@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
+import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
 
 export default function App() {
   const initializedRef = useRef(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [lang, setLang] = useState<Language>(getCurrentLang());
+  const t = getTranslations(lang);
 
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
     initWizardChess();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeLanguage((newLang) => {
+      setLang(newLang);
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -30,6 +40,11 @@ export default function App() {
     };
   }, []);
 
+  const handleToggleLang = () => {
+    const nextLang: Language = lang === 'ko' ? 'en' : 'ko';
+    setAppLanguage(nextLang);
+  };
+
   const handleRestoreUI = () => {
     const win = window as unknown as { wizardChess?: { toggleUI?: (force?: boolean) => void } };
     if (win.wizardChess?.toggleUI) {
@@ -37,18 +52,18 @@ export default function App() {
     } else {
       document.body.classList.remove('cinematic-ui-hidden');
       const btnHide = document.getElementById('btn-hide-ui');
-      if (btnHide) btnHide.textContent = 'Hide UI [H]';
+      if (btnHide) btnHide.textContent = t.hideUi;
     }
   };
 
   return (
     <>
       <div id="loading-overlay">
-        <div className="loader-title">Wizard Chess</div>
+        <div className="loader-title">{t.loadingTitle}</div>
         <div className="loader-bar-wrap">
           <div className="loader-bar" id="loader-bar"></div>
         </div>
-        <div id="loader-text">Summoning Sanctum Architecture &amp; Sculpted Pieces...</div>
+        <div id="loader-text">{t.loadingSub}</div>
       </div>
 
       <div id="canvas-container"></div>
@@ -58,20 +73,20 @@ export default function App() {
         className="hud-btn mobile-only-restore-ui"
         id="btn-mobile-show-ui"
         onClick={handleRestoreUI}
-        title="Show HUD Controls"
+        title={t.showUiMobile}
       >
-        Show UI
+        {t.showUiMobile}
       </button>
 
       <div id="hud-top">
         <div className="hud-group" id="hud-left">
           <div className="brand-pill">
-            <span className="brand-title">Wizard Chess</span>
+            <span className="brand-title">{t.brandTitle}</span>
           </div>
           <div className="status-pill" id="status-pill">
             <span className="turn-dot" id="turn-dot"></span>
-            <span id="turn-text">White to Move</span>
-            <span className="mode-badge" id="mode-badge">Playing as White</span>
+            <span id="turn-text">{t.turnWhite}</span>
+            <span className="mode-badge" id="mode-badge">{t.playingAsWhite}</span>
           </div>
         </div>
 
@@ -83,7 +98,7 @@ export default function App() {
           aria-controls="hud-right"
           onClick={() => setMobileSheetOpen((prev) => !prev)}
         >
-          {mobileSheetOpen ? 'Close' : 'Controls'}
+          {mobileSheetOpen ? t.close : t.controls}
         </button>
 
         <div
@@ -111,7 +126,7 @@ export default function App() {
           </div>
 
           <div className="mobile-sheet-header">
-            <span className="mobile-sheet-title">Controls</span>
+            <span className="mobile-sheet-title">{t.controls}</span>
             <button
               type="button"
               className="mobile-sheet-close"
@@ -120,117 +135,130 @@ export default function App() {
                 e.stopPropagation();
                 setMobileSheetOpen(false);
               }}
-              aria-label="Close Controls"
+              aria-label={t.close}
             >
-              Close ✕
+              {t.close}
             </button>
           </div>
 
-          <div className="mobile-sheet-section-label">Game Actions</div>
+          {/* Language Switch Button */}
+          <button
+            type="button"
+            className="hud-btn lang-toggle-btn"
+            id="btn-lang-toggle"
+            onClick={handleToggleLang}
+            title={lang === 'ko' ? 'Switch to English' : '한국어로 전환'}
+          >
+            🌐 {t.langSwitchLabel}
+          </button>
+
+          <div className="hud-divider" aria-hidden="true"></div>
+
+          <div className="mobile-sheet-section-label">{t.gameActions}</div>
 
           <button
             className="hud-btn"
             id="btn-side-toggle"
-            title="Switch between Playing as White and Playing as Black"
+            title={lang === 'ko' ? '백/흑 진영 바꾸기' : 'Switch between White and Black'}
             onClick={() => setMobileSheetOpen(false)}
           >
-            Play as Black
+            {t.playAsBlack}
           </button>
           <button
             className="hud-btn"
             id="btn-ai-move"
-            title="Let the AI make the next move immediately"
+            title={lang === 'ko' ? 'AI에게 다음 수 두게 하기' : 'Let AI make the next move'}
             onClick={() => setMobileSheetOpen(false)}
           >
-            AI Move
+            {t.aiMove}
           </button>
           <button
             className="hud-btn"
             id="btn-reset"
-            title="Start a fresh game on the altar"
+            title={lang === 'ko' ? '체스판 초기화 및 새 게임 시작' : 'Start a fresh game'}
             onClick={() => setMobileSheetOpen(false)}
           >
-            New Game
+            {t.newGame}
           </button>
 
           <div className="hud-divider" aria-hidden="true"></div>
           <div className="mobile-sheet-section-label">
-            <span>Camera Views</span>
-            <span className="mobile-sheet-section-sub">Tap active view to flip</span>
+            <span>{t.cameraViews}</span>
+            <span className="mobile-sheet-section-sub">{t.cameraSub}</span>
           </div>
 
           <button
             className="hud-btn active"
             id="btn-cam-player"
-            title="Player Camera (Click again to flip White / Black view)"
+            title={t.camPlayer}
           >
-            Player Cam
+            {t.camPlayer}
           </button>
           <button
             className="hud-btn"
             id="btn-cam-top"
-            title="Overhead Board View (Click again to flip White / Black orientation)"
+            title={t.camTop}
           >
-            Overhead
+            {t.camTop}
           </button>
           <button
             className="hud-btn"
             id="btn-cam-side"
-            title="Side Profile View (Click again to switch East / West side)"
+            title={t.camSide}
           >
-            Side
+            {t.camSide}
           </button>
           <button
             className="hud-btn"
             id="btn-cam-wide"
-            title="Wide Cathedral View (Click again to switch North Rose / South Narthex)"
+            title={t.camWide}
           >
-            Cathedral
+            {t.camWide}
           </button>
 
           <div className="hud-divider" aria-hidden="true"></div>
-          <div className="mobile-sheet-section-label">Display &amp; Gestures</div>
+          <div className="mobile-sheet-section-label">{t.displayAndGestures}</div>
 
           <button
             className="hud-btn"
             id="btn-hide-ui"
-            title="Toggle HUD visibility (Shortcut: H)"
+            title={t.hideUi}
             onClick={() => setMobileSheetOpen(false)}
           >
-            Hide UI [H]
+            {t.hideUi}
           </button>
 
           <div className="mobile-sheet-hint">
-            <strong>Touch:</strong> Tap Piece to Move &nbsp;•&nbsp; 1-Finger Drag: Orbit &nbsp;•&nbsp; 2-Finger Drag: Pan &nbsp;•&nbsp; Pinch: Zoom
+            {t.mobileHint}
           </div>
         </div>
       </div>
 
       <div id="hud-bottom">
         <div className="hint-pill" id="controls-hint">
-          <strong>Controls:</strong> Click Piece to Move &nbsp;•&nbsp; Left-Drag: Orbit &nbsp;•&nbsp; Right-Drag: Pan &nbsp;•&nbsp; Scroll: Zoom &nbsp;•&nbsp; WASD + R/F: Fly Cam &nbsp;•&nbsp; H: Hide UI
+          {t.desktopHint}
         </div>
         <div className="captured-pill" id="captured-tray"></div>
       </div>
 
       <div id="checkmate-overlay" role="status" aria-live="polite">
         <div className="checkmate-banner">
-          <div className="checkmate-ornament">✦ &nbsp; Sanctum Judgment &nbsp; ✦</div>
+          <div className="checkmate-ornament">{t.judgment}</div>
           <div className="checkmate-crown" id="checkmate-crown">♔</div>
-          <div className="checkmate-title" id="checkmate-title">Checkmate</div>
+          <div className="checkmate-title" id="checkmate-title">{t.checkmateTitle}</div>
           <div className="checkmate-rule"></div>
           <div className="checkmate-subtitle" id="checkmate-subtitle">
-            White Triumphs • The Black King Has Fallen
+            {t.whiteTriumphs}
           </div>
           <div className="checkmate-actions">
             <button className="checkmate-btn" id="btn-checkmate-replay">
-              Replay King Fall
+              {t.replayFall}
             </button>
             <button className="checkmate-btn" id="btn-checkmate-newgame">
-              New Game
+              {t.newGame}
             </button>
             <button className="checkmate-btn secondary" id="btn-checkmate-dismiss">
-              Dismiss
+              {t.dismiss}
             </button>
           </div>
         </div>

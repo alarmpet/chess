@@ -157,6 +157,21 @@ html, body, #root {
   color: var(--gold-bright);
 }
 
+.lang-toggle-btn {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: var(--gold-bright);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lang-toggle-btn:hover {
+  background: rgba(212, 175, 55, 0.22);
+  border-color: var(--gold-bright);
+}
+
 /* Bottom HUD */
 #hud-bottom {
   position: fixed;

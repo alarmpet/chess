@@ -2,6 +2,7 @@ import * as THREE_NS from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -3243,7 +3244,8 @@ export function initWizardChess() {
       document.body.classList.toggle('cinematic-ui-hidden', shouldHide);
       const btnHide = document.getElementById('btn-hide-ui');
       if (btnHide) {
-        btnHide.textContent = shouldHide ? 'Show UI [H]' : 'Hide UI [H]';
+        const t = getTranslations(getCurrentLang());
+        btnHide.textContent = shouldHide ? t.showUi : t.hideUi;
       }
       return shouldHide;
     }
@@ -3396,13 +3398,11 @@ export function initWizardChess() {
       const titleEl = document.getElementById('checkmate-title');
       const subEl = document.getElementById('checkmate-subtitle');
 
-      const winnerName = winnerColor === 'w' ? 'White' : 'Black';
-      const defeatedName = defeatedColor === 'w' ? 'White' : 'Black';
-
+      const t = getTranslations(getCurrentLang());
       if (crownEl) crownEl.textContent = winnerColor === 'w' ? '♔' : '♚';
-      if (titleEl) titleEl.textContent = 'Checkmate';
+      if (titleEl) titleEl.textContent = t.checkmateTitle;
       if (subEl) {
-        subEl.textContent = `${winnerName} Triumphs • The ${defeatedName} King Has Fallen`;
+        subEl.textContent = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
       }
       if (overlay) {
         overlay.classList.add('visible');
@@ -3665,6 +3665,7 @@ export function initWizardChess() {
       const btnSideToggle = document.getElementById('btn-side-toggle');
       const roomPill = document.getElementById('room-pill');
       const capturedTray = document.getElementById('captured-tray');
+      const t = getTranslations(getCurrentLang());
 
       turnDot.className = 'turn-dot' + (currentTurn === 'b' ? ' black' : '');
 
@@ -3674,45 +3675,53 @@ export function initWizardChess() {
       if (legalMoves.length === 0) {
         gameOver = true;
         if (inCheck) {
-          const winner = currentTurn === 'w' ? 'Black' : 'White';
-          turnText.textContent = `Checkmate — ${winner} Wins`;
+          const winner = currentTurn === 'w' ? t.blackColor : t.whiteColor;
+          turnText.textContent = t.checkmateWin(winner);
           if (!checkmateState.active) {
             triggerCheckmateSequence(currentTurn, currentTurn === 'w' ? 'b' : 'w');
           }
         } else {
-          turnText.textContent = 'Stalemate — Draw';
+          turnText.textContent = t.stalemate;
         }
       } else {
-        const turnLabel = currentTurn === 'w' ? 'White to Move' : 'Black to Move';
+        const turnLabel = currentTurn === 'w' ? t.turnWhite : t.turnBlack;
         const aiColor = playerColor === 'w' ? 'b' : 'w';
         const isAiTurn = !scriptedGameActive && gameMode === 'single' && currentTurn === aiColor;
         if (inCheck) {
-          turnText.textContent = `${turnLabel} (Check!)`;
+          turnText.textContent = `${turnLabel} ${t.checkSuffix}`;
         } else if (isAiTurn) {
-          turnText.textContent = `${turnLabel} (AI)...`;
+          turnText.textContent = `${turnLabel} ${t.aiThinkingSuffix}`;
         } else {
           turnText.textContent = turnLabel;
         }
       }
 
       if (modeBadge) {
-        modeBadge.textContent = `Playing as ${playerColor === 'w' ? 'White' : 'Black'}`;
+        modeBadge.textContent = playerColor === 'w' ? t.playingAsWhite : t.playingAsBlack;
       }
       if (btnAiMove) {
         btnAiMove.style.display = 'inline-flex';
+        btnAiMove.textContent = t.aiMove;
       }
       if (btnSideToggle) {
         btnSideToggle.style.display = 'inline-flex';
-        btnSideToggle.textContent = playerColor === 'w' ? 'Play as Black' : 'Play as White';
+        btnSideToggle.textContent = playerColor === 'w' ? t.playAsBlack : t.playAsWhite;
       }
       if (roomPill) {
         roomPill.style.display = 'none';
       }
 
-      if (capturedByWhite > 0 || capturedByBlack > 0) {
-        capturedTray.textContent = `Captured — White: ${capturedByWhite} | Black: ${capturedByBlack}`;
-      } else {
-        capturedTray.textContent = '';
+      if (capturedTray) {
+        if (capturedByWhite > 0 || capturedByBlack > 0) {
+          const lang = getCurrentLang();
+          if (lang === 'ko') {
+            capturedTray.textContent = `잡은 말 — 백: ${capturedByWhite} | 흑: ${capturedByBlack}`;
+          } else {
+            capturedTray.textContent = `Captured — White: ${capturedByWhite} | Black: ${capturedByBlack}`;
+          }
+        } else {
+          capturedTray.textContent = '';
+        }
       }
       if (typeof updateScriptBarUI === 'function') updateScriptBarUI();
     }
@@ -4229,6 +4238,9 @@ export function initWizardChess() {
     document.getElementById('btn-cam-side')?.addEventListener('click', () => setCameraPreset('side'));
     document.getElementById('btn-cam-wide')?.addEventListener('click', () => setCameraPreset('wide'));
     document.getElementById('btn-hide-ui')?.addEventListener('click', () => toggleUI());
+    subscribeLanguage(() => {
+      updateTurnUI();
+    });
 
     document.getElementById('btn-script-modal')?.addEventListener('click', () => openLobbyModal('script'));
     document.getElementById('btn-script-prev')?.addEventListener('click', () => stepScriptBackward());
@@ -4433,6 +4445,9 @@ export function initWizardChess() {
       openLobbyModal,
       closeLobbyModal,
       toggleUI,
+      onLanguageChanged: () => {
+        updateTurnUI();
+      },
       loadNotation: (pgn, opts) => loadNotationScript(pgn, opts),
       stepScriptForward,
       stepScriptBackward,
