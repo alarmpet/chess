@@ -1794,7 +1794,7 @@ export function initWizardChess() {
     // =========================================================================
     function getPseudoMovesForPiece(r, c, board = boardState) {
       const piece = board[r][c];
-      if (!piece) return [];
+      if (!piece || piece.isPetrified) return [];
       const moves = [];
       const { type, color } = piece;
       const dir = color === 'w' ? -1 : 1;
@@ -1882,7 +1882,7 @@ export function initWizardChess() {
 
     function getLegalMovesForPiece(r, c) {
       const piece = boardState[r][c];
-      if (!piece) return [];
+      if (!piece || piece.isPetrified) return [];
       const pseudo = getPseudoMovesForPiece(r, c, boardState);
       const legal = [];
       for (const m of pseudo) {
@@ -1960,6 +1960,7 @@ export function initWizardChess() {
         for (let c = 0; c < 8; c++) {
           const p = boardState[r][c];
           if (p && p.color === color) {
+            if (p.isPetrified) continue;
             const moves = getLegalMovesForPiece(r, c);
             for (const m of moves) {
               all.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, capture: m.capture });
@@ -2662,9 +2663,20 @@ export function initWizardChess() {
               impactActualTime = elapsed;
               postShatterPiecePos.copy(piece.mesh.position);
               if (captured && captured.mesh) {
-                const shatterOrigin = captured.mesh.position.clone();
-                scene.remove(captured.mesh);
-                spawnStoneShatter(shatterOrigin, captured.color);
+                if (captured.hasShield) {
+                  captured.hasShield = false;
+                  if (captured.shieldMesh) {
+                    captured.mesh.remove(captured.shieldMesh);
+                    captured.shieldMesh = null;
+                  }
+                  impactFlashLight.position.copy(captured.mesh.position);
+                  impactFlashLight.color.setHex(0xffd700);
+                  impactFlashLight.intensity = 14.0;
+                } else {
+                  const shatterOrigin = captured.mesh.position.clone();
+                  scene.remove(captured.mesh);
+                  spawnStoneShatter(shatterOrigin, captured.color);
+                }
               }
             }
 
@@ -3669,6 +3681,10 @@ export function initWizardChess() {
 
       turnDot.className = 'turn-dot' + (currentTurn === 'b' ? ' black' : '');
 
+      if (currentTurn === playerColor && typeof window !== 'undefined' && window.__arcaneEngine) {
+        window.__arcaneEngine.onPlayerTurnStart();
+      }
+
       const legalMoves = getAllLegalMoves(currentTurn);
       const inCheck = isKingInCheck(currentTurn, boardState);
 
@@ -3733,6 +3749,13 @@ export function initWizardChess() {
     const pointer = new THREE.Vector2();
     let pointerDownPos = { x: 0, y: 0 };
 
+    window.addEventListener('contextmenu', (e) => {
+      if (typeof window !== 'undefined' && window.__arcaneEngine?.activeSpell) {
+        e.preventDefault();
+        window.__arcaneEngine.cancelSpell();
+      }
+    });
+
     renderer.domElement.addEventListener('pointerdown', (e) => {
       pointerDownPos = { x: e.clientX, y: e.clientY };
     });
@@ -3788,6 +3811,14 @@ export function initWizardChess() {
       }
 
       if (clickedR === -1) return;
+
+      if (typeof window !== 'undefined' && window.__arcaneTileHandler && window.__arcaneTileHandler(clickedR, clickedC)) {
+        if (preMoveHighlightTask) preMoveHighlightTask = null;
+        clearSquareHighlights();
+        selectedSquare = null;
+        validMoves = [];
+        return;
+      }
 
       // Cancel any pending scripted pre-move highlight timer when the user manually interacts with the board
       if (preMoveHighlightTask) {
@@ -4422,6 +4453,15 @@ export function initWizardChess() {
     // Programmatic API for Automated Verification & Camera Inspection
     // =========================================================================
     window.wizardChess = {
+      scene,
+      camera,
+      renderer,
+      boardState,
+      boardToWorld,
+      instantiatePiece,
+      spawnStoneShatter,
+      impactFlashLight,
+      playerColor: () => playerColor,
       setCameraPreset,
       setCameraPose,
       setCameraLook: setCameraPose,

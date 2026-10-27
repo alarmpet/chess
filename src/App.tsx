@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
+import { arcaneEngine, ArcaneState } from './arcaneEngine';
+import { arcaneAudio } from './arcaneAudio';
 
 export default function App() {
   const initializedRef = useRef(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
+  const [arcaneState, setArcaneState] = useState<ArcaneState>(arcaneEngine.getState());
+  const [isMuted, setIsMuted] = useState(false);
   const t = getTranslations(lang);
 
   useEffect(() => {
@@ -22,9 +26,17 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const unsubArcane = arcaneEngine.subscribe((st) => {
+      setArcaneState(st);
+    });
+    return () => unsubArcane();
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMobileSheetOpen(false);
+        arcaneEngine.cancelSpell();
       }
     };
     const handleResize = () => {
@@ -43,6 +55,11 @@ export default function App() {
   const handleToggleLang = () => {
     const nextLang: Language = lang === 'ko' ? 'en' : 'ko';
     setAppLanguage(nextLang);
+  };
+
+  const handleToggleMute = () => {
+    const muted = arcaneAudio.toggleMute();
+    setIsMuted(muted);
   };
 
   const handleRestoreUI = () => {
@@ -81,12 +98,26 @@ export default function App() {
       <div id="hud-top">
         <div className="hud-group" id="hud-left">
           <div className="brand-pill">
-            <span className="brand-title">{t.brandTitle}</span>
+            <span className="brand-title">{lang === 'ko' ? '아케인 체스: 영혼의 성소' : 'Arcane Chess: Sanctuary'}</span>
           </div>
           <div className="status-pill" id="status-pill">
             <span className="turn-dot" id="turn-dot"></span>
             <span id="turn-text">{t.turnWhite}</span>
             <span className="mode-badge" id="mode-badge">{t.playingAsWhite}</span>
+          </div>
+
+          {/* Arcane Mana Crystal Pill */}
+          <div className="mana-pill" id="mana-pill" title={lang === 'ko' ? '아케인 마나' : 'Arcane Mana'}>
+            <span className="mana-gem-icon">✦</span>
+            <span className="mana-count">{arcaneState.currentMana}/{arcaneState.maxMana}</span>
+            <div className="mana-dots">
+              {Array.from({ length: arcaneState.maxMana }).map((_, idx) => (
+                <span
+                  key={idx}
+                  className={`mana-dot ${idx < arcaneState.currentMana ? 'filled' : 'spent'}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
@@ -141,6 +172,17 @@ export default function App() {
             </button>
           </div>
 
+          {/* Audio Sound Toggle */}
+          <button
+            type="button"
+            className="hud-btn audio-toggle-btn"
+            id="btn-audio-toggle"
+            onClick={handleToggleMute}
+            title={isMuted ? (lang === 'ko' ? '음소거 해제' : 'Unmute Sound') : (lang === 'ko' ? '음소거' : 'Mute Sound')}
+          >
+            {isMuted ? '🔇' : '🔊'}
+          </button>
+
           {/* Language Switch Button */}
           <button
             type="button"
@@ -176,7 +218,11 @@ export default function App() {
             className="hud-btn"
             id="btn-reset"
             title={lang === 'ko' ? '체스판 초기화 및 새 게임 시작' : 'Start a fresh game'}
-            onClick={() => setMobileSheetOpen(false)}
+            onClick={() => {
+              arcaneEngine.cancelSpell();
+              arcaneEngine.refillHand();
+              setMobileSheetOpen(false);
+            }}
           >
             {t.newGame}
           </button>
@@ -231,6 +277,51 @@ export default function App() {
           <div className="mobile-sheet-hint">
             {t.mobileHint}
           </div>
+        </div>
+      </div>
+
+      {/* Floating Arcane Spell Action Banner */}
+      {arcaneState.bannerMessage && (
+        <div className="arcane-banner-overlay" role="alert">
+          <div className="arcane-banner-box">
+            <span className="arcane-banner-text">{arcaneState.bannerMessage}</span>
+            {arcaneState.activeSpell && (
+              <button
+                type="button"
+                className="arcane-cancel-btn"
+                onClick={() => arcaneEngine.cancelSpell()}
+                title="주문 취소 (ESC)"
+              >
+                ✕ {lang === 'ko' ? '취소' : 'Cancel'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Arcane Cards Dock */}
+      <div className="arcane-dock" id="arcane-dock">
+        <div className="arcane-cards-row">
+          {arcaneState.hand.map((card) => {
+            const canAfford = arcaneState.currentMana >= card.cost;
+            const isSelected = arcaneState.activeSpell?.id === card.id;
+            return (
+              <button
+                key={card.id}
+                type="button"
+                className={`arcane-card ${isSelected ? 'active' : ''} ${!canAfford ? 'unaffordable' : ''}`}
+                onClick={() => arcaneEngine.selectCard(card)}
+                title={lang === 'ko' ? card.desc : card.descEn}
+              >
+                <div className="arcane-card-top">
+                  <span className="card-cost">{card.cost} ✦</span>
+                  <span className="card-icon">{card.icon}</span>
+                </div>
+                <div className="card-name">{lang === 'ko' ? card.name : card.nameEn}</div>
+                <div className="card-desc">{lang === 'ko' ? card.desc : card.descEn}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
