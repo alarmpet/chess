@@ -1641,9 +1641,7 @@ export function initWizardChess() {
       let mixer = null;
       const actions = {};
 
-      if (skinMode === 'standee') {
-        root = createBeastMesh(type, color);
-      } else {
+      if (skinMode === 'classic') {
         const tpl = pieceTemplates[`${type}_${color}`];
         if (tpl && tpl.scene) {
           root = SkeletonUtils.clone(tpl.scene);
@@ -1672,29 +1670,15 @@ export function initWizardChess() {
             actions[clip.name] = mixer.clipAction(clip);
           }
           activeMixers.push(mixer);
-
-          // Equip the 3D character with the pulsing Arcane Rune Disc at their feet
-          if (skinMode === '3d_beasts') {
-            const runeMat = new THREE.MeshBasicMaterial({
-              map: getRuneTexture(color),
-              transparent: true,
-              opacity: color === 'w' ? 0.8 : 0.9,
-              depthWrite: false,
-              blending: THREE.AdditiveBlending
-            });
-            const runeGeo = new THREE.PlaneGeometry(0.78, 0.78);
-            const runeDisc = new THREE.Mesh(runeGeo, runeMat);
-            runeDisc.rotation.x = -Math.PI / 2;
-            runeDisc.position.y = 0.012;
-            root.add(runeDisc);
-            root.userData.runeDisc = runeDisc;
-          }
         } else {
           root = new THREE.Mesh(
             new THREE.CylinderGeometry(0.1, 0.14, 0.42, 16),
             color === 'w' ? whitePieceMat : blackPieceMat
           );
         }
+      } else {
+        // Default: 100% Volumetric Sculpted 3D Sanctuary Beast
+        root = createBeastMesh(type, color);
       }
 
       const worldPos = boardToWorld(r, c);

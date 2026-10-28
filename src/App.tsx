@@ -23,7 +23,7 @@ export default function App() {
   const [farmState, setFarmState] = useState<FarmState>(farmEngine.getState());
   const [xpState, setXpState] = useState<XPState>(juiceEngine.getXPState());
   const [quests, setQuests] = useState<DailyQuest[]>(juiceEngine.getQuests());
-  const [pieceSkin, setPieceSkin] = useState<'3d_beasts' | 'standee' | 'classic'>('3d_beasts');
+  const [pieceSkin, setPieceSkin] = useState<'3d_beasts' | 'classic'>('3d_beasts');
   const [selectedBeast, setSelectedBeast] = useState<BeastInfo | null>(null);
   const [codexOpen, setCodexOpen] = useState(false);
   const [codexTab, setCodexTab] = useState<'w' | 'b'>('w');
@@ -123,10 +123,7 @@ export default function App() {
   };
 
   const handleToggleSkin = () => {
-    let nextSkin: '3d_beasts' | 'standee' | 'classic' = '3d_beasts';
-    if (pieceSkin === '3d_beasts') nextSkin = 'classic';
-    else if (pieceSkin === 'classic') nextSkin = 'standee';
-    else nextSkin = '3d_beasts';
+    const nextSkin = pieceSkin === '3d_beasts' ? 'classic' : '3d_beasts';
     setPieceSkin(nextSkin);
     const win = window as any;
     win.wizardChess?.switchChessSkin?.(nextSkin);
@@ -353,39 +350,19 @@ export default function App() {
             🌐 {t.langSwitchLabel}
           </button>
 
-          {/* Piece Skin Toggle (3D Beasts vs Classic vs Standee) */}
+          {/* Piece Skin Toggle (3D Sanctuary Beasts vs Classic Statues) */}
           <button
             type="button"
             className="hud-btn skin-toggle-btn"
             id="btn-skin-toggle"
             onClick={handleToggleSkin}
-            title={
-              pieceSkin === '3d_beasts'
-                ? '현재: 👑 3D 성소 수호신 (완전 3D 입체 캐릭터)'
-                : pieceSkin === 'classic'
-                ? '현재: ♟️ 클래식 석상'
-                : '현재: 🐾 2.5D 성물 비석'
-            }
+            title={pieceSkin === '3d_beasts' ? '클래식 체스 석상으로 전환' : '3D 성소 영수단(동물 신수 조각상)으로 전환'}
             style={{
-              borderColor:
-                pieceSkin === '3d_beasts'
-                  ? 'rgba(234, 179, 8, 0.8)'
-                  : pieceSkin === 'standee'
-                  ? 'rgba(56, 189, 248, 0.8)'
-                  : 'rgba(255, 255, 255, 0.2)',
-              color:
-                pieceSkin === '3d_beasts'
-                  ? '#fef08a'
-                  : pieceSkin === 'standee'
-                  ? '#7dd3fc'
-                  : '#94a3b8'
+              borderColor: pieceSkin === '3d_beasts' ? 'rgba(234, 179, 8, 0.7)' : 'rgba(255, 255, 255, 0.2)',
+              color: pieceSkin === '3d_beasts' ? '#fef08a' : '#94a3b8'
             }}
           >
-            {pieceSkin === '3d_beasts'
-              ? '👑 3D 성소 수호신'
-              : pieceSkin === 'classic'
-              ? '♟️ 클래식 석상'
-              : '🐾 2.5D 성물 비석'}
+            {pieceSkin === '3d_beasts' ? '🐾 3D 성소 영수단' : '♟️ 클래식 석상'}
           </button>
 
           {/* Beast Codex (성소 영수 도감) Button */}
