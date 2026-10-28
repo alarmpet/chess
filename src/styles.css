@@ -1362,3 +1362,363 @@ body.cinematic-ui-hidden .arcane-dock {
   color: #94a3b8;
   font-style: italic;
 }
+
+
+/* =========================================================================
+   Sanctuary Garden: Cloister & Chess - Farm, Shop, and Barn Styling
+   ========================================================================= */
+
+/* Top HUD Farm Currency & View Toggle */
+.farm-currency-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(22, 18, 12, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(234, 179, 8, 0.55);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  color: #fef08a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  user-select: none;
+}
+
+.farm-gold-item, .farm-gems-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.farm-gold-icon {
+  color: #eab308;
+  font-size: 0.95rem;
+}
+
+.farm-gems-icon {
+  color: #38bdf8;
+  font-size: 0.95rem;
+}
+
+.farm-view-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(16, 185, 129, 0.35));
+  border: 1px solid rgba(52, 211, 153, 0.65);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  color: #a7f3d0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.farm-view-btn:hover {
+  transform: translateY(-1px) scale(1.03);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.4), rgba(16, 185, 129, 0.5));
+  border-color: #6ee7b7;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.farm-view-btn.in-garden {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(217, 119, 6, 0.35));
+  border-color: rgba(251, 191, 36, 0.7);
+  color: #fef08a;
+  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.3);
+}
+
+/* Floating Loot Toast */
+.loot-toast-overlay {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  pointer-events: none;
+  animation: loot-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes loot-pop-in {
+  from { opacity: 0; transform: translate(-50%, -10px) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+.loot-toast-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 14, 8, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.85);
+  border-radius: 9999px;
+  padding: 8px 18px;
+  color: #fef3c7;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 20px rgba(245, 158, 11, 0.45);
+}
+
+/* Garden Bottom Toolbar */
+.garden-dock {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+  animation: banner-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.garden-hint-pill {
+  background: rgba(14, 20, 16, 0.85);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  border-radius: 9999px;
+  padding: 5px 14px;
+  color: #a7f3d0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+}
+
+.garden-tools-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(14, 18, 26, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 8px 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  max-width: 95vw;
+  overflow-x: auto;
+}
+
+.garden-seed-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #f8fafc;
+  cursor: pointer;
+  min-width: 72px;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.garden-seed-btn:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(234, 179, 8, 0.7);
+  transform: translateY(-2px);
+}
+
+.garden-seed-btn.active {
+  background: rgba(234, 179, 8, 0.25);
+  border-color: #f59e0b;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
+}
+
+.garden-seed-btn.empty {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.seed-btn-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.seed-btn-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fef08a;
+  white-space: nowrap;
+}
+
+.seed-btn-count {
+  font-size: 0.64rem;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.garden-action-btn {
+  background: rgba(234, 179, 8, 0.18);
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  color: #fef08a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.garden-action-btn:hover {
+  background: rgba(234, 179, 8, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Farm Shop & Barn Modals */
+.farm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 16, 0.82);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  animation: duel-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.farm-modal {
+  width: 95%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(175deg, rgba(20, 24, 36, 0.98) 0%, rgba(10, 14, 22, 0.99) 100%);
+  border: 1px solid rgba(234, 179, 8, 0.55);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(234, 179, 8, 0.25);
+  color: #f8fafc;
+  overflow: hidden;
+}
+
+.farm-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.farm-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fef08a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.farm-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.farm-shop-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.farm-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.farm-item-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.15s;
+}
+
+.farm-item-card:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+.farm-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.farm-item-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.farm-item-desc {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.farm-item-buff {
+  font-size: 0.72rem;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.farm-buy-btn {
+  background: rgba(234, 179, 8, 0.2);
+  border: 1px solid rgba(234, 179, 8, 0.6);
+  color: #fef08a;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+
+.farm-buy-btn:hover:not(:disabled) {
+  background: rgba(234, 179, 8, 0.4);
+  color: #fff;
+}
+
+.farm-buy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Hide garden dock in cinematic UI hidden mode */
+body.cinematic-ui-hidden .garden-dock,
+body.cinematic-ui-hidden .farm-currency-pill,
+body.cinematic-ui-hidden .farm-view-btn {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

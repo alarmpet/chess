@@ -3,15 +3,15 @@ import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
 import { arcaneEngine, ArcaneState } from './arcaneEngine';
 import { arcaneAudio } from './arcaneAudio';
-import { lexiconEngine, LexiconState } from './lexiconEngine';
-import { LEXICON_WORDS } from './lexiconData';
+import { farmEngine, FarmState } from './farmEngine';
+import { CROPS, FACILITIES } from './farmData';
 
 export default function App() {
   const initializedRef = useRef(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
   const [arcaneState, setArcaneState] = useState<ArcaneState>(arcaneEngine.getState());
-  const [lexiconState, setLexiconState] = useState<LexiconState>(lexiconEngine.getState());
+  const [farmState, setFarmState] = useState<FarmState>(farmEngine.getState());
   const [isMuted, setIsMuted] = useState(false);
   const t = getTranslations(lang);
 
@@ -36,10 +36,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const unsubLexicon = lexiconEngine.subscribe((st) => {
-      setLexiconState(st);
+    const unsubFarm = farmEngine.subscribe((st) => {
+      setFarmState(st);
     });
-    return () => unsubLexicon();
+    return () => unsubFarm();
   }, []);
 
   useEffect(() => {
@@ -47,9 +47,8 @@ export default function App() {
       if (e.key === 'Escape') {
         setMobileSheetOpen(false);
         arcaneEngine.cancelSpell();
-        if (lexiconState.isGrimoireOpen) {
-          lexiconEngine.toggleGrimoire(false);
-        }
+        if (farmState.isShopOpen) farmEngine.toggleShop(false);
+        if (farmState.isBarnOpen) farmEngine.toggleBarn(false);
       }
     };
     const handleResize = () => {
@@ -63,7 +62,7 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
     };
-  }, [lexiconState.isGrimoireOpen]);
+  }, [farmState.isShopOpen, farmState.isBarnOpen]);
 
   const handleToggleLang = () => {
     const nextLang: Language = lang === 'ko' ? 'en' : 'ko';
@@ -112,13 +111,37 @@ export default function App() {
         <div className="hud-group" id="hud-left">
           <div className="brand-pill">
             <span className="brand-title">
-              {lang === 'ko' ? '렉시콘 체스: 어원의 성소' : 'Lexicon Chess: Sanctuary'}
+              {lang === 'ko' ? '성소의 정원: 아케인 팜' : 'Sanctuary Garden: Chess & Farm'}
             </span>
           </div>
+
           <div className="status-pill" id="status-pill">
             <span className="turn-dot" id="turn-dot"></span>
             <span id="turn-text">{t.turnWhite}</span>
             <span className="mode-badge" id="mode-badge">{t.playingAsWhite}</span>
+          </div>
+
+          {/* View Toggle Pill (Chessboard vs 3D Garden Courtyard) */}
+          <button
+            type="button"
+            className={`farm-view-btn ${farmState.isGardenView ? 'in-garden' : ''}`}
+            id="btn-farm-view"
+            onClick={() => farmEngine.toggleGardenView()}
+            title={farmState.isGardenView ? '⚔️ 체스 대국장으로 돌아가기' : '🌱 성소 안뜰 정원으로 이동'}
+          >
+            {farmState.isGardenView ? '⚔️ 체스 대국장' : '🌱 성소 정원'}
+          </button>
+
+          {/* Gold & Gems Currency Display */}
+          <div className="farm-currency-pill" id="farm-currency-pill">
+            <span className="farm-gold-item" title="골드 코인 (체스 전투 및 농작물 판매로 획득)">
+              <span className="farm-gold-icon">💰</span>
+              <span>{farmState.gold}G</span>
+            </span>
+            <span className="farm-gems-item" title="성소 보석 (체크메이트 승리 시 획득)">
+              <span className="farm-gems-icon">💎</span>
+              <span>{farmState.gems}</span>
+            </span>
           </div>
 
           {/* Arcane Mana Crystal Pill */}
@@ -133,26 +156,6 @@ export default function App() {
                 />
               ))}
             </div>
-          </div>
-
-          {/* Lexicon Vocabulary Mastery Pill */}
-          <div
-            className="lexicon-pill"
-            id="btn-lexicon-pill"
-            onClick={() => lexiconEngine.toggleGrimoire(true)}
-            title={lang === 'ko' ? '성소의 단어장 열기 (어휘 도감)' : 'Open Sanctuary Grimoire'}
-          >
-            <span>📖</span>
-            <span>
-              {lang === 'ko'
-                ? `${lexiconState.totalMastered}단어 정복`
-                : `${lexiconState.totalMastered} Mastered`}
-            </span>
-            {lexiconState.streak > 1 && (
-              <span className="lexicon-streak-fire">
-                🔥{lexiconState.streak}{lang === 'ko' ? '연속' : 'x'}
-              </span>
-            )}
           </div>
         </div>
 
@@ -207,29 +210,32 @@ export default function App() {
             </button>
           </div>
 
-          {/* Quick Word Duel Button */}
+          {/* Seed Shop Button */}
           <button
             type="button"
             className="hud-btn"
-            id="btn-trigger-duel"
+            id="btn-open-shop"
             onClick={() => {
               setMobileSheetOpen(false);
-              lexiconEngine.triggerDuel({ title: '⚔️ 어휘 룬 챌린지' });
+              farmEngine.toggleShop(true);
             }}
-            title={lang === 'ko' ? '단어 퀴즈 도전 (+1 마나 획득)' : 'Word Duel (+1 Mana)'}
+            title="씨앗 및 정원 시설 상점"
           >
-            ⚔️ {lang === 'ko' ? '단어 퀴즈' : 'Word Duel'}
+            🛒 상점
           </button>
 
-          {/* Web Speech API TTS Pronunciation Toggle */}
+          {/* Barn Warehouse Button */}
           <button
             type="button"
             className="hud-btn"
-            id="btn-tts-toggle"
-            onClick={() => lexiconEngine.toggleTTS()}
-            title={lexiconState.ttsEnabled ? '단어 발음 끄기' : '단어 발음 켜기 (Web Speech)'}
+            id="btn-open-barn"
+            onClick={() => {
+              setMobileSheetOpen(false);
+              farmEngine.toggleBarn(true);
+            }}
+            title="수확물 창고 및 버프 현황"
           >
-            {lexiconState.ttsEnabled ? '🗣️ TTS' : '🔇 TTS'}
+            🎒 창고
           </button>
 
           {/* Audio Sound Toggle */}
@@ -340,8 +346,18 @@ export default function App() {
         </div>
       </div>
 
+      {/* Floating Loot Notification Toast */}
+      {farmState.lootNotification && (
+        <div className="loot-toast-overlay" role="status">
+          <div className="loot-toast-box">
+            <span>✨</span>
+            <span>{farmState.lootNotification}</span>
+          </div>
+        </div>
+      )}
+
       {/* Floating Arcane Spell Action Banner */}
-      {arcaneState.bannerMessage && (
+      {!farmState.isGardenView && arcaneState.bannerMessage && (
         <div className="arcane-banner-overlay" role="alert">
           <div className="arcane-banner-box">
             <span className="arcane-banner-text">{arcaneState.bannerMessage}</span>
@@ -359,168 +375,233 @@ export default function App() {
         </div>
       )}
 
-      {/* Word Duel Modal */}
-      {lexiconState.isDuelActive && lexiconState.currentWord && (
-        <div className="word-duel-overlay" role="dialog" aria-modal="true">
-          <div className="word-duel-modal">
-            <div className="duel-badge">⚔️ CATHEDRAL WORD DUEL</div>
-            <div className="duel-word-wrap">
-              <div className="duel-word-title">{lexiconState.currentWord.word}</div>
-              <button
-                type="button"
-                className="duel-speaker-btn"
-                onClick={() => lexiconEngine.replayWordAudio()}
-                title="발음 듣기 (Web Speech TTS)"
-              >
-                🔊
-              </button>
-            </div>
-            <div className="duel-phonetic">{lexiconState.currentWord.phonetic}</div>
-
-            {/* Etymology Breakdown Box */}
-            <div className="duel-etymology-box">
-              {lexiconState.currentWord.prefix && (
-                <span className="duel-etymology-pill">
-                  접두사: {lexiconState.currentWord.prefix} ({lexiconState.currentWord.prefixMeaning})
-                </span>
-              )}
-              {lexiconState.currentWord.root && (
-                <span className="duel-etymology-pill">
-                  어근: {lexiconState.currentWord.root} ({lexiconState.currentWord.rootMeaning})
-                </span>
-              )}
-              {lexiconState.currentWord.suffix && (
-                <span className="duel-etymology-pill">
-                  접미사: {lexiconState.currentWord.suffix} ({lexiconState.currentWord.suffixMeaning})
-                </span>
-              )}
-              <div style={{ marginTop: '6px' }}>{lexiconState.currentWord.etymologyStory}</div>
-            </div>
-
-            {/* 3 Multiple Choice Options */}
-            <div className="duel-options-grid">
-              {lexiconState.shuffledOptions.map((opt, i) => {
-                let btnClass = 'duel-option-btn';
-                if (lexiconState.isAnswered) {
-                  if (opt === lexiconState.currentWord?.meaningKo) {
-                    btnClass += ' correct';
-                  } else if (opt === lexiconState.selectedOption) {
-                    btnClass += ' wrong';
-                  }
-                }
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    className={btnClass}
-                    disabled={lexiconState.isAnswered}
-                    onClick={() => lexiconEngine.answerDuel(opt)}
-                  >
-                    <span>{i + 1}. {opt}</span>
-                    {lexiconState.isAnswered && opt === lexiconState.currentWord?.meaningKo && <span>✓ 정답</span>}
-                  </button>
-                );
-              })}
-            </div>
-
-            {lexiconState.isAnswered && (
-              <div className={`duel-feedback ${lexiconState.isCorrect ? 'success' : 'failure'}`}>
-                {lexiconState.isCorrect
-                  ? '✦ 정답입니다! (+1 마나 획득 / 룬 각성)'
-                  : '✦ 오답입니다. 다음 기회에 복습해보세요!'}
-              </div>
-            )}
+      {/* GARDEN VIEW TOOLBAR */}
+      {farmState.isGardenView ? (
+        <div className="garden-dock" id="garden-dock">
+          <div className="garden-hint-pill">
+            🌱 3D 밭을 마우스로 클릭하면 씨앗 심기, 물주기, 수확을 진행합니다. 체스를 두면 작물이 고속 성장합니다!
+          </div>
+          <div className="garden-tools-row">
+            {Object.keys(CROPS).map((cropKey) => {
+              const crop = CROPS[cropKey];
+              const count = farmState.seeds[cropKey] || 0;
+              const isSelected = farmState.selectedSeedId === cropKey;
+              return (
+                <button
+                  key={cropKey}
+                  type="button"
+                  className={`garden-seed-btn ${isSelected ? 'active' : ''} ${count === 0 ? 'empty' : ''}`}
+                  onClick={() => farmEngine.selectSeed(cropKey)}
+                  title={`${crop.name}: ${crop.description} (${crop.buffDescription})`}
+                >
+                  <span className="seed-btn-icon">{crop.icon}</span>
+                  <span className="seed-btn-name">{crop.name.split(' ')[0]}</span>
+                  <span className="seed-btn-count">{count}개 보유</span>
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              className="garden-action-btn"
+              onClick={() => farmEngine.toggleShop(true)}
+            >
+              🛒 씨앗 상점
+            </button>
+            <button
+              type="button"
+              className="garden-action-btn"
+              onClick={() => farmEngine.toggleBarn(true)}
+            >
+              🎒 수확 창고
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* CHESS VIEW: ARCANE CARDS DOCK */
+        <div className="arcane-dock" id="arcane-dock">
+          <div className="arcane-cards-row">
+            {arcaneState.hand.map((card) => {
+              const canAfford = arcaneState.currentMana >= card.cost;
+              const isSelected = arcaneState.activeSpell?.id === card.id;
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  className={`arcane-card ${isSelected ? 'active' : ''} ${!canAfford ? 'unaffordable' : ''}`}
+                  onClick={() => arcaneEngine.selectCard(card)}
+                  title={lang === 'ko' ? card.desc : card.descEn}
+                >
+                  <div className="arcane-card-top">
+                    <span className="card-cost">{card.cost} ✦</span>
+                    <span className="card-icon">{card.icon}</span>
+                  </div>
+                  <div className="card-name">{lang === 'ko' ? card.name : card.nameEn}</div>
+                  <div className="card-desc">{lang === 'ko' ? card.desc : card.descEn}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Cathedral Grimoire Modal (Vocabulary Codex) */}
-      {lexiconState.isGrimoireOpen && (
+      {/* SEED & FACILITY SHOP MODAL */}
+      {farmState.isShopOpen && (
         <div
-          className="grimoire-overlay"
+          className="farm-modal-overlay"
           role="dialog"
           aria-modal="true"
-          onClick={() => lexiconEngine.toggleGrimoire(false)}
+          onClick={() => farmEngine.toggleShop(false)}
         >
-          <div
-            className="grimoire-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="grimoire-header">
-              <div className="grimoire-title">
-                <span>📖</span>
-                <span>{lang === 'ko' ? '성소의 어휘 기록서 (Cathedral Grimoire)' : 'Cathedral Grimoire'}</span>
+          <div className="farm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="farm-modal-header">
+              <div className="farm-modal-title">
+                <span>🛒</span>
+                <span>성소의 상점 (Sanctuary Merchant)</span>
               </div>
               <button
                 type="button"
                 className="grimoire-close-btn"
-                onClick={() => lexiconEngine.toggleGrimoire(false)}
-                title="닫기 (ESC)"
+                onClick={() => farmEngine.toggleShop(false)}
               >
                 ✕
               </button>
             </div>
-            <div className="grimoire-body">
-              {LEXICON_WORDS.map((w) => {
-                const isMastered = lexiconState.totalMastered > 0;
-                return (
-                  <div key={w.id} className="grimoire-card">
-                    <div className="grimoire-card-top">
-                      <span className="grimoire-card-word">
-                        {w.word} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{w.phonetic}</span>
-                      </span>
+            <div className="farm-modal-body">
+              <div className="farm-shop-section-title">🌱 마법 씨앗 구매</div>
+              <div className="farm-shop-grid">
+                {Object.keys(CROPS).map((key) => {
+                  const crop = CROPS[key];
+                  const canBuy = farmState.gold >= crop.seedCost;
+                  return (
+                    <div key={key} className="farm-item-card">
+                      <div className="farm-item-header">
+                        <span className="farm-item-name">
+                          <span>{crop.icon}</span>
+                          <span>{crop.name}</span>
+                        </span>
+                        <span style={{ color: '#eab308', fontWeight: 700, fontSize: '0.85rem' }}>
+                          {crop.seedCost} Gold
+                        </span>
+                      </div>
+                      <div className="farm-item-desc">{crop.description}</div>
+                      <div className="farm-item-buff">✦ {crop.buffDescription}</div>
                       <button
                         type="button"
-                        className="duel-speaker-btn"
-                        style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}
-                        onClick={() => lexiconEngine.replayWordAudio(w.word)}
-                        title="발음 듣기"
+                        className="farm-buy-btn"
+                        disabled={!canBuy}
+                        onClick={() => farmEngine.buySeed(key)}
                       >
-                        🔊
+                        {canBuy ? '씨앗 구매하기' : '골드 부족'}
                       </button>
                     </div>
-                    <div className="grimoire-card-meaning">
-                      {w.meaningKo} <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>({w.meaningEn})</span>
+                  );
+                })}
+              </div>
+
+              <div className="farm-shop-section-title" style={{ marginTop: '16px' }}>
+                🏛️ 정원 시설 및 자동화 건설
+              </div>
+              <div className="farm-shop-grid">
+                {Object.keys(FACILITIES).map((facKey) => {
+                  const fac = FACILITIES[facKey];
+                  const alreadyBuilt = farmState.facilities[facKey];
+                  const canBuy = farmState.gold >= fac.cost && !alreadyBuilt;
+                  return (
+                    <div key={facKey} className="farm-item-card">
+                      <div className="farm-item-header">
+                        <span className="farm-item-name">
+                          <span>{fac.icon}</span>
+                          <span>{fac.name}</span>
+                        </span>
+                        <span style={{ color: '#eab308', fontWeight: 700, fontSize: '0.85rem' }}>
+                          {alreadyBuilt ? '건설 완료' : `${fac.cost} Gold`}
+                        </span>
+                      </div>
+                      <div className="farm-item-desc">{fac.description}</div>
+                      <div className="farm-item-buff">✦ {fac.perk}</div>
+                      <button
+                        type="button"
+                        className="farm-buy-btn"
+                        disabled={!canBuy}
+                        onClick={() => farmEngine.buyFacility(facKey)}
+                      >
+                        {alreadyBuilt ? '✓ 건설됨' : canBuy ? '건설하기' : '골드 부족'}
+                      </button>
                     </div>
-                    <div className="grimoire-card-etymology">
-                      <strong>어원 해설:</strong> {w.etymologyStory}
-                    </div>
-                    <div className="grimoire-card-example">
-                      "{w.exampleSentence}"
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bottom Arcane Cards Dock */}
-      <div className="arcane-dock" id="arcane-dock">
-        <div className="arcane-cards-row">
-          {arcaneState.hand.map((card) => {
-            const canAfford = arcaneState.currentMana >= card.cost;
-            const isSelected = arcaneState.activeSpell?.id === card.id;
-            return (
+      {/* BARN / HARVEST WAREHOUSE MODAL */}
+      {farmState.isBarnOpen && (
+        <div
+          className="farm-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => farmEngine.toggleBarn(false)}
+        >
+          <div className="farm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="farm-modal-header">
+              <div className="farm-modal-title">
+                <span>🎒</span>
+                <span>수확물 창고 & 버프 현황 (Sanctuary Barn)</span>
+              </div>
               <button
-                key={card.id}
                 type="button"
-                className={`arcane-card ${isSelected ? 'active' : ''} ${!canAfford ? 'unaffordable' : ''}`}
-                onClick={() => arcaneEngine.selectCard(card)}
-                title={lang === 'ko' ? card.desc : card.descEn}
+                className="grimoire-close-btn"
+                onClick={() => farmEngine.toggleBarn(false)}
               >
-                <div className="arcane-card-top">
-                  <span className="card-cost">{card.cost} ✦</span>
-                  <span className="card-icon">{card.icon}</span>
-                </div>
-                <div className="card-name">{lang === 'ko' ? card.name : card.nameEn}</div>
-                <div className="card-desc">{lang === 'ko' ? card.desc : card.descEn}</div>
+                ✕
               </button>
-            );
-          })}
+            </div>
+            <div className="farm-modal-body">
+              <div className="farm-shop-section-title">🌾 수확한 마법 작물</div>
+              <div className="farm-shop-grid">
+                {Object.keys(CROPS).map((key) => {
+                  const crop = CROPS[key];
+                  const count = farmState.harvested[key] || 0;
+                  return (
+                    <div key={key} className="farm-item-card">
+                      <div className="farm-item-header">
+                        <span className="farm-item-name">
+                          <span>{crop.icon}</span>
+                          <span>{crop.name}</span>
+                        </span>
+                        <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem' }}>
+                          보유: {count}개
+                        </span>
+                      </div>
+                      <div className="farm-item-desc">{crop.buffDescription}</div>
+                      <button
+                        type="button"
+                        className="farm-buy-btn"
+                        disabled={count <= 0}
+                        onClick={() => farmEngine.sellHarvested(key, 1)}
+                      >
+                        {count > 0 ? `1개 판매 (+${crop.sellPrice}G)` : '보유량 없음'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="farm-shop-section-title" style={{ marginTop: '16px' }}>
+                ✨ 현재 활성화된 체스 버프 현황
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px 16px', borderRadius: '10px', fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6' }}>
+                <div>✦ 시작 마나 보너스: +{farmState.activeBuffs.manaBonus} (최대 {3 + farmState.activeBuffs.manaBonus} 마나)</div>
+                <div>✦ 코인 획득 배율: x{farmState.activeBuffs.goldMultiplier}</div>
+                <div>✦ 메테오 십자 폭발: {farmState.activeBuffs.meteorCross ? '🔥 활성화됨' : '미적용'}</div>
+                <div>✦ 킹 생명초 부활: {farmState.activeBuffs.kingRevive ? '🌿 활성화됨' : '미적용'}</div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div id="hud-bottom">
         <div className="hint-pill" id="controls-hint">

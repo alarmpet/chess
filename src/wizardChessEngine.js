@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
+import { SanctuaryGarden3D } from './farm3D';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -58,6 +59,7 @@ export function initWizardChess() {
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
+    const sanctuaryGarden = new SanctuaryGarden3D(scene);
     scene.background = new THREE.Color(0x070a12);
     scene.fog = new THREE.FogExp2(0x080b14, 0.015);
 
@@ -2093,12 +2095,8 @@ export function initWizardChess() {
       }
 
       if (targetOnDest && piece.color === playerColor) {
-        if (typeof window !== 'undefined' && window.__lexiconEngine && Math.random() < 0.6) {
-          window.__lexiconEngine.triggerDuel({
-            title: '⚔️ 격투 룬 챌린지',
-            attackerName: piece.type,
-            defenderName: targetOnDest.type
-          });
+        if (typeof window !== 'undefined' && window.__farmEngine) {
+          window.__farmEngine.awardChessPieceCapture(targetOnDest.type);
         }
       }
 
@@ -3459,6 +3457,9 @@ export function initWizardChess() {
 
       if (!kingPiece || !kingPiece.mesh) {
         showCheckmateBanner(actualWinner, defeatedColor);
+      if (actualWinner === playerColor && typeof window !== 'undefined' && window.__farmEngine) {
+        window.__farmEngine.awardCheckmateVictory();
+      }
         return false;
       }
 
@@ -3818,6 +3819,30 @@ export function initWizardChess() {
           break;
         }
         obj = obj.parent;
+      }
+
+      if (typeof window !== 'undefined' && window.__farmEngine && window.__farmEngine.isGardenView) {
+        const gardenHits = raycaster.intersectObjects(scene.children, true);
+        for (const hit of gardenHits) {
+          let cur = hit.object;
+          while (cur) {
+            if (cur.userData && cur.userData.isGardenPlot) {
+              const plotIdx = cur.userData.plotIndex;
+              const plot = window.__farmEngine.plots[plotIdx];
+              if (!plot) return;
+              if (plot.stage === 3) {
+                window.__farmEngine.harvestPlot(plotIdx);
+              } else if (plot.cropId && !plot.isWatered) {
+                window.__farmEngine.waterPlot(plotIdx);
+              } else if (!plot.cropId && window.__farmEngine.selectedSeedId) {
+                window.__farmEngine.plantSeed(plotIdx, window.__farmEngine.selectedSeedId);
+              }
+              return;
+            }
+            cur = cur.parent;
+          }
+        }
+        return;
       }
 
       if (clickedR === -1) return;
@@ -4462,6 +4487,20 @@ export function initWizardChess() {
     // =========================================================================
     // Programmatic API for Automated Verification & Camera Inspection
     // =========================================================================
+    window.__toggleGardenCamera = (isGarden) => {
+      if (isGarden) {
+        activeCamTransition = null;
+        smoothCameraTo(
+          new THREE.Vector3(0, 3.8, 13.6),
+          new THREE.Vector3(0, 0.95, 9.8),
+          0.85
+        );
+      } else {
+        activeCamTransition = null;
+        setCameraForSide(playerColor);
+      }
+    };
+
     window.wizardChess = {
       scene,
       camera,
