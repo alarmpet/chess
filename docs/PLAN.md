@@ -1,9 +1,10 @@
 # WILD CROWN — 야생의 왕관
 ### 고전 체스의 현대적 재해석 · 동물 왕국 3D 체스 기획서
 
-> 작성일 2026-10-27 · **v0.4** (2026-10-28) · 기반 저장소 `alarmpet/chess` (wizard-chess-3d)
+> 작성일 2026-10-27 · **v0.5** (2026-10-28) · 기반 저장소 `alarmpet/chess` (wizard-chess-3d)
 > v0.2 → v0.3: `tri-agent-review --design` 라운드(agy · grok · codex + 통합자 실측) 결과 반영. **v0.2 의 사실 전제 6개가 거짓**이었다(그중 4개는 통합자 오류). 라운드 원문·대조표: `docs/research/agent-rounds/2026-10-27-design-wild-crown/README.md`.
 > v0.3 → v0.4: 사용자 요청(대전·등급·코인·상점·착용)으로 **§12 메타게임** 신설. 2차 라운드 결과 — 셋 다 "랭크는 외형만" 유지, 가챠 금지, Phase 5 분할. 라운드 기록: `docs/research/agent-rounds/2026-10-28-meta-wild-crown/README.md`.
+> v0.4 → v0.5: 사용자 질문("인기 게임의 진화·카드덱·인기 요소를 조사하고 반영했나?") 에 "아니다" 가 답이어서 **3차 조사 라운드**. Steam 15개 게임 설명·리뷰 덤프(agy 체스 변형·오토체스 9 / codex 덱·수집·비동기 6) + grok 웹(Play 체스 앱·TFT·클래시 로얄·TCG Pocket·lichess/chess.com·한국 매출·쿠키런). **셋 다 "랭크는 외형만" 유지**, §12 에 §12.8(야생 모드 재료)·§12.9(조사 근거 표) 신설, §12.1~12.4 보강. 인용 60여 건 전부 덤프·원문 대조(오류 0, 부정확 1, 미확인 2). 라운드 기록: `docs/research/agent-rounds/2026-10-28-popular-wild-crown/README.md`.
 > 상태: 검토 완료 초안. §10 결정에 답하면 v1.0.
 
 ---
@@ -210,12 +211,12 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 | **2. 사바나 팩** | 2~3주 | 사족 5종 + 임시 폰 임팔라 → biped 보강 후 미어캣 · 바이옴(풀 2천) · 혼 · 포효 | 60fps(성능 게이트 입장 조건) |
 | **3. 밀림 팩 + VFX** | 3주 | 6종(앵무새 biped) · 밀림 바이옴 · 이펙트 **3종 + 왕관 계승** (나머지 3종·시간 변화는 3.5) | 데모 영상 |
 | **4. 스킨 공방** | 3주 | 절차 재생기 · 집콕 팩 · 사진→기물 · 코브라 시험 | 테스터 5명 |
-| **5a. 초대 대전** | 2주 | Supabase Realtime 방 코드·초대 링크 · 양측 chess.js 심판 · 이탈 타임아웃 · PGN · 튜토리얼 · 모바일 | 다른 기기 두 대에서 한 판 완주 · 이탈 시 60초 안에 몰수 처리 |
-| **5b. 등급·코인·상점** | 2~3주 | Glicko-2 · XP · 코인 원장(서버 확정 결과만) · 확정가 상점 · 착용 소켓 · 어린이 안전선 | §12.6 남용 테스트 통과 · 랭크 중 `btn-ai-move`·`btn-reset` 비활성 |
+| **5a. 초대 대전** | 2주 | Supabase Realtime 방 코드·초대 링크 · 양측 chess.js 심판 · 이탈 타임아웃 · **첫 수 미착수 타임아웃** · PGN · **종료 화면 = 복기·재대국 즉시** · 튜토리얼 · 모바일 | 다른 기기 두 대에서 한 판 완주 · 이탈 시 60초 안에 몰수 처리 · 첫 수 60초 미착수 → 무효 |
+| **5b. 등급·코인·상점** | 3주 | Glicko-2 · XP · 코인 원장(서버 확정 결과만, **단일 통화**) · 확정가 상점 · **수집 도감·미리보기·착용 프리셋** · 착용 소켓 · **상대 기물 표준 실루엣 토글 · 연출 배속** · 어린이 안전선 | §12.6 남용 테스트 통과 · 랭크 중 `btn-ai-move`·`btn-reset` 비활성 · 표준 실루엣 토글로 패턴 인지 유지 |
 | **5c. 법무·스토어** | 병렬 | `CREDITS.md`(GPL·CC0) · 개인정보·계정삭제 페이지(study-game 재사용) · Play Data safety · 비공개 테스트 12명×14일 | Play 심사 제출 |
-| **6. WebGPU · 야생 모드** | 이후 | TSL 재작성 · 능력 기물용 별도 규칙 엔진(비레이팅) | 선택 |
+| **6. WebGPU · 야생 모드** | 이후 | TSL 재작성 · 능력 기물용 별도 규칙 엔진(비레이팅) · **§12.8 재료**(3합 승급 · 짝 업그레이드 카드 · 1회 능력 덱) 중 하나를 프로토타입 | 선택 |
 
-**총 15~17주** (v0.3 12~13주 + 5b 2~3주 + 5a 확장 1주. codex 편성 15~16주와 같은 범위 — 실측 아님). Phase 1 은 기린(최악)이 아니라 사자(확실)로 시작해 도구부터 검증하고, 기린은 Phase 2 안에서 Alpaca → UniRig 순으로.
+**총 15~17주** (v0.3 12~13주 + 5b 3주 + 5a 확장 1주. codex 2차 편성 15~16주와 같은 범위 — 실측 아님. 3차 라운드로 5b 에 도감·토글·배속이 늘어 2~3주 → 3주). Phase 1 은 기린(최악)이 아니라 사자(확실)로 시작해 도구부터 검증하고, 기린은 Phase 2 안에서 Alpaca → UniRig 순으로.
 
 ---
 
@@ -236,6 +237,8 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 | 11 | 레이팅 숫자 공개? | **숫자 공개 + 동물 등급 뱃지 병기** (토글) | grok "숫자+RD" / Claude "뱃지" → 둘 다 |
 | 12 | 코인 실돈 판매? | **출시 시점엔 없음.** 열면 한국 확률법 간접유상 범위가 상점 전체로 번짐(§12.4) | grok |
 | 13 | 전송층 | **Supabase Realtime** (study-game 계정·법무 재사용) | agy 추천 · grok E5·E6 수치 |
+| 14 | 일일 퍼즐 넣나? | **넣는다 (Phase 5b, 서버 없음).** lichess 퍼즐 DB 는 **CC0**(6,157,341개 CSV: FEN·Moves·Rating·Themes — 통합자 실측 `database.lichess.org`). 체스 앱의 가장 싼 리텐션 장치. XP 만, 코인 없음 | 3차 라운드 통합자 제안(셋은 묻지 않음) — §12.9 |
+| 15 | 랭크 상대 기물을 표준 실루엣으로 보는 토글 기본값 | **기본 꺼짐**(상대 외형이 보여야 상점이 성립) · 설정에서 켜면 내 화면만 표준 | agy (Chessarama R8 "패턴 인지") · §12.3 |
 
 ---
 
@@ -262,15 +265,22 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 - **계정**: 게스트 즉시 플레이(`wizard_chess_token` `localStorage`, 외부 요청 0 — study-game `installAccount` 와 같은 원칙). 등급·코인을 남기고 싶을 때만 구글·카카오 연결 → study-game 의 `cloud_saves` RLS 스키마(`social-login-supabase` 스킬) 로 이관. 클라우드에 기존 세이브 있으면 1회 선택 팝업 (agy P2: 빈 클라우드가 로컬을 덮어쓰는 사고 방지).
 - **치트 최소선**: 양쪽 피어가 chess.js 로 수신 수를 검증, 불법 수 → 즉시 차단·몰수. 승패는 `isGameOver()` 참일 때만. 결과는 **양쪽 서명 PGN** 을 Supabase 에 올리고 불일치면 무효. **가장 약한 곳**(agy): 변조 클라이언트의 DB 직단 위조는 100% 못 막는다 — RLS 로 `matches` 테이블은 insert-only + 양측 토큰 일치 조건으로 좁힌다.
 - **이탈**: 하트비트 30초 · 무응답 60초 → 몰수패. 랭크 중 `btn-ai-move`·`btn-reset`(`App.tsx:168,176`) **비활성** (codex 충돌 5).
+- **첫 수 미착수 = 인질극** (3차 agy, Chess Ultra 리뷰 R4 "People are always afking at the start of a match to get you to quit so they gain free elo" · R7 "if they do not move you are held hostage"): 양측 첫 수 **60초** 미착수 → 판 **무효(레이팅 변동 없음)**. 상대에게 메시지를 보낼 수단이 없는 설계(§12.5 자유 채팅 없음)라 타이머가 유일한 해법이다.
+- **대국 중 광고 없음** (3차 grok, Play 체스 앱 리뷰 "pretty much after every game, you get 1-2 ads" · "Between few moves sudden ads pop up" · "Way too many ads"): 광고를 나중에 넣더라도 **진행 중인 온라인 판·초읽기 중 삽입 금지**. Play 체스 앱의 반복 불만은 수집 부족이 아니라 광고다.
+- **종료 화면 = 복기·재대국 즉시** (3차 codex, Marvel Snap "Every match gives you another fast chance to test, learn, and improve."): PGN 복기 진입과 "다시 두기" 를 보상 지급과 별개로 바로 띄운다. 코인·레벨이 없어도 다음 판을 두게 하는지를 Phase 5a 에서 본다.
+- **비동기 "상대 기록 대전" 은 5a 의 대체가 아니다** (3차 codex, Backpack Battles R5 "your opponent isn't really there--you play against a snapshot of a rando's build" · R7 "you will always encounter cheat builds"): 체스는 상대가 내 수에 응수해야 한다. 비동기는 **일일 퍼즐 순위**(§10-14) 로만.
 - **테스트 가드**: `test/applet.test.mjs:38-40` 이 `btn-lobby`·`lobby-modal`·`room-pill` 을 금지 → 대전 UI 는 **별도 라우트/오버레이**로 두고 단일 플레이 HUD 테스트는 그대로 (agy 충돌 2).
 
 ### 12.2 등급 — 레이팅과 XP 를 분리 (셋 수렴)
 | 축 | 움직이는 조건 | 쓰는 곳 | 표시 |
 | :--- | :--- | :--- | :--- |
 | **레이팅** Glicko-2 | 랭크 대전 결과만 (서버 확정) | 매칭(인구 후) | **숫자 + RD** (grok) **+ 동물 등급 뱃지** 새끼→성체→우두머리→왕관 (Claude) — 토글 |
-| **XP · 레벨** | 모든 판(AI 포함) · 일일 과제 | 코인 지급 · 상점 해금 | 레벨 숫자 |
+| **XP · 레벨** | 모든 판(AI 포함) · 일일 과제 · 일일 퍼즐 | **비거래 외형 해금·시즌 트랙** (코인 지급 아님 — 3차 codex 가 §12.4 와의 충돌을 잡음) | 레벨 숫자 |
 - Glicko-2 **수식은 퍼블릭 도메인**, lichess 는 Glicko-2(시작 1500±1000, 한 판마다 갱신 변종). **lila 코드는 AGPL-3.0 — 복사 금지**, 계산기는 2024 년 scalachess(MIT) 로 옮겨졌다 (grok E1). 직접 구현 또는 MIT 구현.
 - chess.com 은 시간대별 숫자 레이팅 공개, 공식 등급명 없음 (grok E2). "많이 하면 강해진다"는 체스에서 성립 안 함 → **"많이 하면 멋있어진다"** 로.
+- **동물 등급 뱃지(새끼→성체→우두머리→왕관)는 재미 근거가 없는 통합자 즉석 안**이다 — 3차 라운드 덤프 15개·웹 어디에도 "뱃지 단계가 재미있다" 는 증거가 없다(codex 지적). 남기되 Phase 5b 테스터 5명에게 보여 주고 결정한다. 한국 초등 수집 게임의 훅은 **"변신 연출"**(쿠키런: 킹덤 각성 "최초 각성 시 쿠키의 외형이 변화", 3차 grok) 이므로 뱃지보다 **기물 외형이 사용 횟수로 자라는 것**(§12.3 "쓰면 자란다") 이 더 가까운 후보다.
+- **시즌 보상은 외형·감정표현·보드만** (TFT 공식 "earn rewards such as Little Legend eggs and emotes just for playing" · "unlock cosmetic content", 3차 grok). 랭크 보상에 능력·샤드·팩 없음.
+- **레이팅 보호권 금지** (3차 agy, Auto Chess R1 "Insurance cards: allows you to not lose any points if you had a bad ranked game, does cost you in game currency"): 재화로 패배를 지우는 순간 Glicko-2 가 실력 지표가 아니게 된다.
 
 ### 12.3 상점 — 외형 등급 C/B/A/S, 능력 없음, 가챠 없음 (codex + grok)
 - **등급은 완성도·연출 범위의 약속** (codex): C 기본 캐릭터·색 · B 장식·재질 변형 · A 눈에 띄는 모델 장식 + 고유 공격 효과 · S 고유 등장·승리 연출. **어느 등급도 이동·수 계산·접촉 시각을 바꾸지 않는다.** 상품명은 "A등급 비숍 **외형**", 구매 화면에 "이동 규칙 동일" 명시.
@@ -285,6 +295,15 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 - **`keepMaterials` 선행 필수**: `instantiatePiece` 의 `child.material = primaryMat`(`:1533`) 이 등급 재질을 덮는다 (codex 충돌 2). 왕관 계승 장면은 `stepKingFall`(`:3593`) 이 메시를 기울일 뿐이라 장비 분리·부착 연출을 따로 (codex).
 - **가챠·강화·합성 없음. 전부 확정가.** 근거: 한국 「게임산업진흥에 관한 법률」 확률 표시 의무 **2024-03-22 시행**, 직·간접 유상 아이템 전부 대상, **무료 재화라도 유료 재화와 교환되면 유상**. 예외: 제작·배급·제공자 모두 3년 연평균 매출 1억 원 이하 중소기업 등 (korea.kr 보도자료, 통합자 재확인). Play 가족 정책: 아동 대상이면 **시뮬레이션 도박 자체 금지** — 확률만 공개하면 끝나는 문제가 아니다 (grok E4). FIFA 18 벨기에 도박 판정(2018) → EA 2019-01 FIFA Points 판매 중단 (grok E7).
 - **코인 실돈 판매는 출시 시점에 없음** (§10-12). 체스 사용자가 돈을 내는 것은 **퍼즐·레슨·분석·광고 제거**(chess.com Gold/Platinum/Diamond)이지 카드팩이 아니다 (grok E8 · 가격은 미확인). lichess 는 전 기능 무료 + Patron 뱃지.
+- **보드·기물 테마는 체스 웹에서 무료가 기본** (3차 통합자·grok 실측: lichess features "Light/Dark theme, custom boards, pieces and background" 무료·Patron 동일, Patron 페이지 "Patrons get bragging rights with cool new Patron wings" · chess.com 도움말 Basic "Change your pieces, board, and background to a theme of your choosing", Gold 는 "NO ADS"·"UNLIMITED puzzles"). → **C 등급(기본) 은 완성품이어야 하고, 파는 것은 "추가 룩" 이다.** 모바일 Chess Universe 는 VIP 로 "Access 50 exclusive premium items" 를 판다 — 이쪽이 §12.3 의 실제 선례.
+- **수집 도감 + 미리보기 + 직접 선택** (3차 codex, Marvel Snap 리뷰 R6 "0% Agency over the collection progress." · R3 "it will take you MONTHS to amass a collection"; 통합자 r1): 상점·보유 목록에서 기물별 외형을 **미리 보고 원하는 것을 바로 고른다**. 도감은 빈 칸이 보이는 수집 화면 — 확정가라도 도감은 된다. 무작위 획득과 연결하지 않는다.
+- **착용 프리셋 = "외형 덱"** (3차 codex ③ · agy): 사냥 모션·포효 사운드·승급 연출·승리 팡파르·이모지를 한 세트로 저장해 대국 전에 고른다. 능력이 없으니 **랭크에도 들어간다**. 사용자 말의 "카드 덱" 중 랭크에 넣을 수 있는 유일한 형태.
+- **쓰면 자란다** (통합자 r1 · grok 쿠키런 "변신 연출"): 기물을 많이 쓰면(판 수·잡은 수) 그 기물의 외형 단계가 오른다. 능력 변화 없음, 확률 없음, 거래 없음 → 확률법·가족 정책 밖. 등급 뱃지(§12.2) 보다 이쪽을 먼저 시험.
+- **동반자 펫** (3차 grok, Chess Universe "when you defeat an island opponent, you get to keep it as a pet." · "When you defeat all 120 island opponents you get a special pet."): 과제·온라인 완료 보상으로 킹 옆 대기 연출 펫을 **확정 지급**. 이동·수 계산 무관.
+- **상대 기물을 내 화면에서 표준 실루엣으로** (3차 agy, Chessarama R8 "it picks a random chess set to use, messing up your pattern recognition."): A/S 등급 장식이 수읽기를 방해하면 체스가 깨진다. 설정 토글(§10-15), 기본 꺼짐.
+- **연출 배속·간소화 옵션** (3차 agy, Chessarama R6 "tedious having to watch an unskippable (same) animation after every move."): A/S 공격·사냥 연출은 2배속·핵심 프레임 옵션, 초읽기 중 자동 단축. §4.4 성능 게이트와 같은 자리.
+- **시즌 외형은 판매 종료·재판매 여부를 미리 표시** (3차 codex): "시즌 한정으로 소비처 유지"(§12.4) 는 그대로 두되 예측 가능하게.
+- **단일 통화** (3차 agy, Auto Chess R3 "You collect biscuits to unlock chests, chests require keys to open. Donuts buy keys." …): 비스킷·도넛·열쇠·상자·조각 식 다단계 환전은 만들지 않는다. 코인 하나.
 
 ### 12.4 코인 경제 (codex 표 + 통합자)
 | 흐름 | 설계 | 남용·인플레 제어 |
@@ -300,20 +319,57 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 자유 채팅 **없음**(프리셋 이모지만) · 닉네임 욕설·사칭·광고 금지, 변경 1회 · 친구 = 방 코드/링크만, 랜덤 매칭에 텍스트 없음 · 아동 타겟 선언을 거짓으로 쓰지 않는다 · IAP 가 생기면 Play Billing + 가상코인·원화 병기 + 보호자 승인.
 
 ### 12.6 Phase 5b 남용 테스트 (완료 조건)
-불법 수 전송 → 차단 · 결과 PGN 불일치 → 무효 · AI 버튼으로 랭크 수 두기 → 불가 · 로컬 초기화로 결과 변경 → 불가 · 게스트→계정 이관 시 로컬·클라우드 둘 다 있음 → 선택 팝업 · 상대 창 닫음 → 60초 내 몰수 · `dropRate` 필드 매니페스트 → lint 거부.
+불법 수 전송 → 차단 · 결과 PGN 불일치 → 무효 · AI 버튼으로 랭크 수 두기 → 불가 · 로컬 초기화로 결과 변경 → 불가 · 게스트→계정 이관 시 로컬·클라우드 둘 다 있음 → 선택 팝업 · 상대 창 닫음 → 60초 내 몰수 · **첫 수 60초 미착수 → 무효, 레이팅 불변** · **표준 실루엣 토글 켜면 상대 A/S 기물이 내 화면에서 기본 외형** · 같은 상대 반복·중도 포기 → 코인 미지급 · `dropRate` 필드 매니페스트 → lint 거부.
 
 ### 12.7 틀릴 수 있는 곳
-① Supabase Free 1주 유휴 정지 — 출시 직후 트래픽 공백기에 방 생성이 실패한다 → cron ping 또는 Pro. ② 한국 CGNAT 에서 Realtime 웹소켓 복구(모바일 백그라운드 전환) — agy 미측정. ③ 1인 개발이 매출 1억 예외에 머문다는 가정 — Play(구글)가 "제공자"면 예외가 깨질 수 있다, 법률 자문 전 (grok). ④ 등급별 연출이 체스판 가독성을 해칠 수 있다 → 성능·가독성 게이트를 전 등급 동일 적용 (codex).
+① Supabase Free 1주 유휴 정지 — 출시 직후 트래픽 공백기에 방 생성이 실패한다 → cron ping 또는 Pro. ② 한국 CGNAT 에서 Realtime 웹소켓 복구(모바일 백그라운드 전환) — agy 미측정. ③ 1인 개발이 매출 1억 예외에 머문다는 가정 — Play(구글)가 "제공자"면 예외가 깨질 수 있다, 법률 자문 전 (grok). ④ 등급별 연출이 체스판 가독성을 해칠 수 있다 → 성능·가독성 게이트를 전 등급 동일 적용 (codex) + 표준 실루엣 토글(§10-15). ⑤ **3차 조사 표본 편향**: Steam **영어** 리뷰 "도움됨 상위 10 + 최근 10" 뿐(상위 2페이지 요청이 1페이지를 되돌려 사실상 10개), 도움됨 상위는 밈 리뷰("Finally, Chess 2")로 치우친다. 모바일·한국 이용자 반응은 grok 의 Play 리뷰 몇 줄과 Sensor Tower 집계뿐. ⑥ **외형에 실제로 돈을 낸다는 근거는 없다** (codex): 덤프는 "외형 수집이 인기" 까지만 말하고 구매 전환은 말하지 않는다. Fortnite $9.65B(2018~19, Ars Technica) 는 규모가 다른 사례. ⑦ 동물 등급 뱃지 단계의 재미 — 미검증(§12.2).
+
+### 12.8 야생 모드 재료 (Phase 6, 비레이팅) — 3차 라운드에서 모은 것
+사용자 말의 "진화" 와 "카드 덱" 중 **능력이 바뀌는 것**은 전부 여기. 셋 다 "랭크에는 못 들어간다" 에 수렴했고 근거는 달랐다 — agy: Chess Evolved Online 상위 랭크 "forced to play only the most boring stally armies or lose a lot of rating because of effective RNG where other armies hard-counter your pieces" (R7, 2,226시간) · "Turn one checkmate was once possible" (R3) · 최근 리뷰 "grindy, pay2win, and not that fun" (N1) · "The game is dead" (R6). grok: 클래시 로얄 카드 진화(2023-06-18) "unlock new powers for cards they already own" → Sportskeeda "pay-to-win", "around $100" 출시 팩 비판 · Gametrodon(CEO) "if they've upgraded their pieces, they have access to options and moves you don't". codex: Mahokenshi R7 "cumulative upgrades that carry over runs, the game becomes very trivial".
+
+| 재료 | 출처 게임 (덤프 인용) | 야생 모드에서의 모습 | 넣지 않는 이유가 생기는 곳 |
+| :--- | :--- | :--- | :--- |
+| **3합 승급(진화)** | Dota Underlords · Auto Chess — 같은 기물 3개 → 상위 등급 | 라운드제 변형판: 잡은 기물을 모아 같은 종 3개면 2성 (이동 범위 +1 등) | 체스는 기물 수가 고정 — 라운드제 재편성이 필요 = 별도 규칙 엔진 (agy) |
+| **짝 업그레이드 카드** | Shotgun King "After each floor, you may choose between two random combinations of one upgrade for you and one upgrade for the other side." | AI 상대 PvE 런: 층마다 "내 장점 + 상대 장점" 짝 선택 | 가장 가벼운 "덱". 선택이 의미 있어야 한다 — codex: 무작위 뽑기 자체는 재미가 아님 (Mahokenshi R8 "random card draws, which can screw you over completely") |
+| **1회 능력 덱** | Pawnbarian R7 "Upgrading your cards can add a lot of flexibility and strategy" | 판 중 카드 1장 뽑아 1회 사용 (나이트 지진 등) | 무작위 패가 수읽기를 가린다 (codex ①) |
+| **오프닝 선택 덱** | Slay the Spire "Select cards that work together" | 대국 전 능력 조합 3개 중 공개 선택 | 강한 조합이 고정되면 선택이 사라짐 (codex ②) |
+| **"Chess 2" 한 방 콘셉트** | Shotgun King·Chessplosion·5D·CEO 리뷰 최상단 "Finally, Chess 2" (agy) | "체스인데 사자가 포효하면 한 칸 밀린다" 처럼 **1초 만에 이해되는 규칙 하나** | 복잡한 덱·파밍이 아니라 한 방이 환호를 받았다 (agy §6-3) |
+
+원칙: 전부 **비레이팅 · 확정 해금(XP) · 가챠 없음 · 랭크 코인 상점과 분리**(섞이면 간접 유상이 상점 전체로 번짐, §10-12). 프로토타입은 **짝 업그레이드 카드(PvE)** 부터 — 상대가 AI 라 치트·동기화 문제가 없고 규칙 엔진 분기가 가장 작다.
+
+### 12.9 조사 근거 — 인기 게임에서 가져온 것 · 안 가져온 것 (3차 라운드, 전부 원문 대조)
+| 게임 (출처) | 인기 요소 / 불만 | WILD CROWN 반영 |
+| :--- | :--- | :--- |
+| Chess Evolved Online (Steam, 긍정 91%/808) | 능력 기물 수집 + 랭크 → "Finally, Chess 2" 환호와 "Pay to win chess" 밈, 상위 랭크 하드카운터 RNG, 사망 | **반례** — §10-10 외형만 유지의 가장 직접적 근거 |
+| Chess Ultra (Steam, 76%/1,838) | 4K 기물 세트 DLC 칭찬 "Stunning chess sets and beautiful environments" / 온라인 AFK 인질 | 외형 세트 = §12.3 선례 · 첫 수 타임아웃 §12.1 |
+| Chessarama (Steam) | 디오라마 아트 / 랜덤 세트가 패턴 인지 방해 · 스킵 불가 연출 | 표준 실루엣 토글 · 연출 배속 |
+| Dota Underlords (Steam) | "The paid Battle Pass is not required to play the game, nor does it provide any gameplay specific advantage." / 언더로드 유닛이 게임을 죽임 | 시즌 보상 외형만 · 제3 유닛 금지 |
+| Auto Chess (Steam) | "Cosmetics: Boards, skin pieces, effects, and much more. This game does very well on this side." / 보험 카드 · 5중 통화 | 외형 상점 긍정 · 레이팅 보호권·다단계 통화 금지 |
+| Shotgun King · Pawnbarian · Chessplosion · 5D (Steam) | "Chess 2" 한 방 콘셉트, 짝 업그레이드, 카드 업그레이드 | §12.8 재료 |
+| Slay the Spire · Balatro (Steam) | 메타 진행 없이 해금만으로 재플레이 "things just got interesting again" | XP = 해금, 종료 화면 재대국 |
+| Marvel Snap (Steam) | variant 외형 수집 칭찬 / "0% Agency over the collection progress." · 시즌패스 뒤 능력 카드 P2W | 도감·직접 선택 · 능력 판매 금지 |
+| Backpack Battles (Steam) | 비동기 "snapshot" 대전 — 상대가 없음, 치트 빌드 | 5a 대체 아님 |
+| Chess Universe · Chess Royale (Play) | 펫 수집 · VIP 보드/기물 50종 / 광고 불만 반복 | 펫 확정 지급 · 대국 중 광고 금지 |
+| chess.com (Play 100M+, 보드 매출 2위) · lichess | 테마 무료, 유료 = 퍼즐·레슨·광고 제거 / Patron 은 날개뿐 | 기본 외형 완성품 · 일일 퍼즐 §10-14 |
+| TFT (공식) | 리틀 레전드·이모트·아레나 — 외형만 | 시즌 보상 원칙 |
+| Clash Royale (Supercell 2023-06-18 · Sportskeeda) | 카드 진화 = 새 능력 → P2W 비판 | 능력 진화 랭크 금지 |
+| Pokémon TCG Pocket (Kotaku 2024-11-06) | "twelve different in-game currencies" · "selling gambling to children" · 벨기에 미출시 | 팩·다통화 금지 |
+| 쿠키런: 킹덤 (데브시스터즈 자료 2024-07-01 · Sensor Tower 1H2025 한국 매출 성장 10위) | 각성 = "최초 각성 시 쿠키의 외형이 변화" + 전투력 | **변신 연출만** 가져온다("쓰면 자란다"), 전투력은 안 됨 |
+| 한국 1H2025 모바일 (Sensor Tower) | 약 24억 달러, 1위 리니지M · 2위 WOS · 8위 로블록스(어린이날 기프트 카드) | 수집 체스 선례 없음 — WILD CROWN 은 틈새 |
+| Fortnite (Ars Technica, Epic v Apple) | "$9.65 billion – Approximate gross revenue generated by Fortnite across 2018 and 2019" 외형만 | 규모가 달라 참고만 (§12.7⑥) |
+
+미확인 2건(grok, URL 없음): Kotaku 의 Fortnite "Everything that can be bought is cosmetic" 문장 · IGN TCG Pocket "$200 million" "$1,500". 부정확 1건(agy): Chess Ultra R10 을 AFK 사례로 들었으나 R10 은 접속 불량 리뷰.
 
 ---
 
 ## 13. 바로 다음 액션
-1. §10-7(화풍)·§10-9(GPL)·§10-10(외형만 — 추천 수용)·§10-12(코인 실돈 — 추천 없음) 에 답한다.
+1. §10-7(화풍)·§10-9(GPL)·§10-10(외형만 — 추천 수용, 3차에서도 셋 다 유지)·§10-12(코인 실돈 — 추천 없음)·§10-14(일일 퍼즐 — 추천 넣음) 에 답한다.
 2. Phase 0a 착수: 역할→클립 어댑터 + `keepMaterials` + 대성당 매니페스트.
 3. Phase 1 병행: 도구 개조 4건 → 사자 콘셉트 A/B → 로컬 TRELLIS 밤 큐.
 
 ### 참고 자료
-- 라운드 대조표: `docs/research/agent-rounds/2026-10-27-design-wild-crown/README.md`
+- 라운드 대조표: `docs/research/agent-rounds/2026-10-27-design-wild-crown/README.md` · `2026-10-28-meta-wild-crown/README.md` · `2026-10-28-popular-wild-crown/README.md`(3차, Steam 덤프 15개 포함)
+- lichess 퍼즐·기보 DB (CC0): https://database.lichess.org/ · lichess 기능표: https://lichess.org/features · chess.com 멤버십: https://support.chess.com/en/articles/8562418-what-does-each-level-of-membership-get-me
 - 로컬 TRELLIS v1 서버 원본 (fp16): https://github.com/IgorAherne/trellis-stable-projectorz · TRELLIS.2 (HF 경로): https://github.com/IgorAherne/TRELLIS.2-stableprojectorz
 - Stockfish.js (GPL-3.0 · lite-single): https://github.com/nmrugg/stockfish.js · UCI 옵션: https://official-stockfish.github.io/docs/stockfish-wiki/UCI-Protocol-and-Stockfish-Commands.html
 - chess.js: https://jhlywa.github.io/chess.js/ · postprocessing: https://github.com/pmndrs/postprocessing
