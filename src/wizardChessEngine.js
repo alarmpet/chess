@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { SanctuaryGarden3D } from './farm3D';
-import { createBeastMesh, updateBeastTokens, getBeastInfo } from './beastModels';
+import { createBeastMesh, updateBeastTokens, getBeastInfo, getRuneTexture } from './beastModels';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -1636,12 +1636,12 @@ export function initWizardChess() {
     }
 
     function instantiatePiece(type, color, r, c) {
-      const isBeastSkin = (typeof window !== 'undefined' && window.__chessSkin === 'classic') ? false : true;
+      const skinMode = (typeof window !== 'undefined' && window.__chessSkin) ? window.__chessSkin : '3d_beasts';
       let root;
       let mixer = null;
       const actions = {};
 
-      if (isBeastSkin) {
+      if (skinMode === 'standee') {
         root = createBeastMesh(type, color);
       } else {
         const tpl = pieceTemplates[`${type}_${color}`];
@@ -1672,6 +1672,23 @@ export function initWizardChess() {
             actions[clip.name] = mixer.clipAction(clip);
           }
           activeMixers.push(mixer);
+
+          // Equip the 3D character with the pulsing Arcane Rune Disc at their feet
+          if (skinMode === '3d_beasts') {
+            const runeMat = new THREE.MeshBasicMaterial({
+              map: getRuneTexture(color),
+              transparent: true,
+              opacity: color === 'w' ? 0.8 : 0.9,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending
+            });
+            const runeGeo = new THREE.PlaneGeometry(0.78, 0.78);
+            const runeDisc = new THREE.Mesh(runeGeo, runeMat);
+            runeDisc.rotation.x = -Math.PI / 2;
+            runeDisc.position.y = 0.012;
+            root.add(runeDisc);
+            root.userData.runeDisc = runeDisc;
+          }
         } else {
           root = new THREE.Mesh(
             new THREE.CylinderGeometry(0.1, 0.14, 0.42, 16),

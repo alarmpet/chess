@@ -317,7 +317,7 @@ export function getBeastTexture(info: BeastInfo): THREE.Texture {
 let whiteRuneTexture: THREE.CanvasTexture | null = null;
 let blackRuneTexture: THREE.CanvasTexture | null = null;
 
-function getRuneTexture(color: PieceColor): THREE.Texture {
+export function getRuneTexture(color: PieceColor): THREE.Texture {
   if (color === 'w' && whiteRuneTexture) return whiteRuneTexture;
   if (color === 'b' && blackRuneTexture) return blackRuneTexture;
   if (typeof document === 'undefined') {
