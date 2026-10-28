@@ -239,6 +239,9 @@ class FarmEngine {
       if (changed) {
         this.saveState();
         this.notify();
+        const hasReady = this.plots.some(p => p.stage === 3);
+        const win = window as any;
+        win.__juiceEngine?.setHarvestReady?.(hasReady);
       }
     }, 1000);
   }
@@ -264,6 +267,9 @@ class FarmEngine {
       this.saveState();
       this.notify();
     }
+    const hasReady = this.plots.some(p => p.stage === 3);
+    const win = window as any;
+    win.__juiceEngine?.setHarvestReady?.(hasReady);
   }
 
   // --- Plot Actions ---
@@ -289,6 +295,8 @@ class FarmEngine {
     // Notify 3D mesh renderer
     const win = window as any;
     win.__updatePlotMesh?.(plotIdx, plot);
+    win.__juiceEngine?.progressQuest?.('q_seed');
+    win.__juiceEngine?.awardXP?.(5);
     return true;
   }
 
@@ -340,6 +348,17 @@ class FarmEngine {
     const win = window as any;
     win.__updatePlotMesh?.(plotIdx, plot);
     win.__triggerHarvestParticles?.(plotIdx);
+
+    // Juice Engine: coin cascade & floating text
+    win.__juiceEngine?.spawnHarvestCoins?.(window.innerWidth / 2, window.innerHeight * 0.55, 8);
+    win.__juiceEngine?.spawnFloatingNumber?.(`🌾 ${crop.name} 수확! (+${yieldAmount})`, window.innerWidth / 2, window.innerHeight * 0.5, 'gold');
+    win.__juiceEngine?.progressQuest?.('q_harvest', yieldAmount);
+    win.__juiceEngine?.awardXP?.(15 * yieldAmount);
+    win.__juiceEngine?.bounceCurrency?.('gold');
+
+    const hasReady = this.plots.some(p => p.stage === 3);
+    win.__juiceEngine?.setHarvestReady?.(hasReady);
+
     return true;
   }
 
@@ -446,8 +465,17 @@ class FarmEngine {
 
     const win = window as any;
     win.__updateRestoration3D?.(zoneId);
+    win.__juiceEngine?.progressQuest?.('q_restore');
+    win.__juiceEngine?.awardXP?.(50);
+    win.__juiceEngine?.screenFlash?.('gold');
+    win.__juiceEngine?.spawnFloatingNumber?.(`🏰 ${zone.name} 복원 완공!`, window.innerWidth / 2, window.innerHeight * 0.4, 'checkmate');
     return true;
   }
+
+  public addGold(n: number) { this.gold += n; this.saveState(); this.notify(); }
+  public addGems(n: number) { this.gems += n; this.saveState(); this.notify(); }
+  public addAsh(n: number) { this.sacredAsh += n; this.saveState(); this.notify(); }
+  public addMarble(n: number) { this.marbleDust += n; this.saveState(); this.notify(); }
 
   public sellHarvested(cropId: string, count: number = 1): boolean {
     const crop = CROPS[cropId];

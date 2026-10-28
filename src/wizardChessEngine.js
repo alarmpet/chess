@@ -2226,18 +2226,41 @@ export function initWizardChess() {
       }
 
       if (targetOnDest && piece.color === playerColor) {
-        if (typeof window !== 'undefined' && window.__farmEngine) {
-          const isBrazierTile = hazardTiles[toR]?.[toC]?.type === 'brazier';
-          const isAdjacentToPillar = [
-            [-1, 0], [1, 0], [0, -1], [0, 1]
-          ].some(([dr, dc]) => hazardTiles[toR + dr]?.[toC + dc]?.type === 'pillar');
+        const isBrazierTile = hazardTiles[toR]?.[toC]?.type === 'brazier';
+        const isAdjacentToPillar = [
+          [-1, 0], [1, 0], [0, -1], [0, 1]
+        ].some(([dr, dc]) => hazardTiles[toR + dr]?.[toC + dc]?.type === 'pillar');
 
+        if (typeof window !== 'undefined' && window.__farmEngine) {
           if (isBrazierTile) {
             window.__farmEngine.awardHazardKill('brazier', targetOnDest.type);
           } else if (isAdjacentToPillar) {
             window.__farmEngine.awardHazardKill('pillar', targetOnDest.type);
           }
           window.__farmEngine.awardChessPieceCapture(targetOnDest.type);
+        }
+
+        if (typeof window !== 'undefined' && window.__juiceEngine) {
+          if (isBrazierTile) {
+            window.__juiceEngine.progressQuest('q_brazier');
+            window.__juiceEngine.registerCapture('brazier_kill');
+            window.__juiceEngine.spawnFloatingAtTile('+2🔥 성회', toC, toR, 'ash');
+            window.__juiceEngine.bounceCurrency('ash');
+            window.__juiceEngine.awardXP(25);
+          } else if (isAdjacentToPillar) {
+            window.__juiceEngine.progressQuest('q_pillar');
+            window.__juiceEngine.registerCapture('pillar_stun');
+            window.__juiceEngine.spawnFloatingAtTile('+2🏛️ 대리석', toC, toR, 'marble');
+            window.__juiceEngine.bounceCurrency('marble');
+            window.__juiceEngine.awardXP(20);
+          } else {
+            window.__juiceEngine.progressQuest('q_capture');
+            window.__juiceEngine.registerCapture(targetOnDest.type);
+            const pieceName = targetOnDest.type.toUpperCase();
+            window.__juiceEngine.spawnFloatingAtTile(`⚔️ ${pieceName} 포획!`, toC, toR, targetOnDest.type === 'queen' ? 'critical' : 'damage');
+            window.__juiceEngine.awardXP(targetOnDest.type === 'queen' ? 30 : 15);
+          }
+          window.__juiceEngine.bounceCurrency('gold');
         }
       }
 
@@ -3664,8 +3687,20 @@ export function initWizardChess() {
         const baseSub = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
         if (winnerColor === playerColor) {
           subEl.innerHTML = `${baseSub}<br/><span style="color:#f59e0b;font-size:0.9rem;margin-top:6px;display:inline-block;">🔥 대성당 화로 소각 처형 완료 • +250G | +3💎 | +5 성회 | +5 대리석</span>`;
+          if (typeof window !== 'undefined' && window.__juiceEngine) {
+            window.__juiceEngine.registerWin();
+            window.__juiceEngine.progressQuest('q_checkmate');
+            window.__juiceEngine.screenFlash('gold');
+            window.__juiceEngine.spawnFloatingNumber('🏆 CHECKMATE VICTORY!', window.innerWidth / 2, window.innerHeight * 0.35, 'checkmate');
+            window.__juiceEngine.bounceCurrency('gems');
+            window.__juiceEngine.bounceCurrency('ash');
+            window.__juiceEngine.bounceCurrency('marble');
+          }
         } else {
           subEl.textContent = baseSub;
+          if (typeof window !== 'undefined' && window.__juiceEngine) {
+            window.__juiceEngine.registerLoss();
+          }
         }
       }
       if (overlay) {
@@ -3948,6 +3983,13 @@ export function initWizardChess() {
 
       const legalMoves = getAllLegalMoves(currentTurn);
       const inCheck = isKingInCheck(currentTurn, boardState);
+
+      if (typeof window !== 'undefined' && window.__juiceEngine) {
+        window.__juiceEngine.setDangerVignette(Boolean(inCheck && currentTurn === playerColor && !gameOver));
+        if (inCheck && currentTurn === playerColor && !gameOver) {
+          window.__juiceEngine.screenFlash('red');
+        }
+      }
 
       if (legalMoves.length === 0) {
         gameOver = true;

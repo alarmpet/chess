@@ -478,6 +478,8 @@ class ArcaneEngine {
           this.spawnShoveFX(scene, boardToWorld(srcR, srcC), targetWorldPos);
           arcaneAudio.playShove();
 
+          win.__juiceEngine?.progressQuest?.('q_shove');
+
           if (targetHazard === 'brazier') {
             // Case A: Shoved into Brazier -> Instant Cremation!
             boardState[srcR][srcC] = null;
@@ -485,6 +487,10 @@ class ArcaneEngine {
             win.wizardChess?.spawnBrazierIncineration?.(targetWorldPos);
             win.__farmEngine?.awardHazardKill('brazier', enemyPiece.type);
             win.__farmEngine?.awardChessPieceCapture(enemyPiece.type);
+            win.__juiceEngine?.progressQuest?.('q_brazier');
+            win.__juiceEngine?.registerCapture?.('brazier_kill');
+            win.__juiceEngine?.bounceCurrency?.('ash');
+            win.__juiceEngine?.spawnFloatingNumber?.('🔥 화로 소각 처형! +2 성회', window.innerWidth/2, window.innerHeight*0.4, 'ash');
             this.bannerMessage = '🔥 화로 소각 처형 완료! 적 기물이 화로 속으로 밀려나 전소되었습니다! (+2 성회)';
           } else if (targetHazard === 'pillar') {
             // Case B: Shoved into Pillar -> Massive Stone Collision & Stun!
@@ -492,6 +498,10 @@ class ArcaneEngine {
             enemyPiece.petrifiedTurns = 1;
             win.wizardChess?.shakeCamera?.(0.08);
             win.__farmEngine?.awardHazardKill('pillar', enemyPiece.type);
+            win.__juiceEngine?.progressQuest?.('q_pillar');
+            win.__juiceEngine?.registerCapture?.('pillar_stun');
+            win.__juiceEngine?.bounceCurrency?.('marble');
+            win.__juiceEngine?.spawnFloatingNumber?.('🏛️ 기둥 격돌 스턴! +2 대리석', window.innerWidth/2, window.innerHeight*0.4, 'marble');
             this.bannerMessage = '🏛️ 기둥 격돌 분쇄! 적 기물이 석조 기둥에 처박혀 1턴간 기절했습니다! (+2 대리석)';
           } else if (boardState[r][c]) {
             // Case C: Bump collision with another piece!
@@ -499,6 +509,7 @@ class ArcaneEngine {
             bumpTarget.isPetrified = true;
             bumpTarget.petrifiedTurns = 1;
             win.wizardChess?.shakeCamera?.(0.04);
+            win.__juiceEngine?.spawnFloatingNumber?.('💥 연쇄 충돌!', window.innerWidth/2, window.innerHeight*0.4, 'stun');
             this.bannerMessage = '💥 연쇄 충돌! 두 기물이 강하게 충돌하여 충격을 입었습니다!';
           } else {
             // Case D: Clean displacement into empty square
@@ -509,6 +520,7 @@ class ArcaneEngine {
             if (enemyPiece.mesh) {
               enemyPiece.mesh.position.copy(targetWorldPos);
             }
+            win.__juiceEngine?.spawnFloatingNumber?.('💨 대성당 충격파!', window.innerWidth/2, window.innerHeight*0.4, 'combo');
             this.bannerMessage = '💨 대성당 충격파! 적 기물을 전술적 위치로 1칸 밀쳐냈습니다!';
           }
 
@@ -523,6 +535,9 @@ class ArcaneEngine {
 
   private consumeMana(amount: number) {
     this.currentMana = Math.max(0, this.currentMana - amount);
+    if (typeof window !== 'undefined') {
+      (window as any).__juiceEngine?.progressQuest?.('q_spell');
+    }
   }
 
   private removeCardFromHand(cardId: string) {

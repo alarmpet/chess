@@ -5,15 +5,43 @@ import { arcaneEngine, ArcaneState } from './arcaneEngine';
 import { arcaneAudio } from './arcaneAudio';
 import { farmEngine, FarmState } from './farmEngine';
 import { CROPS, FACILITIES, RESTORATION_ZONES } from './farmData';
+import {
+  juiceEngine,
+  XPState,
+  DailyQuest,
+  attachCardTilt,
+  triggerCardDealAnimation,
+} from './juiceEngine';
 
 export default function App() {
   const initializedRef = useRef(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [questPanelOpen, setQuestPanelOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
   const [arcaneState, setArcaneState] = useState<ArcaneState>(arcaneEngine.getState());
   const [farmState, setFarmState] = useState<FarmState>(farmEngine.getState());
+  const [xpState, setXpState] = useState<XPState>(juiceEngine.getXPState());
+  const [quests, setQuests] = useState<DailyQuest[]>(juiceEngine.getQuests());
   const [isMuted, setIsMuted] = useState(false);
   const t = getTranslations(lang);
+
+  // ── Subscribe to XP & Quest state ──
+  useEffect(() => {
+    const unsubXP = juiceEngine.subscribeXP(setXpState);
+    const unsubQ  = juiceEngine.subscribeQuests(setQuests);
+    juiceEngine.initJuiceEngine();
+    return () => { unsubXP(); unsubQ(); };
+  }, []);
+
+  // ── Card tilt effect on hand change ──
+  useEffect(() => {
+    const cards = document.querySelectorAll<HTMLElement>('.arcane-card');
+    const cleanups: (() => void)[] = [];
+    cards.forEach(card => { cleanups.push(attachCardTilt(card)); });
+    triggerCardDealAnimation();
+    return () => cleanups.forEach(fn => fn());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [arcaneState.hand.length]);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -46,6 +74,7 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMobileSheetOpen(false);
+        setQuestPanelOpen(false);
         arcaneEngine.cancelSpell();
         if (farmState.isShopOpen) farmEngine.toggleShop(false);
         if (farmState.isBarnOpen) farmEngine.toggleBarn(false);
@@ -62,7 +91,7 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
     };
-  }, [farmState.isShopOpen, farmState.isBarnOpen]);
+  }, [farmState.isShopOpen, farmState.isBarnOpen, questPanelOpen]);
 
   const handleToggleLang = () => {
     const nextLang: Language = lang === 'ko' ? 'en' : 'ko';
@@ -165,6 +194,33 @@ export default function App() {
               ))}
             </div>
           </div>
+
+          {/* XP Progress Bar */}
+          <div className="xp-bar-pill" id="xp-bar-pill" title={`레벨 ${xpState.level} — 다음 레벨까지 ${xpState.xpToNext - xpState.xp} XP`}>
+            <span className="level-badge">Lv.{xpState.level}</span>
+            <div className="xp-bar-track">
+              <div className="xp-bar-fill" style={{ width: `${xpState.fillPercent}%` }} />
+            </div>
+          </div>
+
+          {/* Daily Quest Button */}
+          <button
+            type="button"
+            className="daily-quest-pill"
+            onClick={() => setQuestPanelOpen(true)}
+            title="오늘의 성소 임무"
+          >
+            <span className={`quest-dot ${quests.every(q => q.isCompleted) ? 'all-done' : ''}`} />
+            📜 {quests.filter(q => q.isCompleted).length}/{quests.length} 임무
+          </button>
+
+          {/* Win Streak Counter (only show if streak >= 2) */}
+          {xpState.winStreak >= 2 && (
+            <div className="win-streak-pill" title={`${xpState.winStreak}연승 중!`}>
+              <span className="streak-fire-icon">🔥</span>
+              {xpState.winStreak}연승
+            </div>
+          )}
         </div>
 
         <button
@@ -444,8 +500,18 @@ export default function App() {
                 <button
                   key={card.id}
                   type="button"
+                  data-card-id={card.id}
                   className={`arcane-card ${isSelected ? 'active' : ''} ${!canAfford ? 'unaffordable' : ''}`}
-                  onClick={() => arcaneEngine.selectCard(card)}
+                  onClick={() => {
+                    if (!canAfford) {
+                      const el = document.querySelector(`.arcane-card[data-card-id="${card.id}"]`);
+                      el?.classList.remove('shake-reject');
+                      void (el as HTMLElement)?.offsetWidth;
+                      el?.classList.add('shake-reject');
+                      return;
+                    }
+                    arcaneEngine.selectCard(card);
+                  }}
                   title={lang === 'ko' ? card.desc : card.descEn}
                 >
                   <div className="arcane-card-top">
@@ -725,6 +791,32 @@ export default function App() {
           <div className="checkmate-subtitle" id="checkmate-subtitle">
             {t.whiteTriumphs}
           </div>
+
+          {/* Sequential Reward Reveal Breakdown (Balatro / RPG style) */}
+          <div style={{ margin: '14px 0 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div className="checkmate-reward-row" style={{ animationDelay: '0.35s' }}>
+              <span>⚔️ 승리 영예 보상</span>
+              <span style={{ marginLeft: 'auto', color: '#fde047' }}>+250G · +40 XP</span>
+            </div>
+            <div className="checkmate-reward-row" style={{ animationDelay: '0.65s' }}>
+              <span>💎 체크메이트 성소 보석</span>
+              <span style={{ marginLeft: 'auto', color: '#38bdf8' }}>+3💎</span>
+            </div>
+            <div className="checkmate-reward-row" style={{ animationDelay: '0.95s' }}>
+              <span>🔥 대성당 화형 정화 성회</span>
+              <span style={{ marginLeft: 'auto', color: '#fb923c' }}>+5🔥 성회</span>
+            </div>
+            <div className="checkmate-reward-row" style={{ animationDelay: '1.25s' }}>
+              <span>🏛️ 고딕 성당 축복 대리석</span>
+              <span style={{ marginLeft: 'auto', color: '#7dd3fc' }}>+5🏛️ 대리석</span>
+            </div>
+            <div className="checkmate-reward-divider"></div>
+            <div className="checkmate-reward-row total-row" style={{ animationDelay: '1.55s' }}>
+              <span>✨ 총 획득 전리품</span>
+              <span style={{ marginLeft: 'auto' }}>+250G · 3💎 · 5🔥 · 5🏛️</span>
+            </div>
+          </div>
+
           <div className="checkmate-actions">
             <button
               type="button"
@@ -750,6 +842,62 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* DAILY QUEST MODAL */}
+      {questPanelOpen && (
+        <div
+          className="quest-panel-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setQuestPanelOpen(false)}
+        >
+          <div className="quest-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="quest-panel-header">
+              <div className="quest-panel-title">
+                <span>📜</span>
+                <span>오늘의 성소 임무 (Daily Quests)</span>
+              </div>
+              <button
+                type="button"
+                className="grimoire-close-btn"
+                onClick={() => setQuestPanelOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="quest-panel-body">
+              {quests.map((q) => {
+                const fillPct = Math.min(100, (q.progress / q.target) * 100);
+                return (
+                  <div key={q.id} className={`quest-item ${q.isCompleted ? 'completed' : ''}`}>
+                    <span className="quest-item-icon">{q.icon}</span>
+                    <div className="quest-item-body">
+                      <div className="quest-item-title">{q.title}</div>
+                      <div className="quest-item-progress-track">
+                        <div
+                          className={`quest-item-progress-fill ${q.isCompleted ? 'full' : ''}`}
+                          style={{ width: `${fillPct}%` }}
+                        />
+                      </div>
+                      <div className="quest-item-counter">
+                        {q.progress} / {q.target}
+                      </div>
+                    </div>
+                    <div className="quest-item-reward">
+                      {q.reward.gold && <span className="quest-reward-tag">+{q.reward.gold}G</span>}
+                      {q.reward.gems && <span className="quest-reward-tag">+{q.reward.gems}💎</span>}
+                      {q.reward.ash && <span className="quest-reward-tag">+{q.reward.ash}🔥</span>}
+                      {q.reward.marble && <span className="quest-reward-tag">+{q.reward.marble}🏛️</span>}
+                      {q.reward.xp && <span className="quest-reward-tag">+{q.reward.xp} XP</span>}
+                    </div>
+                    {q.isCompleted && <span className="quest-check">✓</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
