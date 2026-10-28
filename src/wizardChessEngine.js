@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { SanctuaryGarden3D } from './farm3D';
+import { createBeastMesh } from './beastModels';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -1634,43 +1635,48 @@ export function initWizardChess() {
     }
 
     function instantiatePiece(type, color, r, c) {
-      const tpl = pieceTemplates[`${type}_${color}`];
+      const isBeastSkin = (typeof window !== 'undefined' && window.__chessSkin === 'classic') ? false : true;
       let root;
       let mixer = null;
       const actions = {};
 
-      if (tpl && tpl.scene) {
-        root = SkeletonUtils.clone(tpl.scene);
-        const primaryMat = color === 'w' ? whitePieceMat : blackPieceMat;
-        root.traverse((child) => {
-          const nm = child.name || '';
-          if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
-            child.visible = false;
-            return;
-          }
-          if (child.isMesh) {
-            const mName = child.material?.name || '';
-            if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
-              child.material = goldTrimMat;
-            } else if (mName.includes('Steel')) {
-              child.material = forgedSteelMat;
-            } else {
-              child.material = primaryMat;
-            }
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
-        mixer = new THREE.AnimationMixer(root);
-        for (const clip of tpl.animations) {
-          actions[clip.name] = mixer.clipAction(clip);
-        }
-        activeMixers.push(mixer);
+      if (isBeastSkin) {
+        root = createBeastMesh(type, color);
       } else {
-        root = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.1, 0.14, 0.42, 16),
-          color === 'w' ? whitePieceMat : blackPieceMat
-        );
+        const tpl = pieceTemplates[`${type}_${color}`];
+        if (tpl && tpl.scene) {
+          root = SkeletonUtils.clone(tpl.scene);
+          const primaryMat = color === 'w' ? whitePieceMat : blackPieceMat;
+          root.traverse((child) => {
+            const nm = child.name || '';
+            if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
+              child.visible = false;
+              return;
+            }
+            if (child.isMesh) {
+              const mName = child.material?.name || '';
+              if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
+                child.material = goldTrimMat;
+              } else if (mName.includes('Steel')) {
+                child.material = forgedSteelMat;
+              } else {
+                child.material = primaryMat;
+              }
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+          mixer = new THREE.AnimationMixer(root);
+          for (const clip of tpl.animations) {
+            actions[clip.name] = mixer.clipAction(clip);
+          }
+          activeMixers.push(mixer);
+        } else {
+          root = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.14, 0.42, 16),
+            color === 'w' ? whitePieceMat : blackPieceMat
+          );
+        }
       }
 
       const worldPos = boardToWorld(r, c);
@@ -1699,6 +1705,23 @@ export function initWizardChess() {
 
       playPieceClip(pieceObj, 'Idle', true, 0);
       return pieceObj;
+    }
+
+    function switchChessSkin(newSkin) {
+      if (typeof window !== 'undefined') {
+        window.__chessSkin = newSkin;
+      }
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = boardState[r][c];
+          if (p && p.mesh) {
+            scene.remove(p.mesh);
+            const newInst = instantiatePiece(p.type, p.color, r, c);
+            newInst.hasMoved = p.hasMoved;
+            boardState[r][c] = newInst;
+          }
+        }
+      }
     }
 
     // Exact per-piece Attack keyframe synchronization (24 fps Blender clips, zero overhead suspension freeze):
@@ -4832,6 +4855,7 @@ export function initWizardChess() {
       },
       hazardTiles,
       impactFlashLight,
+      switchChessSkin,
       playerColor: () => playerColor,
       setCameraPreset,
       setCameraPose,

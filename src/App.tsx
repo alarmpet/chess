@@ -22,6 +22,7 @@ export default function App() {
   const [farmState, setFarmState] = useState<FarmState>(farmEngine.getState());
   const [xpState, setXpState] = useState<XPState>(juiceEngine.getXPState());
   const [quests, setQuests] = useState<DailyQuest[]>(juiceEngine.getQuests());
+  const [pieceSkin, setPieceSkin] = useState<'beasts' | 'classic'>('beasts');
   const [isMuted, setIsMuted] = useState(false);
   const t = getTranslations(lang);
 
@@ -101,6 +102,13 @@ export default function App() {
   const handleToggleMute = () => {
     const muted = arcaneAudio.toggleMute();
     setIsMuted(muted);
+  };
+
+  const handleToggleSkin = () => {
+    const nextSkin = pieceSkin === 'beasts' ? 'classic' : 'beasts';
+    setPieceSkin(nextSkin);
+    const win = window as any;
+    win.wizardChess?.switchChessSkin?.(nextSkin);
   };
 
   const handleRestoreUI = () => {
@@ -322,6 +330,21 @@ export default function App() {
             title={lang === 'ko' ? 'Switch to English' : '한국어로 전환'}
           >
             🌐 {t.langSwitchLabel}
+          </button>
+
+          {/* Piece Skin Toggle (Sanctuary Beasts vs Classic) */}
+          <button
+            type="button"
+            className="hud-btn skin-toggle-btn"
+            id="btn-skin-toggle"
+            onClick={handleToggleSkin}
+            title={pieceSkin === 'beasts' ? '클래식 체스 석상으로 전환' : '성소 영수단(동물 신수)으로 전환'}
+            style={{
+              borderColor: pieceSkin === 'beasts' ? 'rgba(234, 179, 8, 0.7)' : 'rgba(255, 255, 255, 0.2)',
+              color: pieceSkin === 'beasts' ? '#fef08a' : '#94a3b8'
+            }}
+          >
+            {pieceSkin === 'beasts' ? '🐾 성소 영수단' : '♟️ 클래식 석상'}
           </button>
 
           <div className="hud-divider" aria-hidden="true"></div>
