@@ -4,7 +4,7 @@ import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Lan
 import { arcaneEngine, ArcaneState } from './arcaneEngine';
 import { arcaneAudio } from './arcaneAudio';
 import { farmEngine, FarmState } from './farmEngine';
-import { CROPS, FACILITIES } from './farmData';
+import { CROPS, FACILITIES, RESTORATION_ZONES } from './farmData';
 
 export default function App() {
   const initializedRef = useRef(false);
@@ -418,6 +418,15 @@ export default function App() {
             <button
               type="button"
               className="garden-action-btn"
+              id="btn-open-restoration"
+              onClick={() => farmEngine.toggleShop(true)}
+              style={{ background: 'linear-gradient(135deg, rgba(15,118,110,0.4), rgba(13,148,136,0.5))', borderColor: '#5eead4', color: '#ccfbf1' }}
+            >
+              🏛️ 수도원 복원 ({Object.values(farmState.restorations || {}).filter(Boolean).length}/6)
+            </button>
+            <button
+              type="button"
+              className="garden-action-btn"
               onClick={() => farmEngine.toggleBarn(true)}
             >
               🎒 수확 창고
@@ -539,6 +548,53 @@ export default function App() {
                   );
                 })}
               </div>
+
+              <div className="farm-shop-section-title" style={{ marginTop: '20px' }}>
+                ✨ 대성당 및 수도원 6대 구역 복원 (Monastery Restoration)
+              </div>
+              <div className="farm-shop-grid">
+                {Object.keys(RESTORATION_ZONES).map((zoneKey) => {
+                  const zone = RESTORATION_ZONES[zoneKey];
+                  const isRestored = Boolean(farmState.restorations && farmState.restorations[zoneKey]);
+                  const canAfford =
+                    (!zone.cost.gold || farmState.gold >= zone.cost.gold) &&
+                    (!zone.cost.gems || farmState.gems >= zone.cost.gems) &&
+                    (!zone.cost.sacredAsh || farmState.sacredAsh >= zone.cost.sacredAsh) &&
+                    (!zone.cost.marbleDust || farmState.marbleDust >= zone.cost.marbleDust) &&
+                    !isRestored;
+
+                  return (
+                    <div key={zoneKey} className={`farm-item-card ${isRestored ? 'restored-card' : ''}`}>
+                      <div className="farm-item-header">
+                        <span className="farm-item-name">
+                          <span>{zone.icon}</span>
+                          <span>{zone.name}</span>
+                        </span>
+                        <span style={{ color: isRestored ? '#86efac' : '#38bdf8', fontWeight: 700, fontSize: '0.82rem' }}>
+                          {isRestored ? '✓ 복원 완료' : '미복원'}
+                        </span>
+                      </div>
+                      <div className="farm-item-desc">{zone.description}</div>
+                      <div className="farm-item-buff">✦ {zone.perkDescription}</div>
+                      <div className="restoration-costs-pills">
+                        {zone.cost.marbleDust && <span className="cost-tag marble">🏛️ {zone.cost.marbleDust} 대리석</span>}
+                        {zone.cost.sacredAsh && <span className="cost-tag ash">🔥 {zone.cost.sacredAsh} 성회</span>}
+                        {zone.cost.gems && <span className="cost-tag gems">💎 {zone.cost.gems} 보석</span>}
+                        {zone.cost.gold && <span className="cost-tag gold">💰 {zone.cost.gold}G</span>}
+                      </div>
+                      <button
+                        type="button"
+                        className={`farm-buy-btn ${isRestored ? 'restored' : ''}`}
+                        disabled={isRestored || !canAfford}
+                        onClick={() => farmEngine.restoreZone(zoneKey)}
+                        style={{ marginTop: '8px' }}
+                      >
+                        {isRestored ? '✅ 복원 완료 (영구 적용 중)' : canAfford ? '🏛️ 구역 복원하기' : '자재 부족'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -635,6 +691,7 @@ export default function App() {
                 ✨ 현재 활성화된 체스 버프 현황
               </div>
               <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px 16px', borderRadius: '10px', fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6' }}>
+                <div>✦ 수도원 복원 진척도: {Object.values(farmState.restorations || {}).filter(Boolean).length}/6 구역 복원 완료</div>
                 <div>✦ 시작 마나 보너스: +{farmState.activeBuffs.manaBonus} (최대 {3 + farmState.activeBuffs.manaBonus} 마나)</div>
                 <div>✦ 코인 획득 배율: x{farmState.activeBuffs.goldMultiplier}</div>
                 <div>✦ 메테오 십자 폭발: {farmState.activeBuffs.meteorCross ? '🔥 활성화됨' : '미적용'}</div>

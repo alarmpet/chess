@@ -160,6 +160,87 @@ export const SPECIAL_RESOURCES: Record<string, SpecialResourceDef> = {
   }
 };
 
+// 6 Monastery Restoration Zones
+export interface RestorationCost {
+  gold?: number;
+  gems?: number;
+  sacredAsh?: number;
+  marbleDust?: number;
+}
+
+export interface RestorationZoneDef {
+  id: string;
+  name: string;
+  nameEn: string;
+  icon: string;
+  cost: RestorationCost;
+  description: string;
+  perkDescription: string;
+  buffType: 'mana' | 'shield' | 'growth' | 'ash' | 'marble' | 'revive';
+}
+
+export const RESTORATION_ZONES: Record<string, RestorationZoneDef> = {
+  cloister_walkway: {
+    id: 'cloister_walkway',
+    name: '무너진 수도원 회랑',
+    nameEn: 'Ruined Cloister Walkway',
+    icon: '🏛️',
+    cost: { marbleDust: 6, gold: 120 },
+    description: '전투 중 부서진 대리석을 엮어 복원한 고딕 양식의 석조 아치 회랑입니다.',
+    perkDescription: '기둥 격돌 시 대리석 획득량 2배 (+4개) 및 아군 기물 충돌 방어력 강화',
+    buffType: 'marble'
+  },
+  herb_sanctuary: {
+    id: 'herb_sanctuary',
+    name: '성스러운 약초원',
+    nameEn: 'Sacred Herb Sanctuary',
+    icon: '🌿',
+    cost: { sacredAsh: 6, gold: 100 },
+    description: '화로 소각 성회로 토양을 정화하여 마력 약초를 고속 재배하는 정원입니다.',
+    perkDescription: '모든 작물 밭에 비옥한 토양 버프 적용 (턴당 성장률 +15% 가속)',
+    buffType: 'growth'
+  },
+  stained_glass: {
+    id: 'stained_glass',
+    name: '대성당 로즈 스테인드글라스',
+    nameEn: 'Cathedral Rose Window',
+    icon: '✨',
+    cost: { gems: 4, gold: 200, marbleDust: 4 },
+    description: '빛과 영광을 투과하는 대성당의 신성한 장미창을 완벽히 복원합니다.',
+    perkDescription: '체스 대국 시작 마나 +1 영구 증가 (최대 5마나 선제 사용 가능)',
+    buffType: 'mana'
+  },
+  altar_brewery: {
+    id: 'altar_brewery',
+    name: '성배 양조대',
+    nameEn: 'Altar Holy Brewery',
+    icon: '🍷',
+    cost: { sacredAsh: 8, gems: 2, gold: 150 },
+    description: '재배한 약초와 성회를 조합하여 축복의 성유(Holy Oil)를 양조합니다.',
+    perkDescription: '화로 소각 처형 시 성회 획득량 2배 (+4개) 및 메테오 화염 반경 확장',
+    buffType: 'ash'
+  },
+  bell_tower: {
+    id: 'bell_tower',
+    name: '천사 종탑',
+    nameEn: 'Angelic Bell Tower',
+    icon: '🔔',
+    cost: { marbleDust: 10, gold: 250 },
+    description: '사악한 기운을 물리치고 승리의 종소리를 대성당 전역에 울려 퍼지게 합니다.',
+    perkDescription: '대국 승리 및 기물 포획 골드 획득량 1.5배 영구 증폭',
+    buffType: 'shield'
+  },
+  high_altar: {
+    id: 'high_altar',
+    name: '지고의 성소 제단',
+    nameEn: 'Grand Sanctum High Altar',
+    cost: { marbleDust: 12, sacredAsh: 12, gems: 6, gold: 400 },
+    description: '모든 수도원 구역의 마력을 집대성한 궁극의 성소 중앙 제단입니다.',
+    perkDescription: '킹(King) 피격 시 1회 100% 자동 부활 영약 부여 및 체크메이트 승리 보석 2배',
+    buffType: 'revive'
+  }
+};
+
 // Chess Loot Values
 export const CHESS_LOOT = {
   pawn: 15,

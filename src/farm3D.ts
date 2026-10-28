@@ -11,6 +11,7 @@ export class SanctuaryGarden3D {
   private fountainMesh: THREE.Group | null = null;
   private apiaryMesh: THREE.Group | null = null;
   private scarecrowMesh: THREE.Group | null = null;
+  private restorationMeshes: Record<string, THREE.Group | null> = {};
 
   // Center coordinate of the garden courtyard
   public static readonly CENTER_POS = new THREE.Vector3(0, 0.85, 9.8);
@@ -27,6 +28,7 @@ export class SanctuaryGarden3D {
     win.__updatePlotMesh = (idx: number, plot: FarmPlot) => this.updatePlot(idx, plot);
     win.__triggerHarvestParticles = (idx: number) => this.spawnHarvestSparkles(idx);
     win.__updateFacility3D = (facId: string) => this.updateFacility(facId);
+    win.__updateRestoration3D = (zoneId: string) => this.updateRestoration(zoneId);
   }
 
   private buildGardenCourtyard() {
@@ -108,6 +110,13 @@ export class SanctuaryGarden3D {
     if (farmEngine.facilities.fountain) this.updateFacility('fountain');
     if (farmEngine.facilities.apiary) this.updateFacility('apiary');
     if (farmEngine.facilities.scarecrow) this.updateFacility('scarecrow');
+
+    // Build already unlocked restorations
+    for (const zoneId of Object.keys(farmEngine.restorations)) {
+      if (farmEngine.restorations[zoneId]) {
+        this.updateRestoration(zoneId);
+      }
+    }
   }
 
   public updatePlot(plotIdx: number, plot: FarmPlot) {
@@ -353,5 +362,133 @@ export class SanctuaryGarden3D {
       this.group.add(scarecrow);
       this.scarecrowMesh = scarecrow;
     }
+  }
+
+  public updateRestoration(zoneId: string) {
+    if (this.restorationMeshes[zoneId]) return; // Already rendered
+
+    const zoneGroup = new THREE.Group();
+    const marbleMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      roughness: 0.35,
+      metalness: 0.15
+    });
+    const goldTrimMat = new THREE.MeshStandardMaterial({
+      color: 0xd4af37,
+      roughness: 0.25,
+      metalness: 0.85
+    });
+
+    if (zoneId === 'cloister_walkway') {
+      // 1. Ruined Cloister Walkway: Gothic Arched Colonnade around the terrace perimeter
+      const pillarGeo = new THREE.CylinderGeometry(0.08, 0.10, 0.95, 12);
+      const archGeo = new THREE.BoxGeometry(0.95, 0.08, 0.14);
+      const positions = [
+        [-2.1, 0, -1.2], [-2.1, 0, 0.0], [-2.1, 0, 1.2],
+        [2.1, 0, -1.2], [2.1, 0, 0.0], [2.1, 0, 1.2]
+      ];
+      for (const pos of positions) {
+        const col = new THREE.Mesh(pillarGeo, marbleMat);
+        col.position.set(pos[0], 0.48, pos[2]);
+        col.castShadow = true;
+        col.receiveShadow = true;
+        zoneGroup.add(col);
+      }
+      for (const sideX of [-2.1, 2.1]) {
+        for (const z of [-0.6, 0.6]) {
+          const arch = new THREE.Mesh(archGeo, marbleMat);
+          arch.position.set(sideX, 0.96, z);
+          arch.rotation.y = Math.PI / 2;
+          zoneGroup.add(arch);
+        }
+      }
+    } else if (zoneId === 'herb_sanctuary') {
+      // 2. Sacred Herb Sanctuary: Lush glowing herb planter borders & green soil luminescence
+      const herbMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.6 });
+      const flowerGeo = new THREE.SphereGeometry(0.06, 8, 8);
+      for (let i = 0; i < 16; i++) {
+        const ang = (i / 16) * Math.PI * 2;
+        const rad = 1.65 + (i % 2) * 0.2;
+        const fl = new THREE.Mesh(flowerGeo, herbMat);
+        fl.position.set(Math.cos(ang) * rad, 0.14, Math.sin(ang) * rad);
+        zoneGroup.add(fl);
+      }
+      const sacredLight = new THREE.PointLight(0x34d399, 1.8, 4.0);
+      sacredLight.position.set(0, 0.8, 0);
+      zoneGroup.add(sacredLight);
+    } else if (zoneId === 'stained_glass') {
+      // 3. Rose Window Stained Glass: Radiant multicolored light shafts slanting into courtyard
+      const colors = [0x38bdf8, 0xf43f5e, 0xfacc15];
+      colors.forEach((colHex, idx) => {
+        const beamGeo = new THREE.CylinderGeometry(0.35, 0.55, 3.2, 16);
+        const beamMat = new THREE.MeshBasicMaterial({
+          color: colHex,
+          transparent: true,
+          opacity: 0.22,
+          side: THREE.DoubleSide
+        });
+        const beam = new THREE.Mesh(beamGeo, beamMat);
+        beam.position.set((idx - 1) * 1.1, 1.6, (idx - 1) * 0.4);
+        beam.rotation.x = 0.25;
+        beam.rotation.z = (idx - 1) * 0.15;
+        zoneGroup.add(beam);
+      });
+    } else if (zoneId === 'altar_brewery') {
+      // 4. Holy Altar Brewery: Cauldron + alchemy barrel station
+      const breweryGroup = new THREE.Group();
+      breweryGroup.position.set(1.9, 0, 1.6);
+      const copperMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.4, metalness: 0.7 });
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.18, 0.32, 12), copperMat);
+      pot.position.y = 0.16;
+      breweryGroup.add(pot);
+
+      const brewLiquidMat = new THREE.MeshBasicMaterial({ color: 0xa855f7 });
+      const liquid = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.02, 12), brewLiquidMat);
+      liquid.position.y = 0.31;
+      breweryGroup.add(liquid);
+
+      const brewGlow = new THREE.PointLight(0xa855f7, 2.2, 2.5);
+      brewGlow.position.set(0, 0.45, 0);
+      breweryGroup.add(brewGlow);
+      zoneGroup.add(breweryGroup);
+    } else if (zoneId === 'bell_tower') {
+      // 5. Angelic Bell Tower: Gothic spire pinnacle with bronze swinging bell
+      const towerGroup = new THREE.Group();
+      towerGroup.position.set(-1.9, 0, 1.7);
+      const towerBase = new THREE.Mesh(new THREE.BoxGeometry(0.36, 1.2, 0.36), marbleMat);
+      towerBase.position.y = 0.6;
+      towerGroup.add(towerBase);
+
+      const bronzeMat = new THREE.MeshStandardMaterial({ color: 0xcd7f32, roughness: 0.3, metalness: 0.85 });
+      const bell = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.18, 12), bronzeMat);
+      bell.position.y = 1.05;
+      towerGroup.add(bell);
+
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.45, 4), goldTrimMat);
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = 1.42;
+      towerGroup.add(roof);
+      zoneGroup.add(towerGroup);
+    } else if (zoneId === 'high_altar') {
+      // 6. Grand Sanctum High Altar: Elevated white marble altar with glowing golden chalice
+      const altarGroup = new THREE.Group();
+      altarGroup.position.set(0, 0, 2.0);
+      const altarTable = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.35, 0.45), marbleMat);
+      altarTable.position.y = 0.18;
+      altarTable.castShadow = true;
+      altarGroup.add(altarTable);
+
+      const chalice = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.16, 12), goldTrimMat);
+      chalice.position.y = 0.44;
+      altarGroup.add(chalice);
+
+      const holyLight = new THREE.PointLight(0xfff7ed, 3.2, 3.5);
+      holyLight.position.set(0, 0.65, 0);
+      altarGroup.add(holyLight);
+      zoneGroup.add(altarGroup);
+    }
+
+    this.group.add(zoneGroup);
+    this.restorationMeshes[zoneId] = zoneGroup;
   }
 }

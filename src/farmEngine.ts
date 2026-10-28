@@ -1,4 +1,4 @@
-import { CROPS, CropDef, FACILITIES, FacilityDef, CHESS_LOOT } from './farmData';
+import { CROPS, CropDef, FACILITIES, FacilityDef, CHESS_LOOT, RESTORATION_ZONES, RestorationZoneDef } from './farmData';
 import { farmAudio } from './farmAudio';
 
 export interface FarmPlot {
@@ -19,6 +19,7 @@ export interface FarmState {
   seeds: Record<string, number>;
   harvested: Record<string, number>;
   facilities: Record<string, boolean>;
+  restorations: Record<string, boolean>;
   activeBuffs: {
     manaBonus: number;
     goldMultiplier: number;
@@ -51,6 +52,14 @@ class FarmEngine {
     fountain: false,
     apiary: false,
     scarecrow: false
+  };
+  public restorations: Record<string, boolean> = {
+    cloister_walkway: false,
+    herb_sanctuary: false,
+    stained_glass: false,
+    altar_brewery: false,
+    bell_tower: false,
+    high_altar: false
   };
   public activeBuffs = {
     manaBonus: 0,
@@ -98,6 +107,7 @@ class FarmEngine {
           if (parsed.seeds) this.seeds = { ...this.seeds, ...parsed.seeds };
           if (parsed.harvested) this.harvested = parsed.harvested;
           if (parsed.facilities) this.facilities = { ...this.facilities, ...parsed.facilities };
+          if (parsed.restorations) this.restorations = { ...this.restorations, ...parsed.restorations };
           if (parsed.activeBuffs) this.activeBuffs = { ...this.activeBuffs, ...parsed.activeBuffs };
         }
       }
@@ -118,6 +128,7 @@ class FarmEngine {
           seeds: this.seeds,
           harvested: this.harvested,
           facilities: this.facilities,
+          restorations: this.restorations,
           activeBuffs: this.activeBuffs
         };
         localStorage.setItem('sanctuary_farm_save', JSON.stringify(payload));
@@ -150,6 +161,7 @@ class FarmEngine {
       seeds: { ...this.seeds },
       harvested: { ...this.harvested },
       facilities: { ...this.facilities },
+      restorations: { ...this.restorations },
       activeBuffs: { ...this.activeBuffs },
       isGardenView: this.isGardenView,
       isShopOpen: this.isShopOpen,
@@ -238,7 +250,8 @@ class FarmEngine {
       if (!plot.cropId || plot.stage === 3) continue;
       const crop = CROPS[plot.cropId];
       if (crop) {
-        const bonus = crop.growthPerChessMove * (this.facilities.apiary ? 1.4 : 1.0);
+        const sanctuaryMultiplier = this.restorations.herb_sanctuary ? 1.5 : 1.0;
+        const bonus = crop.growthPerChessMove * (this.facilities.apiary ? 1.4 : 1.0) * sanctuaryMultiplier;
         plot.growthProgress = Math.min(100, plot.growthProgress + bonus);
 
         if (plot.growthProgress >= 100) plot.stage = 3;
@@ -387,6 +400,55 @@ class FarmEngine {
     return true;
   }
 
+  public restoreZone(zoneId: string): boolean {
+    const zone = RESTORATION_ZONES[zoneId];
+    if (!zone || this.restorations[zoneId]) return false;
+
+    const reqGold = zone.cost.gold || 0;
+    const reqGems = zone.cost.gems || 0;
+    const reqAsh = zone.cost.sacredAsh || 0;
+    const reqMarble = zone.cost.marbleDust || 0;
+
+    if (
+      this.gold < reqGold ||
+      this.gems < reqGems ||
+      this.sacredAsh < reqAsh ||
+      this.marbleDust < reqMarble
+    ) {
+      return false;
+    }
+
+    this.gold -= reqGold;
+    this.gems -= reqGems;
+    this.sacredAsh -= reqAsh;
+    this.marbleDust -= reqMarble;
+    this.restorations[zoneId] = true;
+
+    // Apply permanent perks
+    if (zoneId === 'stained_glass') {
+      this.activeBuffs.manaBonus += 1;
+      const win = window as any;
+      if (win.__arcaneEngine) {
+        win.__arcaneEngine.maxMana = 3 + this.activeBuffs.manaBonus;
+      }
+    } else if (zoneId === 'bell_tower') {
+      this.activeBuffs.goldMultiplier = 1.5;
+    } else if (zoneId === 'high_altar') {
+      this.activeBuffs.kingRevive = true;
+    } else if (zoneId === 'altar_brewery') {
+      this.activeBuffs.meteorCross = true;
+    }
+
+    farmAudio.playBuy();
+    this.showLootNotification(`🏛️ [${zone.name}] 복원 성공! ✦ ${zone.perkDescription}`);
+    this.saveState();
+    this.notify();
+
+    const win = window as any;
+    win.__updateRestoration3D?.(zoneId);
+    return true;
+  }
+
   public sellHarvested(cropId: string, count: number = 1): boolean {
     const crop = CROPS[cropId];
     const owned = this.harvested[cropId] || 0;
@@ -405,13 +467,15 @@ class FarmEngine {
 
   public awardHazardKill(type: 'brazier' | 'pillar', pieceType: string = 'pawn') {
     if (type === 'brazier') {
-      const ashGain = CHESS_LOOT.brazierKillAsh || 2;
+      let ashGain = CHESS_LOOT.brazierKillAsh || 2;
+      if (this.restorations.altar_brewery) ashGain *= 2; // Altar brewery perk
       this.sacredAsh += ashGain;
       farmAudio.playBrazierIncinerate();
       this.onChessMoveAdvance();
       this.showLootNotification(`🔥 화로 소각 처형! +${ashGain} 정화된 성회(Sacred Ash) 획득! (${pieceType.toUpperCase()})`);
     } else {
-      const marbleGain = CHESS_LOOT.pillarKillMarble || 2;
+      let marbleGain = CHESS_LOOT.pillarKillMarble || 2;
+      if (this.restorations.cloister_walkway) marbleGain *= 2; // Cloister walkway perk
       this.marbleDust += marbleGain;
       farmAudio.playPillarSmash();
       this.onChessMoveAdvance();
@@ -436,7 +500,8 @@ class FarmEngine {
 
   public awardCheckmateVictory() {
     const winGold = Math.round(CHESS_LOOT.checkmateWin * this.activeBuffs.goldMultiplier);
-    const winGems = CHESS_LOOT.checkmateGems;
+    let winGems = CHESS_LOOT.checkmateGems;
+    if (this.restorations.high_altar) winGems *= 2; // High altar perk
     const winAsh = CHESS_LOOT.checkmateAsh || 5;
     const winMarble = CHESS_LOOT.checkmateMarble || 5;
 
