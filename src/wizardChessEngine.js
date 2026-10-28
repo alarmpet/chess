@@ -1695,7 +1695,8 @@ export function initWizardChess() {
     const fadingPieces = [];
     function retireAnimalPiece(piece) {
       if (!piece || !piece.mesh) return;
-      fadingPieces.push({ piece, life: 1.15, total: 1.15, baseY: piece.mesh.position.y });
+      // Long enough for a 1.2 s kneel/death clip to land before the sink starts at 55 %.
+      fadingPieces.push({ piece, life: 1.9, total: 1.9, baseY: piece.mesh.position.y });
     }
     function stepFadingPieces(dt) {
       for (let i = fadingPieces.length - 1; i >= 0; i--) {
@@ -2911,7 +2912,8 @@ export function initWizardChess() {
             ) {
               defenderFlinchTriggered = true;
               if (captured) {
-                playPieceClip(captured, 'Shatter', false, 0.04);
+                // Statues crack at contact; rigs with a hit clip flinch first and collapse at the blow.
+                playPieceClip(captured, captured.clipMap?.hit ? 'Hit' : 'Shatter', false, 0.04);
                 impactFlashLight.position.set(
                   endPos.x - dirX * 0.08,
                   BOARD_SURFACE_Y + 0.28,
@@ -2932,6 +2934,7 @@ export function initWizardChess() {
                   scene.remove(captured.mesh);
                   spawnStoneShatter(shatterOrigin, captured.color);
                 } else {
+                  if (captured.clipMap?.hit) playPieceClip(captured, 'Shatter', false, 0.10);
                   retireAnimalPiece(captured);
                   spawnDustPuff(shatterOrigin);
                 }
@@ -4693,6 +4696,13 @@ export function initWizardChess() {
     // Programmatic API for Automated Verification & Camera Inspection
     // =========================================================================
     window.wizardChess = {
+      // Debug: play a clip role (idle/move/attack/hit/shatter/victory/kneel/bored) on the piece at (r, c).
+      debugPlayClip: (r, c, role, loop = false) => {
+        const p = boardState[r]?.[c];
+        if (!p) return false;
+        playPieceClip(p, role, loop, 0.08);
+        return p.clipMap?.[role.toLowerCase()] || null;
+      },
       setCameraPreset,
       setCameraPose,
       setCameraLook: setCameraPose,

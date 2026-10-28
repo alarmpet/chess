@@ -80,7 +80,7 @@ npm run preview
 * **셰이더 & 이펙트**: Custom GLSL (Brazier Fire & Charred Embers, Procedural Stone Noise)
 * **에셋 파이프라인**: 3D 바이너리 모델 스트리밍 (`.glb.gz.b64` ➔ `DecompressionStream('gzip')`)
 * **팩 매니페스트** (`public/packs/<id>/pack.json`): 기물 모델(색별 가능)·역할→클립 매핑(`idle`·`move`·`attack`·`shatter` 필수, `charge`·`hit`·`victory`·`kneel`·`bored` 선택)·`attackSync` 타이밍·`standoff`·`keepMaterials`·`fitHeight`·`yawOffset`, 그리고 환경(`model` GLB 또는 `type: "procedural"` 바이옴)·`board` 색·`teamTint` 를 팩 단위로 선언. `?pack=<id>` 로 선택. 검증기는 `src/packs/packManifest.js`, 테스트는 `npm test` (`test/pack.test.mjs` 가 선언된 클립이 GLB 안에 실제로 있는지 대조). 동물 왕국 설계는 `docs/PLAN.md` §4.3.
-  * `legend` (**기본**): 두 발로 선 의인화 동물 — 사바나(늑대 킹·여우 퀸·판다 룩·얼룩말 나이트·유니콘 비숍·토끼 폰) vs 밀림(호랑이 킹·드래곤 퀸·펭귄 룩·사슴 나이트·오리 비숍·시바 폰). study-game 의 자체 제작 `legend` 캐릭터(두 발 리그 15본, Idle·Walk·Run·Sit·Cheer). 공격 = `Cheer`, 패배 = `Sit` 은 임시(Attack·Hit·Kneel 클립이 생기면 교체). 절차 생성 초원 바이옴.
+  * `legend` (**기본**): 두 발로 선 의인화 동물 — **양 진영 같은 종**(호랑이 킹·드래곤 퀸·판다 룩·여우 비숍·사슴 나이트·토끼 폰), 진영은 팀 틴트(백색/암흑 왕국)로 구분. 최종 캐스팅(사자·호랑이·코뿔소·여우·캥거루·미어캣)의 대역 — `docs/PLAN.md` §2.2·§10-17. study-game 의 자체 제작 `legend` 캐릭터(두 발 리그 15본, Idle·Walk·Run·Sit·Cheer) 에 `tools/legend_add_clips.py`(Blender 5.2, 헤드리스) 로 **Attack·Hit·Kneel** 을 키프레임으로 더했다. 잡기 = Attack(접촉 0.40 s), 잡힘 = Hit → Kneel 뒤 가라앉음. 절차 생성 초원 바이옴.
   * `savanna`: 네 발 동물 — 사바나(늑대·여우·소·말·알파카·사슴) vs 밀림(수사슴·허스키·소·말·당나귀·시바), Quaternius Animated Animal Pack **CC0** (`?pack=savanna`). 잡힌 동물은 `Death` 클립 뒤 가라앉는다.
   * `cathedral`: 원래의 대성당 석상 버전 (`?pack=cathedral`).
 
