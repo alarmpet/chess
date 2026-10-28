@@ -649,6 +649,13 @@ export default function App() {
         <div className="hint-pill" id="controls-hint">
           {t.desktopHint}
         </div>
+        {!farmState.isGardenView && (
+          <div className="hazard-legend-pill" id="hazard-legend-pill">
+            <span>🔥 {lang === 'ko' ? '화로: 소각 처형 (성회 획득)' : 'Brazier: Incinerate'}</span>
+            <span style={{ opacity: 0.4 }}>•</span>
+            <span>🗿 {lang === 'ko' ? '기둥: 진입 불가 장애물' : 'Pillar: Impassable'}</span>
+          </div>
+        )}
         <div className="captured-pill" id="captured-tray"></div>
       </div>
 

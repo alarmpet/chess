@@ -42,6 +42,9 @@ test('Farm Data, Audio, 3D, and Engine modules exist and have valid structure', 
   const chessCode = fs.readFileSync(path.join(ROOT, 'src/wizardChessEngine.js'), 'utf-8');
   assert.ok(chessCode.includes('startCheckmateBrazierExecution'), 'Missing checkmate execution cutscene in wizardChessEngine');
   assert.ok(chessCode.includes('spawnBrazierIncineration'), 'Missing brazier incineration effect in wizardChessEngine');
+  assert.ok(chessCode.includes('setupHazardTiles'), 'Missing setupHazardTiles in wizardChessEngine');
+  assert.ok(chessCode.includes('hazardTilesGroup'), 'Missing hazardTilesGroup in wizardChessEngine');
+  assert.ok(chessCode.includes('isPillarObstacle'), 'Missing isPillarObstacle in wizardChessEngine');
 });
 
 test('App.tsx integrates Farm View Toggle, Currency Pill, Shop, and Barn', () => {
@@ -55,4 +58,5 @@ test('App.tsx integrates Farm View Toggle, Currency Pill, Shop, and Barn', () =>
   assert.ok(appTsx.includes('btn-open-barn'), 'Missing btn-open-barn in App.tsx');
   assert.ok(appTsx.includes('garden-dock'), 'Missing garden-dock in App.tsx');
   assert.ok(appTsx.includes('btn-checkmate-garden'), 'Missing btn-checkmate-garden in App.tsx');
+  assert.ok(appTsx.includes('hazard-legend-pill'), 'Missing hazard-legend-pill in App.tsx');
 });

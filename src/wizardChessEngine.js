@@ -924,6 +924,129 @@ export function initWizardChess() {
     buildChessBoardGrid();
 
     // =========================================================================
+    // Feature: In-Grid Hazard & Obstacle Tiles (Into the Breach Tactical Mechanics)
+    // =========================================================================
+    const hazardTilesGroup = new THREE.Group();
+    scene.add(hazardTilesGroup);
+    let hazardTiles = Array.from({ length: 8 }, () => Array(8).fill(null));
+    const activeBrazierTileMeshes = [];
+
+    function setupHazardTiles() {
+      while (hazardTilesGroup.children.length > 0) {
+        const obj = hazardTilesGroup.children[0];
+        hazardTilesGroup.remove(obj);
+        if (obj.geometry) obj.geometry.dispose();
+      }
+      activeBrazierTileMeshes.length = 0;
+      hazardTiles = Array.from({ length: 8 }, () => Array(8).fill(null));
+
+      // Neutral Battlefield Setup (Point-Symmetric between Black and White in rows 2..5)
+      // Brazier Tiles at (3, 1) and (4, 6)
+      // Pillar Obstacles at (2, 4) and (5, 3)
+      const hazardConfigs = [
+        { r: 3, c: 1, type: 'brazier' },
+        { r: 4, c: 6, type: 'brazier' },
+        { r: 2, c: 4, type: 'pillar' },
+        { r: 5, c: 3, type: 'pillar' }
+      ];
+
+      const pillarStoneMat = new THREE.MeshStandardMaterial({
+        color: 0x948e84,
+        roughness: 0.88,
+        metalness: 0.06
+      });
+
+      const brazierPlateMat = new THREE.MeshStandardMaterial({
+        color: 0x241208,
+        emissive: 0xff3b00,
+        emissiveIntensity: 0.65,
+        roughness: 0.45,
+        metalness: 0.35
+      });
+
+      for (const cfg of hazardConfigs) {
+        const worldPos = boardToWorld(cfg.r, cfg.c);
+        if (cfg.type === 'brazier') {
+          // Runic glowing brazier tile plate on board surface
+          const plateGeo = new THREE.BoxGeometry(BOARD_SQ_SIZE * 0.94, 0.006, BOARD_SQ_SIZE * 0.94);
+          const plate = new THREE.Mesh(plateGeo, brazierPlateMat);
+          plate.position.set(worldPos.x, BOARD_SURFACE_Y + 0.003, worldPos.z);
+          plate.receiveShadow = true;
+          plate.userData = { r: cfg.r, c: cfg.c, isBrazierTile: true };
+          hazardTilesGroup.add(plate);
+
+          // Runic flame ring inner
+          const ringGeo = new THREE.RingGeometry(0.045, 0.095, 24);
+          ringGeo.rotateX(-Math.PI / 2);
+          const ringMat = new THREE.MeshBasicMaterial({ color: 0xffa500, side: THREE.DoubleSide });
+          const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+          ringMesh.position.set(worldPos.x, BOARD_SURFACE_Y + 0.007, worldPos.z);
+          hazardTilesGroup.add(ringMesh);
+
+          // 4 tiny corner braziers
+          const cornerHalf = BOARD_SQ_SIZE * 0.38;
+          const cornerGeo = new THREE.BoxGeometry(0.024, 0.028, 0.024);
+          const cornerMat = new THREE.MeshStandardMaterial({ color: 0x1c1917, metalness: 0.85, roughness: 0.25 });
+          for (const sx of [-1, 1]) {
+            for (const sz of [-1, 1]) {
+              const cMesh = new THREE.Mesh(cornerGeo, cornerMat);
+              cMesh.position.set(worldPos.x + sx * cornerHalf, BOARD_SURFACE_Y + 0.014, worldPos.z + sz * cornerHalf);
+              hazardTilesGroup.add(cMesh);
+            }
+          }
+
+          activeBrazierTileMeshes.push(plate);
+          hazardTiles[cfg.r][cfg.c] = {
+            type: 'brazier',
+            r: cfg.r,
+            c: cfg.c,
+            mesh: plate
+          };
+        } else if (cfg.type === 'pillar') {
+          // Authentic 3D Gothic Pillar Obstacle
+          const pillarGroup = new THREE.Group();
+          pillarGroup.position.set(worldPos.x, BOARD_SURFACE_Y, worldPos.z);
+
+          // Pedestal Base
+          const baseGeo = new THREE.BoxGeometry(0.20, 0.04, 0.20);
+          const baseMesh = new THREE.Mesh(baseGeo, pillarStoneMat);
+          baseMesh.position.y = 0.02;
+          baseMesh.castShadow = true;
+          baseMesh.receiveShadow = true;
+          pillarGroup.add(baseMesh);
+
+          // Column Shaft
+          const shaftGeo = new THREE.CylinderGeometry(0.07, 0.08, 0.24, 12);
+          const shaftMesh = new THREE.Mesh(shaftGeo, pillarStoneMat);
+          shaftMesh.position.y = 0.16;
+          shaftMesh.castShadow = true;
+          shaftMesh.receiveShadow = true;
+          pillarGroup.add(shaftMesh);
+
+          // Capital
+          const capGeo = new THREE.BoxGeometry(0.18, 0.035, 0.18);
+          const capMesh = new THREE.Mesh(capGeo, pillarStoneMat);
+          capMesh.position.y = 0.295;
+          capMesh.castShadow = true;
+          capMesh.receiveShadow = true;
+          pillarGroup.add(capMesh);
+
+          pillarGroup.userData = { r: cfg.r, c: cfg.c, isPillarObstacle: true };
+          hazardTilesGroup.add(pillarGroup);
+
+          hazardTiles[cfg.r][cfg.c] = {
+            type: 'pillar',
+            r: cfg.r,
+            c: cfg.c,
+            mesh: pillarGroup
+          };
+        }
+      }
+    }
+
+    setupHazardTiles();
+
+    // =========================================================================
     // Native Baked Wall/Column Stone (Original Ashlar) & Floor Stone (Abbey Flagstone)
     // =========================================================================
     const WALL_STONE_LOOKS = [
@@ -1763,6 +1886,7 @@ export function initWizardChess() {
       orbitControls.enabled = true;
       clearAllPieces();
       clearSquareHighlights();
+      setupHazardTiles();
       selectedSquare = null;
       validMoves = [];
       currentTurn = 'w';
@@ -1810,6 +1934,7 @@ export function initWizardChess() {
       const inBounds = (nr, nc) => nr >= 0 && nr < 8 && nc >= 0 && nc < 8;
       const addMove = (nr, nc) => {
         if (!inBounds(nr, nc)) return false;
+        if (hazardTiles[nr]?.[nc]?.type === 'pillar') return false; // Impassable pillar obstacle
         const target = board[nr][nc];
         if (!target) {
           moves.push({ r: nr, c: nc, capture: false });
@@ -1822,15 +1947,15 @@ export function initWizardChess() {
       };
 
       if (type === 'pawn') {
-        if (inBounds(r + dir, c) && !board[r + dir][c]) {
+        if (inBounds(r + dir, c) && !board[r + dir][c] && hazardTiles[r + dir]?.[c]?.type !== 'pillar') {
           moves.push({ r: r + dir, c, capture: false });
           const startRow = color === 'w' ? 6 : 1;
-          if (r === startRow && !board[r + dir * 2][c]) {
+          if (r === startRow && !board[r + dir * 2][c] && hazardTiles[r + dir * 2]?.[c]?.type !== 'pillar') {
             moves.push({ r: r + dir * 2, c, capture: false });
           }
         }
         for (const dc of [-1, 1]) {
-          if (inBounds(r + dir, c + dc)) {
+          if (inBounds(r + dir, c + dc) && hazardTiles[r + dir]?.[c + dc]?.type !== 'pillar') {
             const target = board[r + dir][c + dc];
             if (target && target.color !== color) {
               moves.push({ r: r + dir, c: c + dc, capture: true });
@@ -2102,6 +2227,16 @@ export function initWizardChess() {
 
       if (targetOnDest && piece.color === playerColor) {
         if (typeof window !== 'undefined' && window.__farmEngine) {
+          const isBrazierTile = hazardTiles[toR]?.[toC]?.type === 'brazier';
+          const isAdjacentToPillar = [
+            [-1, 0], [1, 0], [0, -1], [0, 1]
+          ].some(([dr, dc]) => hazardTiles[toR + dr]?.[toC + dc]?.type === 'pillar');
+
+          if (isBrazierTile) {
+            window.__farmEngine.awardHazardKill('brazier', targetOnDest.type);
+          } else if (isAdjacentToPillar) {
+            window.__farmEngine.awardHazardKill('pillar', targetOnDest.type);
+          }
           window.__farmEngine.awardChessPieceCapture(targetOnDest.type);
         }
       }
@@ -2689,7 +2824,11 @@ export function initWizardChess() {
                 } else {
                   const shatterOrigin = captured.mesh.position.clone();
                   scene.remove(captured.mesh);
-                  spawnStoneShatter(shatterOrigin, captured.color);
+                  if (hazardTiles[toR]?.[toC]?.type === 'brazier') {
+                    spawnBrazierIncineration(shatterOrigin);
+                  } else {
+                    spawnStoneShatter(shatterOrigin, captured.color);
+                  }
                 }
               }
             }
@@ -2785,6 +2924,11 @@ export function initWizardChess() {
         // Material gain on capture
         if (target) {
           score += PIECE_VALUES[target.type] * 1.15 - PIECE_VALUES[piece.type] * 0.08;
+          if (hazardTiles[m.toR]?.[m.toC]?.type === 'brazier') {
+            score += 48; // Heavy tactical incentive to incinerate enemies on fire tiles!
+          }
+        } else if (hazardTiles[m.toR]?.[m.toC]?.type === 'brazier') {
+          score -= 15; // Avoid lingering needlessly on a hazard tile
         }
 
         // Center control bonus
@@ -3924,6 +4068,11 @@ export function initWizardChess() {
           clickedC = obj.userData.c;
           break;
         }
+        if (obj.userData && obj.userData.isPillarObstacle) {
+          clickedR = obj.userData.r;
+          clickedC = obj.userData.c;
+          break;
+        }
         obj = obj.parent;
       }
 
@@ -4729,6 +4878,9 @@ export function initWizardChess() {
         uiHidden: document.body.classList.contains('cinematic-ui-hidden'),
         playerColor,
         currentTurn,
+        hazardTiles: hazardTiles.map((row) =>
+          row.map((cell) => (cell ? { type: cell.type, r: cell.r, c: cell.c } : null))
+        ),
         roomCode,
         isAnimatingMove,
         gameOver,
@@ -5096,6 +5248,12 @@ export function initWizardChess() {
       }
 
       // Advance volumetric GLSL brazier flames & active warm firelight flicker
+      for (let i = 0; i < activeBrazierTileMeshes.length; i++) {
+        const mesh = activeBrazierTileMeshes[i];
+        if (mesh && mesh.material && mesh.material.emissiveIntensity !== undefined) {
+          mesh.material.emissiveIntensity = 0.55 + Math.sin(elapsedTotal * 3.8 + i * 2.1) * 0.22;
+        }
+      }
       for (let i = 0; i < brazierFireUniforms.length; i++) {
         brazierFireUniforms[i].uTime.value = elapsedTotal;
       }
