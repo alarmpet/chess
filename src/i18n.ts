@@ -7,6 +7,7 @@ export interface Translations {
   checkSuffix: string;
   aiThinkingSuffix: string;
   stalemate: string;
+  drawBy: (reason: string) => string;
   checkmateWin: (winner: string) => string;
   playingAsWhite: string;
   playingAsBlack: string;
@@ -52,6 +53,8 @@ const translations: Record<Language, Translations> = {
     checkSuffix: '(체크!)',
     aiThinkingSuffix: '(AI 생각 중...)',
     stalemate: '스테일메이트 — 무승부',
+    drawBy: (reason: string) =>
+      reason === 'threefold' ? '3회 반복 — 무승부' : reason === 'insufficient' ? '기물 부족 — 무승부' : reason === 'fifty' ? '50수 규칙 — 무승부' : '무승부',
     checkmateWin: (winner: string) => `체크메이트 — ${winner} 승리`,
     playingAsWhite: '백으로 플레이 중',
     playingAsBlack: '흑으로 플레이 중',
@@ -95,6 +98,8 @@ const translations: Record<Language, Translations> = {
     checkSuffix: '(Check!)',
     aiThinkingSuffix: '(AI)...',
     stalemate: 'Stalemate — Draw',
+    drawBy: (reason: string) =>
+      reason === 'threefold' ? 'Threefold repetition — Draw' : reason === 'insufficient' ? 'Insufficient material — Draw' : reason === 'fifty' ? 'Fifty-move rule — Draw' : 'Draw',
     checkmateWin: (winner: string) => `Checkmate — ${winner} Wins`,
     playingAsWhite: 'Playing as White',
     playingAsBlack: 'Playing as Black',

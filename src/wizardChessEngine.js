@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES } from './packs/packManifest.js';
+import { Referee } from './rules/referee.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -1605,6 +1606,11 @@ export function initWizardChess() {
     // =========================================================================
     let boardState = Array.from({ length: 8 }, () => Array(8).fill(null));
     let currentTurn = 'w';
+    // Rules authority (chess.js, PLAN §4.5 Phase 0b). boardState is the picture; the referee is the truth.
+    const referee = new Referee();
+    function syncRefereeFromBoard(turn) {
+      referee.loadCells(boardState, turn, { fullmove: Math.floor(moveHistory.length / 2) + 1 });
+    }
     let selectedSquare = null;
     let validMoves = [];
     let isAnimatingMove = false;
@@ -1903,6 +1909,7 @@ export function initWizardChess() {
 
     function captureBoardSnapshot() {
       return {
+        fen: referee.fen(),
         currentTurn,
         gameOver,
         capturedByWhite,
@@ -1968,6 +1975,15 @@ export function initWizardChess() {
           }
         }
       }
+      if (snap.fen) {
+        try {
+          referee.load(snap.fen);
+        } catch (e) {
+          syncRefereeFromBoard(currentTurn);
+        }
+      } else {
+        syncRefereeFromBoard(currentTurn);
+      }
 
       renderer.shadowMap.needsUpdate = true;
       updateTurnUI();
@@ -2011,6 +2027,7 @@ export function initWizardChess() {
         boardState[1][c] = instantiatePiece('pawn', 'b', 1, c);
         boardState[0][c] = instantiatePiece(backRow[c], 'b', 0, c);
       }
+      referee.reset();
 
       if (orientCamera) {
         const viewSide = playerColor === 'b' ? 'b' : 'w';
@@ -2117,6 +2134,13 @@ export function initWizardChess() {
     }
 
     function getLegalMovesForPiece(r, c) {
+      // chess.js is the authority (en passant, castling-through-check, pins all included).
+      if (boardState[r][c]) return referee.legalMovesFor(r, c);
+      return [];
+    }
+
+    // Legacy generator kept only as a reference for the PGN parser's virtual boards (loadNotation).
+    function getLegalMovesForPieceLegacy(r, c) {
       const piece = boardState[r][c];
       if (!piece) return [];
       const pseudo = getPseudoMovesForPiece(r, c, boardState);
@@ -2191,19 +2215,7 @@ export function initWizardChess() {
     }
 
     function getAllLegalMoves(color) {
-      const all = [];
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          const p = boardState[r][c];
-          if (p && p.color === color) {
-            const moves = getLegalMovesForPiece(r, c);
-            for (const m of moves) {
-              all.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, capture: m.capture });
-            }
-          }
-        }
-      }
-      return all;
+      return referee.allLegalMoves(color);
     }
 
     // =========================================================================
@@ -2355,6 +2367,15 @@ export function initWizardChess() {
       if (preMoveHighlightTask) {
         preMoveHighlightTask = null;
       }
+
+      // Commit to the referee first: it is the only legality check for remote moves and the source of
+      // en-passant / castling facts for the choreography below.
+      const refMove = referee.move({ fromR, fromC, toR, toC, promotion: promotionType });
+      if (!refMove) {
+        console.warn('Referee rejected move', { fromR, fromC, toR, toC, promotionType, fen: referee.fen() });
+        return false;
+      }
+      const enPassantVictim = refMove.enPassantVictim ? boardState[refMove.enPassantVictim.r]?.[refMove.enPassantVictim.c] : null;
 
       // Save board state snapshot (including pre-move scriptCursor & scriptDeviated) so Left Arrow / [ can step backward & re-record
       moveHistory.push({
@@ -2781,6 +2802,22 @@ export function initWizardChess() {
           orbitControls.target.copy(savedTarget);
           orbitControls.enabled = true;
           orbitControls.update();
+        }
+
+        // En passant: the taken pawn sits beside the destination, not on it.
+        if (enPassantVictim && boardState[enPassantVictim.r]?.[enPassantVictim.c] === enPassantVictim) {
+          boardState[enPassantVictim.r][enPassantVictim.c] = null;
+          const origin = enPassantVictim.mesh ? enPassantVictim.mesh.position.clone() : boardToWorld(enPassantVictim.r, enPassantVictim.c);
+          if (enPassantVictim.rig === 'statue') {
+            if (enPassantVictim.mesh) scene.remove(enPassantVictim.mesh);
+            spawnStoneShatter(origin, enPassantVictim.color);
+          } else {
+            playPieceClip(enPassantVictim, 'Shatter', false, 0.1);
+            retireAnimalPiece(enPassantVictim);
+            spawnDustPuff(origin);
+          }
+          if (piece.color === 'w') capturedByWhite += 1;
+          else capturedByBlack += 1;
         }
 
         currentTurn = currentTurn === 'w' ? 'b' : 'w';
@@ -3944,18 +3981,21 @@ export function initWizardChess() {
       turnDot.className = 'turn-dot' + (currentTurn === 'b' ? ' black' : '');
 
       const legalMoves = getAllLegalMoves(currentTurn);
-      const inCheck = isKingInCheck(currentTurn, boardState);
+      const inCheck = referee.inCheck(currentTurn);
+      const endReason = referee.turn() === currentTurn ? referee.gameOverReason() : null;
 
-      if (legalMoves.length === 0) {
+      if (legalMoves.length === 0 || endReason) {
         gameOver = true;
-        if (inCheck) {
+        if (endReason === 'checkmate' || (legalMoves.length === 0 && inCheck)) {
           const winner = currentTurn === 'w' ? t.blackColor : t.whiteColor;
           turnText.textContent = t.checkmateWin(winner);
           if (!checkmateState.active) {
             triggerCheckmateSequence(currentTurn, currentTurn === 'w' ? 'b' : 'w');
           }
-        } else {
+        } else if (endReason === 'stalemate' || legalMoves.length === 0) {
           turnText.textContent = t.stalemate;
+        } else {
+          turnText.textContent = (t.drawBy && t.drawBy(endReason)) || t.stalemate;
         }
       } else {
         const turnLabel = currentTurn === 'w' ? t.turnWhite : t.turnBlack;
@@ -4779,6 +4819,7 @@ export function initWizardChess() {
           boardState[p.r][p.c] = inst;
         }
         currentTurn = turn;
+        syncRefereeFromBoard(turn);
         updateTurnUI();
         renderer.render(scene, camera);
       },
@@ -4799,8 +4840,11 @@ export function initWizardChess() {
         bp.mesh.position.copy(boardToWorld(3, 3));
 
         currentTurn = 'w';
+        syncRefereeFromBoard('w');
         return executeChessMove(4, 4, 3, 3);
       },
+      getFen: () => referee.fen(),
+      getPgn: () => referee.pgn(),
       getState: () => ({
         gameMode,
         scriptedGameActive,
