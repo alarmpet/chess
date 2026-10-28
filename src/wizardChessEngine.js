@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { SanctuaryGarden3D } from './farm3D';
-import { createBeastMesh } from './beastModels';
+import { createBeastMesh, updateBeastTokens, getBeastInfo } from './beastModels';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -1561,6 +1561,7 @@ export function initWizardChess() {
     let boardState = Array.from({ length: 8 }, () => Array(8).fill(null));
     let currentTurn = 'w';
     let selectedSquare = null;
+    let hoveredSquare = null;
     let validMoves = [];
     let isAnimatingMove = false;
     let gameOver = false;
@@ -2246,6 +2247,9 @@ export function initWizardChess() {
 
       if (preMoveHighlightTask) {
         preMoveHighlightTask = null;
+      }
+      if (typeof window !== 'undefined' && window.__onBeastSelect) {
+        window.__onBeastSelect(null, null);
       }
 
       if (targetOnDest && piece.color === playerColor) {
@@ -4086,6 +4090,41 @@ export function initWizardChess() {
       pointerDownPos = { x: e.clientX, y: e.clientY };
     });
 
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      if (typeof window !== 'undefined' && window.__farmEngine && window.__farmEngine.isGardenView) {
+        hoveredSquare = null;
+        return;
+      }
+      const rect = renderer.domElement.getBoundingClientRect();
+      const px = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const py = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      const hoverRay = new THREE.Raycaster();
+      hoverRay.setFromCamera(new THREE.Vector2(px, py), camera);
+      const hits = hoverRay.intersectObjects([...pieceMeshes, ...boardSquareMeshes], true);
+      if (hits.length > 0) {
+        let obj = hits[0].object;
+        let hR = -1, hC = -1;
+        while (obj) {
+          if (obj.userData && obj.userData.piece) {
+            hR = obj.userData.piece.r;
+            hC = obj.userData.piece.c;
+            break;
+          }
+          if (obj.userData && obj.userData.isSquare) {
+            hR = obj.userData.r;
+            hC = obj.userData.c;
+            break;
+          }
+          obj = obj.parent;
+        }
+        if (hR !== -1 && hC !== -1) {
+          hoveredSquare = { r: hR, c: hC };
+          return;
+        }
+      }
+      hoveredSquare = null;
+    });
+
     renderer.domElement.addEventListener('pointerup', (e) => {
       const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
       if (moveDist > 6) return;
@@ -4196,6 +4235,9 @@ export function initWizardChess() {
       if (preMoveHighlightTask) {
         preMoveHighlightTask = null;
       }
+      if (typeof window !== 'undefined' && window.__onBeastSelect) {
+        window.__onBeastSelect(null, null);
+      }
 
       if (selectedSquare) {
         const move = validMoves.find(
@@ -4214,10 +4256,20 @@ export function initWizardChess() {
         selectedSquare = { r: clickedR, c: clickedC };
         validMoves = getLegalMovesForPiece(clickedR, clickedC);
         showSquareHighlights(clickedR, clickedC, validMoves);
+        if (typeof window !== 'undefined' && window.__onBeastSelect) {
+          window.__onBeastSelect(getBeastInfo(clickedPiece.type, clickedPiece.color), clickedPiece);
+        }
       } else {
         clearSquareHighlights();
         selectedSquare = null;
         validMoves = [];
+        if (typeof window !== 'undefined' && window.__onBeastSelect) {
+          if (clickedPiece) {
+            window.__onBeastSelect(getBeastInfo(clickedPiece.type, clickedPiece.color), clickedPiece);
+          } else {
+            window.__onBeastSelect(null, null);
+          }
+        }
       }
     });
 
@@ -5152,6 +5204,10 @@ export function initWizardChess() {
 
       for (const mixer of activeMixers) {
         mixer.update(dt);
+      }
+
+      if (typeof updateBeastTokens === 'function') {
+        updateBeastTokens(dt, boardState, camera, selectedSquare, hoveredSquare);
       }
 
       // Feature 3c: Advance pre-move piece selection & valid-squares highlight beat before executing scripted move

@@ -2548,3 +2548,546 @@ body.cinematic-ui-hidden .farm-view-btn {
   .win-streak-pill { padding: 4px 10px; font-size: 0.72rem; }
   .daily-quest-pill { padding: 4px 10px; font-size: 0.72rem; }
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   20. SANCTUARY BEASTS AAA HUD & CODEX (Nano Banana 2.1)
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* Floating Beast Inspection Card HUD */
+.beast-inspection-card {
+  position: fixed;
+  bottom: 84px;
+  left: 20px;
+  width: 320px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 14px;
+  z-index: 950;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(234, 179, 8, 0.25);
+  border: 1.5px solid rgba(234, 179, 8, 0.6);
+  color: #f8fafc;
+  font-family: inherit;
+  animation: beast-card-slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.beast-inspection-card.black-beast {
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(239, 68, 68, 0.3);
+}
+
+@keyframes beast-card-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.beast-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.beast-card-symbol {
+  font-size: 1.6rem;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(234, 179, 8, 0.8);
+}
+
+.beast-inspection-card.black-beast .beast-card-symbol {
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+}
+
+.beast-card-names {
+  flex: 1;
+  min-width: 0;
+}
+
+.beast-card-name-ko {
+  font-weight: 800;
+  font-size: 0.98rem;
+  color: #fef08a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.beast-inspection-card.black-beast .beast-card-name-ko {
+  color: #fca5a5;
+}
+
+.beast-card-name-en {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.beast-card-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.beast-card-close-btn:hover {
+  background: rgba(239, 68, 68, 0.35);
+  color: #fff;
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+.beast-card-portrait-wrapper {
+  position: relative;
+  width: 100%;
+  height: 170px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 10px;
+  background: #090d16;
+}
+
+.beast-card-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.beast-inspection-card:hover .beast-card-portrait-img {
+  transform: scale(1.04);
+}
+
+.beast-card-foil-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.18) 45%,
+    rgba(254, 240, 138, 0.28) 50%,
+    rgba(255, 255, 255, 0.18) 55%,
+    transparent 80%
+  );
+  opacity: 0.6;
+  pointer-events: none;
+  animation: foil-sweep 4s infinite linear;
+}
+
+@keyframes foil-sweep {
+  0% { transform: translateX(-150%) translateY(-50%) rotate(25deg); }
+  100% { transform: translateX(150%) translateY(50%) rotate(25deg); }
+}
+
+.beast-card-badge-row {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.beast-role-pill, .beast-value-pill {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fef08a;
+}
+
+.beast-inspection-card.black-beast .beast-role-pill {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.beast-card-quote {
+  font-style: italic;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  border-left: 2px solid rgba(234, 179, 8, 0.6);
+  padding-left: 8px;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.beast-inspection-card.black-beast .beast-card-quote {
+  border-left-color: rgba(239, 68, 68, 0.6);
+}
+
+.beast-card-trait-box {
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.beast-trait-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.beast-trait-title {
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: #93c5fd;
+}
+
+.beast-trait-desc {
+  font-size: 0.73rem;
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+.beast-card-move-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+}
+
+/* ── Sanctuary Beast Codex Modal ── */
+.beast-codex-overlay {
+  z-index: 1100;
+}
+
+.beast-codex-modal {
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1.5px solid rgba(234, 179, 8, 0.6);
+  border-radius: 20px;
+  width: 90vw;
+  max-width: 960px;
+  max-height: 86vh;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(234, 179, 8, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: codex-modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes codex-modal-pop {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.beast-codex-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.beast-codex-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fef08a;
+  text-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+}
+
+.beast-codex-tab-group {
+  display: flex;
+  gap: 8px;
+}
+
+.codex-tab-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #94a3b8;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.codex-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+.codex-tab-btn.active.white-tab {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(202, 138, 4, 0.4));
+  border-color: rgba(234, 179, 8, 0.8);
+  color: #fef08a;
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.35);
+}
+
+.codex-tab-btn.active.black-tab {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.4));
+  border-color: rgba(239, 68, 68, 0.8);
+  color: #fca5a5;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
+}
+
+.beast-codex-content {
+  display: flex;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  gap: 20px;
+}
+
+.beast-codex-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  flex: 1;
+}
+
+.beast-codex-card {
+  background: rgba(30, 41, 59, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.beast-codex-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(234, 179, 8, 0.7);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(234, 179, 8, 0.25);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.beast-codex-card.black-card:hover {
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(239, 68, 68, 0.25);
+}
+
+.beast-codex-card.selected {
+  border-color: #fef08a !important;
+  box-shadow: 0 0 24px rgba(234, 179, 8, 0.5) !important;
+  background: rgba(234, 179, 8, 0.12) !important;
+}
+
+.beast-codex-card.black-card.selected {
+  border-color: #fca5a5 !important;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.5) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+}
+
+.codex-card-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background: #090d16;
+}
+
+.codex-card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.codex-card-symbol {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 1.4rem;
+  text-shadow: 0 0 8px rgba(0,0,0,0.8);
+}
+
+.codex-card-foil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.codex-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.codex-card-role {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.codex-card-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.codex-card-trait-preview {
+  font-size: 0.72rem;
+  color: #38bdf8;
+  margin-top: 2px;
+}
+
+/* Detail Side Pane in Codex */
+.beast-codex-detail-pane {
+  width: 320px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1.5px solid rgba(234, 179, 8, 0.5);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: codex-pane-fade 0.25s ease forwards;
+}
+
+.beast-codex-detail-pane.black-pane {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+@keyframes codex-pane-fade {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.detail-pane-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #090d16;
+}
+
+.detail-pane-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-pane-symbol {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-size: 1.8rem;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+.detail-pane-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-pane-role-pill {
+  display: inline-block;
+  align-self: flex-start;
+  background: rgba(234, 179, 8, 0.2);
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  color: #fef08a;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.detail-pane-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.detail-pane-subtitle {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.detail-pane-quote {
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  border-left: 2px solid rgba(234, 179, 8, 0.6);
+  padding-left: 8px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.detail-pane-section {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.74rem;
+}
+
+.detail-section-label {
+  font-weight: 700;
+  color: #93c5fd;
+  margin-bottom: 2px;
+}
+
+.detail-section-desc {
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .beast-inspection-card {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: 96px;
+  }
+  .beast-codex-content {
+    flex-direction: column;
+    padding: 14px;
+  }
+  .beast-codex-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .beast-codex-detail-pane {
+    width: 100%;
+  }
+}

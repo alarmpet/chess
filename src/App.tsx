@@ -12,6 +12,7 @@ import {
   attachCardTilt,
   triggerCardDealAnimation,
 } from './juiceEngine';
+import { BeastInfo, ALL_BEASTS } from './beastModels';
 
 export default function App() {
   const initializedRef = useRef(false);
@@ -23,6 +24,10 @@ export default function App() {
   const [xpState, setXpState] = useState<XPState>(juiceEngine.getXPState());
   const [quests, setQuests] = useState<DailyQuest[]>(juiceEngine.getQuests());
   const [pieceSkin, setPieceSkin] = useState<'beasts' | 'classic'>('beasts');
+  const [selectedBeast, setSelectedBeast] = useState<BeastInfo | null>(null);
+  const [codexOpen, setCodexOpen] = useState(false);
+  const [codexTab, setCodexTab] = useState<'w' | 'b'>('w');
+  const [codexDetailBeast, setCodexDetailBeast] = useState<BeastInfo | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const t = getTranslations(lang);
 
@@ -32,6 +37,16 @@ export default function App() {
     const unsubQ  = juiceEngine.subscribeQuests(setQuests);
     juiceEngine.initJuiceEngine();
     return () => { unsubXP(); unsubQ(); };
+  }, []);
+
+  // ── Subscribe to 3D Beast Piece Selection ──
+  useEffect(() => {
+    (window as any).__onBeastSelect = (beastInfo: BeastInfo | null) => {
+      setSelectedBeast(beastInfo);
+    };
+    return () => {
+      delete (window as any).__onBeastSelect;
+    };
   }, []);
 
   // ── Card tilt effect on hand change ──
@@ -76,6 +91,9 @@ export default function App() {
       if (e.key === 'Escape') {
         setMobileSheetOpen(false);
         setQuestPanelOpen(false);
+        setSelectedBeast(null);
+        setCodexDetailBeast(null);
+        setCodexOpen(false);
         arcaneEngine.cancelSpell();
         if (farmState.isShopOpen) farmEngine.toggleShop(false);
         if (farmState.isBarnOpen) farmEngine.toggleBarn(false);
@@ -345,6 +363,25 @@ export default function App() {
             }}
           >
             {pieceSkin === 'beasts' ? '🐾 성소 영수단' : '♟️ 클래식 석상'}
+          </button>
+
+          {/* Beast Codex (성소 영수 도감) Button */}
+          <button
+            type="button"
+            className="hud-btn codex-btn"
+            id="btn-beast-codex"
+            onClick={() => {
+              setCodexOpen(true);
+              setMobileSheetOpen(false);
+            }}
+            title={lang === 'ko' ? '성소 영수 도감 열기' : 'Open Beast Codex'}
+            style={{
+              borderColor: 'rgba(234, 179, 8, 0.6)',
+              background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(0, 0, 0, 0.4))',
+              color: '#fef08a'
+            }}
+          >
+            📖 {lang === 'ko' ? '영수 도감' : 'Beast Codex'}
           </button>
 
           <div className="hud-divider" aria-hidden="true"></div>
@@ -917,6 +954,154 @@ export default function App() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Active Beast Inspection Card (Nano Banana 2.1 AAA Asset View) ── */}
+      {selectedBeast && (
+        <div
+          className={`beast-inspection-card ${selectedBeast.color === 'w' ? 'white-beast' : 'black-beast'}`}
+          id="beast-inspection-card"
+        >
+          <div className="beast-card-header">
+            <span className="beast-card-symbol">{selectedBeast.chessSymbol}</span>
+            <div className="beast-card-names">
+              <div className="beast-card-name-ko">{selectedBeast.nameKo}</div>
+              <div className="beast-card-name-en">{selectedBeast.nameEn}</div>
+            </div>
+            <button
+              type="button"
+              className="beast-card-close-btn"
+              onClick={() => setSelectedBeast(null)}
+              title="닫기"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="beast-card-portrait-wrapper">
+            <img
+              src={selectedBeast.imageUrl}
+              alt={selectedBeast.nameKo}
+              className="beast-card-portrait-img"
+              loading="eager"
+            />
+            <div className="beast-card-badge-row">
+              <span className="beast-role-pill">{selectedBeast.chessRoleKo}</span>
+              <span className="beast-value-pill">가치 {selectedBeast.value}</span>
+            </div>
+            <div className="beast-card-foil-shine" />
+          </div>
+
+          <div className="beast-card-body">
+            <div className="beast-card-quote">“{selectedBeast.quoteKo}”</div>
+
+            <div className="beast-card-trait-box">
+              <div className="beast-trait-header">
+                <span className="beast-trait-icon">⚔️</span>
+                <span className="beast-trait-title">{selectedBeast.traitNameKo}</span>
+              </div>
+              <div className="beast-trait-desc">{selectedBeast.traitDescKo}</div>
+            </div>
+
+            <div className="beast-card-move-box">
+              <span className="beast-move-icon">👟</span>
+              <span className="beast-move-desc">{selectedBeast.moveDescKo}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sanctuary Beast Codex Modal (성소 영수 도감) ── */}
+      {codexOpen && (
+        <div
+          className="grimoire-overlay beast-codex-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              if (codexDetailBeast) setCodexDetailBeast(null);
+              else setCodexOpen(false);
+            }
+          }}
+        >
+          <div className="beast-codex-modal" role="dialog" aria-modal="true">
+            <div className="beast-codex-header">
+              <div className="beast-codex-title">
+                <span className="codex-icon">📖</span>
+                <span>성소 영수 도감 (Sanctuary Beasts Codex)</span>
+              </div>
+              <div className="beast-codex-tab-group">
+                <button
+                  type="button"
+                  className={`codex-tab-btn ${codexTab === 'w' ? 'active white-tab' : ''}`}
+                  onClick={() => { setCodexTab('w'); setCodexDetailBeast(null); }}
+                >
+                  ✨ 백색 성소 영수단 (6)
+                </button>
+                <button
+                  type="button"
+                  className={`codex-tab-btn ${codexTab === 'b' ? 'active black-tab' : ''}`}
+                  onClick={() => { setCodexTab('b'); setCodexDetailBeast(null); }}
+                >
+                  🌋 흑요석 심연 영수단 (6)
+                </button>
+              </div>
+              <button
+                type="button"
+                className="grimoire-close-btn"
+                onClick={() => { setCodexDetailBeast(null); setCodexOpen(false); }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="beast-codex-content">
+              {/* Card Grid */}
+              <div className="beast-codex-grid">
+                {ALL_BEASTS.filter((b) => b.color === codexTab).map((beast) => (
+                  <div
+                    key={beast.id}
+                    className={`beast-codex-card ${beast.color === 'w' ? 'white-card' : 'black-card'} ${codexDetailBeast?.id === beast.id ? 'selected' : ''}`}
+                    onClick={() => setCodexDetailBeast(beast)}
+                  >
+                    <div className="codex-card-thumb-wrap">
+                      <img src={beast.imageUrl} alt={beast.nameKo} className="codex-card-thumb" />
+                      <span className="codex-card-symbol">{beast.chessSymbol}</span>
+                      <div className="codex-card-foil" />
+                    </div>
+                    <div className="codex-card-info">
+                      <div className="codex-card-role">{beast.chessRoleKo}</div>
+                      <div className="codex-card-name">{beast.nameKo}</div>
+                      <div className="codex-card-trait-preview">{beast.traitNameKo}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Detail Panel */}
+              {codexDetailBeast && (
+                <div className={`beast-codex-detail-pane ${codexDetailBeast.color === 'w' ? 'white-pane' : 'black-pane'}`}>
+                  <div className="detail-pane-img-wrap">
+                    <img src={codexDetailBeast.imageUrl} alt={codexDetailBeast.nameKo} className="detail-pane-img" />
+                    <div className="detail-pane-symbol">{codexDetailBeast.chessSymbol}</div>
+                  </div>
+                  <div className="detail-pane-info">
+                    <div className="detail-pane-role-pill">{codexDetailBeast.chessRoleKo}</div>
+                    <h3 className="detail-pane-title">{codexDetailBeast.nameKo}</h3>
+                    <div className="detail-pane-subtitle">{codexDetailBeast.nameEn} · {codexDetailBeast.titleKo}</div>
+                    <p className="detail-pane-quote">“{codexDetailBeast.quoteKo}”</p>
+                    <div className="detail-pane-section">
+                      <div className="detail-section-label">⚡ 영수 고유 특성: {codexDetailBeast.traitNameKo}</div>
+                      <div className="detail-section-desc">{codexDetailBeast.traitDescKo}</div>
+                    </div>
+                    <div className="detail-pane-section">
+                      <div className="detail-section-label">♟️ 체스 전술 기동:</div>
+                      <div className="detail-section-desc">{codexDetailBeast.moveDescKo}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
