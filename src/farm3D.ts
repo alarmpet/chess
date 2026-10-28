@@ -73,13 +73,13 @@ export class SanctuaryGarden3D {
         const posZ = offset + r * spacing;
 
         // Soil mound
-        const soilGeo = new THREE.CylinderGeometry(0.38, 0.44, 0.08, 16);
+        const soilGeo = new THREE.CylinderGeometry(0.48, 0.52, 0.12, 16);
         const soilMat = new THREE.MeshStandardMaterial({
           color: 0x543d2b, // Dry soil brown
           roughness: 0.95
         });
         const soilMesh = new THREE.Mesh(soilGeo, soilMat);
-        soilMesh.position.set(posX, 0.04, posZ);
+        soilMesh.position.set(posX, 0.06, posZ);
         soilMesh.receiveShadow = true;
         soilMesh.castShadow = true;
 
@@ -89,12 +89,30 @@ export class SanctuaryGarden3D {
           plotIndex: plotIdx
         };
 
+        // Generous clickable hit area around plot
+        const hitGeo = new THREE.CylinderGeometry(0.58, 0.58, 0.35, 16);
+        const hitMat = new THREE.MeshBasicMaterial({
+          transparent: true,
+          opacity: 0.001,
+          depthWrite: false
+        });
+        const hitMesh = new THREE.Mesh(hitGeo, hitMat);
+        hitMesh.userData = {
+          isGardenPlot: true,
+          plotIndex: plotIdx
+        };
+        soilMesh.add(hitMesh);
+
         this.group.add(soilMesh);
         this.plotMeshes.push(soilMesh);
 
         // Crop mesh container
         const cropGroup = new THREE.Group();
         cropGroup.position.set(posX, 0.08, posZ);
+        cropGroup.userData = {
+          isGardenPlot: true,
+          plotIndex: plotIdx
+        };
         this.group.add(cropGroup);
         this.cropGroups.push(cropGroup);
 
@@ -141,12 +159,26 @@ export class SanctuaryGarden3D {
 
     // 3. Render crop according to stage (0: seed, 1: sprout, 2: growing, 3: harvestable)
     if (plot.stage === 0) {
-      // Tiny seed mound
-      const seedGeo = new THREE.SphereGeometry(0.06, 8, 8);
-      const seedMat = new THREE.MeshStandardMaterial({ color: 0x854d0e });
+      // Freshly tilled soil mound + crisp wooden crop marker stake
+      const seedGeo = new THREE.CylinderGeometry(0.25, 0.30, 0.08, 12);
+      const seedMat = new THREE.MeshStandardMaterial({ color: 0x3d2716, roughness: 0.9 });
       const seedMesh = new THREE.Mesh(seedGeo, seedMat);
-      seedMesh.position.y = 0.03;
+      seedMesh.position.y = 0.04;
       cropGroup.add(seedMesh);
+
+      // Wooden stake
+      const stakeGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.22, 6);
+      const stakeMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.8 });
+      const stake = new THREE.Mesh(stakeGeo, stakeMat);
+      stake.position.set(0.08, 0.11, 0.05);
+      cropGroup.add(stake);
+
+      // Plaque with crop signature color
+      const plaqueGeo = new THREE.BoxGeometry(0.14, 0.08, 0.02);
+      const plaqueMat = new THREE.MeshStandardMaterial({ color: cropDef.color, roughness: 0.4 });
+      const plaque = new THREE.Mesh(plaqueGeo, plaqueMat);
+      plaque.position.set(0.08, 0.19, 0.05);
+      cropGroup.add(plaque);
     } else if (plot.stage === 1) {
       // Little green two-leaf sprout
       const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.14, 8);

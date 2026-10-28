@@ -52,6 +52,8 @@ test('Farm Data, Audio, 3D, and Engine modules exist and have valid structure', 
   assert.ok(chessCode.includes('setupHazardTiles'), 'Missing setupHazardTiles in wizardChessEngine');
   assert.ok(chessCode.includes('hazardTilesGroup'), 'Missing hazardTilesGroup in wizardChessEngine');
   assert.ok(chessCode.includes('isPillarObstacle'), 'Missing isPillarObstacle in wizardChessEngine');
+  assert.ok(chessCode.includes('GARDEN VIEW INTERACTION (Priority #1'), 'Missing Priority #1 garden interaction in pointerup');
+  assert.ok(chessCode.includes('isGardenPlot'), 'Missing isGardenPlot raycast check in wizardChessEngine');
 });
 
 test('App.tsx integrates Farm View Toggle, Currency Pill, Shop, and Barn', () => {

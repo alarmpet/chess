@@ -276,10 +276,18 @@ class FarmEngine {
 
   public plantSeed(plotIdx: number, seedId: string): boolean {
     const plot = this.plots[plotIdx];
-    if (!plot || plot.cropId) return false;
+    if (!plot) return false;
+    if (plot.cropId) {
+      this.showLootNotification('⚠️ 이미 작물이 심어져 있는 밭입니다!');
+      return false;
+    }
 
     const count = this.seeds[seedId] || 0;
-    if (count <= 0) return false;
+    if (count <= 0) {
+      const crop = CROPS[seedId];
+      this.showLootNotification(`⚠️ 보유한 [${crop?.name || seedId}] 씨앗이 없습니다! 🛒 상점에서 구매하세요.`);
+      return false;
+    }
 
     this.seeds[seedId] = count - 1;
     plot.cropId = seedId;
@@ -297,6 +305,9 @@ class FarmEngine {
     win.__updatePlotMesh?.(plotIdx, plot);
     win.__juiceEngine?.progressQuest?.('q_seed');
     win.__juiceEngine?.awardXP?.(5);
+
+    const crop = CROPS[seedId];
+    this.showLootNotification(`🌱 [${crop?.name || seedId}] 파종 완료! (남은 씨앗: ${this.seeds[seedId]}개)`);
     return true;
   }
 
@@ -306,6 +317,7 @@ class FarmEngine {
 
     plot.isWatered = true;
     farmAudio.playWater();
+    this.showLootNotification('💧 작물에 물을 주었습니다! 촉촉해져 성장이 가속됩니다.');
     this.saveState();
     this.notify();
 
@@ -392,14 +404,19 @@ class FarmEngine {
 
   public buySeed(seedId: string): boolean {
     const crop = CROPS[seedId];
-    if (!crop || this.gold < crop.seedCost) return false;
+    if (!crop || this.gold < crop.seedCost) {
+      this.showLootNotification('⚠️ 골드가 부족합니다!');
+      return false;
+    }
 
     this.gold -= crop.seedCost;
     this.seeds[seedId] = (this.seeds[seedId] || 0) + 1;
+    this.selectedSeedId = seedId; // Auto-select the newly bought seed so it can be planted immediately!
 
     farmAudio.playBuy();
     this.saveState();
     this.notify();
+    this.showLootNotification(`🌱 [${crop.name}] 씨앗 구매 완료! (보유: ${this.seeds[seedId]}개) - 이제 밭을 클릭하세요!`);
     return true;
   }
 

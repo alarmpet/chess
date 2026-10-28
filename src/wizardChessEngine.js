@@ -4066,17 +4066,58 @@ export function initWizardChess() {
     renderer.domElement.addEventListener('pointerup', (e) => {
       const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
       if (moveDist > 6) return;
-      if (isAnimatingMove || gameOver) return;
-
-      // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
-      if (gameMode === 'multi' && currentTurn !== playerColor) return;
-      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) return;
 
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
+
+      // =========================================================================
+      // 1. GARDEN VIEW INTERACTION (Priority #1 when visiting the Cloister Garden)
+      // =========================================================================
+      if (typeof window !== 'undefined' && window.__farmEngine && window.__farmEngine.isGardenView) {
+        const gardenHits = raycaster.intersectObjects(scene.children, true);
+        for (const hit of gardenHits) {
+          let cur = hit.object;
+          while (cur) {
+            if (cur.userData && cur.userData.isGardenPlot) {
+              const plotIdx = cur.userData.plotIndex;
+              const plot = window.__farmEngine.plots[plotIdx];
+              if (!plot) return;
+              if (plot.stage === 3) {
+                window.__farmEngine.harvestPlot(plotIdx);
+              } else if (plot.cropId && !plot.isWatered) {
+                window.__farmEngine.waterPlot(plotIdx);
+              } else if (!plot.cropId) {
+                if (window.__farmEngine.selectedSeedId) {
+                  const planted = window.__farmEngine.plantSeed(plotIdx, window.__farmEngine.selectedSeedId);
+                  if (!planted) {
+                    const seed = window.__farmEngine.selectedSeedId;
+                    const count = window.__farmEngine.seeds[seed] || 0;
+                    if (count <= 0) {
+                      window.__farmEngine.showLootNotification?.(`⚠️ 보유한 씨앗이 없습니다! 상점([🛒 상점])에서 씨앗을 구매하세요.`);
+                    }
+                  }
+                } else {
+                  window.__farmEngine.showLootNotification?.('⚠️ 하단 도크에서 심을 씨앗을 먼저 클릭하세요!');
+                }
+              } else {
+                window.__farmEngine.showLootNotification?.(`🌱 작물이 자라고 있습니다 (${Math.round(plot.growthProgress)}%) - 체스 수를 두면 급속 성장합니다!`);
+              }
+              return;
+            }
+            cur = cur.parent;
+          }
+        }
+        return;
+      }
+
+      if (isAnimatingMove || gameOver) return;
+
+      // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
+      if (gameMode === 'multi' && currentTurn !== playerColor) return;
+      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) return;
 
       const pieceMeshes = [];
       for (let r = 0; r < 8; r++) {
@@ -4116,30 +4157,6 @@ export function initWizardChess() {
           break;
         }
         obj = obj.parent;
-      }
-
-      if (typeof window !== 'undefined' && window.__farmEngine && window.__farmEngine.isGardenView) {
-        const gardenHits = raycaster.intersectObjects(scene.children, true);
-        for (const hit of gardenHits) {
-          let cur = hit.object;
-          while (cur) {
-            if (cur.userData && cur.userData.isGardenPlot) {
-              const plotIdx = cur.userData.plotIndex;
-              const plot = window.__farmEngine.plots[plotIdx];
-              if (!plot) return;
-              if (plot.stage === 3) {
-                window.__farmEngine.harvestPlot(plotIdx);
-              } else if (plot.cropId && !plot.isWatered) {
-                window.__farmEngine.waterPlot(plotIdx);
-              } else if (!plot.cropId && window.__farmEngine.selectedSeedId) {
-                window.__farmEngine.plantSeed(plotIdx, window.__farmEngine.selectedSeedId);
-              }
-              return;
-            }
-            cur = cur.parent;
-          }
-        }
-        return;
       }
 
       if (clickedR === -1) return;
