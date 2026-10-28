@@ -3,12 +3,15 @@ import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
 import { arcaneEngine, ArcaneState } from './arcaneEngine';
 import { arcaneAudio } from './arcaneAudio';
+import { lexiconEngine, LexiconState } from './lexiconEngine';
+import { LEXICON_WORDS } from './lexiconData';
 
 export default function App() {
   const initializedRef = useRef(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
   const [arcaneState, setArcaneState] = useState<ArcaneState>(arcaneEngine.getState());
+  const [lexiconState, setLexiconState] = useState<LexiconState>(lexiconEngine.getState());
   const [isMuted, setIsMuted] = useState(false);
   const t = getTranslations(lang);
 
@@ -33,10 +36,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const unsubLexicon = lexiconEngine.subscribe((st) => {
+      setLexiconState(st);
+    });
+    return () => unsubLexicon();
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMobileSheetOpen(false);
         arcaneEngine.cancelSpell();
+        if (lexiconState.isGrimoireOpen) {
+          lexiconEngine.toggleGrimoire(false);
+        }
       }
     };
     const handleResize = () => {
@@ -50,7 +63,7 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [lexiconState.isGrimoireOpen]);
 
   const handleToggleLang = () => {
     const nextLang: Language = lang === 'ko' ? 'en' : 'ko';
@@ -98,7 +111,9 @@ export default function App() {
       <div id="hud-top">
         <div className="hud-group" id="hud-left">
           <div className="brand-pill">
-            <span className="brand-title">{lang === 'ko' ? '아케인 체스: 영혼의 성소' : 'Arcane Chess: Sanctuary'}</span>
+            <span className="brand-title">
+              {lang === 'ko' ? '렉시콘 체스: 어원의 성소' : 'Lexicon Chess: Sanctuary'}
+            </span>
           </div>
           <div className="status-pill" id="status-pill">
             <span className="turn-dot" id="turn-dot"></span>
@@ -118,6 +133,26 @@ export default function App() {
                 />
               ))}
             </div>
+          </div>
+
+          {/* Lexicon Vocabulary Mastery Pill */}
+          <div
+            className="lexicon-pill"
+            id="btn-lexicon-pill"
+            onClick={() => lexiconEngine.toggleGrimoire(true)}
+            title={lang === 'ko' ? '성소의 단어장 열기 (어휘 도감)' : 'Open Sanctuary Grimoire'}
+          >
+            <span>📖</span>
+            <span>
+              {lang === 'ko'
+                ? `${lexiconState.totalMastered}단어 정복`
+                : `${lexiconState.totalMastered} Mastered`}
+            </span>
+            {lexiconState.streak > 1 && (
+              <span className="lexicon-streak-fire">
+                🔥{lexiconState.streak}{lang === 'ko' ? '연속' : 'x'}
+              </span>
+            )}
           </div>
         </div>
 
@@ -171,6 +206,31 @@ export default function App() {
               {t.close}
             </button>
           </div>
+
+          {/* Quick Word Duel Button */}
+          <button
+            type="button"
+            className="hud-btn"
+            id="btn-trigger-duel"
+            onClick={() => {
+              setMobileSheetOpen(false);
+              lexiconEngine.triggerDuel({ title: '⚔️ 어휘 룬 챌린지' });
+            }}
+            title={lang === 'ko' ? '단어 퀴즈 도전 (+1 마나 획득)' : 'Word Duel (+1 Mana)'}
+          >
+            ⚔️ {lang === 'ko' ? '단어 퀴즈' : 'Word Duel'}
+          </button>
+
+          {/* Web Speech API TTS Pronunciation Toggle */}
+          <button
+            type="button"
+            className="hud-btn"
+            id="btn-tts-toggle"
+            onClick={() => lexiconEngine.toggleTTS()}
+            title={lexiconState.ttsEnabled ? '단어 발음 끄기' : '단어 발음 켜기 (Web Speech)'}
+          >
+            {lexiconState.ttsEnabled ? '🗣️ TTS' : '🔇 TTS'}
+          </button>
 
           {/* Audio Sound Toggle */}
           <button
@@ -295,6 +355,143 @@ export default function App() {
                 ✕ {lang === 'ko' ? '취소' : 'Cancel'}
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Word Duel Modal */}
+      {lexiconState.isDuelActive && lexiconState.currentWord && (
+        <div className="word-duel-overlay" role="dialog" aria-modal="true">
+          <div className="word-duel-modal">
+            <div className="duel-badge">⚔️ CATHEDRAL WORD DUEL</div>
+            <div className="duel-word-wrap">
+              <div className="duel-word-title">{lexiconState.currentWord.word}</div>
+              <button
+                type="button"
+                className="duel-speaker-btn"
+                onClick={() => lexiconEngine.replayWordAudio()}
+                title="발음 듣기 (Web Speech TTS)"
+              >
+                🔊
+              </button>
+            </div>
+            <div className="duel-phonetic">{lexiconState.currentWord.phonetic}</div>
+
+            {/* Etymology Breakdown Box */}
+            <div className="duel-etymology-box">
+              {lexiconState.currentWord.prefix && (
+                <span className="duel-etymology-pill">
+                  접두사: {lexiconState.currentWord.prefix} ({lexiconState.currentWord.prefixMeaning})
+                </span>
+              )}
+              {lexiconState.currentWord.root && (
+                <span className="duel-etymology-pill">
+                  어근: {lexiconState.currentWord.root} ({lexiconState.currentWord.rootMeaning})
+                </span>
+              )}
+              {lexiconState.currentWord.suffix && (
+                <span className="duel-etymology-pill">
+                  접미사: {lexiconState.currentWord.suffix} ({lexiconState.currentWord.suffixMeaning})
+                </span>
+              )}
+              <div style={{ marginTop: '6px' }}>{lexiconState.currentWord.etymologyStory}</div>
+            </div>
+
+            {/* 3 Multiple Choice Options */}
+            <div className="duel-options-grid">
+              {lexiconState.shuffledOptions.map((opt, i) => {
+                let btnClass = 'duel-option-btn';
+                if (lexiconState.isAnswered) {
+                  if (opt === lexiconState.currentWord?.meaningKo) {
+                    btnClass += ' correct';
+                  } else if (opt === lexiconState.selectedOption) {
+                    btnClass += ' wrong';
+                  }
+                }
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={btnClass}
+                    disabled={lexiconState.isAnswered}
+                    onClick={() => lexiconEngine.answerDuel(opt)}
+                  >
+                    <span>{i + 1}. {opt}</span>
+                    {lexiconState.isAnswered && opt === lexiconState.currentWord?.meaningKo && <span>✓ 정답</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {lexiconState.isAnswered && (
+              <div className={`duel-feedback ${lexiconState.isCorrect ? 'success' : 'failure'}`}>
+                {lexiconState.isCorrect
+                  ? '✦ 정답입니다! (+1 마나 획득 / 룬 각성)'
+                  : '✦ 오답입니다. 다음 기회에 복습해보세요!'}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Cathedral Grimoire Modal (Vocabulary Codex) */}
+      {lexiconState.isGrimoireOpen && (
+        <div
+          className="grimoire-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => lexiconEngine.toggleGrimoire(false)}
+        >
+          <div
+            className="grimoire-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="grimoire-header">
+              <div className="grimoire-title">
+                <span>📖</span>
+                <span>{lang === 'ko' ? '성소의 어휘 기록서 (Cathedral Grimoire)' : 'Cathedral Grimoire'}</span>
+              </div>
+              <button
+                type="button"
+                className="grimoire-close-btn"
+                onClick={() => lexiconEngine.toggleGrimoire(false)}
+                title="닫기 (ESC)"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grimoire-body">
+              {LEXICON_WORDS.map((w) => {
+                const isMastered = lexiconState.totalMastered > 0;
+                return (
+                  <div key={w.id} className="grimoire-card">
+                    <div className="grimoire-card-top">
+                      <span className="grimoire-card-word">
+                        {w.word} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{w.phonetic}</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="duel-speaker-btn"
+                        style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}
+                        onClick={() => lexiconEngine.replayWordAudio(w.word)}
+                        title="발음 듣기"
+                      >
+                        🔊
+                      </button>
+                    </div>
+                    <div className="grimoire-card-meaning">
+                      {w.meaningKo} <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>({w.meaningEn})</span>
+                    </div>
+                    <div className="grimoire-card-etymology">
+                      <strong>어원 해설:</strong> {w.etymologyStory}
+                    </div>
+                    <div className="grimoire-card-example">
+                      "{w.exampleSentence}"
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

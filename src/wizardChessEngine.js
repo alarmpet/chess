@@ -2092,6 +2092,16 @@ export function initWizardChess() {
         preMoveHighlightTask = null;
       }
 
+      if (targetOnDest && piece.color === playerColor) {
+        if (typeof window !== 'undefined' && window.__lexiconEngine && Math.random() < 0.6) {
+          window.__lexiconEngine.triggerDuel({
+            title: '⚔️ 격투 룬 챌린지',
+            attackerName: piece.type,
+            defenderName: targetOnDest.type
+          });
+        }
+      }
+
       // Save board state snapshot (including pre-move scriptCursor & scriptDeviated) so Left Arrow / [ can step backward & re-record
       moveHistory.push({
         snapshot: captureBoardSnapshot(),
