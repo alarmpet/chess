@@ -1386,10 +1386,18 @@ body.cinematic-ui-hidden .arcane-dock {
   user-select: none;
 }
 
-.farm-gold-item, .farm-gems-item {
+.farm-gold-item, .farm-gems-item, .farm-ash-item, .farm-marble-item {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.farm-ash-item {
+  color: #fb923c;
+}
+
+.farm-marble-item {
+  color: #7dd3fc;
 }
 
 .farm-gold-icon {

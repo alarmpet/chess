@@ -134,6 +134,32 @@ export const FACILITIES: Record<string, FacilityDef> = {
   }
 };
 
+// Cathedral Special Relic Resources
+export interface SpecialResourceDef {
+  id: 'sacredAsh' | 'marbleDust';
+  name: string;
+  nameEn: string;
+  icon: string;
+  description: string;
+}
+
+export const SPECIAL_RESOURCES: Record<string, SpecialResourceDef> = {
+  sacredAsh: {
+    id: 'sacredAsh',
+    name: '정화된 성회',
+    nameEn: 'Purified Sacred Ash',
+    icon: '🔥',
+    description: '대성당 화로의 신성한 불꽃에 악이 소각되며 남긴 거룩한 재입니다. 토양의 생명력을 극대화합니다.'
+  },
+  marbleDust: {
+    id: 'marbleDust',
+    name: '축복받은 대리석',
+    nameEn: 'Consecrated Marble Dust',
+    icon: '🏛️',
+    description: '기둥과 석조물에 가해진 충격으로 부서져 내린 고딕 대리석 파편입니다. 수도원 건축 복원의 핵심 자재입니다.'
+  }
+};
+
 // Chess Loot Values
 export const CHESS_LOOT = {
   pawn: 15,
@@ -142,5 +168,9 @@ export const CHESS_LOOT = {
   rook: 60,
   queen: 100,
   checkmateWin: 250,
-  checkmateGems: 3
+  checkmateGems: 3,
+  brazierKillAsh: 2,
+  pillarKillMarble: 2,
+  checkmateAsh: 5,
+  checkmateMarble: 5
 };

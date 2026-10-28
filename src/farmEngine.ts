@@ -13,6 +13,8 @@ export interface FarmPlot {
 export interface FarmState {
   gold: number;
   gems: number;
+  sacredAsh: number;
+  marbleDust: number;
   plots: FarmPlot[];
   seeds: Record<string, number>;
   harvested: Record<string, number>;
@@ -35,6 +37,8 @@ type FarmListener = (state: FarmState) => void;
 class FarmEngine {
   public gold: number = 120;
   public gems: number = 5;
+  public sacredAsh: number = 0;
+  public marbleDust: number = 0;
   public plots: FarmPlot[] = [];
   public seeds: Record<string, number> = {
     mana_grape: 2,
@@ -88,6 +92,8 @@ class FarmEngine {
           const parsed = JSON.parse(raw);
           if (typeof parsed.gold === 'number') this.gold = parsed.gold;
           if (typeof parsed.gems === 'number') this.gems = parsed.gems;
+          if (typeof parsed.sacredAsh === 'number') this.sacredAsh = parsed.sacredAsh;
+          if (typeof parsed.marbleDust === 'number') this.marbleDust = parsed.marbleDust;
           if (Array.isArray(parsed.plots)) this.plots = parsed.plots;
           if (parsed.seeds) this.seeds = { ...this.seeds, ...parsed.seeds };
           if (parsed.harvested) this.harvested = parsed.harvested;
@@ -106,6 +112,8 @@ class FarmEngine {
         const payload = {
           gold: this.gold,
           gems: this.gems,
+          sacredAsh: this.sacredAsh,
+          marbleDust: this.marbleDust,
           plots: this.plots,
           seeds: this.seeds,
           harvested: this.harvested,
@@ -136,6 +144,8 @@ class FarmEngine {
     return {
       gold: this.gold,
       gems: this.gems,
+      sacredAsh: this.sacredAsh,
+      marbleDust: this.marbleDust,
       plots: this.plots.map((p) => ({ ...p })),
       seeds: { ...this.seeds },
       harvested: { ...this.harvested },
@@ -393,6 +403,24 @@ class FarmEngine {
 
   // --- Chess Rewards Integration ---
 
+  public awardHazardKill(type: 'brazier' | 'pillar', pieceType: string = 'pawn') {
+    if (type === 'brazier') {
+      const ashGain = CHESS_LOOT.brazierKillAsh || 2;
+      this.sacredAsh += ashGain;
+      farmAudio.playBrazierIncinerate();
+      this.onChessMoveAdvance();
+      this.showLootNotification(`🔥 화로 소각 처형! +${ashGain} 정화된 성회(Sacred Ash) 획득! (${pieceType.toUpperCase()})`);
+    } else {
+      const marbleGain = CHESS_LOOT.pillarKillMarble || 2;
+      this.marbleDust += marbleGain;
+      farmAudio.playPillarSmash();
+      this.onChessMoveAdvance();
+      this.showLootNotification(`🏛️ 기둥 격돌 분쇄! +${marbleGain} 대리석 파편(Marble Dust) 획득! (${pieceType.toUpperCase()})`);
+    }
+    this.saveState();
+    this.notify();
+  }
+
   public awardChessPieceCapture(pieceType: string) {
     const baseGold = (CHESS_LOOT as any)[pieceType] || 20;
     const finalGold = Math.round(baseGold * this.activeBuffs.goldMultiplier);
@@ -408,8 +436,14 @@ class FarmEngine {
 
   public awardCheckmateVictory() {
     const winGold = Math.round(CHESS_LOOT.checkmateWin * this.activeBuffs.goldMultiplier);
+    const winGems = CHESS_LOOT.checkmateGems;
+    const winAsh = CHESS_LOOT.checkmateAsh || 5;
+    const winMarble = CHESS_LOOT.checkmateMarble || 5;
+
     this.gold += winGold;
-    this.gems += CHESS_LOOT.checkmateGems;
+    this.gems += winGems;
+    this.sacredAsh += winAsh;
+    this.marbleDust += winMarble;
 
     // Award bonus seed
     const seedKeys = Object.keys(CROPS);
@@ -417,7 +451,7 @@ class FarmEngine {
     this.seeds[bonusSeed] = (this.seeds[bonusSeed] || 0) + 1;
 
     farmAudio.playBuy();
-    this.showLootNotification(`✦ 체크메이트 대승리! +${winGold} Gold, +3 Gems, [${CROPS[bonusSeed].name}] 획득!`);
+    this.showLootNotification(`✦ 체크메이트 대승리! +${winGold}G, +${winGems}💎, +${winAsh}🔥 성회, +${winMarble}🏛️ 대리석, [${CROPS[bonusSeed].name}] 획득!`);
     this.saveState();
     this.notify();
   }

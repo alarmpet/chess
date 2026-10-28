@@ -128,6 +128,60 @@ class FarmAudioEngine {
       osc.stop(now + i * 0.04 + 0.42);
     });
   }
+
+  // 6. Brazier Incineration / Roaring flame consume
+  public playBrazierIncinerate() {
+    this.initCtx();
+    if (!this.ctx || !this.masterGain || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    // Low flame roar
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(45, now + 0.65);
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.70);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.72);
+
+    // High sizzling sparks
+    [720, 960, 1440].forEach((freq, idx) => {
+      if (!this.ctx || !this.masterGain) return;
+      const sOsc = this.ctx.createOscillator();
+      const sGain = this.ctx.createGain();
+      sOsc.type = 'triangle';
+      sOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+      sGain.gain.setValueAtTime(0.18, now + idx * 0.08);
+      sGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.28);
+      sOsc.connect(sGain);
+      sGain.connect(this.masterGain);
+      sOsc.start(now + idx * 0.08);
+      sOsc.stop(now + idx * 0.08 + 0.30);
+    });
+  }
+
+  // 7. Stone Column smash / Rubble crush
+  public playPillarSmash() {
+    this.initCtx();
+    if (!this.ctx || !this.masterGain || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(110, now);
+    osc.frequency.exponentialRampToValueAtTime(32, now + 0.45);
+    gain.gain.setValueAtTime(0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.50);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.52);
+  }
 }
 
 export const farmAudio = new FarmAudioEngine();

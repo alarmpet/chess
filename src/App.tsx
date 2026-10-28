@@ -132,7 +132,7 @@ export default function App() {
             {farmState.isGardenView ? '⚔️ 체스 대국장' : '🌱 성소 정원'}
           </button>
 
-          {/* Gold & Gems Currency Display */}
+          {/* Gold, Gems & Sacred Relics Currency Display */}
           <div className="farm-currency-pill" id="farm-currency-pill">
             <span className="farm-gold-item" title="골드 코인 (체스 전투 및 농작물 판매로 획득)">
               <span className="farm-gold-icon">💰</span>
@@ -141,6 +141,14 @@ export default function App() {
             <span className="farm-gems-item" title="성소 보석 (체크메이트 승리 시 획득)">
               <span className="farm-gems-icon">💎</span>
               <span>{farmState.gems}</span>
+            </span>
+            <span className="farm-ash-item" title="정화된 성회 (화로 소각 처형 및 체크메이트 승리 획득)">
+              <span className="farm-ash-icon">🔥</span>
+              <span>{farmState.sacredAsh}</span>
+            </span>
+            <span className="farm-marble-item" title="축복받은 대리석 (기둥 격돌 및 체크메이트 승리 획득)">
+              <span className="farm-marble-icon">🏛️</span>
+              <span>{farmState.marbleDust}</span>
             </span>
           </div>
 
@@ -590,6 +598,40 @@ export default function App() {
               </div>
 
               <div className="farm-shop-section-title" style={{ marginTop: '16px' }}>
+                🏛️ 수도원 복원 성물 자재 (Cathedral Relics)
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                <div className="farm-item-card">
+                  <div className="farm-item-header">
+                    <span className="farm-item-name">
+                      <span>🔥</span>
+                      <span>정화된 성회 (Sacred Ash)</span>
+                    </span>
+                    <span style={{ color: '#f97316', fontWeight: 700, fontSize: '0.9rem' }}>
+                      {farmState.sacredAsh}개
+                    </span>
+                  </div>
+                  <div className="farm-item-desc">
+                    화로 소각 처형 및 체크메이트 승리로 획득. 수도원 허브 밭 비옥화 재료입니다.
+                  </div>
+                </div>
+                <div className="farm-item-card">
+                  <div className="farm-item-header">
+                    <span className="farm-item-name">
+                      <span>🏛️</span>
+                      <span>축복받은 대리석 (Marble Dust)</span>
+                    </span>
+                    <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem' }}>
+                      {farmState.marbleDust}개
+                    </span>
+                  </div>
+                  <div className="farm-item-desc">
+                    기둥 격돌 분쇄 및 체크메이트 승리로 획득. 수도원 회랑 복원 필수 자재입니다.
+                  </div>
+                </div>
+              </div>
+
+              <div className="farm-shop-section-title" style={{ marginTop: '16px' }}>
                 ✨ 현재 활성화된 체스 버프 현황
               </div>
               <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px 16px', borderRadius: '10px', fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6' }}>
@@ -620,6 +662,18 @@ export default function App() {
             {t.whiteTriumphs}
           </div>
           <div className="checkmate-actions">
+            <button
+              type="button"
+              className="checkmate-btn"
+              id="btn-checkmate-garden"
+              style={{ background: 'linear-gradient(135deg, #15803d, #16a34a)', borderColor: '#86efac', color: '#fff', fontWeight: 700 }}
+              onClick={() => {
+                farmEngine.toggleGardenView(true);
+                document.getElementById('checkmate-overlay')?.classList.remove('visible');
+              }}
+            >
+              🌱 {lang === 'ko' ? '수도원 정원으로 이동' : 'Visit Sanctuary Garden'}
+            </button>
             <button className="checkmate-btn" id="btn-checkmate-replay">
               {t.replayFall}
             </button>

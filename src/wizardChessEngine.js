@@ -1665,6 +1665,12 @@ export function initWizardChess() {
       if (overlay) {
         overlay.classList.remove('visible');
       }
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = boardState[r]?.[c];
+          if (p && p.mesh) p.mesh.visible = true;
+        }
+      }
     }
 
     function captureBoardSnapshot() {
@@ -3412,6 +3418,95 @@ export function initWizardChess() {
       impactFlashLight.intensity = 6.2;
     }
 
+    function spawnBrazierIncineration(pos) {
+      const emberMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+      for (let i = 0; i < 28; i++) {
+        const sz = 0.02 + Math.random() * 0.035;
+        const geo = new THREE.DodecahedronGeometry(sz, 0);
+        const frag = new THREE.Mesh(geo, emberMat);
+        frag.position.set(
+          pos.x + (Math.random() - 0.5) * 0.35,
+          pos.y + Math.random() * 0.25,
+          pos.z + (Math.random() - 0.5) * 0.35
+        );
+        frag.castShadow = true;
+        scene.add(frag);
+        shatterDebris.push({
+          mesh: frag,
+          vel: new THREE.Vector3(
+            (Math.random() - 0.5) * 2.8,
+            2.2 + Math.random() * 2.5,
+            (Math.random() - 0.5) * 2.8
+          ),
+          rotVel: new THREE.Vector3(
+            Math.random() * 12,
+            Math.random() * 12,
+            Math.random() * 12
+          ),
+          life: 1.6
+        });
+      }
+      impactFlashLight.position.set(pos.x, pos.y + 0.45, pos.z);
+      impactFlashLight.intensity = 15.0;
+
+      for (const bl of brazierLights) {
+        if (bl.position.distanceTo(pos) < 2.0) {
+          bl.intensity = 14.0;
+        }
+      }
+    }
+
+    function startCheckmateBrazierExecution(kingMesh, defeatedColor, actualWinner, homePos) {
+      const targetBrazierIdx = homePos.x <= 0 ? 0 : 1;
+      const targetBrazierCfg = brazierCoords[targetBrazierIdx];
+      const targetPos = new THREE.Vector3(
+        targetBrazierCfg.pos[0],
+        targetBrazierCfg.pos[1] + 0.35,
+        targetBrazierCfg.pos[2]
+      );
+
+      const startPos = kingMesh.position.clone();
+
+      // Cinematic Camera Glides towards the Nave Brazier
+      const camTargetPos = new THREE.Vector3(targetPos.x * 0.45, 1.25, 0.0);
+      const camPos = new THREE.Vector3(targetPos.x * 0.25, 2.65, 3.8);
+      smoothCameraTo(camPos, camTargetPos, 1.35);
+
+      let execElapsed = 0;
+      const tExecDuration = 1.35; // 1.35s flight & cremation
+
+      function stepKingBrazierArc(dt) {
+        execElapsed += dt;
+        const u = Math.min(1.0, execElapsed / tExecDuration);
+        const easeU = easeInOutCubic(u);
+
+        // Arc path: parabolic trajectory from chessboard up into the brazier bowl
+        const currX = THREE.MathUtils.lerp(startPos.x, targetPos.x, easeU);
+        const currZ = THREE.MathUtils.lerp(startPos.z, targetPos.z, easeU);
+        const arcY = Math.sin(easeU * Math.PI) * 1.5;
+        const currY = THREE.MathUtils.lerp(startPos.y, targetPos.y, easeU) + arcY;
+
+        kingMesh.position.set(currX, currY, currZ);
+        kingMesh.rotation.x += dt * 3.8;
+        kingMesh.rotation.y += dt * 4.6;
+
+        if (u >= 1.0) {
+          kingMesh.visible = false;
+          spawnBrazierIncineration(targetPos);
+          if (typeof window !== 'undefined' && window.__farmEngine) {
+            window.__farmEngine.awardHazardKill('brazier', 'king');
+            window.__farmEngine.awardCheckmateVictory();
+          }
+          checkmateState.phase = 'cremated';
+          showCheckmateBanner(actualWinner, defeatedColor);
+          return true;
+        }
+        return false;
+      }
+
+      activeMoveTweens.push(stepKingBrazierArc);
+    }
+
     function showCheckmateBanner(winnerColor, defeatedColor) {
       const overlay = document.getElementById('checkmate-overlay');
       const crownEl = document.getElementById('checkmate-crown');
@@ -3422,7 +3517,12 @@ export function initWizardChess() {
       if (crownEl) crownEl.textContent = winnerColor === 'w' ? '♔' : '♚';
       if (titleEl) titleEl.textContent = t.checkmateTitle;
       if (subEl) {
-        subEl.textContent = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
+        const baseSub = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
+        if (winnerColor === playerColor) {
+          subEl.innerHTML = `${baseSub}<br/><span style="color:#f59e0b;font-size:0.9rem;margin-top:6px;display:inline-block;">🔥 대성당 화로 소각 처형 완료 • +250G | +3💎 | +5 성회 | +5 대리석</span>`;
+        } else {
+          subEl.textContent = baseSub;
+        }
       }
       if (overlay) {
         overlay.classList.add('visible');
@@ -3457,11 +3557,12 @@ export function initWizardChess() {
 
       if (!kingPiece || !kingPiece.mesh) {
         showCheckmateBanner(actualWinner, defeatedColor);
-      if (actualWinner === playerColor && typeof window !== 'undefined' && window.__farmEngine) {
-        window.__farmEngine.awardCheckmateVictory();
-      }
+        if (actualWinner === playerColor && typeof window !== 'undefined' && window.__farmEngine) {
+          window.__farmEngine.awardCheckmateVictory();
+        }
         return false;
       }
+      kingPiece.mesh.visible = true;
 
       // Find the checkmating attacker piece so the King falls away from the blow or into the clearest open square
       let attackerPos = null;
@@ -3665,8 +3766,13 @@ export function initWizardChess() {
         if (elapsed >= tTotal) {
           applyKingTopplePose(MAX_FALL_RAD, 0);
           checkmateState.phase = 'fallen';
-          if (!bannerShown) {
-            showCheckmateBanner(actualWinner, defeatedColor);
+          if (actualWinner === playerColor && kingPiece && kingPiece.mesh) {
+            startCheckmateBrazierExecution(kingPiece.mesh, defeatedColor, actualWinner, homePos);
+          } else {
+            if (!bannerShown) {
+              bannerShown = true;
+              showCheckmateBanner(actualWinner, defeatedColor);
+            }
           }
           return true;
         }
