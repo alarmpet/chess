@@ -4764,6 +4764,14 @@ export function initWizardChess() {
       boardToWorld,
       instantiatePiece,
       spawnStoneShatter,
+      spawnBrazierIncineration,
+      shakeCamera: (intensity = 0.06) => {
+        camera.position.y += intensity;
+        setTimeout(() => {
+          camera.position.y -= intensity;
+        }, 80);
+      },
+      hazardTiles,
       impactFlashLight,
       playerColor: () => playerColor,
       setCameraPreset,

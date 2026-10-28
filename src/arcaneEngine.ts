@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { arcaneAudio } from './arcaneAudio';
 
-export type SpellType = 'lightning' | 'teleport' | 'shield' | 'meteor' | 'ascend';
+export type SpellType = 'lightning' | 'teleport' | 'shield' | 'meteor' | 'ascend' | 'kinetic_shove';
 
 export interface SpellCard {
   id: string;
@@ -24,6 +24,16 @@ export const SPELL_POOL: SpellCard[] = [
     icon: '⚡',
     desc: '적 기물 1개를 1턴간 석화(이동/공격 불가)',
     descEn: 'Petrify 1 enemy piece for 1 turn (cannot move or attack)'
+  },
+  {
+    id: 'kinetic_shove',
+    type: 'kinetic_shove',
+    name: '대성당 충격파',
+    nameEn: 'Cathedral Kinetic Shove',
+    cost: 1,
+    icon: '💨',
+    desc: '적 기물 1개를 1칸 밀쳐내어 기둥이나 화로에 처박음!',
+    descEn: 'Shove 1 enemy piece 1 tile away into columns or braziers!'
   },
   {
     id: 'teleport',
@@ -74,6 +84,7 @@ export interface ArcaneState {
   activeSpell: SpellCard | null;
   targetingStep: string | null; // e.g. 'teleport_dest'
   teleportSource: { r: number; c: number } | null;
+  shoveSource: { r: number; c: number } | null;
   bannerMessage: string;
 }
 
@@ -86,6 +97,7 @@ class ArcaneEngine {
   public activeSpell: SpellCard | null = null;
   public targetingStep: string | null = null;
   public teleportSource: { r: number; c: number } | null = null;
+  public shoveSource: { r: number; c: number } | null = null;
   public bannerMessage: string = '';
 
   private listeners: ArcaneListener[] = [];
@@ -116,6 +128,7 @@ class ArcaneEngine {
       activeSpell: this.activeSpell,
       targetingStep: this.targetingStep,
       teleportSource: this.teleportSource,
+      shoveSource: this.shoveSource,
       bannerMessage: this.bannerMessage
     };
   }
@@ -194,6 +207,9 @@ class ArcaneEngine {
       case 'ascend':
         this.bannerMessage = `[♟️ ${card.name}] 여왕으로 승급시킬 아군 폰을 클릭하세요 (취소: ESC 또는 우클릭)`;
         break;
+      case 'kinetic_shove':
+        this.bannerMessage = `[💨 ${card.name}] 밀쳐낼 적 기물(킹 제외)을 클릭하세요 (취소: ESC 또는 우클릭)`;
+        break;
     }
 
     this.notify();
@@ -203,6 +219,7 @@ class ArcaneEngine {
     this.activeSpell = null;
     this.targetingStep = null;
     this.teleportSource = null;
+    this.shoveSource = null;
     this.bannerMessage = '';
     this.notify();
   }
@@ -409,6 +426,96 @@ class ArcaneEngine {
         this.notify();
         return true;
       }
+
+      case 'kinetic_shove': {
+        if (!this.shoveSource) {
+          // Step 1: Click target enemy non-king piece
+          if (!clickedPiece || clickedPiece.color === playerColor) {
+            this.bannerMessage = '⚠️ 밀쳐낼 적 기물을 클릭하세요!';
+            this.notify();
+            return true;
+          }
+          if (clickedPiece.type === 'king') {
+            this.bannerMessage = '⚠️ 대성당의 군주(King)는 절대 체급으로 밀쳐낼 수 없습니다!';
+            this.notify();
+            return true;
+          }
+          this.shoveSource = { r, c };
+          this.targetingStep = 'shove_dir';
+          this.bannerMessage = '[💨 충격파] 적 기물을 밀쳐낼 방향(인접 1칸: 상하좌우)을 클릭하세요!';
+          this.notify();
+          return true;
+        } else {
+          // Step 2: Click adjacent tile to shove into
+          const srcR = this.shoveSource.r;
+          const srcC = this.shoveSource.c;
+          const dr = Math.abs(r - srcR);
+          const dc = Math.abs(c - srcC);
+
+          if (dr + dc !== 1) {
+            this.bannerMessage = '⚠️ 상하좌우 인접한 1칸을 클릭해야 합니다!';
+            this.notify();
+            return true;
+          }
+
+          const enemyPiece = boardState[srcR][srcC];
+          if (!enemyPiece) {
+            this.cancelSpell();
+            return true;
+          }
+
+          this.consumeMana(this.activeSpell.cost);
+          this.removeCardFromHand(this.activeSpell.id);
+          this.activeSpell = null;
+          this.shoveSource = null;
+          this.targetingStep = null;
+
+          const hazardTiles = win.wizardChess?.hazardTiles || [];
+          const targetHazard = hazardTiles[r]?.[c]?.type;
+          const targetWorldPos = boardToWorld(r, c);
+
+          // Kinetic visual shockwave
+          this.spawnShoveFX(scene, boardToWorld(srcR, srcC), targetWorldPos);
+          arcaneAudio.playShove();
+
+          if (targetHazard === 'brazier') {
+            // Case A: Shoved into Brazier -> Instant Cremation!
+            boardState[srcR][srcC] = null;
+            if (enemyPiece.mesh) scene.remove(enemyPiece.mesh);
+            win.wizardChess?.spawnBrazierIncineration?.(targetWorldPos);
+            win.__farmEngine?.awardHazardKill('brazier', enemyPiece.type);
+            win.__farmEngine?.awardChessPieceCapture(enemyPiece.type);
+            this.bannerMessage = '🔥 화로 소각 처형 완료! 적 기물이 화로 속으로 밀려나 전소되었습니다! (+2 성회)';
+          } else if (targetHazard === 'pillar') {
+            // Case B: Shoved into Pillar -> Massive Stone Collision & Stun!
+            enemyPiece.isPetrified = true;
+            enemyPiece.petrifiedTurns = 1;
+            win.wizardChess?.shakeCamera?.(0.08);
+            win.__farmEngine?.awardHazardKill('pillar', enemyPiece.type);
+            this.bannerMessage = '🏛️ 기둥 격돌 분쇄! 적 기물이 석조 기둥에 처박혀 1턴간 기절했습니다! (+2 대리석)';
+          } else if (boardState[r][c]) {
+            // Case C: Bump collision with another piece!
+            const bumpTarget = boardState[r][c];
+            bumpTarget.isPetrified = true;
+            bumpTarget.petrifiedTurns = 1;
+            win.wizardChess?.shakeCamera?.(0.04);
+            this.bannerMessage = '💥 연쇄 충돌! 두 기물이 강하게 충돌하여 충격을 입었습니다!';
+          } else {
+            // Case D: Clean displacement into empty square
+            boardState[srcR][srcC] = null;
+            boardState[r][c] = enemyPiece;
+            enemyPiece.r = r;
+            enemyPiece.c = c;
+            if (enemyPiece.mesh) {
+              enemyPiece.mesh.position.copy(targetWorldPos);
+            }
+            this.bannerMessage = '💨 대성당 충격파! 적 기물을 전술적 위치로 1칸 밀쳐냈습니다!';
+          }
+
+          this.notify();
+          return true;
+        }
+      }
     }
 
     return false;
@@ -589,6 +696,37 @@ class ArcaneEngine {
         scene.remove(pillar);
         geo.dispose();
         mat.dispose();
+      }
+    }, 16);
+  }
+
+  private spawnShoveFX(scene: THREE.Scene, fromPos: THREE.Vector3, toPos: THREE.Vector3) {
+    const group = new THREE.Group();
+    const ringGeo = new THREE.RingGeometry(0.08, 0.22, 24);
+    ringGeo.rotateX(-Math.PI / 2);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.9,
+      side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(fromPos);
+    ring.position.y += 0.05;
+    group.add(ring);
+    scene.add(group);
+
+    let t = 0;
+    const interval = setInterval(() => {
+      t += 0.05;
+      ring.position.lerp(toPos, 0.35);
+      ring.scale.multiplyScalar(1.08);
+      ringMat.opacity = Math.max(0, 0.9 - t * 1.8);
+      if (t >= 0.5) {
+        clearInterval(interval);
+        scene.remove(group);
+        ringGeo.dispose();
+        ringMat.dispose();
       }
     }, 16);
   }

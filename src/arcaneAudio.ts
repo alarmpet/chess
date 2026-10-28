@@ -197,6 +197,25 @@ class ArcaneAudioEngine {
     osc.start(now);
     osc.stop(now + 0.12);
   }
+
+  // 7. Kinetic Shove / Cathedral Shockwave whoosh & punch
+  public playShove() {
+    this.initCtx();
+    if (!this.ctx || !this.masterGain || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.exponentialRampToValueAtTime(55, now + 0.38);
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.40);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.42);
+  }
 }
 
 export const arcaneAudio = new ArcaneAudioEngine();

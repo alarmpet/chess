@@ -19,6 +19,7 @@ test('Arcane Engine & Audio modules exist and export expected functions', () => 
   assert.ok(engineCode.includes('shield'), 'shield spell missing');
   assert.ok(engineCode.includes('meteor'), 'meteor spell missing');
   assert.ok(engineCode.includes('ascend'), 'ascend spell missing');
+  assert.ok(engineCode.includes('kinetic_shove'), 'kinetic_shove spell missing');
   assert.ok(engineCode.includes('handleTileClick'), 'handleTileClick missing from arcaneEngine');
 
   const audioCode = fs.readFileSync(arcaneAudioPath, 'utf-8');
@@ -27,6 +28,7 @@ test('Arcane Engine & Audio modules exist and export expected functions', () => 
   assert.ok(audioCode.includes('playShield'), 'playShield missing from arcaneAudio');
   assert.ok(audioCode.includes('playFireball'), 'playFireball missing from arcaneAudio');
   assert.ok(audioCode.includes('playAscend'), 'playAscend missing from arcaneAudio');
+  assert.ok(audioCode.includes('playShove'), 'playShove missing from arcaneAudio');
 });
 
 test('App.tsx integrates Arcane Mana bar and Spell Cards dock', () => {
