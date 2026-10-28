@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
+import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES } from './packs/packManifest.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -863,6 +864,16 @@ export function initWizardChess() {
     // =========================================================================
     const gltfLoader = new GLTFLoader();
     const pieceTemplates = {};
+    // Active pack manifest (PLAN §4.3). Loaded in loadAllAssets(); `?pack=<id>` selects one.
+    let activePack = null;
+    const DEFAULT_PACK_ID = 'cathedral';
+    function resolvePackId() {
+      try {
+        const q = new URLSearchParams(window.location.search).get('pack');
+        if (q && /^[a-z0-9_-]+$/i.test(q)) return q;
+      } catch (e) {}
+      return DEFAULT_PACK_ID;
+    }
     const activeMixers = [];
     const shatterDebris = [];
     const clock = new THREE.Clock();
@@ -1161,6 +1172,24 @@ export function initWizardChess() {
       const loaderText = document.getElementById('loader-text');
       const totalItems = PIECE_TYPES.length + 1;
 
+      // 0. Pack manifest — which models/clips/timings to use. Falls back to the cathedral pack.
+      const packId = resolvePackId();
+      try {
+        activePack = await fetchPackManifest(packId);
+      } catch (err) {
+        console.error(`Pack "${packId}" unavailable, falling back to "${DEFAULT_PACK_ID}":`, err);
+        activePack = packId === DEFAULT_PACK_ID ? null : await fetchPackManifest(DEFAULT_PACK_ID).catch((e2) => {
+          console.error('Default pack unavailable too:', e2);
+          return null;
+        });
+      }
+      if (activePack) {
+        for (const type of PIECE_TYPES) {
+          ATTACK_SYNC_PROFILES[type] = toAttackProfile(activePack.pieces[type].attackSync);
+        }
+      }
+      const envModelName = activePack?.environment?.model || 'option8_cathedral';
+
       async function loadGltfModel(baseName) {
         let arrayBuffer = null;
         try {
@@ -1235,7 +1264,7 @@ export function initWizardChess() {
       // 1. Load Native Full-Height Cathedral Environment (shifted by z = -0.65 so the Obsidian Altar is centered at 0, 0.7215, 0)
       const maxAniso = renderer.capabilities.getMaxAnisotropy() || 8;
       await new Promise((resolve) => {
-        loadGltfModel('option8_cathedral').then(
+        loadGltfModel(envModelName).then(
           (gltf) => {
             const cathedralRoot = gltf.scene;
             cathedralRoot.position.set(0, 0, -0.65);
@@ -1393,8 +1422,10 @@ export function initWizardChess() {
 
       // 2. Load 6 Sculpted & Rigged Chess Piece Models (shared between White & Black with PBR materials)
       for (const type of PIECE_TYPES) {
+        const pieceDef = activePack?.pieces?.[type] || null;
+        const modelName = pieceDef?.model || `${type}_white`;
         await new Promise((resolve) => {
-          loadGltfModel(`${type}_white`).then(
+          loadGltfModel(modelName).then(
             (gltf) => {
               const toRemove = [];
               gltf.scene.traverse((child) => {
@@ -1408,9 +1439,19 @@ export function initWizardChess() {
                 if (rem.parent) rem.parent.remove(rem);
               }
 
+              const animations = gltf.animations || [];
+              // Role→clip adapter: resolve each clip role once per template (PLAN §4.3).
+              const clipNames = animations.map((a) => a.name);
+              const clipMap = {};
+              for (const role of [...REQUIRED_CLIP_ROLES, ...OPTIONAL_CLIP_ROLES]) {
+                const resolved = resolveClipName(pieceDef || { clips: {} }, role, clipNames);
+                if (resolved) clipMap[role] = resolved;
+              }
               const tpl = {
                 scene: gltf.scene,
-                animations: gltf.animations || []
+                animations,
+                clipMap,
+                keepMaterials: Boolean(pieceDef?.keepMaterials)
               };
               pieceTemplates[`${type}_w`] = tpl;
               pieceTemplates[`${type}_b`] = tpl;
@@ -1524,13 +1565,16 @@ export function initWizardChess() {
             return;
           }
           if (child.isMesh) {
-            const mName = child.material?.name || '';
-            if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
-              child.material = goldTrimMat;
-            } else if (mName.includes('Steel')) {
-              child.material = forgedSteelMat;
-            } else {
-              child.material = primaryMat;
+            // keepMaterials (PLAN §4.3): animal packs ship their own PBR materials — never recolour them.
+            if (!tpl.keepMaterials) {
+              const mName = child.material?.name || '';
+              if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
+                child.material = goldTrimMat;
+              } else if (mName.includes('Steel')) {
+                child.material = forgedSteelMat;
+              } else {
+                child.material = primaryMat;
+              }
             }
             child.castShadow = true;
             child.receiveShadow = true;
@@ -1564,6 +1608,7 @@ export function initWizardChess() {
         mesh: root,
         mixer,
         actions,
+        clipMap: (tpl && tpl.clipMap) || {},
         currentAction: null,
         hasMoved: false
       };
@@ -1591,7 +1636,9 @@ export function initWizardChess() {
     function playPieceClip(piece, clipKeyword, loop = true, fadeSeconds = 0.18) {
       if (!piece || !piece.actions) return;
       const lowerKw = clipKeyword.toLowerCase();
-      const key = Object.keys(piece.actions).find((k) =>
+      // Pack adapter first (clip role → actual clip name), then the legacy substring match.
+      const mapped = piece.clipMap && piece.clipMap[lowerKw];
+      const key = (mapped && piece.actions[mapped]) ? mapped : Object.keys(piece.actions).find((k) =>
         k.toLowerCase().includes(lowerKw)
       );
       if (!key) return;
@@ -2087,6 +2134,11 @@ export function initWizardChess() {
         }
       }
 
+      // Promotion piece for this move (null when not a promotion). Was hard-coded to queen in
+      // three places before Phase 0a; UI/PGN/network may now request an under-promotion.
+      const promotionType =
+        piece.type === 'pawn' && (toR === 0 || toR === 7) ? normalizePromotion(options.promotion) : null;
+
       if (preMoveHighlightTask) {
         preMoveHighlightTask = null;
       }
@@ -2102,7 +2154,7 @@ export function initWizardChess() {
           toR,
           toC,
           capture: Boolean(targetOnDest),
-          promotion: options.promotion || 'queen'
+          promotion: promotionType || 'queen'
         }
       });
 
@@ -2145,7 +2197,7 @@ export function initWizardChess() {
           color: piece.color,
           from: { r: fromR, c: fromC },
           to: { r: toR, c: toC },
-          promotion: 'queen'
+          promotion: promotionType || 'queen'
         });
       }
 
@@ -2495,10 +2547,10 @@ export function initWizardChess() {
           playPieceClip(castleRook, 'Idle', true, 0.18);
         }
 
-        // Pawn Promotion to Queen
-        if (piece.type === 'pawn' && (toR === 0 || toR === 7)) {
+        // Pawn Promotion (queen by default; rook/bishop/knight when requested)
+        if (promotionType) {
           scene.remove(piece.mesh);
-          const promoted = instantiatePiece('queen', piece.color, toR, toC);
+          const promoted = instantiatePiece(promotionType, piece.color, toR, toC);
           promoted.hasMoved = true;
           boardState[toR][toC] = promoted;
         } else {
@@ -3111,7 +3163,7 @@ export function initWizardChess() {
         const mv = preMoveHighlightTask.move;
         const fromScriptFlag = Boolean(preMoveHighlightTask.fromScript);
         preMoveHighlightTask = null;
-        executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag });
+        executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag, promotion: mv.promotion });
       }
       let safety = 0;
       while (activeMoveTweens.length > 0 && safety < 200) {
@@ -3210,7 +3262,8 @@ export function initWizardChess() {
       }
 
       return executeChessMove(nextMove.fromR, nextMove.fromC, nextMove.toR, nextMove.toC, {
-        fromScript: isFromScript
+        fromScript: isFromScript,
+        promotion: nextMove.promotion
       });
     }
 
@@ -3969,7 +4022,7 @@ export function initWizardChess() {
               nextMove.from.c,
               nextMove.to.r,
               nextMove.to.c,
-              { fromRemote: true }
+              { fromRemote: true, promotion: nextMove.promotion }
             );
           }
           if (appliedMoveSeq < room.moves.length) {
@@ -4727,7 +4780,7 @@ export function initWizardChess() {
           const mv = preMoveHighlightTask.move;
           const fromScriptFlag = Boolean(preMoveHighlightTask.fromScript);
           preMoveHighlightTask = null;
-          executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag });
+          executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag, promotion: mv.promotion });
         }
       }
 

@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "id": "cathedral",
+  "name": { "ko": "대성당 (클래식)", "en": "Cathedral (Classic)" },
+  "assetBase": "./assets/glb/",
+  "environment": { "model": "option8_cathedral" },
+  "pieces": {
+    "pawn": {
+      "model": "pawn_white",
+      "rig": "statue",
+      "keepMaterials": false,
+      "clips": { "idle": ["Idle"], "move": "Move", "attack": "Attack", "shatter": "Shatter" },
+      "attackSync": { "timeScale": 1.15, "swingStartSec": 0.36, "contactSec": 0.60, "blowSec": 0.78, "maxLunge": 0.095 }
+    },
+    "rook": {
+      "model": "rook_white",
+      "rig": "statue",
+      "keepMaterials": false,
+      "clips": { "idle": ["Idle"], "move": "Move", "attack": "Attack", "shatter": "Shatter" },
+      "attackSync": { "timeScale": 1.06, "swingStartSec": 0.35, "contactSec": 0.58, "blowSec": 0.77, "maxLunge": 0.055 }
+    },
+    "knight": {
+      "model": "knight_white",
+      "rig": "statue",
+      "keepMaterials": false,
+      "clips": { "idle": ["Idle"], "move": "Move", "attack": "Attack", "shatter": "Shatter" },
+      "attackSync": { "timeScale": 1.08, "swingStartSec": 0.35, "contactSec": 0.58, "blowSec": 0.77, "maxLunge": 0.060 }
+    },
+    "bishop": {
+      "model": "bishop_white",
+      "rig": "statue",
+      "keepMaterials": false,
+      "clips": { "idle": ["Idle"], "move": "Move", "attack": "Attack", "shatter": "Shatter" },
+      "attackSync": { "timeScale": 1.08, "swingStartSec": 0.35, "contactSec": 0.58, "blowSec": 0.77, "maxLunge": 0.065 }
+    },
+    "queen": {
+      "model": "queen_white",
+      "rig": "statue",
+      "keepMaterials": false,
+      "clips": { "idle": ["Idle"], "move": "Move", "attack": "Attack", "shatter": "Shatter" },
+      "attackSync": { "timeScale": 1.08, "swingStartSec": 0.35, "contactSec": 0.58, "blowSec": 0.77, "maxLunge": 0.065 }
+    },
+    "king": {
+      "model": "king_white",
+      "rig": "statue",
+      "keepMaterials": false,
+      "clips": { "idle": ["Idle"], "move": "Move", "attack": "Attack", "shatter": "Shatter" },
+      "attackSync": { "timeScale": 1.10, "swingStartSec": 0.34, "contactSec": 0.56, "blowSec": 0.75, "maxLunge": 0.080 }
+    }
+  }
+}

@@ -79,6 +79,7 @@ npm run preview
 * **3D 그래픽스 & 애니메이션**: Three.js (r170), GLTFLoader, SkeletonUtils, OrbitControls
 * **셰이더 & 이펙트**: Custom GLSL (Brazier Fire & Charred Embers, Procedural Stone Noise)
 * **에셋 파이프라인**: 3D 바이너리 모델 스트리밍 (`.glb.gz.b64` ➔ `DecompressionStream('gzip')`)
+* **팩 매니페스트** (`public/packs/<id>/pack.json`): 기물 모델·역할→클립 매핑(`idle`·`move`·`attack`·`shatter`)·`attackSync` 타이밍·`keepMaterials` 를 팩 단위로 선언. `?pack=<id>` 로 선택하며 없거나 깨진 팩은 `cathedral` 로 폴백. 검증기는 `src/packs/packManifest.js`, 테스트는 `npm test` (`test/pack.test.mjs` 가 선언된 클립이 GLB 안에 실제로 있는지 대조). 동물 왕국 팩 계획은 `docs/PLAN.md` §4.3.
 
 ---
 
