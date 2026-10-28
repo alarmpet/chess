@@ -8,6 +8,7 @@ import {
   resolveClipName,
   toAttackProfile,
   normalizePromotion,
+  modelNameFor,
   PIECE_ROLES,
   REQUIRED_CLIP_ROLES
 } from '../src/packs/packManifest.js';
@@ -16,9 +17,9 @@ const ROOT = process.cwd();
 const PACKS_DIR = path.join(ROOT, 'public/packs');
 const GLB_DIR = path.join(ROOT, 'public/assets/glb');
 
-function readGlbJson(baseName) {
-  const b64Path = path.join(GLB_DIR, `${baseName}.glb.gz.b64`);
-  const rawPath = path.join(GLB_DIR, `${baseName}.glb`);
+function readGlbJson(baseName, dir = GLB_DIR) {
+  const b64Path = path.join(dir, `${baseName}.glb.gz.b64`);
+  const rawPath = path.join(dir, `${baseName}.glb`);
   let glb;
   if (fs.existsSync(b64Path)) {
     glb = zlib.gunzipSync(Buffer.from(fs.readFileSync(b64Path, 'utf-8').trim(), 'base64'));
@@ -50,17 +51,25 @@ for (const packId of packIds) {
   });
 
   test(`pack "${packId}": every model file exists and declared clips are present in the GLB`, () => {
-    const envJson = readGlbJson(manifest.environment.model);
-    assert.ok(envJson, `environment model ${manifest.environment.model} not found in public/assets/glb`);
+    const assetDir = manifest.assetBase
+      ? path.join(ROOT, 'public', manifest.assetBase.replace(/^\.\//, ''))
+      : GLB_DIR;
+    if (manifest.environment.type !== 'procedural') {
+      const envJson = readGlbJson(manifest.environment.model, assetDir);
+      assert.ok(envJson, `environment model ${manifest.environment.model} not found in ${assetDir}`);
+    }
 
     for (const role of PIECE_ROLES) {
       const def = manifest.pieces[role];
-      const json = readGlbJson(def.model);
-      assert.ok(json, `${role}: model ${def.model} not found in public/assets/glb`);
-      const names = (json.animations || []).map((a) => a.name);
-      for (const clipRole of REQUIRED_CLIP_ROLES) {
-        const resolved = resolveClipName(def, clipRole, names);
-        assert.ok(resolved, `${role}: clip role "${clipRole}" resolves to nothing in ${def.model} (has: ${names.join(', ')})`);
+      for (const color of ['w', 'b']) {
+        const modelName = modelNameFor(def, color);
+        const json = readGlbJson(modelName, assetDir);
+        assert.ok(json, `${role}/${color}: model ${modelName} not found in ${assetDir}`);
+        const names = (json.animations || []).map((a) => a.name);
+        for (const clipRole of REQUIRED_CLIP_ROLES) {
+          const resolved = resolveClipName(def, clipRole, names);
+          assert.ok(resolved, `${role}/${color}: clip role "${clipRole}" resolves to nothing in ${modelName} (has: ${names.join(', ')})`);
+        }
       }
     }
   });

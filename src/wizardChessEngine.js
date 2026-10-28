@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
-import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES } from './packs/packManifest.js';
+import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES } from './packs/packManifest.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -866,7 +866,9 @@ export function initWizardChess() {
     const pieceTemplates = {};
     // Active pack manifest (PLAN §4.3). Loaded in loadAllAssets(); `?pack=<id>` selects one.
     let activePack = null;
-    const DEFAULT_PACK_ID = 'cathedral';
+    // Default pack. The cathedral statues stay available via `?pack=cathedral`.
+    const DEFAULT_PACK_ID = 'legend';
+    const FALLBACK_PACK_ID = 'cathedral';
     function resolvePackId() {
       try {
         const q = new URLSearchParams(window.location.search).get('pack');
@@ -931,6 +933,119 @@ export function initWizardChess() {
     }
 
     buildChessBoardGrid();
+
+    // Pack-driven board palette (PLAN §4.3 `board`): recolours the shared square/rim materials.
+    function applyBoardPalette(board) {
+      if (!board) return;
+      for (const sq of boardSquareMeshes) {
+        const hex = sq.userData.isSquare && ((sq.userData.r + sq.userData.c) % 2 === 0) ? board.light : board.dark;
+        if (hex) sq.material.color.set(hex);
+      }
+      if (board.rim) goldTrimMat.color.set(board.rim);
+    }
+
+    // Procedural biome (PLAN §4.3 `environment.type = "procedural"`): sky, fog, ground, low-poly trees and rocks.
+    // Used by animal packs until a modelled biome exists; the cathedral GLB is skipped entirely.
+    const biomeGroup = new THREE.Group();
+    scene.add(biomeGroup);
+    function buildProceduralEnvironment(env) {
+      if (env.background) scene.background = new THREE.Color(env.background);
+      if (env.fog) scene.fog = new THREE.FogExp2(new THREE.Color(env.fog.color).getHex(), env.fog.density);
+      if (env.hemi) {
+        hemiLight.color.set(env.hemi.sky);
+        hemiLight.groundColor.set(env.hemi.ground);
+        if (typeof env.hemi.intensity === 'number') hemiLight.intensity = env.hemi.intensity;
+      }
+      if (env.sun) {
+        keyLight.color.set(env.sun.color);
+        if (typeof env.sun.intensity === 'number') keyLight.intensity = env.sun.intensity;
+      }
+      // Cathedral-only light rigs off (window/brazier point lights, flame halos).
+      scene.traverse((o) => {
+        if (o.isPointLight && o !== impactFlashLight) o.intensity = 0;
+      });
+      for (const sp of brazierGlowSprites) sp.visible = false;
+
+      const rand = mulberry32(1234);
+      const groundR = env.ground?.radius || 40;
+      const ground = new THREE.Mesh(
+        new THREE.CircleGeometry(groundR, 48),
+        new THREE.MeshStandardMaterial({ color: env.ground?.color || '#4f7a3a', roughness: 0.95, metalness: 0 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = BOARD_SURFACE_Y - 0.06;
+      ground.receiveShadow = true;
+      biomeGroup.add(ground);
+
+      // Raised earth plinth under the board so it reads as a clearing, not a floating slab.
+      const plinth = new THREE.Mesh(
+        new THREE.CylinderGeometry(BOARD_SQ_SIZE * 4.9, BOARD_SQ_SIZE * 5.4, 0.08, 40),
+        new THREE.MeshStandardMaterial({ color: '#6b5236', roughness: 1.0 })
+      );
+      plinth.position.y = BOARD_SURFACE_Y - 0.045;
+      plinth.receiveShadow = true;
+      biomeGroup.add(plinth);
+
+      const trees = env.trees || {};
+      const canopyColors = (trees.canopy || ['#2f7a3a', '#3f8f45']).map((c) => new THREE.Color(c));
+      const trunkMat = new THREE.MeshStandardMaterial({ color: trees.trunk || '#5a3b23', roughness: 0.9 });
+      const canopyMats = canopyColors.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, flatShading: true }));
+      const trunkGeo = new THREE.CylinderGeometry(0.06, 0.09, 1, 7);
+      const coneGeo = new THREE.ConeGeometry(0.5, 1, 7);
+      const blobGeo = new THREE.IcosahedronGeometry(0.5, 1);
+      const nTrees = trees.count || 60;
+      const rIn = trees.innerRadius || 3.4;
+      const rOut = trees.outerRadius || 16;
+      for (let i = 0; i < nTrees; i++) {
+        const a = rand() * Math.PI * 2;
+        const rr = rIn + Math.sqrt(rand()) * (rOut - rIn);
+        const x = Math.cos(a) * rr;
+        const z = Math.sin(a) * rr;
+        const h = 1.2 + rand() * 2.6;
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.scale.set(1 + rand() * 0.8, h * 0.45, 1 + rand() * 0.8);
+        trunk.position.y = h * 0.225;
+        trunk.castShadow = true;
+        tree.add(trunk);
+        const layers = 1 + Math.floor(rand() * 3);
+        for (let l = 0; l < layers; l++) {
+          const canopy = new THREE.Mesh(rand() < 0.6 ? blobGeo : coneGeo, canopyMats[Math.floor(rand() * canopyMats.length)]);
+          const w = (0.9 + rand() * 1.4) * (1 - l * 0.22);
+          canopy.scale.set(w, (0.8 + rand() * 1.1) * (1 - l * 0.15), w);
+          canopy.position.set((rand() - 0.5) * 0.3, h * 0.45 + l * 0.55 + 0.3, (rand() - 0.5) * 0.3);
+          canopy.castShadow = true;
+          tree.add(canopy);
+        }
+        tree.position.set(x, BOARD_SURFACE_Y - 0.06, z);
+        tree.rotation.y = rand() * Math.PI * 2;
+        biomeGroup.add(tree);
+      }
+      const rocks = env.rocks || {};
+      const rockMat = new THREE.MeshStandardMaterial({ color: rocks.color || '#8a8578', roughness: 0.95, flatShading: true });
+      const rockGeo = new THREE.DodecahedronGeometry(0.25, 0);
+      for (let i = 0; i < (rocks.count || 20); i++) {
+        const a = rand() * Math.PI * 2;
+        const rr = rIn * 0.8 + rand() * (rOut - rIn * 0.8);
+        const rock = new THREE.Mesh(rockGeo, rockMat);
+        rock.scale.set(0.5 + rand() * 1.6, 0.35 + rand() * 0.9, 0.5 + rand() * 1.6);
+        rock.position.set(Math.cos(a) * rr, BOARD_SURFACE_Y - 0.08, Math.sin(a) * rr);
+        rock.rotation.set(rand(), rand() * Math.PI, rand());
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        biomeGroup.add(rock);
+      }
+    }
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return () => {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
 
     // =========================================================================
     // Native Baked Wall/Column Stone (Original Ashlar) & Floor Stone (Abbey Flagstone)
@@ -1177,9 +1292,9 @@ export function initWizardChess() {
       try {
         activePack = await fetchPackManifest(packId);
       } catch (err) {
-        console.error(`Pack "${packId}" unavailable, falling back to "${DEFAULT_PACK_ID}":`, err);
-        activePack = packId === DEFAULT_PACK_ID ? null : await fetchPackManifest(DEFAULT_PACK_ID).catch((e2) => {
-          console.error('Default pack unavailable too:', e2);
+        console.error(`Pack "${packId}" unavailable, falling back to "${FALLBACK_PACK_ID}":`, err);
+        activePack = packId === FALLBACK_PACK_ID ? null : await fetchPackManifest(FALLBACK_PACK_ID).catch((e2) => {
+          console.error('Fallback pack unavailable too:', e2);
           return null;
         });
       }
@@ -1188,12 +1303,17 @@ export function initWizardChess() {
           ATTACK_SYNC_PROFILES[type] = toAttackProfile(activePack.pieces[type].attackSync);
         }
       }
-      const envModelName = activePack?.environment?.model || 'option8_cathedral';
+      const packAssetBase = activePack?.assetBase || './assets/glb/';
+      const envDef = activePack?.environment || { model: 'option8_cathedral' };
+      const envModelName = envDef.model || 'option8_cathedral';
+      const isProceduralEnv = envDef.type === 'procedural';
+      if (isProceduralEnv) buildProceduralEnvironment(envDef);
+      applyBoardPalette(activePack?.board);
 
-      async function loadGltfModel(baseName) {
+      async function loadGltfModel(baseName, base = './assets/glb/') {
         let arrayBuffer = null;
         try {
-          const resB64 = await fetch(`./assets/glb/${baseName}.glb.gz.b64`);
+          const resB64 = await fetch(`${base}${baseName}.glb.gz.b64`);
           if (resB64.ok) {
             const b64Text = (await resB64.text()).trim();
             if (b64Text.length > 64) {
@@ -1210,13 +1330,13 @@ export function initWizardChess() {
         } catch (e) {}
 
         if (!arrayBuffer) {
-          const resGlb = await fetch(`./assets/glb/${baseName}.glb`);
+          const resGlb = await fetch(`${base}${baseName}.glb`);
           if (!resGlb.ok) throw new Error(`Failed to fetch ${baseName}`);
           arrayBuffer = await resGlb.arrayBuffer();
         }
 
         return new Promise((resolve, reject) => {
-          gltfLoader.parse(arrayBuffer, './assets/glb/', (gltf) => resolve(gltf), (err) => reject(err));
+          gltfLoader.parse(arrayBuffer, base, (gltf) => resolve(gltf), (err) => reject(err));
         });
       }
       let loadedCount = 0;
@@ -1264,7 +1384,12 @@ export function initWizardChess() {
       // 1. Load Native Full-Height Cathedral Environment (shifted by z = -0.65 so the Obsidian Altar is centered at 0, 0.7215, 0)
       const maxAniso = renderer.capabilities.getMaxAnisotropy() || 8;
       await new Promise((resolve) => {
-        loadGltfModel(envModelName).then(
+        if (isProceduralEnv) {
+          bumpProgress('Biome grown...');
+          resolve();
+          return;
+        }
+        loadGltfModel(envModelName, packAssetBase).then(
           (gltf) => {
             const cathedralRoot = gltf.scene;
             cathedralRoot.position.set(0, 0, -0.65);
@@ -1420,51 +1545,56 @@ export function initWizardChess() {
         );
       });
 
-      // 2. Load 6 Sculpted & Rigged Chess Piece Models (shared between White & Black with PBR materials)
+      // 2. Load the piece models the pack declares (one per role, or one per role and colour)
+      const templateCache = {};
+      async function buildTemplate(type, pieceDef, modelName) {
+        if (templateCache[modelName]) return templateCache[modelName];
+        const gltf = await loadGltfModel(modelName, packAssetBase);
+        const toRemove = [];
+        gltf.scene.traverse((child) => {
+          const nm = child.name || '';
+          if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
+            child.visible = false;
+            toRemove.push(child);
+          }
+        });
+        for (const rem of toRemove) {
+          if (rem.parent) rem.parent.remove(rem);
+        }
+        const animations = gltf.animations || [];
+        // Role→clip adapter: resolve each clip role once per template (PLAN §4.3).
+        const clipNames = animations.map((a) => a.name);
+        const clipMap = {};
+        for (const role of [...REQUIRED_CLIP_ROLES, ...OPTIONAL_CLIP_ROLES]) {
+          const resolved = resolveClipName(pieceDef || { clips: {} }, role, clipNames);
+          if (resolved) clipMap[role] = resolved;
+        }
+        // Fit box (model units) so animal packs can be normalised to a height in board squares.
+        const bbox = new THREE.Box3().setFromObject(gltf.scene);
+        const tpl = {
+          scene: gltf.scene,
+          animations,
+          clipMap,
+          rig: pieceDef?.rig || 'statue',
+          keepMaterials: Boolean(pieceDef?.keepMaterials),
+          fitHeight: typeof pieceDef?.fitHeight === 'number' ? pieceDef.fitHeight : null,
+          yawOffset: typeof pieceDef?.yawOffset === 'number' ? pieceDef.yawOffset : 0,
+          bbox
+        };
+        templateCache[modelName] = tpl;
+        return tpl;
+      }
       for (const type of PIECE_TYPES) {
         const pieceDef = activePack?.pieces?.[type] || null;
-        const modelName = pieceDef?.model || `${type}_white`;
-        await new Promise((resolve) => {
-          loadGltfModel(modelName).then(
-            (gltf) => {
-              const toRemove = [];
-              gltf.scene.traverse((child) => {
-                const nm = child.name || '';
-                if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
-                  child.visible = false;
-                  toRemove.push(child);
-                }
-              });
-              for (const rem of toRemove) {
-                if (rem.parent) rem.parent.remove(rem);
-              }
-
-              const animations = gltf.animations || [];
-              // Role→clip adapter: resolve each clip role once per template (PLAN §4.3).
-              const clipNames = animations.map((a) => a.name);
-              const clipMap = {};
-              for (const role of [...REQUIRED_CLIP_ROLES, ...OPTIONAL_CLIP_ROLES]) {
-                const resolved = resolveClipName(pieceDef || { clips: {} }, role, clipNames);
-                if (resolved) clipMap[role] = resolved;
-              }
-              const tpl = {
-                scene: gltf.scene,
-                animations,
-                clipMap,
-                keepMaterials: Boolean(pieceDef?.keepMaterials)
-              };
-              pieceTemplates[`${type}_w`] = tpl;
-              pieceTemplates[`${type}_b`] = tpl;
-              bumpProgress(`Summoned ${type.toUpperCase()} Statue...`);
-              resolve();
-            },
-            (err) => {
-              console.warn(`Piece load warning (${type}):`, err);
-              bumpProgress(`Loaded ${type}`);
-              resolve();
-            }
-          );
-        });
+        for (const color of ['w', 'b']) {
+          const modelName = (pieceDef && modelNameFor(pieceDef, color)) || `${type}_white`;
+          try {
+            pieceTemplates[`${type}_${color}`] = await buildTemplate(type, pieceDef, modelName);
+          } catch (err) {
+            console.warn(`Piece load warning (${type}/${color}):`, err);
+          }
+        }
+        bumpProgress(`Summoned ${type.toUpperCase()}...`);
       }
 
       document.getElementById('loading-overlay')?.classList.add('hidden');
@@ -1549,6 +1679,42 @@ export function initWizardChess() {
       }
     }
 
+    const tintedMaterialCache = new Map();
+    function getTintedMaterial(material, color, tintHex) {
+      const key = `${material.uuid}|${color}`;
+      let m = tintedMaterialCache.get(key);
+      if (!m) {
+        m = material.clone();
+        if (m.color) m.color.multiply(new THREE.Color(tintHex));
+        tintedMaterialCache.set(key, m);
+      }
+      return m;
+    }
+
+    // Captured animals play their death clip and sink away instead of shattering into stone.
+    const fadingPieces = [];
+    function retireAnimalPiece(piece) {
+      if (!piece || !piece.mesh) return;
+      fadingPieces.push({ piece, life: 1.15, total: 1.15, baseY: piece.mesh.position.y });
+    }
+    function stepFadingPieces(dt) {
+      for (let i = fadingPieces.length - 1; i >= 0; i--) {
+        const f = fadingPieces[i];
+        f.life -= dt;
+        const u = 1 - Math.max(0, f.life / f.total);
+        if (u > 0.55) {
+          const k = (u - 0.55) / 0.45;
+          f.piece.mesh.position.y = f.baseY - k * k * 0.35;
+          const sc = BOARD_SQ_SIZE * (1 - k * 0.6);
+          f.piece.mesh.scale.set(sc, sc, sc);
+        }
+        if (f.life <= 0) {
+          scene.remove(f.piece.mesh);
+          fadingPieces.splice(i, 1);
+        }
+      }
+    }
+
     function instantiatePiece(type, color, r, c) {
       const tpl = pieceTemplates[`${type}_${color}`];
       let root;
@@ -1556,9 +1722,10 @@ export function initWizardChess() {
       const actions = {};
 
       if (tpl && tpl.scene) {
-        root = SkeletonUtils.clone(tpl.scene);
+        const model = SkeletonUtils.clone(tpl.scene);
         const primaryMat = color === 'w' ? whitePieceMat : blackPieceMat;
-        root.traverse((child) => {
+        const tintHex = activePack?.teamTint?.[color];
+        model.traverse((child) => {
           const nm = child.name || '';
           if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
             child.visible = false;
@@ -1575,12 +1742,32 @@ export function initWizardChess() {
               } else {
                 child.material = primaryMat;
               }
+            } else if (tintHex && child.material) {
+              // Team readability tint: a per-side multiply on a cloned copy of the pack material.
+              child.material = getTintedMaterial(child.material, color, tintHex);
             }
             child.castShadow = true;
             child.receiveShadow = true;
           }
         });
-        mixer = new THREE.AnimationMixer(root);
+        mixer = new THREE.AnimationMixer(model);
+        if (tpl.rig === 'statue') {
+          root = model;
+        } else {
+          // Animal rigs: wrap so the engine's rotation.y (facing) and scale stay on the group while the
+          // model inside is normalised (feet at y=0, centred, height = fitHeight squares, native yaw fixed).
+          root = new THREE.Group();
+          const size = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          tpl.bbox.getSize(size);
+          tpl.bbox.getCenter(center);
+          const s = tpl.fitHeight && size.y > 1e-6 ? tpl.fitHeight / size.y : 1;
+          model.scale.setScalar(s);
+          model.rotation.y = tpl.yawOffset;
+          model.position.set(-center.x * s, -tpl.bbox.min.y * s, -center.z * s);
+          root.add(model);
+          root.userData.animalModel = model;
+        }
         for (const clip of tpl.animations) {
           actions[clip.name] = mixer.clipAction(clip);
         }
@@ -1609,6 +1796,7 @@ export function initWizardChess() {
         mixer,
         actions,
         clipMap: (tpl && tpl.clipMap) || {},
+        rig: (tpl && tpl.rig) || 'statue',
         currentAction: null,
         hasMoved: false
       };
@@ -2099,6 +2287,30 @@ export function initWizardChess() {
       impactFlashLight.intensity = 7.5;
     }
 
+    const dustMat = new THREE.MeshStandardMaterial({ color: 0xc9b58a, roughness: 1.0, metalness: 0.0 });
+    function spawnDustPuff(worldPos) {
+      for (let i = 0; i < 18; i++) {
+        const sz = 0.02 + Math.random() * 0.035;
+        const puff = new THREE.Mesh(sharedShardGeo, dustMat);
+        puff.scale.setScalar(sz);
+        puff.position.set(
+          worldPos.x + (Math.random() - 0.5) * 0.2,
+          worldPos.y + 0.04 + Math.random() * 0.12,
+          worldPos.z + (Math.random() - 0.5) * 0.2
+        );
+        scene.add(puff);
+        shatterDebris.push({
+          mesh: puff,
+          baseScale: sz,
+          vel: new THREE.Vector3((Math.random() - 0.5) * 1.4, 0.5 + Math.random() * 0.9, (Math.random() - 0.5) * 1.4),
+          rotVel: new THREE.Vector3(Math.random() * 4, Math.random() * 4, Math.random() * 4),
+          life: 1.1
+        });
+      }
+      impactFlashLight.position.set(worldPos.x, worldPos.y + 0.3, worldPos.z);
+      impactFlashLight.intensity = 3.0;
+    }
+
     // =========================================================================
     // Concrete 3D Piece Dimensions & Anti-Clipping Collision Constants
     // =========================================================================
@@ -2232,7 +2444,8 @@ export function initWizardChess() {
       }
 
       // Full Concrete Standoff Distance for Melee Strike (0.36m for multi-square captures, scaled to 0.76*dist for 1-square captures so attacker always steps forward)
-      const stopOffset = isCapture ? Math.min(MELEE_STANDOFF, dist * 0.76) : 0;
+      const standoffForPiece = ATTACK_SYNC_PROFILES[piece.type]?.standoff ?? MELEE_STANDOFF;
+      const stopOffset = isCapture ? Math.min(standoffForPiece, dist * 0.76) : 0;
       const strikePos = new THREE.Vector3(
         endPos.x - dirX * stopOffset,
         BOARD_SURFACE_Y,
@@ -2715,8 +2928,13 @@ export function initWizardChess() {
               postShatterPiecePos.copy(piece.mesh.position);
               if (captured && captured.mesh) {
                 const shatterOrigin = captured.mesh.position.clone();
-                scene.remove(captured.mesh);
-                spawnStoneShatter(shatterOrigin, captured.color);
+                if (captured.rig === 'statue') {
+                  scene.remove(captured.mesh);
+                  spawnStoneShatter(shatterOrigin, captured.color);
+                } else {
+                  retireAnimalPiece(captured);
+                  spawnDustPuff(shatterOrigin);
+                }
               }
             }
 
@@ -4903,6 +5121,8 @@ export function initWizardChess() {
       if (impactFlashLight.intensity > 0) {
         impactFlashLight.intensity = Math.max(0, impactFlashLight.intensity - dt * 28);
       }
+
+      stepFadingPieces(dt);
 
       for (let i = shatterDebris.length - 1; i >= 0; i--) {
         const d = shatterDebris[i];

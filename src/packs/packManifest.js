@@ -12,9 +12,22 @@ export const RIG_KINDS = ['statue', 'animal', 'biped'];
 
 // Attack timing used by the capture choreography. Manifest keys are in seconds of clip
 // time (`*Sec`); the engine keeps its historical `*Clip` names internally.
-const ATTACK_SYNC_KEYS = ['timeScale', 'swingStartSec', 'contactSec', 'blowSec', 'maxLunge'];
+const ATTACK_SYNC_KEYS = ['timeScale', 'swingStartSec', 'contactSec', 'blowSec', 'maxLunge', 'standoff'];
 
 const DEFAULT_ATTACK_SYNC = { timeScale: 1.08, swingStartSec: 0.35, contactSec: 0.58, blowSec: 0.77, maxLunge: 0.065 };
+
+const COLOR_RE = /^#[0-9a-f]{6}$/i;
+
+/** `model` may be one name for both sides or `{ w, b }`. Returns the name for a colour. */
+export function modelNameFor(pieceDef, color) {
+  const m = pieceDef?.model;
+  if (m && typeof m === 'object') return m[color] || m.w || m.b || null;
+  return typeof m === 'string' ? m : null;
+}
+
+function isHex(v) {
+  return typeof v === 'string' && COLOR_RE.test(v);
+}
 
 /**
  * Validate a parsed pack manifest.
@@ -27,8 +40,29 @@ export function validatePackManifest(manifest) {
   }
   if (manifest.schema !== 1) errors.push(`schema must be 1 (got ${manifest.schema})`);
   if (typeof manifest.id !== 'string' || !manifest.id) errors.push('id must be a non-empty string');
-  if (!manifest.environment || typeof manifest.environment.model !== 'string') {
-    errors.push('environment.model must be a string');
+  const env = manifest.environment;
+  if (!env || typeof env !== 'object') {
+    errors.push('environment must be an object');
+  } else if (env.type === 'procedural') {
+    for (const k of ['background']) {
+      if (env[k] !== undefined && !isHex(env[k])) errors.push(`environment.${k} must be a #rrggbb colour`);
+    }
+    if (env.fog !== undefined && (!isHex(env.fog.color) || typeof env.fog.density !== 'number')) {
+      errors.push('environment.fog must be { color: #rrggbb, density: number }');
+    }
+    if (env.ground !== undefined && !isHex(env.ground.color)) errors.push('environment.ground.color must be a #rrggbb colour');
+  } else if (typeof env.model !== 'string') {
+    errors.push('environment.model must be a string (or environment.type = "procedural")');
+  }
+  if (manifest.board !== undefined) {
+    for (const k of ['light', 'dark', 'rim']) {
+      if (manifest.board[k] !== undefined && !isHex(manifest.board[k])) errors.push(`board.${k} must be a #rrggbb colour`);
+    }
+  }
+  if (manifest.teamTint !== undefined) {
+    for (const k of ['w', 'b']) {
+      if (manifest.teamTint[k] !== undefined && !isHex(manifest.teamTint[k])) errors.push(`teamTint.${k} must be a #rrggbb colour`);
+    }
   }
   const pieces = manifest.pieces;
   if (!pieces || typeof pieces !== 'object') {
@@ -41,7 +75,15 @@ export function validatePackManifest(manifest) {
       errors.push(`pieces.${role} is missing`);
       continue;
     }
-    if (typeof def.model !== 'string' || !def.model) errors.push(`pieces.${role}.model must be a string`);
+    if (!modelNameFor(def, 'w') || !modelNameFor(def, 'b')) {
+      errors.push(`pieces.${role}.model must be a string or { w, b }`);
+    }
+    if (def.fitHeight !== undefined && !(typeof def.fitHeight === 'number' && def.fitHeight > 0)) {
+      errors.push(`pieces.${role}.fitHeight must be a positive number (board squares)`);
+    }
+    if (def.yawOffset !== undefined && typeof def.yawOffset !== 'number') {
+      errors.push(`pieces.${role}.yawOffset must be a number (radians)`);
+    }
     if (def.rig !== undefined && !RIG_KINDS.includes(def.rig)) {
       errors.push(`pieces.${role}.rig must be one of ${RIG_KINDS.join('|')}`);
     }
@@ -119,7 +161,8 @@ export function toAttackProfile(attackSync) {
     swingStartClip: a.swingStartSec,
     contactClip: a.contactSec,
     blowClip: a.blowSec,
-    maxLunge: a.maxLunge
+    maxLunge: a.maxLunge,
+    standoff: typeof a.standoff === 'number' ? a.standoff : undefined
   };
 }
 

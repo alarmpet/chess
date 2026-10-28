@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "id": "legend",
+  "name": { "ko": "레전드 — 두 발로 선 동물들 (프로토타입)", "en": "Legend — animals on two legs (prototype)" },
+  "credits": "study-game 'legend' biped characters (own assets, biped_rig.py: Idle/Walk/Run/Sit/Cheer). Attack = Cheer and defeat = Sit are placeholders until Attack/Hit/Kneel clips exist (PLAN §1.2).",
+  "assetBase": "./packs/legend/",
+  "environment": {
+    "type": "procedural",
+    "background": "#a7d8ff",
+    "fog": { "color": "#bfe0b5", "density": 0.04 },
+    "ground": { "color": "#55803d", "radius": 40 },
+    "hemi": { "sky": "#d6ecff", "ground": "#3b4d2c", "intensity": 1.0 },
+    "sun": { "color": "#fff4de", "intensity": 2.3 },
+    "trees": { "count": 70, "innerRadius": 3.4, "outerRadius": 16, "canopy": ["#2f7a3a", "#3f8f45", "#57a04f", "#2b6b47"], "trunk": "#5a3b23" },
+    "rocks": { "count": 24, "color": "#8a8578" }
+  },
+  "board": { "light": "#e2cf97", "dark": "#5e7f3c", "rim": "#6b4a2b" },
+  "teamTint": { "w": "#fff6e6", "b": "#a9b8d8" },
+  "pieces": {
+    "pawn": {
+      "model": { "w": "rabbit", "b": "dog_shiba" },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.05,
+      "clips": { "idle": "Idle", "move": "Walk", "charge": "Run", "attack": "Cheer", "shatter": "Sit", "victory": "Cheer", "kneel": "Sit", "bored": "Sit" },
+      "attackSync": { "timeScale": 1.0, "swingStartSec": 0.15, "contactSec": 0.40, "blowSec": 0.62, "maxLunge": 0.10, "standoff": 0.34 }
+    },
+    "rook": {
+      "model": { "w": "panda", "b": "penguin" },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.3,
+      "clips": { "idle": "Idle", "move": "Walk", "charge": "Run", "attack": "Cheer", "shatter": "Sit", "victory": "Cheer", "kneel": "Sit", "bored": "Sit" },
+      "attackSync": { "timeScale": 1.0, "swingStartSec": 0.15, "contactSec": 0.40, "blowSec": 0.62, "maxLunge": 0.07, "standoff": 0.34 }
+    },
+    "knight": {
+      "model": { "w": "zebra", "b": "deer" },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.45,
+      "clips": { "idle": "Idle", "move": "Run", "charge": "Run", "attack": "Cheer", "shatter": "Sit", "victory": "Cheer", "kneel": "Sit", "bored": "Sit" },
+      "attackSync": { "timeScale": 1.0, "swingStartSec": 0.15, "contactSec": 0.40, "blowSec": 0.62, "maxLunge": 0.08, "standoff": 0.34 }
+    },
+    "bishop": {
+      "model": { "w": "unicorn", "b": "duck" },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.5,
+      "clips": { "idle": "Idle", "move": "Walk", "charge": "Run", "attack": "Cheer", "shatter": "Sit", "victory": "Cheer", "kneel": "Sit", "bored": "Sit" },
+      "attackSync": { "timeScale": 1.0, "swingStartSec": 0.15, "contactSec": 0.40, "blowSec": 0.62, "maxLunge": 0.07, "standoff": 0.34 }
+    },
+    "queen": {
+      "model": { "w": "fox", "b": "dragon" },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.4,
+      "clips": { "idle": "Idle", "move": "Walk", "charge": "Run", "attack": "Cheer", "shatter": "Sit", "victory": "Cheer", "kneel": "Sit", "bored": "Sit" },
+      "attackSync": { "timeScale": 1.0, "swingStartSec": 0.15, "contactSec": 0.40, "blowSec": 0.62, "maxLunge": 0.09, "standoff": 0.34 }
+    },
+    "king": {
+      "model": { "w": "wolf", "b": "tiger" },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.6,
+      "clips": { "idle": "Idle", "move": "Walk", "charge": "Run", "attack": "Cheer", "shatter": "Sit", "victory": "Cheer", "kneel": "Sit", "bored": "Sit" },
+      "attackSync": { "timeScale": 1.0, "swingStartSec": 0.15, "contactSec": 0.40, "blowSec": 0.62, "maxLunge": 0.08, "standoff": 0.34 }
+    }
+  }
+}
