@@ -2,9 +2,20 @@ import * as THREE_NS from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { SanctuaryGarden3D } from './farm3D';
-import { createBeastMesh, updateBeastTokens, getBeastInfo, getRuneTexture } from './beastModels';
+import {
+  createBeastMesh,
+  updateBeastTokens,
+  getBeastInfo,
+  getRuneTexture,
+  createHighEndBeastMaterials,
+  attachBeastGuardianTotem
+} from './beastModels';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -112,6 +123,30 @@ export function initWizardChess() {
     orbitControls.maxDistance = 36.0;
     orbitControls.target.set(0, 0.85, -0.15);
     orbitControls.update();
+
+    // =========================================================================
+    // Cinematic Post-Processing: UnrealBloomPass + OutputPass
+    // =========================================================================
+    let composer = null;
+    try {
+      if (typeof window !== 'undefined' && !isAutomatedTest) {
+        const renderPass = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(
+          new THREE.Vector2(window.innerWidth, window.innerHeight),
+          0.58, // ethereal bloom strength
+          0.35, // bloom radius
+          0.82  // threshold for emissive runes and gold highlights
+        );
+        const outputPass = new OutputPass();
+        composer = new EffectComposer(renderer);
+        composer.addPass(renderPass);
+        composer.addPass(bloomPass);
+        composer.addPass(outputPass);
+      }
+    } catch (e) {
+      console.warn('Post-processing EffectComposer not available, using standard renderer:', e);
+      composer = null;
+    }
 
     // =========================================================================
     // Feature 5: Hold Shift + Mouse Drag (Left=Rotate, Right=Pan) Axis Lock (X or Y)
@@ -833,33 +868,16 @@ export function initWizardChess() {
     scene.add(impactFlashLight);
 
     // =========================================================================
-    // Materials for White & Black Sculpted Stone Chess Pieces
+    // High-End PBR Materials for White & Black Sculpted 3D Pieces
     // =========================================================================
-    const whitePieceMat = new THREE.MeshStandardMaterial({
-      color: 0xe6dfd0,
-      roughness: 0.34,
-      metalness: 0.06
-    });
-
-    const blackPieceMat = new THREE.MeshStandardMaterial({
-      color: 0x222630,
-      roughness: 0.28,
-      metalness: 0.24
-    });
-
-    const goldTrimMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37,
-      roughness: 0.26,
-      metalness: 0.86
-    });
-
-    const forgedSteelMat = new THREE.MeshStandardMaterial({
-      color: 0xdce4ee,
-      roughness: 0.20,
-      metalness: 0.88,
-      emissive: 0x222832,
-      emissiveIntensity: 0.25
-    });
+    const {
+      whitePieceMat,
+      goldTrimMat,
+      forgedSteelMat,
+      blackPieceMat,
+      blackGoldTrimMat,
+      blackSteelMat
+    } = createHighEndBeastMaterials();
 
     // =========================================================================
     // Asset Loading (Cathedral GLB + 12 Rigged Piece GLBs)
@@ -1636,48 +1654,44 @@ export function initWizardChess() {
     }
 
     function instantiatePiece(type, color, r, c) {
-      const skinMode = (typeof window !== 'undefined' && window.__chessSkin) ? window.__chessSkin : '3d_beasts';
       let root;
       let mixer = null;
       const actions = {};
 
-      if (skinMode === 'classic') {
-        const tpl = pieceTemplates[`${type}_${color}`];
-        if (tpl && tpl.scene) {
-          root = SkeletonUtils.clone(tpl.scene);
-          const primaryMat = color === 'w' ? whitePieceMat : blackPieceMat;
-          root.traverse((child) => {
-            const nm = child.name || '';
-            if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
-              child.visible = false;
-              return;
-            }
-            if (child.isMesh) {
-              const mName = child.material?.name || '';
-              if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
-                child.material = goldTrimMat;
-              } else if (mName.includes('Steel')) {
-                child.material = forgedSteelMat;
-              } else {
-                child.material = primaryMat;
-              }
-              child.castShadow = true;
-              child.receiveShadow = true;
-            }
-          });
-          mixer = new THREE.AnimationMixer(root);
-          for (const clip of tpl.animations) {
-            actions[clip.name] = mixer.clipAction(clip);
+      const tpl = pieceTemplates[`${type}_${color}`];
+      if (tpl && tpl.scene) {
+        root = SkeletonUtils.clone(tpl.scene);
+        const primaryMat = color === 'w' ? whitePieceMat : blackPieceMat;
+        const trimMat = color === 'w' ? goldTrimMat : blackGoldTrimMat;
+        const steelMat = color === 'w' ? forgedSteelMat : blackSteelMat;
+        root.traverse((child) => {
+          const nm = child.name || '';
+          if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
+            child.visible = false;
+            return;
           }
-          activeMixers.push(mixer);
-        } else {
-          root = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.1, 0.14, 0.42, 16),
-            color === 'w' ? whitePieceMat : blackPieceMat
-          );
+          if (child.isMesh) {
+            const mName = child.material?.name || '';
+            if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
+              child.material = trimMat;
+            } else if (mName.includes('Steel')) {
+              child.material = steelMat;
+            } else {
+              child.material = primaryMat;
+            }
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        mixer = new THREE.AnimationMixer(root);
+        for (const clip of tpl.animations) {
+          actions[clip.name] = mixer.clipAction(clip);
         }
+        activeMixers.push(mixer);
+
+        // Attach High-End 3D Animal Guardian Totem, Rune Disc & Skeleton Accessories
+        attachBeastGuardianTotem(root, type, color);
       } else {
-        // Default: 100% Volumetric Sculpted 3D Sanctuary Beast
         root = createBeastMesh(type, color);
       }
 
@@ -4955,7 +4969,8 @@ export function initWizardChess() {
           enforceCathedralBoundsAndSolidColumns(prev, camera.position, orbitControls.target);
           path.push(camera.position.toArray().map((v) => Number(v.toFixed(3))));
         }
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
         return path;
       },
       setSinglePlayerSide: (color) => {
@@ -4987,7 +5002,8 @@ export function initWizardChess() {
         }
         currentTurn = turn;
         updateTurnUI();
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
       },
       triggerDemoCapture: () => {
         // Set up an immediate pawn capture (e4 x d5) and execute it
@@ -5056,7 +5072,8 @@ export function initWizardChess() {
         telemetry: cameraTelemetry
       }),
       captureScreenshot: async (filename) => {
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
         const outCanvas = document.createElement('canvas');
         outCanvas.width = renderer.domElement.width;
         outCanvas.height = renderer.domElement.height;
@@ -5192,7 +5209,8 @@ export function initWizardChess() {
       for (let i = 0; i < steps; i++) {
         stepScene(subDt, false);
       }
-      renderer.render(scene, camera);
+      if (composer) composer.render();
+      else renderer.render(scene, camera);
     };
 
     // =========================================================================
@@ -5427,7 +5445,11 @@ export function initWizardChess() {
       }
 
       if (doRender) {
-        renderer.render(scene, camera);
+        if (composer) {
+          composer.render();
+        } else {
+          renderer.render(scene, camera);
+        }
       }
     }
 
@@ -5449,6 +5471,9 @@ export function initWizardChess() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      if (composer) {
+        composer.setSize(window.innerWidth, window.innerHeight);
+      }
     });
 
 
