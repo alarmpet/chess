@@ -25,8 +25,10 @@ import {
   buildBilliardsTable,
   buildCueStick,
   buildOverheadLamp,
+  buildBilliardsLoungeRoom,
   createBallTexture,
   createResinBallMaterial,
+  createBilliardsSalonPMREMEnvironment,
   FELT_THEMES
 } from './billiardsAssets.ts';
 import { billiardsAudio } from './billiardsAudio.ts';
@@ -163,13 +165,19 @@ export class BilliardsGameEngine {
       this.composer = null;
     }
 
-    // 4. Ambient Environment & Warm Lounge Lighting
-    const ambientLight = new THREE.AmbientLight(0xffedd5, 0.45);
-    this.scene.add(ambientLight);
+    // 4. Ambient Environment & PMREM Studio IBL Reflection
+    const envTex = createBilliardsSalonPMREMEnvironment(this.renderer);
+    if (envTex) {
+      this.scene.environment = envTex;
+      if ('environmentIntensity' in this.scene) {
+        (this.scene as any).environmentIntensity = 0.95;
+      }
+    }
+    this.scene.background = new THREE.Color(0x0a0c14);
+    this.scene.fog = new THREE.FogExp2(0x0a0c14, 0.035);
 
-    const floorBounce = new THREE.DirectionalLight(0x1e3a8a, 0.35);
-    floorBounce.position.set(0, -2, 0);
-    this.scene.add(floorBounce);
+    const ambientLight = new THREE.AmbientLight(0xffeedd, 0.55);
+    this.scene.add(ambientLight);
 
     // 5. Build 3D Assets
     this.buildScene();
@@ -184,6 +192,10 @@ export class BilliardsGameEngine {
 
   private buildScene() {
     this.scene.clear();
+
+    // 0. VIP Billiards Lounge Room Interior (Herringbone Hardwood Floor, Sconces, Dust Motes)
+    const loungeRoom = buildBilliardsLoungeRoom();
+    this.scene.add(loungeRoom);
 
     // 1. Table
     const tableBuild = buildBilliardsTable(
@@ -264,14 +276,20 @@ export class BilliardsGameEngine {
     this.bankLineMesh.visible = false;
     this.scene.add(this.bankLineMesh);
 
-    const ghostGeo = new THREE.SphereGeometry(this.physics.bounds.ballRadius, 16, 16);
-    const ghostMat = new THREE.MeshBasicMaterial({
+    const ghostGeo = new THREE.SphereGeometry(this.physics.bounds.ballRadius, 32, 32);
+    const ghostMat = new THREE.MeshPhysicalMaterial({
       color: 0x38bdf8,
-      wireframe: true,
+      roughness: 0.12,
+      transmission: 0.65,
+      thickness: 0.05,
       transparent: true,
-      opacity: 0.50
+      opacity: 0.70,
+      emissive: 0x0284c7,
+      emissiveIntensity: 0.40,
+      ior: 1.5
     });
     this.ghostBallMesh = new THREE.Mesh(ghostGeo, ghostMat);
+    this.ghostBallMesh.visible = false;
     this.scene.add(this.ghostBallMesh);
 
     // 5. Initialize Mode Balls
@@ -316,7 +334,7 @@ export class BilliardsGameEngine {
     this.physics.balls = [];
 
     const R = this.bounds.ballRadius;
-    const geo = new THREE.SphereGeometry(R, 32, 32);
+    const geo = new THREE.SphereGeometry(R, 48, 48);
 
     if (mode === '8ball') {
       // 1. Cue Ball (White) at head string (X = -0.55)
@@ -984,12 +1002,24 @@ export class BilliardsGameEngine {
     }
     this.lastSimulating = simulating;
 
-    // 3. OrbitControls update
+    // 3. Subtle Atmospheric Dust Motes Drift
+    const dust = this.scene.getObjectByName('Ambient_Dust_Motes') as THREE.Points;
+    if (dust && dust.geometry && dust.geometry.attributes.position) {
+      const pos = dust.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let y = pos.getY(i) - 0.0006;
+        if (y < 0.2) y = 1.35;
+        pos.setY(i, y);
+      }
+      pos.needsUpdate = true;
+    }
+
+    // 4. OrbitControls update
     if (this.orbitControls && this.orbitControls.enabled) {
       this.orbitControls.update();
     }
 
-    // 4. Render
+    // 5. Render
     if (this.composer) {
       this.composer.render();
     } else if (this.renderer) {

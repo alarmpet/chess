@@ -215,12 +215,15 @@ export class BilliardsPhysicsEngine {
       b.position.x += b.velocity.x * dt;
       b.position.z += b.velocity.z * dt;
 
-      // Update 3D mesh
+      // Update 3D mesh with true Quaternion orientation integration (avoids Euler gimbal lock & axis wobble)
       if (b.mesh) {
         b.mesh.position.copy(b.position);
-        b.mesh.rotation.x += b.angularVelocity.x * dt;
-        b.mesh.rotation.y += b.angularVelocity.y * dt;
-        b.mesh.rotation.z += b.angularVelocity.z * dt;
+        const angSpeed = b.angularVelocity.length();
+        if (angSpeed > 0.0001) {
+          const rotAxis = b.angularVelocity.clone().normalize();
+          const deltaQuat = new THREE.Quaternion().setFromAxisAngle(rotAxis, angSpeed * dt);
+          b.mesh.quaternion.premultiply(deltaQuat);
+        }
       }
     }
 
