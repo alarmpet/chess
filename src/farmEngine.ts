@@ -1,0 +1,582 @@
+import { CROPS, CropDef, FACILITIES, FacilityDef, CHESS_LOOT, RESTORATION_ZONES, RestorationZoneDef } from './farmData';
+import { farmAudio } from './farmAudio';
+
+export interface FarmPlot {
+  id: number;
+  cropId: string | null;
+  stage: 0 | 1 | 2 | 3; // 0: seed, 1: sprout, 2: growing, 3: harvestable
+  growthProgress: number; // 0 to 100
+  isWatered: boolean;
+  plantedAt: number;
+}
+
+export interface FarmState {
+  gold: number;
+  gems: number;
+  sacredAsh: number;
+  marbleDust: number;
+  plots: FarmPlot[];
+  seeds: Record<string, number>;
+  harvested: Record<string, number>;
+  facilities: Record<string, boolean>;
+  restorations: Record<string, boolean>;
+  activeBuffs: {
+    manaBonus: number;
+    goldMultiplier: number;
+    kingRevive: boolean;
+    meteorCross: boolean;
+  };
+  isGardenView: boolean;
+  isShopOpen: boolean;
+  isBarnOpen: boolean;
+  selectedSeedId: string | null;
+  lootNotification: string | null;
+}
+
+type FarmListener = (state: FarmState) => void;
+
+class FarmEngine {
+  public gold: number = 120;
+  public gems: number = 5;
+  public sacredAsh: number = 0;
+  public marbleDust: number = 0;
+  public plots: FarmPlot[] = [];
+  public seeds: Record<string, number> = {
+    mana_grape: 2,
+    golden_wheat: 4,
+    flame_pepper: 1,
+    sacred_herb: 1
+  };
+  public harvested: Record<string, number> = {};
+  public facilities: Record<string, boolean> = {
+    fountain: false,
+    apiary: false,
+    scarecrow: false
+  };
+  public restorations: Record<string, boolean> = {
+    cloister_walkway: false,
+    herb_sanctuary: false,
+    stained_glass: false,
+    altar_brewery: false,
+    bell_tower: false,
+    high_altar: false
+  };
+  public activeBuffs = {
+    manaBonus: 0,
+    goldMultiplier: 1.0,
+    kingRevive: false,
+    meteorCross: false
+  };
+  public isGardenView: boolean = false;
+  public isShopOpen: boolean = false;
+  public isBarnOpen: boolean = false;
+  public selectedSeedId: string | null = 'golden_wheat';
+  public lootNotification: string | null = null;
+
+  private listeners: FarmListener[] = [];
+  private tickTimer: any = null;
+
+  constructor() {
+    this.initPlots();
+    this.loadState();
+    this.startGrowthLoop();
+  }
+
+  private initPlots() {
+    this.plots = Array.from({ length: 9 }, (_, i) => ({
+      id: i,
+      cropId: null,
+      stage: 0,
+      growthProgress: 0,
+      isWatered: false,
+      plantedAt: 0
+    }));
+  }
+
+  private loadState() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const raw = localStorage.getItem('sanctuary_farm_save');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed.gold === 'number') this.gold = parsed.gold;
+          if (typeof parsed.gems === 'number') this.gems = parsed.gems;
+          if (typeof parsed.sacredAsh === 'number') this.sacredAsh = parsed.sacredAsh;
+          if (typeof parsed.marbleDust === 'number') this.marbleDust = parsed.marbleDust;
+          if (Array.isArray(parsed.plots)) this.plots = parsed.plots;
+          if (parsed.seeds) this.seeds = { ...this.seeds, ...parsed.seeds };
+          if (parsed.harvested) this.harvested = parsed.harvested;
+          if (parsed.facilities) this.facilities = { ...this.facilities, ...parsed.facilities };
+          if (parsed.restorations) this.restorations = { ...this.restorations, ...parsed.restorations };
+          if (parsed.activeBuffs) this.activeBuffs = { ...this.activeBuffs, ...parsed.activeBuffs };
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load farm save:', e);
+    }
+  }
+
+  public saveState() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const payload = {
+          gold: this.gold,
+          gems: this.gems,
+          sacredAsh: this.sacredAsh,
+          marbleDust: this.marbleDust,
+          plots: this.plots,
+          seeds: this.seeds,
+          harvested: this.harvested,
+          facilities: this.facilities,
+          restorations: this.restorations,
+          activeBuffs: this.activeBuffs
+        };
+        localStorage.setItem('sanctuary_farm_save', JSON.stringify(payload));
+      }
+    } catch (e) {
+      console.warn('Failed to save farm:', e);
+    }
+  }
+
+  public subscribe(fn: FarmListener): () => void {
+    this.listeners.push(fn);
+    this.notify();
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== fn);
+    };
+  }
+
+  public notify() {
+    const st = this.getState();
+    for (const l of this.listeners) l(st);
+  }
+
+  public getState(): FarmState {
+    return {
+      gold: this.gold,
+      gems: this.gems,
+      sacredAsh: this.sacredAsh,
+      marbleDust: this.marbleDust,
+      plots: this.plots.map((p) => ({ ...p })),
+      seeds: { ...this.seeds },
+      harvested: { ...this.harvested },
+      facilities: { ...this.facilities },
+      restorations: { ...this.restorations },
+      activeBuffs: { ...this.activeBuffs },
+      isGardenView: this.isGardenView,
+      isShopOpen: this.isShopOpen,
+      isBarnOpen: this.isBarnOpen,
+      selectedSeedId: this.selectedSeedId,
+      lootNotification: this.lootNotification
+    };
+  }
+
+  public toggleGardenView(force?: boolean) {
+    this.isGardenView = force !== undefined ? force : !this.isGardenView;
+    this.notify();
+
+    // Trigger Three.js camera transition via window hook if available
+    const win = window as any;
+    if (win.__toggleGardenCamera) {
+      win.__toggleGardenCamera(this.isGardenView);
+    }
+  }
+
+  public toggleShop(open?: boolean) {
+    this.isShopOpen = open !== undefined ? open : !this.isShopOpen;
+    this.notify();
+  }
+
+  public toggleBarn(open?: boolean) {
+    this.isBarnOpen = open !== undefined ? open : !this.isBarnOpen;
+    this.notify();
+  }
+
+  public selectSeed(seedId: string) {
+    this.selectedSeedId = seedId;
+    this.notify();
+  }
+
+  // --- Real-Time Growth & Chess Integration Loop ---
+
+  private startGrowthLoop() {
+    if (typeof window === 'undefined') return;
+    this.tickTimer = setInterval(() => {
+      let changed = false;
+      const speedMultiplier = this.facilities.apiary ? 1.5 : 1.0;
+
+      for (const plot of this.plots) {
+        if (!plot.cropId || plot.stage === 3) continue;
+
+        // Golden Fountain auto-waters
+        if (this.facilities.fountain && !plot.isWatered) {
+          plot.isWatered = true;
+          changed = true;
+        }
+
+        if (plot.isWatered) {
+          const crop = CROPS[plot.cropId];
+          if (crop) {
+            const growthRate = (100 / crop.growthTimeSeconds) * speedMultiplier;
+            plot.growthProgress = Math.min(100, plot.growthProgress + growthRate);
+
+            const oldStage = plot.stage;
+            if (plot.growthProgress >= 100) {
+              plot.stage = 3; // Harvestable!
+            } else if (plot.growthProgress >= 60) {
+              plot.stage = 2; // Growing
+            } else if (plot.growthProgress >= 25) {
+              plot.stage = 1; // Sprout
+            }
+
+            if (oldStage !== plot.stage) {
+              changed = true;
+            }
+          }
+        }
+      }
+
+      if (changed) {
+        this.saveState();
+        this.notify();
+        const hasReady = this.plots.some(p => p.stage === 3);
+        const win = window as any;
+        win.__juiceEngine?.setHarvestReady?.(hasReady);
+      }
+    }, 1000);
+  }
+
+  // Every chess move made in the game advances all crops instantly!
+  public onChessMoveAdvance() {
+    let changed = false;
+    for (const plot of this.plots) {
+      if (!plot.cropId || plot.stage === 3) continue;
+      const crop = CROPS[plot.cropId];
+      if (crop) {
+        const sanctuaryMultiplier = this.restorations.herb_sanctuary ? 1.5 : 1.0;
+        const bonus = crop.growthPerChessMove * (this.facilities.apiary ? 1.4 : 1.0) * sanctuaryMultiplier;
+        plot.growthProgress = Math.min(100, plot.growthProgress + bonus);
+
+        if (plot.growthProgress >= 100) plot.stage = 3;
+        else if (plot.growthProgress >= 60) plot.stage = 2;
+        else if (plot.growthProgress >= 25) plot.stage = 1;
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.saveState();
+      this.notify();
+    }
+    const hasReady = this.plots.some(p => p.stage === 3);
+    const win = window as any;
+    win.__juiceEngine?.setHarvestReady?.(hasReady);
+  }
+
+  // --- Plot Actions ---
+
+  public plantSeed(plotIdx: number, seedId: string): boolean {
+    const plot = this.plots[plotIdx];
+    if (!plot) return false;
+    if (plot.cropId) {
+      this.showLootNotification('⚠️ 이미 작물이 심어져 있는 밭입니다!');
+      return false;
+    }
+
+    const count = this.seeds[seedId] || 0;
+    if (count <= 0) {
+      const crop = CROPS[seedId];
+      this.showLootNotification(`⚠️ 보유한 [${crop?.name || seedId}] 씨앗이 없습니다! 🛒 상점에서 구매하세요.`);
+      return false;
+    }
+
+    this.seeds[seedId] = count - 1;
+    plot.cropId = seedId;
+    plot.stage = 0;
+    plot.growthProgress = 0;
+    plot.isWatered = this.facilities.fountain ? true : false;
+    plot.plantedAt = Date.now();
+
+    farmAudio.playPlant();
+    this.saveState();
+    this.notify();
+
+    // Notify 3D mesh renderer
+    const win = window as any;
+    win.__updatePlotMesh?.(plotIdx, plot);
+    win.__juiceEngine?.progressQuest?.('q_seed');
+    win.__juiceEngine?.awardXP?.(5);
+
+    const crop = CROPS[seedId];
+    this.showLootNotification(`🌱 [${crop?.name || seedId}] 파종 완료! (남은 씨앗: ${this.seeds[seedId]}개)`);
+    return true;
+  }
+
+  public waterPlot(plotIdx: number): boolean {
+    const plot = this.plots[plotIdx];
+    if (!plot || !plot.cropId || plot.isWatered) return false;
+
+    plot.isWatered = true;
+    farmAudio.playWater();
+    this.showLootNotification('💧 작물에 물을 주었습니다! 촉촉해져 성장이 가속됩니다.');
+    this.saveState();
+    this.notify();
+
+    const win = window as any;
+    win.__updatePlotMesh?.(plotIdx, plot);
+    return true;
+  }
+
+  public harvestPlot(plotIdx: number): boolean {
+    const plot = this.plots[plotIdx];
+    if (!plot || !plot.cropId || plot.stage !== 3) return false;
+
+    const cropId = plot.cropId;
+    const crop = CROPS[cropId];
+    if (!crop) return false;
+
+    // Check Scarecrow 25% double yield perk
+    let yieldAmount = 1;
+    if (this.facilities.scarecrow && Math.random() < 0.25) {
+      yieldAmount = 2;
+    }
+
+    this.harvested[cropId] = (this.harvested[cropId] || 0) + yieldAmount;
+
+    // Reset plot
+    plot.cropId = null;
+    plot.stage = 0;
+    plot.growthProgress = 0;
+    plot.isWatered = false;
+
+    farmAudio.playHarvest();
+
+    // Trigger crop buff application
+    this.applyCropBuff(cropId);
+
+    this.saveState();
+    this.notify();
+
+    // Notify 3D mesh renderer & trigger particle sparkle
+    const win = window as any;
+    win.__updatePlotMesh?.(plotIdx, plot);
+    win.__triggerHarvestParticles?.(plotIdx);
+
+    // Juice Engine: coin cascade & floating text
+    win.__juiceEngine?.spawnHarvestCoins?.(window.innerWidth / 2, window.innerHeight * 0.55, 8);
+    win.__juiceEngine?.spawnFloatingNumber?.(`🌾 ${crop.name} 수확! (+${yieldAmount})`, window.innerWidth / 2, window.innerHeight * 0.5, 'gold');
+    win.__juiceEngine?.progressQuest?.('q_harvest', yieldAmount);
+    win.__juiceEngine?.awardXP?.(15 * yieldAmount);
+    win.__juiceEngine?.bounceCurrency?.('gold');
+
+    const hasReady = this.plots.some(p => p.stage === 3);
+    win.__juiceEngine?.setHarvestReady?.(hasReady);
+
+    return true;
+  }
+
+  private applyCropBuff(cropId: string) {
+    if (cropId === 'mana_grape') {
+      this.activeBuffs.manaBonus = Math.min(2, this.activeBuffs.manaBonus + 1);
+      // Upgrade Arcane max mana
+      const win = window as any;
+      if (win.__arcaneEngine) {
+        win.__arcaneEngine.maxMana = 3 + this.activeBuffs.manaBonus;
+        win.__arcaneEngine.currentMana = win.__arcaneEngine.maxMana;
+        win.__arcaneEngine.notify?.();
+      }
+      this.showLootNotification(`🍇 아케인 마나 포도 수확! 체스 최대 마나가 +1 증가했습니다! (현재 ${3 + this.activeBuffs.manaBonus})`);
+    } else if (cropId === 'golden_wheat') {
+      this.activeBuffs.goldMultiplier = 1.5;
+      this.showLootNotification('🌾 황금 밀 수확! 다음 대국에서 코인 획득량이 1.5배 증가합니다!');
+    } else if (cropId === 'flame_pepper') {
+      this.activeBuffs.meteorCross = true;
+      this.showLootNotification('🌶️ 화로 불꽃 고추 수확! 메테오 마법의 폭발 범위가 십자형으로 확대되었습니다!');
+    } else if (cropId === 'sacred_herb') {
+      this.activeBuffs.kingRevive = true;
+      this.showLootNotification('🌿 성스러운 생명초 수확! 킹이 1회 치명상을 막아내는 부활의 영약을 획득했습니다!');
+    } else if (cropId === 'amethyst_gourd') {
+      this.gold += 160;
+      this.showLootNotification('🎃 자수정 보석 호박 판매 완료! +160 Gold 획득!');
+    }
+  }
+
+  // --- Shop & Purchases ---
+
+  public buySeed(seedId: string): boolean {
+    const crop = CROPS[seedId];
+    if (!crop || this.gold < crop.seedCost) {
+      this.showLootNotification('⚠️ 골드가 부족합니다!');
+      return false;
+    }
+
+    this.gold -= crop.seedCost;
+    this.seeds[seedId] = (this.seeds[seedId] || 0) + 1;
+    this.selectedSeedId = seedId; // Auto-select the newly bought seed so it can be planted immediately!
+
+    farmAudio.playBuy();
+    this.saveState();
+    this.notify();
+    this.showLootNotification(`🌱 [${crop.name}] 씨앗 구매 완료! (보유: ${this.seeds[seedId]}개) - 이제 밭을 클릭하세요!`);
+    return true;
+  }
+
+  public buyFacility(facilityId: string): boolean {
+    const fac = FACILITIES[facilityId];
+    if (!fac || this.facilities[facilityId] || this.gold < fac.cost) return false;
+
+    this.gold -= fac.cost;
+    this.facilities[facilityId] = true;
+
+    farmAudio.playBuy();
+    this.saveState();
+    this.notify();
+
+    const win = window as any;
+    win.__updateFacility3D?.(facilityId);
+    return true;
+  }
+
+  public restoreZone(zoneId: string): boolean {
+    const zone = RESTORATION_ZONES[zoneId];
+    if (!zone || this.restorations[zoneId]) return false;
+
+    const reqGold = zone.cost.gold || 0;
+    const reqGems = zone.cost.gems || 0;
+    const reqAsh = zone.cost.sacredAsh || 0;
+    const reqMarble = zone.cost.marbleDust || 0;
+
+    if (
+      this.gold < reqGold ||
+      this.gems < reqGems ||
+      this.sacredAsh < reqAsh ||
+      this.marbleDust < reqMarble
+    ) {
+      return false;
+    }
+
+    this.gold -= reqGold;
+    this.gems -= reqGems;
+    this.sacredAsh -= reqAsh;
+    this.marbleDust -= reqMarble;
+    this.restorations[zoneId] = true;
+
+    // Apply permanent perks
+    if (zoneId === 'stained_glass') {
+      this.activeBuffs.manaBonus += 1;
+      const win = window as any;
+      if (win.__arcaneEngine) {
+        win.__arcaneEngine.maxMana = 3 + this.activeBuffs.manaBonus;
+      }
+    } else if (zoneId === 'bell_tower') {
+      this.activeBuffs.goldMultiplier = 1.5;
+    } else if (zoneId === 'high_altar') {
+      this.activeBuffs.kingRevive = true;
+    } else if (zoneId === 'altar_brewery') {
+      this.activeBuffs.meteorCross = true;
+    }
+
+    farmAudio.playBuy();
+    this.showLootNotification(`🏛️ [${zone.name}] 복원 성공! ✦ ${zone.perkDescription}`);
+    this.saveState();
+    this.notify();
+
+    const win = window as any;
+    win.__updateRestoration3D?.(zoneId);
+    win.__juiceEngine?.progressQuest?.('q_restore');
+    win.__juiceEngine?.awardXP?.(50);
+    win.__juiceEngine?.screenFlash?.('gold');
+    win.__juiceEngine?.spawnFloatingNumber?.(`🏰 ${zone.name} 복원 완공!`, window.innerWidth / 2, window.innerHeight * 0.4, 'checkmate');
+    return true;
+  }
+
+  public addGold(n: number) { this.gold += n; this.saveState(); this.notify(); }
+  public addGems(n: number) { this.gems += n; this.saveState(); this.notify(); }
+  public addAsh(n: number) { this.sacredAsh += n; this.saveState(); this.notify(); }
+  public addMarble(n: number) { this.marbleDust += n; this.saveState(); this.notify(); }
+
+  public sellHarvested(cropId: string, count: number = 1): boolean {
+    const crop = CROPS[cropId];
+    const owned = this.harvested[cropId] || 0;
+    if (!crop || owned < count) return false;
+
+    this.harvested[cropId] = owned - count;
+    this.gold += crop.sellPrice * count;
+
+    farmAudio.playCoin();
+    this.saveState();
+    this.notify();
+    return true;
+  }
+
+  // --- Chess Rewards Integration ---
+
+  public awardHazardKill(type: 'brazier' | 'pillar', pieceType: string = 'pawn') {
+    if (type === 'brazier') {
+      let ashGain = CHESS_LOOT.brazierKillAsh || 2;
+      if (this.restorations.altar_brewery) ashGain *= 2; // Altar brewery perk
+      this.sacredAsh += ashGain;
+      farmAudio.playBrazierIncinerate();
+      this.onChessMoveAdvance();
+      this.showLootNotification(`🔥 화로 소각 처형! +${ashGain} 정화된 성회(Sacred Ash) 획득! (${pieceType.toUpperCase()})`);
+    } else {
+      let marbleGain = CHESS_LOOT.pillarKillMarble || 2;
+      if (this.restorations.cloister_walkway) marbleGain *= 2; // Cloister walkway perk
+      this.marbleDust += marbleGain;
+      farmAudio.playPillarSmash();
+      this.onChessMoveAdvance();
+      this.showLootNotification(`🏛️ 기둥 격돌 분쇄! +${marbleGain} 대리석 파편(Marble Dust) 획득! (${pieceType.toUpperCase()})`);
+    }
+    this.saveState();
+    this.notify();
+  }
+
+  public awardChessPieceCapture(pieceType: string) {
+    const baseGold = (CHESS_LOOT as any)[pieceType] || 20;
+    const finalGold = Math.round(baseGold * this.activeBuffs.goldMultiplier);
+    this.gold += finalGold;
+
+    farmAudio.playCoin();
+    this.onChessMoveAdvance(); // Crops grow on capture!
+
+    this.showLootNotification(`+${finalGold} Gold 획득! (${pieceType.toUpperCase()} 처치) | 🌱 작물 성장 가속!`);
+    this.saveState();
+    this.notify();
+  }
+
+  public awardCheckmateVictory() {
+    const winGold = Math.round(CHESS_LOOT.checkmateWin * this.activeBuffs.goldMultiplier);
+    let winGems = CHESS_LOOT.checkmateGems;
+    if (this.restorations.high_altar) winGems *= 2; // High altar perk
+    const winAsh = CHESS_LOOT.checkmateAsh || 5;
+    const winMarble = CHESS_LOOT.checkmateMarble || 5;
+
+    this.gold += winGold;
+    this.gems += winGems;
+    this.sacredAsh += winAsh;
+    this.marbleDust += winMarble;
+
+    // Award bonus seed
+    const seedKeys = Object.keys(CROPS);
+    const bonusSeed = seedKeys[Math.floor(Math.random() * seedKeys.length)];
+    this.seeds[bonusSeed] = (this.seeds[bonusSeed] || 0) + 1;
+
+    farmAudio.playBuy();
+    this.showLootNotification(`✦ 체크메이트 대승리! +${winGold}G, +${winGems}💎, +${winAsh}🔥 성회, +${winMarble}🏛️ 대리석, [${CROPS[bonusSeed].name}] 획득!`);
+    this.saveState();
+    this.notify();
+  }
+
+  public showLootNotification(msg: string) {
+    this.lootNotification = msg;
+    this.notify();
+    setTimeout(() => {
+      if (this.lootNotification === msg) {
+        this.lootNotification = null;
+        this.notify();
+      }
+    }, 3200);
+  }
+}
+
+export const farmEngine = new FarmEngine();
+(window as any).__farmEngine = farmEngine;
