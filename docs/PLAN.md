@@ -119,8 +119,10 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 | 퀸 | 🐯 호랑이 | study-game `char_tiger` + Attack/Hit/Kneel | — |
 | 룩 | 🦏 코뿔소 | 콘셉트 seed 23 → TRELLIS **seed 13** (0.681). seed 12(0.784)는 등에 판 모양 가짜 지오메트리 — **두께 지표가 속았다** → 이후 시드마다 `render_vc` 렌더를 남겨 눈으로 고른다. seed 11 은 어깨 좌우 비대칭(UpperArm.L 11 정점) → 팔 찢김. 둥근 등을 꼬리로 오인해 찢기는 문제는 `tools/biped_rig.py`(chess 사본) 의 `NO_TAIL=1` 로 | `rhino.png` · `rhino_rig.png` |
 | 비숍 | 🦊 여우 | study-game `char_fox` + 클립 | — |
-| 나이트 | 🦘 캥거루 | 콘셉트 seed 11 → TRELLIS seed 12 (0.305 — 얇은 편, 재생성 후보) | `kangaroo.png` · `kangaroo_rig.png` |
+| 나이트 | 🦘 캥거루 | **v2** 콘셉트("THICK chunky rounded arms … sturdy plump body", seed 47) → TRELLIS seed 11 (0.384). v1(0.305)은 팔이 칼날처럼 얇아 교체 — 원인은 콘셉트 그림 자체였다 | `kangaroo.png` · `kangaroo_rig.png` |
 | 폰 | 🦦 미어캣 | 콘셉트 seed 11 → TRELLIS seed 12 (0.317) | `meerkat.png` · `meerkat_rig.png` |
+
+높이(보드 칸, `fitHeight`) = 스탠턴 순서 킹 1.6 > 퀸 1.48 > 비숍 1.36 > 나이트 1.3 > 룩 1.22 > 폰 1.0 (`window.wizardChess.debugPieceHeights()` 로 실측 일치).
 
 도구: `tools/comfy_concept.py`(ComfyUI API, 과거 출력 PNG 에서 복원한 Flux schnell GGUF 그래프) · `tools/make_biped.py`(TRELLIS best-of-N → 굽기 → 리깅 → 압축 → 클립 → 팩 반입). GPU 8GB 라 ComfyUI 와 TRELLIS 는 번갈아 띄운다. Phase 1(§9 "사자 1종 파이프라인 검증") 은 이것으로 끝났고, 화풍 A/B(§10-7) 는 "ComfyUI 콘셉트의 치비 3D 렌더 화풍" 이 사실상 채택됐다 — 사용자 확인 대기. 품질 다듬기(코뿔소 팔 판정·캥거루 두께·`fitHeight`·접촉 시각)는 Phase 2.
 

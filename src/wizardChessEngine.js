@@ -4736,6 +4736,21 @@ export function initWizardChess() {
     // Programmatic API for Automated Verification & Camera Inspection
     // =========================================================================
     window.wizardChess = {
+      // Debug: world-space height (in board squares) of one piece per type/colour, measured in its current pose.
+      debugPieceHeights: () => {
+        const out = {};
+        const box = new THREE.Box3();
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const p = boardState[r][c];
+            const key = p ? `${p.type}_${p.color}` : null;
+            if (!p || !p.mesh || out[key]) continue;
+            box.setFromObject(p.mesh, true);
+            out[key] = Number(((box.max.y - box.min.y) / BOARD_SQ_SIZE).toFixed(2));
+          }
+        }
+        return out;
+      },
       // Debug: play a clip role (idle/move/attack/hit/shatter/victory/kneel/bored) on the piece at (r, c).
       debugPlayClip: (r, c, role, loop = false) => {
         const p = boardState[r]?.[c];

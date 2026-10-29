@@ -18,6 +18,14 @@ yaw = opt('--yaw', '0'); hip = opt('--hip', ''); tri = opt('--tri', '8000'); tex
 name, concept = args[0], os.path.abspath(args[1])
 d = os.path.join(CHESS, '.reports', 'biped', name)
 os.makedirs(d, exist_ok=True)
+# The TRELLIS server rejects multipart parts over 1024 KB ("Part exceeded maximum size of 1024KB."), and the image goes
+# up base64-encoded (+33 %) — an 888 KB PNG failed (kangaroo 2026-10-29). Re-encode large concepts as JPEG first.
+if os.path.getsize(concept) > 700 * 1024:
+    from PIL import Image
+    small = os.path.join(d, 'concept.jpg')
+    Image.open(concept).convert('RGB').save(small, quality=92)
+    print(f'  concept {os.path.getsize(concept) // 1024} KB -> {os.path.getsize(small) // 1024} KB JPEG (server part limit)', flush=True)
+    concept = small
 
 def run(cmd, cwd=SG, env=None):
     e = dict(os.environ); e.update(env or {})
