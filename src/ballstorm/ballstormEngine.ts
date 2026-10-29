@@ -128,13 +128,14 @@ class BallStormEngine {
   private clock: THREE.Clock = new THREE.Clock();
 
   // Camera defaults
-  private baseCamPos: THREE.Vector3 = new THREE.Vector3(0, 1.6, 4.8);
-  private baseFov: number = 52;
+  private baseCamPos: THREE.Vector3 = new THREE.Vector3(0, 0.05, 4.45);
+  private baseFov: number = 48;
 
   // Visual Dropper
   private dropperMesh: THREE.Mesh | null = null;
   private dropGuideLine: THREE.Line | null = null;
   private dropperX: number = 0;
+  private targetDropperX: number = 0;
   private canDrop: boolean = true;
   private dropCooldownTimer: number = 0;
 
@@ -236,7 +237,7 @@ class BallStormEngine {
     // 2. Camera
     this.camera = new THREE.PerspectiveCamera(this.baseFov, width / height, 0.1, 100);
     this.camera.position.copy(this.baseCamPos);
-    this.camera.lookAt(0, 0.4, 0);
+    this.camera.lookAt(0, -0.35, 0);
 
     // 3. Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -281,20 +282,14 @@ class BallStormEngine {
     const halfW = ARENA_W / 2;
     const halfD = ARENA_D / 2;
     const pts = [
-      new THREE.Vector3(-halfW, DANGER_Y, -halfD),
-      new THREE.Vector3( halfW, DANGER_Y, -halfD),
-      new THREE.Vector3( halfW, DANGER_Y, -halfD),
-      new THREE.Vector3( halfW, DANGER_Y,  halfD),
-      new THREE.Vector3( halfW, DANGER_Y,  halfD),
-      new THREE.Vector3(-halfW, DANGER_Y,  halfD),
-      new THREE.Vector3(-halfW, DANGER_Y,  halfD),
-      new THREE.Vector3(-halfW, DANGER_Y, -halfD),
+      new THREE.Vector3(-halfW, DANGER_Y, halfD + 0.01),
+      new THREE.Vector3( halfW, DANGER_Y, halfD + 0.01),
     ];
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({
       color: 0xef4444,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.6,
       linewidth: 2,
     });
     this.dangerLineMesh = new THREE.LineSegments(geo, mat);
@@ -309,14 +304,14 @@ class BallStormEngine {
 
     // Dropper guide line
     this.dropGuideLine = createDropIndicator();
-    this.dropGuideLine.position.set(0, DANGER_Y + 0.35, 0);
+    this.dropGuideLine.position.set(0, 0, 0);
     this.scene.add(this.dropGuideLine);
 
     // Dropper preview ball
     this.dropperMesh = createBallMesh(this.currentTier, this.envMap);
-    this.dropperMesh.position.set(0, DANGER_Y + 0.35, 0);
+    this.dropperMesh.position.set(0, 1.95, 0);
     (this.dropperMesh.material as THREE.MeshPhysicalMaterial).transparent = true;
-    (this.dropperMesh.material as THREE.MeshPhysicalMaterial).opacity = 0.9;
+    (this.dropperMesh.material as THREE.MeshPhysicalMaterial).opacity = 0.95;
     this.scene.add(this.dropperMesh);
   }
 
@@ -333,7 +328,7 @@ class BallStormEngine {
     if (!this.dropperMesh || !this.scene || !this.envMap) return;
     this.scene.remove(this.dropperMesh);
     this.dropperMesh = createBallMesh(this.currentTier, this.envMap);
-    this.dropperMesh.position.set(this.dropperX, DANGER_Y + 0.35, 0);
+    this.dropperMesh.position.set(this.dropperX, 1.95, 0);
     this.scene.add(this.dropperMesh);
   }
 
@@ -350,20 +345,16 @@ class BallStormEngine {
   private onPointerMove = (e: PointerEvent): void => {
     if (!this.container) return;
     const rect = this.container.getBoundingClientRect();
-    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1; // -1..1
-    const maxX = (ARENA_W / 2) - 0.28;
-    this.dropperX = THREE.MathUtils.clamp(nx * (ARENA_W / 2), -maxX, maxX);
-
-    if (this.dropperMesh) {
-      this.dropperMesh.position.x = this.dropperX;
-    }
-    if (this.dropGuideLine) {
-      this.dropGuideLine.position.x = this.dropperX;
-    }
+    const mouseX = e.clientX - rect.left;
+    const ratio = mouseX / Math.max(1, rect.width); // 0..1
+    const arenaX = (ratio - 0.5) * (ARENA_W * 0.94);
+    const maxX = (ARENA_W / 2) - 0.22;
+    this.targetDropperX = THREE.MathUtils.clamp(arenaX, -maxX, maxX);
   };
 
   private onPointerDown = (e: PointerEvent): void => {
     if (this.activeCardChoices || this.isGameOver) return;
+    if (e.clientY < 75) return; // Prevent accidental drop when interacting with top HUD
     if (e.button === 0) {
       this.dropCurrentBall();
     }
@@ -374,15 +365,13 @@ class BallStormEngine {
       e.preventDefault();
       this.dropCurrentBall();
     } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
-      const maxX = (ARENA_W / 2) - 0.28;
-      this.dropperX = Math.max(-maxX, this.dropperX - 0.15);
-      if (this.dropperMesh) this.dropperMesh.position.x = this.dropperX;
-      if (this.dropGuideLine) this.dropGuideLine.position.x = this.dropperX;
+      const maxX = (ARENA_W / 2) - 0.22;
+      this.targetDropperX = Math.max(-maxX, this.targetDropperX - 0.15);
     } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
-      const maxX = (ARENA_W / 2) - 0.28;
-      this.dropperX = Math.min(maxX, this.dropperX + 0.15);
-      if (this.dropperMesh) this.dropperMesh.position.x = this.dropperX;
-      if (this.dropGuideLine) this.dropGuideLine.position.x = this.dropperX;
+      const maxX = (ARENA_W / 2) - 0.22;
+      this.targetDropperX = Math.min(maxX, this.targetDropperX + 0.15);
+    } else if (e.code === 'KeyR') {
+      this.resetGame();
     }
   };
 
@@ -402,17 +391,17 @@ class BallStormEngine {
     if (!this.canDrop || this.isGameOver || this.activeCardChoices || !this.scene || !this.envMap) return;
 
     this.canDrop = false;
-    this.dropCooldownTimer = 0.38; // 380ms rapid fire drop interval
+    this.dropCooldownTimer = 0.25; // 250ms rapid fire drop interval
 
     const dropTier = this.currentTier;
-    const dropPos = new THREE.Vector3(this.dropperX, DANGER_Y + 0.35, (Math.random() - 0.5) * 0.15);
+    const dropPos = new THREE.Vector3(this.dropperX, 1.95, 0);
     const ballMesh = createBallMesh(dropTier, this.envMap);
     ballMesh.position.copy(dropPos);
     this.scene.add(ballMesh);
 
     const pBall = createPhysicsBall(dropTier, dropPos, ballMesh);
-    // Slight initial downward velocity
-    pBall.vel.set((Math.random() - 0.5) * 0.5, -2.0, (Math.random() - 0.5) * 0.5);
+    // Initial drop velocity straight down
+    pBall.vel.set((Math.random() - 0.5) * 0.1, -3.2, 0);
     this.balls.push(pBall);
 
     // If Mega Bomb is primed, tag it
@@ -542,6 +531,16 @@ class BallStormEngine {
     this.animFrameId = requestAnimationFrame(this.animate);
     const dt = Math.min(0.033, this.clock.getDelta());
     const now = performance.now();
+
+    // 0. Smoothly lerp dropper position to target
+    this.dropperX = THREE.MathUtils.lerp(this.dropperX, this.targetDropperX, 0.45);
+    if (this.dropperMesh) {
+      this.dropperMesh.position.x = this.dropperX;
+      this.dropperMesh.position.y = 1.95;
+    }
+    if (this.dropGuideLine) {
+      this.dropGuideLine.position.x = this.dropperX;
+    }
 
     // 1. Dropper Cooldown
     if (!this.canDrop) {

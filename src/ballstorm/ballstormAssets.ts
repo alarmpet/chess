@@ -163,17 +163,23 @@ export function createBallMesh(tier: number, envMap: THREE.Texture): THREE.Mesh 
 }
 
 // ─────────────────────────────────────────────────────────────────
-// 4. Neon Arena Room & Table
+// 4. Neon Arena Room & Vertical Drop Chamber
 // ─────────────────────────────────────────────────────────────────
 export function buildCyberArena(scene: THREE.Scene, envMap: THREE.Texture): void {
-  // Floor — dark glossy grid
-  const floorGeo = new THREE.PlaneGeometry(20, 20);
+  const halfW = 1.2;  // ARENA_W / 2
+  const halfD = 0.36; // ARENA_D / 2
+  const floorY = -2.2;
+  const chamberH = 4.0;
+  const centerY = floorY + chamberH / 2; // -0.2
+
+  // 1. Room Floor — dark glossy grid
+  const roomFloorGeo = new THREE.PlaneGeometry(16, 16);
   const floorCanvas = document.createElement('canvas');
   floorCanvas.width = 512; floorCanvas.height = 512;
   const fctx = floorCanvas.getContext('2d')!;
-  fctx.fillStyle = '#050010';
+  fctx.fillStyle = '#030008';
   fctx.fillRect(0, 0, 512, 512);
-  fctx.strokeStyle = 'rgba(120,0,255,0.35)';
+  fctx.strokeStyle = 'rgba(123,47,255,0.25)';
   fctx.lineWidth = 1;
   for (let i = 0; i <= 512; i += 32) {
     fctx.beginPath(); fctx.moveTo(i, 0); fctx.lineTo(i, 512); fctx.stroke();
@@ -181,70 +187,130 @@ export function buildCyberArena(scene: THREE.Scene, envMap: THREE.Texture): void
   }
   const floorTex = new THREE.CanvasTexture(floorCanvas);
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-  floorTex.repeat.set(4, 4);
-  const floorMat = new THREE.MeshPhysicalMaterial({
-    map: floorTex, envMap,
-    roughness: 0.1, metalness: 0.3, reflectivity: 0.8, color: 0x110022,
+  floorTex.repeat.set(8, 8);
+  const roomFloorMat = new THREE.MeshStandardMaterial({
+    map: floorTex,
+    roughness: 0.2,
+    metalness: 0.4,
+    color: 0x090214
   });
-  const floor = new THREE.Mesh(floorGeo, floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -2.0;
-  floor.receiveShadow = true;
-  scene.add(floor);
+  const roomFloor = new THREE.Mesh(roomFloorGeo, roomFloorMat);
+  roomFloor.rotation.x = -Math.PI / 2;
+  roomFloor.position.y = floorY - 0.05;
+  roomFloor.receiveShadow = true;
+  scene.add(roomFloor);
 
-  // Arena container walls (transparent neon glass)
-  const wallMat = new THREE.MeshPhysicalMaterial({
-    color: 0x7b2fff, envMap,
-    transmission: 0.82, roughness: 0.0, metalness: 0.0,
-    thickness: 0.05, ior: 1.45, side: THREE.BackSide,
-    emissive: new THREE.Color(0x3300ff), emissiveIntensity: 0.15,
+  // 2. Chamber Floor Bed (Mirrored Neon Glass)
+  const bedGeo = new THREE.BoxGeometry(halfW * 2, 0.1, halfD * 2);
+  const bedMat = new THREE.MeshPhysicalMaterial({
+    color: 0x0f0524,
+    envMap,
+    roughness: 0.05,
+    metalness: 0.6,
+    clearcoat: 1.0,
+    reflectivity: 0.95
+  });
+  const chamberBed = new THREE.Mesh(bedGeo, bedMat);
+  chamberBed.position.set(0, floorY - 0.05, 0);
+  chamberBed.receiveShadow = true;
+  scene.add(chamberBed);
+
+  // 3. Chamber Back Wall (Glossy Mirrored Dark Glass with Hex grid)
+  const backGeo = new THREE.BoxGeometry(halfW * 2 + 0.08, chamberH, 0.05);
+  const backMat = new THREE.MeshPhysicalMaterial({
+    color: 0x070214,
+    envMap,
+    roughness: 0.1,
+    metalness: 0.7,
+    clearcoat: 0.9,
+    reflectivity: 0.9
+  });
+  const backWall = new THREE.Mesh(backGeo, backMat);
+  backWall.position.set(0, centerY, -halfD - 0.025);
+  backWall.receiveShadow = true;
+  scene.add(backWall);
+
+  // 4. Chamber Side Columns (Left & Right Glowing Neon Pillars)
+  const colMat = new THREE.MeshPhysicalMaterial({
+    color: 0x7b2fff,
+    envMap,
+    roughness: 0.15,
+    metalness: 0.3,
+    clearcoat: 1.0,
+    emissive: new THREE.Color(0x3b0764),
+    emissiveIntensity: 0.4
   });
 
-  const wallW = new THREE.Mesh(new THREE.BoxGeometry(0.06, 5.0, 3.2), wallMat.clone());
-  wallW.position.set(-1.6, 0.5, 0); scene.add(wallW);
-  const wallE = wallW.clone(); wallE.position.set( 1.6, 0.5, 0); scene.add(wallE);
-  const wallN = new THREE.Mesh(new THREE.BoxGeometry(3.2, 5.0, 0.06), wallMat.clone());
-  wallN.position.set(0, 0.5, -1.6); scene.add(wallN);
-  const wallS = wallN.clone(); wallS.position.set(0, 0.5, 1.6); scene.add(wallS);
+  const colGeo = new THREE.BoxGeometry(0.08, chamberH + 0.1, halfD * 2 + 0.1);
+  const leftCol = new THREE.Mesh(colGeo, colMat);
+  leftCol.position.set(-halfW - 0.04, centerY, 0);
+  leftCol.castShadow = true;
+  scene.add(leftCol);
 
-  // Neon edge glow strips
-  const edgeGeo = new THREE.BoxGeometry(3.2, 0.04, 0.04);
-  const edgeMat = new THREE.MeshBasicMaterial({ color: 0x00eeff });
-  [-1.6, 1.6].forEach(z => {
-    const e = new THREE.Mesh(edgeGeo, edgeMat);
-    e.position.set(0, -2.0, z);
-    scene.add(e);
-    const el = new THREE.PointLight(0x00eeff, 8, 3);
-    el.position.set(0, -1.9, z);
-    scene.add(el);
+  const rightCol = new THREE.Mesh(colGeo, colMat.clone());
+  rightCol.position.set(halfW + 0.04, centerY, 0);
+  rightCol.castShadow = true;
+  scene.add(rightCol);
+
+  // 5. Vertical Neon Light Tubes on side pillars
+  const tubeGeo = new THREE.CylinderGeometry(0.015, 0.015, chamberH * 0.9, 16);
+  const tubeMatCyan = new THREE.MeshBasicMaterial({ color: 0x00eeff });
+  const tubeMatMagenta = new THREE.MeshBasicMaterial({ color: 0xff007f });
+
+  const leftTube = new THREE.Mesh(tubeGeo, tubeMatCyan);
+  leftTube.position.set(-halfW, centerY, halfD + 0.02);
+  scene.add(leftTube);
+
+  const rightTube = new THREE.Mesh(tubeGeo, tubeMatMagenta);
+  rightTube.position.set(halfW, centerY, halfD + 0.02);
+  scene.add(rightTube);
+
+  // 6. Bottom Neon Bevel Rails (gently guide balls toward center)
+  const bevelGeo = new THREE.BoxGeometry(halfW * 2, 0.04, 0.04);
+  const bevelMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+  const bottomBevel = new THREE.Mesh(bevelGeo, bevelMat);
+  bottomBevel.position.set(0, floorY + 0.02, halfD);
+  scene.add(bottomBevel);
+
+  // 7. Corner Deflector Wedges (prevent balls from getting stuck dead in corners)
+  const cornerGeo = new THREE.BoxGeometry(0.24, 0.16, halfD * 2);
+  const cornerMat = new THREE.MeshPhysicalMaterial({
+    color: 0x1e1b4b,
+    roughness: 0.2,
+    metalness: 0.4
   });
+  const leftWedge = new THREE.Mesh(cornerGeo, cornerMat);
+  leftWedge.position.set(-halfW + 0.08, floorY + 0.06, 0);
+  leftWedge.rotation.z = Math.PI / 6; // 30 deg slope
+  scene.add(leftWedge);
 
-  // Overhead spotlight
-  const spotlight = new THREE.SpotLight(0xffffff, 80, 12, Math.PI / 4, 0.3, 1.5);
-  spotlight.position.set(0, 6, 0);
-  spotlight.target.position.set(0, 0, 0);
-  spotlight.castShadow = true;
-  spotlight.shadow.mapSize.set(2048, 2048);
-  spotlight.shadow.normalBias = 0.02;
-  spotlight.shadow.bias = -0.0001;
-  spotlight.shadow.radius = 2;
-  scene.add(spotlight);
-  scene.add(spotlight.target);
+  const rightWedge = new THREE.Mesh(cornerGeo, cornerMat);
+  rightWedge.position.set(halfW - 0.08, floorY + 0.06, 0);
+  rightWedge.rotation.z = -Math.PI / 6;
+  scene.add(rightWedge);
 
-  // Ambient purple fill
-  scene.add(new THREE.AmbientLight(0x150030, 3.5));
+  // 8. Overhead Master Key Spotlight
+  const keySpot = new THREE.SpotLight(0xffffff, 55, 10, Math.PI / 4, 0.35, 1.4);
+  keySpot.position.set(0, 4.5, 2.2);
+  keySpot.target.position.set(0, -0.4, 0);
+  keySpot.castShadow = true;
+  keySpot.shadow.mapSize.set(2048, 2048);
+  keySpot.shadow.normalBias = 0.02;
+  keySpot.shadow.bias = -0.0001;
+  keySpot.shadow.radius = 2.0;
+  scene.add(keySpot);
+  scene.add(keySpot.target);
 
-  // Side neon point lights
-  [
-    { color: 0x7b2fff, pos: [-4, 2, 0] },
-    { color: 0x00eeff, pos: [ 4, 2, 0] },
-    { color: 0xff007f, pos: [ 0, 2, 4] },
-    { color: 0xffaa00, pos: [ 0, 2,-4] },
-  ].forEach(({ color, pos }) => {
-    const l = new THREE.PointLight(color, 15, 8);
-    l.position.set(...pos as [number, number, number]);
-    scene.add(l);
-  });
+  // 9. Ambient fill light & dual rim point lights
+  scene.add(new THREE.AmbientLight(0x180838, 2.8));
+
+  const cyanRim = new THREE.PointLight(0x00eeff, 18, 6);
+  cyanRim.position.set(-1.6, 0.6, 1.2);
+  scene.add(cyanRim);
+
+  const pinkRim = new THREE.PointLight(0xff007f, 18, 6);
+  pinkRim.position.set(1.6, 0.6, 1.2);
+  scene.add(pinkRim);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -330,14 +396,14 @@ export function createTrailMesh(color: number): THREE.Points {
 // 7. Drop Indicator Line
 // ─────────────────────────────────────────────────────────────────
 export function createDropIndicator(): THREE.Line {
-  const pts = [new THREE.Vector3(0, 10, 0), new THREE.Vector3(0, -2, 0)];
+  const pts = [new THREE.Vector3(0, 1.95, 0), new THREE.Vector3(0, -2.2, 0)];
   const geo = new THREE.BufferGeometry().setFromPoints(pts);
   const mat = new THREE.LineDashedMaterial({
     color: 0x00eeff,
     dashSize: 0.12,
-    gapSize: 0.06,
+    gapSize: 0.08,
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.6,
   });
   const line = new THREE.Line(geo, mat);
   line.computeLineDistances();

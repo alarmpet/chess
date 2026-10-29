@@ -12,17 +12,17 @@
 import * as THREE from 'three';
 
 export const GRAVITY = -11.5;
-export const BALL_RESTITUTION = 0.52;     // bounciness 0..1
-export const FLOOR_FRICTION   = 0.72;     // horizontal damping on floor contact
-export const WALL_RESTITUTION = 0.60;
-export const LINEAR_DAMPING   = 0.994;    // air drag per frame
-export const ANGULAR_DAMPING  = 0.96;
+export const BALL_RESTITUTION = 0.45;     // bounciness 0..1 (tuned for satisfying settling)
+export const FLOOR_FRICTION   = 0.85;     // horizontal damping on floor contact
+export const WALL_RESTITUTION = 0.45;
+export const LINEAR_DAMPING   = 0.992;    // air drag per frame
+export const ANGULAR_DAMPING  = 0.95;
 
-/** Width × depth of the arena (metres). */
-export const ARENA_W = 3.2;
-export const ARENA_D = 3.2;
-export const ARENA_FLOOR_Y = -2.0;
-export const DANGER_Y = 2.3;              // balls resting above this line trigger danger countdown
+/** Constrained Vertical Drop Chamber Dimensions (metres). */
+export const ARENA_W = 2.4;               // Width fits ~12 balls
+export const ARENA_D = 0.72;              // Depth sized to fit from Tier 1 (0.1m) to Tier 16 (0.34m)
+export const ARENA_FLOOR_Y = -2.2;
+export const DANGER_Y = 1.35;             // Danger threshold line in upper third of chamber
 
 /** Ball tier definitions (1→15 = billiard numbers, 16 = cue ball) */
 export interface BallTier {
@@ -187,10 +187,11 @@ export function stepPhysics(
       if (b.pos.x > wallX)  { b.pos.x =  wallX; b.vel.x = -Math.abs(b.vel.x) * WALL_RESTITUTION; }
       if (b.pos.x < -wallX) { b.pos.x = -wallX; b.vel.x =  Math.abs(b.vel.x) * WALL_RESTITUTION; }
 
-      // Wall collisions (Z axis)
-      const wallZ = halfD - b.radius;
+      // Wall collisions (Z axis) & Center-plane stabilization
+      const wallZ = Math.max(0.01, halfD - b.radius);
       if (b.pos.z > wallZ)  { b.pos.z =  wallZ; b.vel.z = -Math.abs(b.vel.z) * WALL_RESTITUTION; }
       if (b.pos.z < -wallZ) { b.pos.z = -wallZ; b.vel.z =  Math.abs(b.vel.z) * WALL_RESTITUTION; }
+      b.vel.z *= 0.94; // Keep balls rolling primarily in the view plane
 
       // Air damping
       b.vel.multiplyScalar(LINEAR_DAMPING);
@@ -225,8 +226,8 @@ export function stepPhysics(
         if (distSq < minDist * minDist && distSq > 0.00001) {
           const dist = Math.sqrt(distSq);
 
-          // Check for Merge (same tier, under max tier 16, minimum age threshold of 18 frames)
-          if (a.tier === b.tier && a.tier < 16 && a.age > 18 && b.age > 18) {
+          // Check for Merge (same tier, under max tier 16, age threshold of 10 frames)
+          if (a.tier === b.tier && a.tier < 16 && a.age > 10 && b.age > 10) {
             a.merging = true;
             b.merging = true;
             const center = new THREE.Vector3(

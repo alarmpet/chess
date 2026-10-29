@@ -153,47 +153,52 @@ export default function App() {
         <BilliardsView onSwitchMode={setAppMode} onBackToChess={() => setAppMode('chess')} />
       )}
 
-      <div id="loading-overlay" className={appMode !== 'chess' ? 'hidden' : ''}>
-        <div className="loader-title">{t.loadingTitle}</div>
-        <div className="loader-bar-wrap">
-          <div className="loader-bar" id="loader-bar"></div>
-        </div>
-        <div id="loader-text">{t.loadingSub}</div>
-      </div>
+      <div
+        id="canvas-container"
+        style={{ display: appMode === 'chess' ? 'block' : 'none' }}
+      ></div>
 
-      <div id="canvas-container"></div>
+      {appMode === 'chess' && (
+        <>
+          <div id="loading-overlay">
+            <div className="loader-title">{t.loadingTitle}</div>
+            <div className="loader-bar-wrap">
+              <div className="loader-bar" id="loader-bar"></div>
+            </div>
+            <div id="loader-text">{t.loadingSub}</div>
+          </div>
 
-      <button
-        type="button"
-        className="hud-btn mobile-only-restore-ui"
-        id="btn-mobile-show-ui"
-        onClick={handleRestoreUI}
-        title={t.showUiMobile}
-      >
-        {t.showUiMobile}
-      </button>
+          <button
+            type="button"
+            className="hud-btn mobile-only-restore-ui"
+            id="btn-mobile-show-ui"
+            onClick={handleRestoreUI}
+            title={t.showUiMobile}
+          >
+            {t.showUiMobile}
+          </button>
 
-      <div id="hud-top">
+          <div id="hud-top">
         <div className="hud-group" id="hud-left">
           {/* Universal 3-Mode Switcher: Ball Storm vs 3D Billiards vs Magic Chess */}
           <div className="app-mode-switch-pill">
             <button
               type="button"
-              className={`app-mode-pill-btn ${appMode === 'ballstorm' ? 'active' : ''}`}
+              className="app-mode-pill-btn"
               onClick={() => setAppMode('ballstorm')}
             >
               ⚡ 볼 스톰
             </button>
             <button
               type="button"
-              className={`app-mode-pill-btn ${appMode === 'billiards' ? 'active' : ''}`}
+              className="app-mode-pill-btn"
               onClick={() => setAppMode('billiards')}
             >
               🎱 3D 당구장
             </button>
             <button
               type="button"
-              className={`app-mode-pill-btn ${appMode === 'chess' ? 'active' : ''}`}
+              className="app-mode-pill-btn active"
               onClick={() => setAppMode('chess')}
             >
               ♚ 마법 체스
@@ -1141,6 +1146,8 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </>
   );
