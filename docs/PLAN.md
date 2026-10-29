@@ -117,7 +117,7 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 | :--- | :--- | :--- | :--- |
 | 킹 | 🦁 사자 | ComfyUI(Flux schnell) 콘셉트 seed 11 → 로컬 TRELLIS best-of-3(seed 11, 몸통깊이/키 0.573) → `bake_low` 8k·1024 → `biped_rig` → `pack-statue` → `legend_add_clips` | `docs/concepts/lion.png` · `lion_rig.png` |
 | 퀸 | 🐯 호랑이 | study-game `char_tiger` + Attack/Hit/Kneel | — |
-| 룩 | 🦏 코뿔소 | 콘셉트 seed 23 → TRELLIS seed 12 (0.784) | `rhino.png` · `rhino_rig.png` |
+| 룩 | 🦏 코뿔소 | 콘셉트 seed 23 → TRELLIS **seed 13** (0.681). seed 12(0.784)는 등에 판 모양 가짜 지오메트리 — **두께 지표가 속았다** → 이후 시드마다 `render_vc` 렌더를 남겨 눈으로 고른다. seed 11 은 어깨 좌우 비대칭(UpperArm.L 11 정점) → 팔 찢김. 둥근 등을 꼬리로 오인해 찢기는 문제는 `tools/biped_rig.py`(chess 사본) 의 `NO_TAIL=1` 로 | `rhino.png` · `rhino_rig.png` |
 | 비숍 | 🦊 여우 | study-game `char_fox` + 클립 | — |
 | 나이트 | 🦘 캥거루 | 콘셉트 seed 11 → TRELLIS seed 12 (0.305 — 얇은 편, 재생성 후보) | `kangaroo.png` · `kangaroo_rig.png` |
 | 폰 | 🦦 미어캣 | 콘셉트 seed 11 → TRELLIS seed 12 (0.317) | `meerkat.png` · `meerkat_rig.png` |

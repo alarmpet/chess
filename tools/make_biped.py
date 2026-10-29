@@ -47,6 +47,9 @@ if not os.path.exists(raw):
         except Exception as ex:
             print('  thickness failed', sd, repr(ex)); t = -1
         print(f'  seed {sd} 몸통깊이/키 {t:.3f}', flush=True)
+        if not os.path.exists(p.replace('.glb', '_a.png')):
+            try: run([BLENDER, '--background', '--python', 'tools/legend/render_vc.py', '--', p, p[:-4], '35', '480'])
+            except SystemExit: print('  (render failed, continuing)')
         if best is None or t > best[0]: best = (t, p, sd)
     shutil.copyfile(best[1], raw)
     json.dump({'seed': best[2], 'thickness': best[0], 'concept': concept}, open(os.path.join(d, 'pick.json'), 'w'))
@@ -56,10 +59,15 @@ if not os.path.exists(raw):
 bake, rig, packed, final = (os.path.join(d, n) for n in ('bake.glb', 'rig.glb', 'packed.glb', 'final.glb'))
 env = {'VOXEL': '0', 'CAGE': '0.015', 'YAW': yaw}
 if hip: env['HIP'] = hip
+# Rigger knobs added in the chess copy (tools/biped_rig.py): NO_TAIL=1 (chunky backs mistaken for a tail → torn by the
+# wag, rhino 2026-10-29), ARM_NEAR / ARM_FALL (arm weight capture radius). Pass through from the environment.
+for k in ('NO_TAIL', 'ARM_NEAR', 'ARM_FALL', 'ARM_DOWN', 'TAILW', 'LEGSIGN'):
+    if os.environ.get(k): env[k] = os.environ[k]
+RIG = os.path.join(CHESS, 'tools', 'biped_rig.py')
 if not os.path.exists(bake):
     run([BLENDER, '--background', '--python', 'tools/legend/bake_low.py', '--', raw, bake, tri, tex], env=env)
 if not os.path.exists(rig):
-    run([BLENDER, '--background', '--python', 'tools/legend/biped_rig.py', '--', bake, rig, os.path.join(d, 'rig')], env=env)
+    run([BLENDER, '--background', '--python', RIG, '--', bake, rig, os.path.join(d, 'rig')], env=env)
 if not os.path.exists(packed):
     run(['node', 'tools/legend/pack-statue.mjs', rig, packed, '999999', '88', tex])
 run([BLENDER, '--background', '--python', os.path.join(CHESS, 'tools', 'legend_add_clips.py'), '--', packed, final], cwd=CHESS)
