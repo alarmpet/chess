@@ -586,19 +586,113 @@ function getBeastSigilTexture(icon: string, color: PieceColor): THREE.Texture {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Attach Beast Guardian Totem to 3D Rigged Model
+// Setup & Assemble Complete 3D Sanctuary Beast Piece
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Attaches the animal guardian totem, foot rune disc, and 3D accessories
- * to a full 3D rigged character statue.
+ * Transforms, scales, dresses with luxury pedestal, PBR materials, 3D royal regalia,
+ * and attaches floating spirit totems to a 3D animal model.
  */
-export function attachBeastGuardianTotem(root: THREE.Group, type: string, color: PieceColor) {
+export function setupBeastPiece(
+  root: THREE.Group,
+  model: THREE.Object3D,
+  type: string,
+  color: PieceColor
+) {
   const normType = normalizePieceType(type);
   const info = getBeastInfo(normType, color);
   const isWhite = color === 'w';
 
-  // 1. Foot Arcane Rune Disc at the base
+  // 1. Remove unwanted extraneous meshes (like butterflies in bear model)
+  const toRemove: THREE.Object3D[] = [];
+  model.traverse((child) => {
+    const nm = (child.name || '').toLowerCase();
+    if (nm.includes('butterfly') || nm.includes('icosphere') || nm.includes('gltf_not_exported')) {
+      child.visible = false;
+      toRemove.push(child);
+    }
+  });
+  for (const rem of toRemove) {
+    if (rem.parent) rem.parent.remove(rem);
+  }
+
+  // 2. Base rotation so all 3D animals face forward (+Z)
+  if (normType === 'king') {
+    model.rotation.y = -Math.PI / 2; // Lion head at +X -> rotate to +Z
+  } else if (normType === 'bishop') {
+    model.rotation.y = Math.PI; // Eagle head at -Z -> rotate to +Z
+  }
+
+  // 3. Measure bounding box and scale to standard chess footprint
+  model.updateMatrixWorld(true);
+  const initialBox = new THREE.Box3().setFromObject(model);
+  const initialSize = new THREE.Vector3();
+  initialBox.getSize(initialSize);
+
+  const targetMaxFootprint: Record<string, number> = {
+    king: 1.45,
+    queen: 1.35,
+    rook: 1.20,
+    bishop: 1.25,
+    knight: 1.20,
+    pawn: 0.95
+  };
+
+  const maxHoz = Math.max(initialSize.x, initialSize.z);
+  const s = (targetMaxFootprint[normType] || 1.20) / (maxHoz || 1);
+  model.scale.multiplyScalar(s);
+
+  model.updateMatrixWorld(true);
+  const scaledBox = new THREE.Box3().setFromObject(model);
+  const scaledCenter = new THREE.Vector3();
+  scaledBox.getCenter(scaledCenter);
+
+  // Plinth base height
+  const plinthH = 0.08;
+  const plinthTopY = plinthH;
+
+  // Center horizontally and place animal feet squarely atop the pedestal
+  model.position.x -= scaledCenter.x;
+  model.position.z -= scaledCenter.z;
+  model.position.y = plinthTopY - scaledBox.min.y;
+
+  // 4. Carved Luxury Marble / Obsidian Pedestal Plinth
+  const plinthGeo = new THREE.CylinderGeometry(0.36, 0.40, plinthH, 24);
+  const plinthMat = isWhite
+    ? new THREE.MeshPhysicalMaterial({
+        color: 0xfbf9f5,
+        roughness: 0.20,
+        metalness: 0.04,
+        clearcoat: 0.85,
+        clearcoatRoughness: 0.12
+      })
+    : new THREE.MeshPhysicalMaterial({
+        color: 0x14161d,
+        roughness: 0.18,
+        metalness: 0.28,
+        clearcoat: 0.95,
+        clearcoatRoughness: 0.08
+      });
+  const plinthMesh = new THREE.Mesh(plinthGeo, plinthMat);
+  plinthMesh.position.y = plinthH * 0.5;
+  plinthMesh.castShadow = true;
+  plinthMesh.receiveShadow = true;
+  root.add(plinthMesh);
+
+  // Pedestal Gold / Bronze Rim Ring
+  const rimMat = new THREE.MeshStandardMaterial({
+    color: isWhite ? 0xf59e0b : 0x9a3412,
+    metalness: 0.94,
+    roughness: 0.18,
+    emissive: isWhite ? 0xd97706 : 0x7c2d12,
+    emissiveIntensity: 0.35
+  });
+  const rimMesh = new THREE.Mesh(new THREE.TorusGeometry(0.362, 0.012, 8, 24), rimMat);
+  rimMesh.rotation.x = Math.PI / 2;
+  rimMesh.position.y = plinthH;
+  root.add(rimMesh);
+
+  // Pulsing Foot Arcane Rune Disc on the Pedestal
   const runeMat = new THREE.MeshBasicMaterial({
     map: getRuneTexture(color),
     transparent: true,
@@ -606,144 +700,150 @@ export function attachBeastGuardianTotem(root: THREE.Group, type: string, color:
     depthWrite: false,
     blending: THREE.AdditiveBlending
   });
-  const runeGeo = new THREE.PlaneGeometry(0.78, 0.78);
+  const runeGeo = new THREE.PlaneGeometry(0.68, 0.68);
   const runeDisc = new THREE.Mesh(runeGeo, runeMat);
   runeDisc.rotation.x = -Math.PI / 2;
-  runeDisc.position.y = 0.012;
+  runeDisc.position.y = plinthH + 0.004;
   root.add(runeDisc);
 
-  // 2. Floating Ethereal Beast Spirit Totem Crest (Hovering above the head)
-  let headY = 1.35;
-  if (normType === 'king') headY = 1.55;
-  else if (normType === 'queen') headY = 1.48;
-  else if (normType === 'rook') headY = 1.38;
-  else if (normType === 'bishop') headY = 1.42;
-  else if (normType === 'knight') headY = 1.45;
-  else headY = 1.15; // pawn
+  // 5. Materials & Shaders for the 3D Beast
+  const mats = createHighEndBeastMaterials();
+  const primaryMat = isWhite ? mats.whitePieceMat : mats.blackPieceMat;
+  const trimMat = isWhite ? mats.goldTrimMat : mats.blackGoldTrimMat;
 
+  model.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      const nm = (mesh.name || '').toLowerCase();
+      const mName = (mesh.material && 'name' in mesh.material ? (mesh.material as any).name : '').toLowerCase();
+
+      // If mesh already has an image texture (Lion, Tiger, Bear, Eagle)
+      if (mesh.material && (mesh.material as any).map) {
+        const origMap = (mesh.material as any).map;
+        mesh.material = new THREE.MeshPhysicalMaterial({
+          map: origMap,
+          color: isWhite ? 0xfcfbfa : 0x22242a,
+          roughness: isWhite ? 0.28 : 0.22,
+          metalness: isWhite ? 0.08 : 0.32,
+          clearcoat: isWhite ? 0.65 : 0.85,
+          clearcoatRoughness: 0.12,
+          emissive: isWhite ? 0x38bdf8 : 0xef4444,
+          emissiveIntensity: isWhite ? 0.18 : 0.42
+        });
+      } else {
+        // Procedural piece without texture (Stag, Wolf, trims)
+        if (nm.includes('horn') || nm.includes('eye') || nm.includes('trim') || nm.includes('gold') || mName.includes('horn')) {
+          mesh.material = trimMat;
+        } else {
+          mesh.material = primaryMat;
+        }
+      }
+    }
+  });
+
+  // 6. Royal Regalia & Embellishments
+  root.updateMatrixWorld(true);
+  const animalBox = new THREE.Box3().setFromObject(root);
+  const headY = animalBox.max.y;
+
+  // 🦁 King Lion: Sculpted 3D Golden Crown with Ruby Jewel
+  if (normType === 'king') {
+    const crownGroup = new THREE.Group();
+    crownGroup.position.set(0, headY - 0.06, 0.36);
+    crownGroup.rotation.x = 0.20;
+
+    const crownBase = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.018, 8, 20), trimMat);
+    crownBase.rotation.x = Math.PI / 2;
+    crownGroup.add(crownBase);
+
+    // 4 Crown Spikes
+    for (let i = 0; i < 4; i++) {
+      const ang = (i * Math.PI) / 2;
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.07, 4), trimMat);
+      spike.position.set(Math.cos(ang) * 0.12, 0.035, Math.sin(ang) * 0.12);
+      crownGroup.add(spike);
+    }
+    // Crown Jewel (Ruby / Sapphire)
+    const jewelMat = new THREE.MeshStandardMaterial({
+      color: isWhite ? 0x38bdf8 : 0xef4444,
+      emissive: isWhite ? 0x0284c7 : 0xd97706,
+      emissiveIntensity: 2.5,
+      roughness: 0.05,
+      metalness: 0.95
+    });
+    const jewel = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 12), jewelMat);
+    jewel.position.y = 0.03;
+    crownGroup.add(jewel);
+    root.add(crownGroup);
+  }
+
+  // 🐯 Queen Tiger: Celestial Tiara with Mana Jewel
+  if (normType === 'queen') {
+    const tiaraGroup = new THREE.Group();
+    tiaraGroup.position.set(0, headY - 0.04, 0.32);
+    tiaraGroup.rotation.x = 0.18;
+    const tiaraArc = new THREE.Mesh(new THREE.TorusGeometry(0.10, 0.014, 6, 16, Math.PI), trimMat);
+    tiaraArc.rotation.x = Math.PI / 2;
+    tiaraGroup.add(tiaraArc);
+    const starMat = new THREE.MeshStandardMaterial({
+      color: isWhite ? 0x38bdf8 : 0xef4444,
+      emissive: isWhite ? 0x38bdf8 : 0xf97316,
+      emissiveIntensity: 3.0,
+      roughness: 0.1,
+      metalness: 0.9
+    });
+    const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.035, 0), starMat);
+    star.position.y = 0.04;
+    tiaraGroup.add(star);
+    root.add(tiaraGroup);
+  }
+
+  // 🐻 Rook Bear: Fortress Battlement Turret Armor on Back
+  if (normType === 'rook') {
+    const turretGroup = new THREE.Group();
+    turretGroup.position.set(0, headY + 0.02, -0.05);
+    const battlement = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.22, 0.12, 6),
+      trimMat
+    );
+    battlement.castShadow = true;
+    turretGroup.add(battlement);
+    root.add(turretGroup);
+  }
+
+  // 🦅 Bishop Eagle: Gothic Cathedral Sunburst Halo Disc
+  if (normType === 'bishop') {
+    const haloGroup = new THREE.Group();
+    haloGroup.position.set(0, headY + 0.05, -0.15);
+    const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.20, 0.014, 8, 24), trimMat);
+    haloGroup.add(haloRing);
+    root.add(haloGroup);
+  }
+
+  // 7. Floating Rotating Beast Spirit Totem
+  const totemY = headY + 0.22;
   const totemGroup = new THREE.Group();
   totemGroup.name = 'Beast_Spirit_Totem';
-  totemGroup.position.set(0, headY, 0);
+  totemGroup.position.set(0, totemY, 0);
 
-  // Outer Torus Ring
-  const ringMat = new THREE.MeshStandardMaterial({
-    color: isWhite ? 0xfbbf24 : 0x9a3412,
-    metalness: 0.92,
-    roughness: 0.18,
-    emissive: isWhite ? 0xd97706 : 0xef4444,
-    emissiveIntensity: 0.4
-  });
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.012, 12, 24), ringMat);
-  totemGroup.add(ring);
+  const ringMesh = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.012, 10, 24), trimMat);
+  totemGroup.add(ringMesh);
 
-  // Glowing Sigil Disc (Double-Sided)
   const sigilMat = new THREE.MeshBasicMaterial({
     map: getBeastSigilTexture(info.beastIcon, color),
     transparent: true,
-    opacity: 0.90,
+    opacity: 0.92,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide
   });
-  const sigilPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.24), sigilMat);
+  const sigilPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), sigilMat);
   totemGroup.add(sigilPlane);
-
   root.add(totemGroup);
 
-  // 3. Piece-Specific 3D Physical Attachments (mounted directly to skeleton nodes!)
-  // Knight: 3D Branching Stag Antlers on Horse Head
-  if (normType === 'knight') {
-    let horseHeadNode: THREE.Object3D | null = null;
-    root.traverse((child) => {
-      if (child.name === 'Horse_Head') horseHeadNode = child;
-    });
-
-    if (horseHeadNode) {
-      const antlerMat = new THREE.MeshStandardMaterial({
-        color: isWhite ? 0xf59e0b : 0x9a3412,
-        metalness: 0.94,
-        roughness: 0.16,
-        emissive: isWhite ? 0xd97706 : 0xef4444,
-        emissiveIntensity: 0.55
-      });
-
-      function createBranch(isR: boolean): THREE.Group {
-        const bg = new THREE.Group();
-        const sign = isR ? 1 : -1;
-        const mainCurve = new THREE.CatmullRomCurve3([
-          new THREE.Vector3(sign * 0.04, 0.12, 0.02),
-          new THREE.Vector3(sign * 0.14, 0.28, -0.04),
-          new THREE.Vector3(sign * 0.22, 0.45, -0.08),
-          new THREE.Vector3(sign * 0.18, 0.58, -0.12)
-        ]);
-        const mainTube = new THREE.Mesh(new THREE.TubeGeometry(mainCurve, 12, 0.016, 6, false), antlerMat);
-        mainTube.castShadow = true;
-        bg.add(mainTube);
-
-        const browCurve = new THREE.CatmullRomCurve3([
-          new THREE.Vector3(sign * 0.08, 0.20, 0.02),
-          new THREE.Vector3(sign * 0.12, 0.28, 0.10)
-        ]);
-        const browTube = new THREE.Mesh(new THREE.TubeGeometry(browCurve, 6, 0.012, 5, false), antlerMat);
-        bg.add(browTube);
-
-        return bg;
-      }
-
-      const antlerL = createBranch(false);
-      const antlerR = createBranch(true);
-      (horseHeadNode as THREE.Object3D).add(antlerL);
-      (horseHeadNode as THREE.Object3D).add(antlerR);
-    }
-  }
-
-  // Bishop: 3D Feathered Angelic Eagle Wings on Back
-  if (normType === 'bishop') {
-    const wingMat = new THREE.MeshStandardMaterial({
-      color: isWhite ? 0xf59e0b : 0x9a3412,
-      metalness: 0.88,
-      roughness: 0.20,
-      emissive: isWhite ? 0xd97706 : 0xef4444,
-      emissiveIntensity: 0.4
-    });
-
-    const wingGeo = new THREE.SphereGeometry(0.16, 12, 12);
-    wingGeo.scale(0.25, 1.25, 0.65);
-
-    const wingL = new THREE.Mesh(wingGeo, wingMat);
-    wingL.position.set(-0.18, 0.70, -0.10);
-    wingL.rotation.set(-0.25, 0.15, 0.2);
-    wingL.castShadow = true;
-    root.add(wingL);
-
-    const wingR = new THREE.Mesh(wingGeo, wingMat);
-    wingR.position.set(0.18, 0.70, -0.10);
-    wingR.rotation.set(-0.25, -0.15, -0.2);
-    wingR.castShadow = true;
-    root.add(wingR);
-  }
-
-  // Queen: Scepter Glowing Arcane Tiger Core Orb
-  if (normType === 'queen') {
-    let scepterNode: THREE.Object3D | null = null;
-    root.traverse((child) => {
-      if (child.name === 'Mace_Scepter_Bone') scepterNode = child;
-    });
-    if (scepterNode) {
-      const orbMat = new THREE.MeshStandardMaterial({
-        color: isWhite ? 0x38bdf8 : 0xef4444,
-        emissive: isWhite ? 0x0284c7 : 0xd97706,
-        emissiveIntensity: 3.2,
-        roughness: 0.05,
-        metalness: 0.9
-      });
-      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 12), orbMat);
-      orb.position.set(0, 0.38, 0);
-      (scepterNode as THREE.Object3D).add(orb);
-    }
-  }
-
-  // Tag metadata for animation and selection engine
+  // 8. Tag Metadata for Hover/Select & Animation
   root.userData = {
     ...root.userData,
     isSanctuaryBeast: true,
@@ -754,8 +854,13 @@ export function attachBeastGuardianTotem(root: THREE.Group, type: string, color:
     totemGroup,
     hoverOffset: 0,
     animPhase: Math.random() * Math.PI * 2,
-    baseHeadY: headY
+    baseHeadY: totemY
   };
+}
+
+export function attachBeastGuardianTotem(root: THREE.Group, type: string, color: PieceColor) {
+  const model = root.children[0] || root;
+  setupBeastPiece(root, model, type, color);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

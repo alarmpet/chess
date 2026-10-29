@@ -14,6 +14,7 @@ import {
   getBeastInfo,
   getRuneTexture,
   createHighEndBeastMaterials,
+  setupBeastPiece,
   attachBeastGuardianTotem
 } from './beastModels';
 
@@ -1660,37 +1661,18 @@ export function initWizardChess() {
 
       const tpl = pieceTemplates[`${type}_${color}`];
       if (tpl && tpl.scene) {
-        root = SkeletonUtils.clone(tpl.scene);
-        const primaryMat = color === 'w' ? whitePieceMat : blackPieceMat;
-        const trimMat = color === 'w' ? goldTrimMat : blackGoldTrimMat;
-        const steelMat = color === 'w' ? forgedSteelMat : blackSteelMat;
-        root.traverse((child) => {
-          const nm = child.name || '';
-          if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
-            child.visible = false;
-            return;
-          }
-          if (child.isMesh) {
-            const mName = child.material?.name || '';
-            if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
-              child.material = trimMat;
-            } else if (mName.includes('Steel')) {
-              child.material = steelMat;
-            } else {
-              child.material = primaryMat;
-            }
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
-        mixer = new THREE.AnimationMixer(root);
+        root = new THREE.Group();
+        const model = SkeletonUtils.clone(tpl.scene);
+        root.add(model);
+
+        // Setup complete 3D animal sculpture, luxury pedestal plinth, PBR materials & royal regalia
+        setupBeastPiece(root, model, type, color);
+
+        mixer = new THREE.AnimationMixer(model);
         for (const clip of tpl.animations) {
           actions[clip.name] = mixer.clipAction(clip);
         }
         activeMixers.push(mixer);
-
-        // Attach High-End 3D Animal Guardian Totem, Rune Disc & Skeleton Accessories
-        attachBeastGuardianTotem(root, type, color);
       } else {
         root = createBeastMesh(type, color);
       }
