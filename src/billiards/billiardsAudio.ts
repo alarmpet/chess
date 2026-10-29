@@ -13,6 +13,8 @@
 class BilliardsAudioEngine {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
+  private lastHitTimes: number[] = [];
+  private readonly maxPolyphony: number = 4;
 
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -50,12 +52,21 @@ class BilliardsAudioEngine {
     const ctx = this.getContext();
     if (!ctx) return;
 
+    // Polyphony limiter & debouncing to prevent audio clipping on multi-ball breaks
+    const nowMs = performance.now();
+    this.lastHitTimes = this.lastHitTimes.filter((t) => nowMs - t < 35);
+    if (this.lastHitTimes.length >= this.maxPolyphony) {
+      return;
+    }
+    this.lastHitTimes.push(nowMs);
+    const polyphonyDamp = 1.0 / Math.sqrt(this.lastHitTimes.length);
+
     const clampedSpeed = Math.max(0.05, Math.min(relSpeed, 3.5));
     const now = ctx.currentTime;
 
-    // Master volume scaled by collision speed
+    // Master volume scaled by collision speed & polyphony damping
     const gain = ctx.createGain();
-    const volume = Math.min(1.0, 0.15 + clampedSpeed * 0.28);
+    const volume = Math.min(1.0, (0.15 + clampedSpeed * 0.28) * polyphonyDamp);
     gain.gain.setValueAtTime(volume, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
     gain.connect(ctx.destination);

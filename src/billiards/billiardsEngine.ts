@@ -45,6 +45,8 @@ export interface BilliardsGameState {
   isShooting: boolean;
   shotPower: number; // 0.0 to 1.0
   english: { x: number; y: number }; // -1 to +1
+  cueElevation: number; // 0 to 25 degrees
+  isBallInHand: boolean;
   cameraPreset: CameraPreset;
   activeFeltTheme: keyof typeof FELT_THEMES;
   notification: string;
@@ -63,6 +65,9 @@ export class BilliardsGameEngine {
   private cueGroup: THREE.Group | null = null;
   private overheadLamp: THREE.Group | null = null;
   private aimLineMesh: THREE.Line | null = null;
+  private targetLineMesh: THREE.Line | null = null;
+  private tangentLineMesh: THREE.Line | null = null;
+  private bankLineMesh: THREE.Line | null = null;
   private ghostBallMesh: THREE.Mesh | null = null;
   private setFeltThemeFn: ((k: keyof typeof FELT_THEMES) => void) | null = null;
 
@@ -75,6 +80,8 @@ export class BilliardsGameEngine {
     isShooting: false,
     shotPower: 0.5,
     english: { x: 0, y: 0 },
+    cueElevation: 2.5,
+    isBallInHand: false,
     cameraPreset: 'aim',
     activeFeltTheme: 'tournamentBlue',
     notification: 'Welcome to 3D Billiards! Drag to aim, pull back cue to shoot.'
@@ -197,7 +204,7 @@ export class BilliardsGameEngine {
     this.cueGroup = cueBuild.cueGroup;
     this.scene.add(this.cueGroup);
 
-    // 4. Aim Trajectory Guide & Ghost Ball
+    // 4. Aim Trajectory Guides (Main Cue Line, Object Target Line, Tangent Line, Bank Line)
     const lineMat = new THREE.LineDashedMaterial({
       color: 0xffffff,
       dashSize: 0.04,
@@ -205,20 +212,64 @@ export class BilliardsGameEngine {
       opacity: 0.85,
       transparent: true
     });
-    const lineGeo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, 1)
-    ]);
-    this.aimLineMesh = new THREE.Line(lineGeo, lineMat);
+    this.aimLineMesh = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      lineMat
+    );
     this.aimLineMesh.computeLineDistances();
     this.scene.add(this.aimLineMesh);
+
+    // Object Ball Projected Target Line (Yellow)
+    const targetLineMat = new THREE.LineDashedMaterial({
+      color: 0xfacc15,
+      dashSize: 0.03,
+      gapSize: 0.02,
+      opacity: 0.90,
+      transparent: true
+    });
+    this.targetLineMesh = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      targetLineMat
+    );
+    this.targetLineMesh.visible = false;
+    this.scene.add(this.targetLineMesh);
+
+    // Cue Ball 90-degree Tangent Deflection Line (Cyan)
+    const tangentLineMat = new THREE.LineDashedMaterial({
+      color: 0x38bdf8,
+      dashSize: 0.03,
+      gapSize: 0.02,
+      opacity: 0.85,
+      transparent: true
+    });
+    this.tangentLineMesh = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      tangentLineMat
+    );
+    this.tangentLineMesh.visible = false;
+    this.scene.add(this.tangentLineMesh);
+
+    // Cushion Bank Reflection Line (White)
+    const bankLineMat = new THREE.LineDashedMaterial({
+      color: 0xffffff,
+      dashSize: 0.03,
+      gapSize: 0.02,
+      opacity: 0.75,
+      transparent: true
+    });
+    this.bankLineMesh = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      bankLineMat
+    );
+    this.bankLineMesh.visible = false;
+    this.scene.add(this.bankLineMesh);
 
     const ghostGeo = new THREE.SphereGeometry(this.physics.bounds.ballRadius, 16, 16);
     const ghostMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       wireframe: true,
       transparent: true,
-      opacity: 0.45
+      opacity: 0.50
     });
     this.ghostBallMesh = new THREE.Mesh(ghostGeo, ghostMat);
     this.scene.add(this.ghostBallMesh);
@@ -512,6 +563,55 @@ export class BilliardsGameEngine {
     );
   }
 
+  public setCueElevation(deg: number) {
+    this.state.cueElevation = Math.max(0, Math.min(deg, 25));
+    this.updateAimGuide();
+    this.notify();
+  }
+
+  public setBallInHand(active: boolean) {
+    this.state.isBallInHand = active;
+    if (active) {
+      this.state.notification = '프리볼(Ball-in-Hand) 모드: 당구대 위 원하는 위치를 클릭하여 수구를 배치하세요.';
+    }
+    this.notify();
+  }
+
+  public placeCueBall(x: number, z: number) {
+    const cueBall = this.getCueBall();
+    if (!cueBall) return;
+    const R = this.bounds.ballRadius;
+    const halfL = this.bounds.length / 2 - R * 1.5;
+    const halfW = this.bounds.width / 2 - R * 1.5;
+
+    const clampedX = Math.max(-halfL, Math.min(x, halfL));
+    const clampedZ = Math.max(-halfW, Math.min(z, halfW));
+
+    const tooClose = this.physics.balls.some(
+      (b) => b.id !== cueBall.id && !b.isPotted && Math.hypot(b.position.x - clampedX, b.position.z - clampedZ) < R * 2.1
+    );
+    if (tooClose) {
+      this.state.notification = '다른 공과 너무 가깝습니다! 빈 공간을 클릭하세요.';
+      this.notify();
+      return;
+    }
+
+    cueBall.position.set(clampedX, R, clampedZ);
+    cueBall.velocity.set(0, 0, 0);
+    cueBall.angularVelocity.set(0, 0, 0);
+    cueBall.isPotted = false;
+    cueBall.state = 'resting';
+    if (cueBall.mesh) {
+      cueBall.mesh.position.copy(cueBall.position);
+      cueBall.mesh.visible = true;
+    }
+
+    this.state.isBallInHand = false;
+    this.state.notification = '수구 배치 완료! 조준 후 샷을 준비하세요.';
+    this.updateAimGuide();
+    this.notify();
+  }
+
   private updateAimGuide() {
     const cueBall = this.getCueBall();
     if (!cueBall || cueBall.isPotted || !this.aimLineMesh || !this.ghostBallMesh) return;
@@ -520,9 +620,41 @@ export class BilliardsGameEngine {
     const dirZ = Math.sin(this.aimAngle);
     const origin = cueBall.position;
     const R = this.bounds.ballRadius;
+    const halfL = this.bounds.length / 2 - R;
+    const halfW = this.bounds.width / 2 - R;
 
-    // Raycast against all object balls to find first collision point
-    let closestDist = 2.5;
+    // 1. Raycast against cushions to find boundary wall intersection
+    let railDist = 10.0;
+    const railNormal = new THREE.Vector3();
+    if (dirX > 0.0001) {
+      const d = (halfL - origin.x) / dirX;
+      if (d > 0 && d < railDist) {
+        railDist = d;
+        railNormal.set(-1, 0, 0);
+      }
+    } else if (dirX < -0.0001) {
+      const d = (-halfL - origin.x) / dirX;
+      if (d > 0 && d < railDist) {
+        railDist = d;
+        railNormal.set(1, 0, 0);
+      }
+    }
+    if (dirZ > 0.0001) {
+      const d = (halfW - origin.z) / dirZ;
+      if (d > 0 && d < railDist) {
+        railDist = d;
+        railNormal.set(0, 0, -1);
+      }
+    } else if (dirZ < -0.0001) {
+      const d = (-halfW - origin.z) / dirZ;
+      if (d > 0 && d < railDist) {
+        railDist = d;
+        railNormal.set(0, 0, 1);
+      }
+    }
+
+    // 2. Raycast against all object balls
+    let closestDist = railDist;
     let hitBall: BallPhysicsState | null = null;
 
     for (const b of this.physics.balls) {
@@ -530,10 +662,8 @@ export class BilliardsGameEngine {
       const ox = b.position.x - origin.x;
       const oz = b.position.z - origin.z;
 
-      // Project onto aim direction
       const proj = ox * dirX + oz * dirZ;
       if (proj > 0 && proj < closestDist) {
-        // Perpendicular distance
         const perpSq = (ox * ox + oz * oz) - (proj * proj);
         const touchDist = R * 2;
         if (perpSq <= touchDist * touchDist) {
@@ -546,7 +676,7 @@ export class BilliardsGameEngine {
       }
     }
 
-    // Update Aim Line
+    // Update Main Aim Line
     const endPoint = new THREE.Vector3(
       origin.x + dirX * closestDist,
       origin.y,
@@ -557,25 +687,82 @@ export class BilliardsGameEngine {
     posAttr.setXYZ(1, endPoint.x, endPoint.y, endPoint.z);
     posAttr.needsUpdate = true;
     this.aimLineMesh.computeLineDistances();
+    this.aimLineMesh.visible = true;
 
-    // Update Ghost Ball Indicator
+    // 3. Object Ball Target Line & Cue Tangent Line
     if (hitBall) {
       this.ghostBallMesh.visible = true;
       this.ghostBallMesh.position.copy(endPoint);
+
+      const nx = hitBall.position.x - endPoint.x;
+      const nz = hitBall.position.z - endPoint.z;
+      const nLen = Math.hypot(nx, nz) || 1;
+      const normX = nx / nLen;
+      const normZ = nz / nLen;
+
+      if (this.targetLineMesh) {
+        const tLen = 0.50;
+        const tPos = this.targetLineMesh.geometry.attributes.position;
+        tPos.setXYZ(0, hitBall.position.x, hitBall.position.y, hitBall.position.z);
+        tPos.setXYZ(1, hitBall.position.x + normX * tLen, hitBall.position.y, hitBall.position.z + normZ * tLen);
+        tPos.needsUpdate = true;
+        this.targetLineMesh.computeLineDistances();
+        this.targetLineMesh.visible = true;
+      }
+
+      if (this.tangentLineMesh) {
+        const dot = dirX * normX + dirZ * normZ;
+        let tanX = dirX - normX * dot;
+        let tanZ = dirZ - normZ * dot;
+        const tanLen = Math.hypot(tanX, tanZ);
+        if (tanLen > 0.001) {
+          tanX /= tanLen;
+          tanZ /= tanLen;
+          const sLen = 0.35;
+          const sPos = this.tangentLineMesh.geometry.attributes.position;
+          sPos.setXYZ(0, endPoint.x, endPoint.y, endPoint.z);
+          sPos.setXYZ(1, endPoint.x + tanX * sLen, endPoint.y, endPoint.z + tanZ * sLen);
+          sPos.needsUpdate = true;
+          this.tangentLineMesh.computeLineDistances();
+          this.tangentLineMesh.visible = true;
+        } else {
+          this.tangentLineMesh.visible = false;
+        }
+      }
+
+      if (this.bankLineMesh) this.bankLineMesh.visible = false;
     } else {
+      // 4. Cushion Bank Reflection Forecast
       this.ghostBallMesh.visible = false;
+      if (this.targetLineMesh) this.targetLineMesh.visible = false;
+      if (this.tangentLineMesh) this.tangentLineMesh.visible = false;
+
+      if (this.bankLineMesh && railDist < 9.0) {
+        const dotR = dirX * railNormal.x + dirZ * railNormal.z;
+        const refX = dirX - 2 * dotR * railNormal.x;
+        const refZ = dirZ - 2 * dotR * railNormal.z;
+        const bLen = 0.45;
+
+        const bPos = this.bankLineMesh.geometry.attributes.position;
+        bPos.setXYZ(0, endPoint.x, endPoint.y, endPoint.z);
+        bPos.setXYZ(1, endPoint.x + refX * bLen, endPoint.y, endPoint.z + refZ * bLen);
+        bPos.needsUpdate = true;
+        this.bankLineMesh.computeLineDistances();
+        this.bankLineMesh.visible = true;
+      }
     }
 
-    // Update Cue Stick Position & Rotation
+    // Update Cue Stick Position, Rotation & Elevation Angle
     if (this.cueGroup) {
       const cueDist = R + 0.02 + this.strokeOffset;
+      const elevRad = ((this.state.cueElevation || 2.5) * Math.PI) / 180;
       this.cueGroup.position.set(
         origin.x - dirX * cueDist,
-        origin.y + 0.015,
+        origin.y + 0.015 + Math.sin(elevRad) * 0.12,
         origin.z - dirZ * cueDist
       );
       this.cueGroup.rotation.y = -this.aimAngle + Math.PI / 2;
-      this.cueGroup.rotation.x = 0.04; // Slight downward cue angle
+      this.cueGroup.rotation.x = elevRad;
     }
 
     this.updateAimCamera();
@@ -619,6 +806,9 @@ export class BilliardsGameEngine {
 
         if (this.cueGroup) this.cueGroup.visible = false;
         if (this.aimLineMesh) this.aimLineMesh.visible = false;
+        if (this.targetLineMesh) this.targetLineMesh.visible = false;
+        if (this.tangentLineMesh) this.tangentLineMesh.visible = false;
+        if (this.bankLineMesh) this.bankLineMesh.visible = false;
         if (this.ghostBallMesh) this.ghostBallMesh.visible = false;
       }
     };
@@ -634,7 +824,32 @@ export class BilliardsGameEngine {
     let startX = 0;
     let startY = 0;
 
+    // Mouse Wheel for ultra-fine aim angle adjustment
+    dom.addEventListener('wheel', (e: WheelEvent) => {
+      if (!this.state.isAiming || this.physics.isSimulating() || this.state.isBallInHand) return;
+      e.preventDefault();
+      const step = e.shiftKey ? 0.001 : 0.004;
+      const delta = e.deltaY > 0 ? step : -step;
+      this.aimAngle += delta;
+      this.updateAimGuide();
+    }, { passive: false });
+
     dom.addEventListener('pointerdown', (e) => {
+      // 1. Interactive Ball-in-Hand (프리볼) placement
+      if (this.state.isBallInHand) {
+        const rect = dom.getBoundingClientRect();
+        const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), this.camera);
+        const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -this.bounds.ballRadius);
+        const hitPt = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(groundPlane, hitPt)) {
+          this.placeCueBall(hitPt.x, hitPt.z);
+        }
+        return;
+      }
+
       if (!this.state.isAiming || this.physics.isSimulating()) return;
       isPointerDown = true;
       startX = e.clientX;
@@ -734,14 +949,14 @@ export class BilliardsGameEngine {
     } else if (mode === '8ball') {
       const cueBall = this.physics.balls.find((b) => b.id === 0);
       if (cueBall && cueBall.isPotted) {
-        this.state.notification = `Scratch! Cue ball in pocket!`;
         cueBall.isPotted = false;
-        cueBall.position.set(-0.55, this.bounds.ballRadius, 0);
         cueBall.velocity.set(0, 0, 0);
+        cueBall.angularVelocity.set(0, 0, 0);
         if (cueBall.mesh) {
           cueBall.mesh.visible = true;
-          cueBall.mesh.position.copy(cueBall.position);
         }
+        this.setBallInHand(true);
+        this.state.notification = `스크래치 파울! 수구가 포켓에 빠졌습니다. 당구대를 클릭하여 원하는 위치에 수구를 배치(Ball-in-Hand)하세요!`;
       }
     }
 

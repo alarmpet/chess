@@ -1,15 +1,13 @@
 /**
  * BilliardsView.tsx — Authentic 3D Billiards Game View & High-End HUD
  *
- * Provides:
- *  - Fullscreen Three.js WebGL Billiards Canvas mount
- *  - 8-Ball Pool, Korean 4-Ball, and 3-Cushion Carom modes
- *  - Circular English/Spin (상/하/좌/우 당점) picker with live visual cue tip contact
- *  - Dynamic Power Meter & Shoot button (with Spacebar & Mouse stroke support)
- *  - Fine-tuning aim angle buttons (◀ 0.5° / 0.5° ▶) & Arrow key navigation
- *  - Multi-camera angle presets (🎯 조준, 📐 탑다운, 🎥 자유 궤도)
- *  - Simonis 860 Felt cloth color switcher (토너먼트 블루, 시모니스 그린, 버건디 레드)
- *  - Real-time score board, turn indicators, and rule notification banner
+ * Implements:
+ *  - Dual Trajectory Line System: Object Target line (Yellow) + Tangent Deflection line (Cyan) + Cushion Bank Reflection (White)
+ *  - Mouse Wheel Ultra-Fine Aim Rotation (0.1° per tick, Shift+Wheel for millimeter precision)
+ *  - Cue Stick Elevation / Masse Slider (0°~25°)
+ *  - Interactive Ball-in-Hand (프리볼) Table Click Placement
+ *  - Collapsible Shooting Dock ([▼ 최소화] / [▲ 펼치기]) for full-table view
+ *  - Real-Time Score Celebration & Game-Feel Feedback
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -34,6 +32,13 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
   const [isMuted, setIsMuted] = useState(billiardsAudio.getMuted());
   const [ruleModalOpen, setRuleModalOpen] = useState(false);
   const [isDraggingSpin, setIsDraggingSpin] = useState(false);
+  const [dockCollapsed, setDockCollapsed] = useState(false);
+  const [scoreCelebration, setScoreCelebration] = useState<string | null>(null);
+
+  const prevScoreRef = useRef<{ p1: number; p2: number }>({
+    p1: billiardsEngine.state.player1Score,
+    p2: billiardsEngine.state.player2Score
+  });
 
   // 1. Initialize Billiards Engine on Mount
   useEffect(() => {
@@ -42,6 +47,17 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
 
     const unsub = billiardsEngine.subscribe((st) => {
       setGameState({ ...st });
+
+      // Check for score increase for celebration feedback
+      const prev = prevScoreRef.current;
+      if (st.player1Score > prev.p1) {
+        setScoreCelebration(`1P +${st.player1Score - prev.p1} 득점! ✦`);
+        setTimeout(() => setScoreCelebration(null), 2400);
+      } else if (st.player2Score > prev.p2) {
+        setScoreCelebration(`2P +${st.player2Score - prev.p2} 득점! ✦`);
+        setTimeout(() => setScoreCelebration(null), 2400);
+      }
+      prevScoreRef.current = { p1: st.player1Score, p2: st.player2Score };
     });
 
     return () => {
@@ -98,7 +114,7 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
 
     ctx.clearRect(0, 0, w, h);
 
-    // Ball Base with subtle 3D lighting gradient
+    // Ball Base with 3D gradient
     const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r);
     grad.addColorStop(0, '#ffffff');
     grad.addColorStop(0.65, '#e2e8f0');
@@ -124,8 +140,7 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // English Contact Point (Red leather chalk dot)
-    // Note: gameState.english.x is [-1, 1], y is [-1, 1] (y > 0 is top)
+    // English Contact Point
     const dotX = cx + gameState.english.x * (r * 0.72);
     const dotY = cy - gameState.english.y * (r * 0.72);
 
@@ -145,7 +160,7 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
     ctx.stroke();
   }, [gameState.english]);
 
-  // Handle spin canvas mouse / touch interactions
+  // Handle spin canvas pointer interaction
   const handleSpinPointer = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = spinCanvasRef.current;
     if (!canvas) return;
@@ -265,6 +280,16 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
 
         {/* Top Right Controls & Settings */}
         <div className="billiards-top-right">
+          {/* Ball-in-Hand Manual Trigger */}
+          <button
+            type="button"
+            className={`billiards-btn ${gameState.isBallInHand ? 'btn-ball-in-hand-active' : ''}`}
+            onClick={() => billiardsEngine.setBallInHand(!gameState.isBallInHand)}
+            title="수구를 원하는 위치에 직접 배치"
+          >
+            🖐️ {gameState.isBallInHand ? '배치 취소' : '프리볼'}
+          </button>
+
           {/* Felt Color Dropdown / Pills */}
           <div className="felt-theme-selector" title="당구대 라사지(펠트) 색상 변경">
             {(Object.keys(FELT_THEMES) as (keyof typeof FELT_THEMES)[]).map((themeKey) => (
@@ -341,150 +366,246 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
         </div>
       </header>
 
+      {/* Score Celebration Toast */}
+      {scoreCelebration && (
+        <div className="billiards-celebration-toast">
+          <span className="celebration-spark">✨</span>
+          <span className="celebration-text">{scoreCelebration}</span>
+        </div>
+      )}
+
+      {/* Ball-in-Hand Interactive Banner */}
+      {gameState.isBallInHand && (
+        <div className="billiards-ball-in-hand-banner">
+          <span className="hand-icon">🖐️</span>
+          <span>프리볼 모드: 당구대 위 원하는 빈 공간을 클릭하여 수구를 배치하세요!</span>
+        </div>
+      )}
+
       {/* Live Toast Notification Banner */}
-      {gameState.notification && (
+      {!gameState.isBallInHand && gameState.notification && (
         <div className="billiards-notification-banner">
           <span className="notif-sparkle">✦</span>
           <span className="notif-text">{gameState.notification}</span>
         </div>
       )}
 
-      {/* Bottom Cue Shooting Dock */}
-      <footer className="billiards-bottom-dock">
-        {/* English / Spin Circular Ball Controller */}
-        <div className="english-dock-card">
-          <div className="english-card-header">
-            <span className="english-title">🎯 당점 (English)</span>
-            <span className="english-label-text">{getEnglishLabel()}</span>
-          </div>
-          <div className="english-canvas-wrap">
-            <canvas
-              ref={spinCanvasRef}
-              width={84}
-              height={84}
-              className="english-canvas"
-              onPointerDown={(e) => {
-                setIsDraggingSpin(true);
-                handleSpinPointer(e);
-              }}
-              onPointerMove={(e) => {
-                if (isDraggingSpin) handleSpinPointer(e);
-              }}
-              onPointerUp={() => setIsDraggingSpin(false)}
-              onPointerLeave={() => setIsDraggingSpin(false)}
-            />
-          </div>
-          <button
-            type="button"
-            className="english-reset-btn"
-            onClick={() => {
-              billiardsEngine.setEnglish(0, 0);
-              billiardsAudio.playChalk();
-            }}
-          >
-            중앙 (무회전)
-          </button>
-        </div>
+      {/* Trajectory Guide Legend Floating Pill */}
+      <div className="trajectory-legend-pill">
+        <span className="legend-tag">
+          <span className="legend-dot white" /> 수구 조준/쿠션 반사
+        </span>
+        <span className="legend-tag">
+          <span className="legend-dot yellow" /> 제1목적구 진행선
+        </span>
+        <span className="legend-tag">
+          <span className="legend-dot cyan" /> 수구 90° 분리선
+        </span>
+        <span className="legend-hint">
+          💡 마우스 휠: 0.1° 미세 조준 (Shift+휠: 초정밀)
+        </span>
+      </div>
 
-        {/* Aim Angle Micro-Adjuster */}
-        <div className="aim-fine-tune-card">
-          <span className="dock-card-label">조준 미세 조절</span>
-          <div className="aim-tune-buttons">
-            <button
-              type="button"
-              className="aim-nudge-btn"
-              onClick={() => billiardsEngine.adjustAimAngle(-0.01)}
-              title="좌측으로 0.5° 미세 회전"
-            >
-              ◀◀
-            </button>
-            <button
-              type="button"
-              className="aim-nudge-btn"
-              onClick={() => billiardsEngine.adjustAimAngle(-0.002)}
-              title="좌측으로 0.1° 초미세 회전"
-            >
-              ◀
-            </button>
-            <span className="aim-icon">🎯</span>
-            <button
-              type="button"
-              className="aim-nudge-btn"
-              onClick={() => billiardsEngine.adjustAimAngle(0.002)}
-              title="우측으로 0.1° 초미세 회전"
-            >
-              ▶
-            </button>
-            <button
-              type="button"
-              className="aim-nudge-btn"
-              onClick={() => billiardsEngine.adjustAimAngle(0.01)}
-              title="우측으로 0.5° 미세 회전"
-            >
-              ▶▶
-            </button>
-          </div>
-          <span className="aim-hint-text">단축키: 좌/우 방향키 (← / →)</span>
-        </div>
+      {/* Bottom Cue Shooting Cockpit Dock */}
+      <footer className={`billiards-bottom-dock ${dockCollapsed ? 'collapsed' : ''}`}>
+        {/* Toggle Collapse Button */}
+        <button
+          type="button"
+          className="dock-toggle-btn"
+          onClick={() => setDockCollapsed(!dockCollapsed)}
+          title={dockCollapsed ? '조작 독 펼치기' : '조작 독 접어 당구대 전체보기'}
+        >
+          {dockCollapsed ? '▲ 조작 독 펼치기' : '▼ 독 최소화'}
+        </button>
 
-        {/* Shot Power Slider & Gauge */}
-        <div className="power-meter-card">
-          <div className="power-card-header">
-            <span className="dock-card-label">샷 파워 (Power)</span>
-            <span className="power-val-badge">{Math.round(gameState.shotPower * 100)}%</span>
-          </div>
+        {!dockCollapsed && (
+          <>
+            {/* English / Spin Circular Ball Controller */}
+            <div className="english-dock-card">
+              <div className="english-card-header">
+                <span className="english-title">🎯 당점 (English)</span>
+                <span className="english-label-text">{getEnglishLabel()}</span>
+              </div>
+              <div className="english-canvas-wrap">
+                <canvas
+                  ref={spinCanvasRef}
+                  width={84}
+                  height={84}
+                  className="english-canvas"
+                  onPointerDown={(e) => {
+                    setIsDraggingSpin(true);
+                    handleSpinPointer(e);
+                  }}
+                  onPointerMove={(e) => {
+                    if (isDraggingSpin) handleSpinPointer(e);
+                  }}
+                  onPointerUp={() => setIsDraggingSpin(false)}
+                  onPointerLeave={() => setIsDraggingSpin(false)}
+                />
+              </div>
+              <button
+                type="button"
+                className="english-reset-btn"
+                onClick={() => {
+                  billiardsEngine.setEnglish(0, 0);
+                  billiardsAudio.playChalk();
+                }}
+              >
+                중앙 (무회전)
+              </button>
+            </div>
 
-          <div className="power-track-wrap">
-            <div
-              className="power-bar-fill"
-              style={{
-                width: `${gameState.shotPower * 100}%`,
-                background: `linear-gradient(90deg, #38bdf8 0%, #facc15 60%, #ef4444 100%)`
-              }}
-            />
-            <input
-              type="range"
-              min="0.05"
-              max="1.0"
-              step="0.01"
-              value={gameState.shotPower}
-              onChange={(e) => billiardsEngine.setShotPower(parseFloat(e.target.value))}
-              className="power-range-input"
-              title="샷 파워 조절 (단축키: ↑ / ↓)"
-            />
-          </div>
+            {/* Aim Angle Micro-Adjuster */}
+            <div className="aim-fine-tune-card">
+              <span className="dock-card-label">조준 미세 조절</span>
+              <div className="aim-tune-buttons">
+                <button
+                  type="button"
+                  className="aim-nudge-btn"
+                  onClick={() => billiardsEngine.adjustAimAngle(-0.01)}
+                  title="좌측으로 0.5° 회전"
+                >
+                  ◀◀
+                </button>
+                <button
+                  type="button"
+                  className="aim-nudge-btn"
+                  onClick={() => billiardsEngine.adjustAimAngle(-0.002)}
+                  title="좌측으로 0.1° 초미세 회전"
+                >
+                  ◀
+                </button>
+                <span className="aim-icon">🎯</span>
+                <button
+                  type="button"
+                  className="aim-nudge-btn"
+                  onClick={() => billiardsEngine.adjustAimAngle(0.002)}
+                  title="우측으로 0.1° 초미세 회전"
+                >
+                  ▶
+                </button>
+                <button
+                  type="button"
+                  className="aim-nudge-btn"
+                  onClick={() => billiardsEngine.adjustAimAngle(0.01)}
+                  title="우측으로 0.5° 회전"
+                >
+                  ▶▶
+                </button>
+              </div>
+              <span className="aim-hint-text">마우스 휠 스크롤 회전 지원</span>
+            </div>
 
-          <div className="power-presets">
-            <button
-              type="button"
-              className="power-quick-btn"
-              onClick={() => billiardsEngine.setShotPower(0.25)}
-            >
-              약 (25%)
-            </button>
-            <button
-              type="button"
-              className="power-quick-btn"
-              onClick={() => billiardsEngine.setShotPower(0.55)}
-            >
-              중 (55%)
-            </button>
-            <button
-              type="button"
-              className="power-quick-btn"
-              onClick={() => billiardsEngine.setShotPower(0.90)}
-            >
-              강 (90%)
-            </button>
-          </div>
-        </div>
+            {/* Cue Elevation / Masse Angle Card */}
+            <div className="cue-elevation-card">
+              <div className="power-card-header">
+                <span className="dock-card-label">큐대 각도 (Elevation)</span>
+                <span className="elev-val-badge">{(gameState.cueElevation || 2.5).toFixed(1)}°</span>
+              </div>
+              <div className="elev-track-wrap">
+                <input
+                  type="range"
+                  min="0"
+                  max="25"
+                  step="0.5"
+                  value={gameState.cueElevation || 2.5}
+                  onChange={(e) => billiardsEngine.setCueElevation(parseFloat(e.target.value))}
+                  className="elev-range-input"
+                  title="큐대 상하 각도 조절 (맛세이/찍어치기)"
+                />
+              </div>
+              <div className="elev-presets">
+                <button
+                  type="button"
+                  className="elev-quick-btn"
+                  onClick={() => billiardsEngine.setCueElevation(0)}
+                >
+                  수평 0°
+                </button>
+                <button
+                  type="button"
+                  className="elev-quick-btn"
+                  onClick={() => billiardsEngine.setCueElevation(2.5)}
+                >
+                  기본 2.5°
+                </button>
+                <button
+                  type="button"
+                  className="elev-quick-btn"
+                  onClick={() => billiardsEngine.setCueElevation(12)}
+                >
+                  각도 12°
+                </button>
+                <button
+                  type="button"
+                  className="elev-quick-btn"
+                  onClick={() => billiardsEngine.setCueElevation(22)}
+                >
+                  맛세이 22°
+                </button>
+              </div>
+            </div>
+
+            {/* Shot Power Slider & Gauge */}
+            <div className="power-meter-card">
+              <div className="power-card-header">
+                <span className="dock-card-label">샷 파워 (Power)</span>
+                <span className="power-val-badge">{Math.round(gameState.shotPower * 100)}%</span>
+              </div>
+
+              <div className="power-track-wrap">
+                <div
+                  className="power-bar-fill"
+                  style={{
+                    width: `${gameState.shotPower * 100}%`,
+                    background: `linear-gradient(90deg, #38bdf8 0%, #facc15 60%, #ef4444 100%)`
+                  }}
+                />
+                <input
+                  type="range"
+                  min="0.05"
+                  max="1.0"
+                  step="0.01"
+                  value={gameState.shotPower}
+                  onChange={(e) => billiardsEngine.setShotPower(parseFloat(e.target.value))}
+                  className="power-range-input"
+                  title="샷 파워 조절 (단축키: ↑ / ↓)"
+                />
+              </div>
+
+              <div className="power-presets">
+                <button
+                  type="button"
+                  className="power-quick-btn"
+                  onClick={() => billiardsEngine.setShotPower(0.25)}
+                >
+                  약 (25%)
+                </button>
+                <button
+                  type="button"
+                  className="power-quick-btn"
+                  onClick={() => billiardsEngine.setShotPower(0.55)}
+                >
+                  중 (55%)
+                </button>
+                <button
+                  type="button"
+                  className="power-quick-btn"
+                  onClick={() => billiardsEngine.setShotPower(0.90)}
+                >
+                  강 (90%)
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Big Shoot Cue Button */}
         <div className="shoot-action-wrap">
           <button
             type="button"
             className={`billiards-shoot-btn ${gameState.isAiming ? 'ready' : 'busy'}`}
-            disabled={!gameState.isAiming || gameState.isShooting}
+            disabled={!gameState.isAiming || gameState.isShooting || gameState.isBallInHand}
             onClick={() => billiardsEngine.shootCue()}
             title="큐 스틱으로 공을 타격합니다 (단축키: 스페이스바)"
           >
@@ -493,9 +614,11 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
               {gameState.isShooting ? '타격 중...' : '샷 발사 (Space)'}
             </span>
           </button>
-          <span className="shoot-guide-hint">
-            💡 화면을 마우스로 뒤로 당겨도 파워 충전 후 발사됩니다
-          </span>
+          {!dockCollapsed && (
+            <span className="shoot-guide-hint">
+              💡 화면 마우스 드래그로 큐 당기기/파워 충전 가능
+            </span>
+          )}
         </div>
       </footer>
 
@@ -520,6 +643,7 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
                 <p>
                   브레이크 샷 후 처음 포켓에 넣은 공의 종류(솔리드 1~7번 또는 스트라이프 9~15번)가 자신의 그룹이 됩니다.
                   자신의 그룹 공을 모두 넣은 뒤 마지막으로 검정색 8번 공을 넣으면 승리합니다.
+                  스크래치 파울 시 상대방은 원하는 위치에 수구를 놓고 치는 <strong>프리볼(Ball-in-Hand)</strong> 권리를 얻습니다.
                 </p>
               </div>
 
@@ -545,7 +669,8 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
                   <li><strong>Han 마찰 전이 모델:</strong> 미끄러짐(Sliding)에서 구름(Rolling)으로의 자연스러운 감속 전이 시뮬레이션</li>
                   <li><strong>Dr. Dave 회전 편차(Throw):</strong> 빗겨치기 마찰로 인한 궤도 편차(CIT) 및 사이드 스핀으로 인한 휨 현상(SIT) 구현</li>
                   <li><strong>Mathavan K-55 쿠션 모델:</strong> 2/5 고도 접촉 반발($e=0.85$) 및 레일 회전 각도 반사</li>
-                  <li><strong>Aramith 페놀 수지 사운드:</strong> Web Audio API로 합성된 "딱!" 하는 타격감과 공간 울림</li>
+                  <li><strong>이중 궤적 예측선:</strong> 제1목적구 진행 경로(노란색) 및 수구 90° 분리각(하늘색), 쿠션 반사선(흰색) 실시간 시각화</li>
+                  <li><strong>Aramith 페놀 수지 사운드:</strong> Web Audio API로 합성된 다중 음성 리미터 기반의 청명한 타격감</li>
                 </ul>
               </div>
             </div>

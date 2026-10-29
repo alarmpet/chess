@@ -71,3 +71,34 @@ test('Billiards Audio Engine exports expected sound trigger methods', () => {
   assert.ok(typeof billiardsAudio.playPocketDrop === 'function');
   assert.ok(typeof billiardsAudio.playChalk === 'function');
 });
+
+test('Billiards Game Engine supports cue elevation, ball-in-hand placement, and angle adjustment', async () => {
+  const { billiardsEngine } = await import('../src/billiards/billiardsEngine.ts');
+  
+  // 1. Cue Elevation
+  billiardsEngine.setCueElevation(15);
+  assert.equal(billiardsEngine.state.cueElevation, 15);
+  billiardsEngine.setCueElevation(40); // clamped to 25
+  assert.equal(billiardsEngine.state.cueElevation, 25);
+
+  // 2. Aim Angle adjustment
+  const prevAngle = billiardsEngine.aimAngle || 0;
+  billiardsEngine.adjustAimAngle(0.05);
+  assert.equal(billiardsEngine.aimAngle, prevAngle + 0.05);
+
+  // 3. Ball-in-Hand placement
+  billiardsEngine.physics.balls = [{
+    id: 0,
+    type: 'cue',
+    position: new THREE.Vector3(-0.55, 0.04, 0),
+    velocity: new THREE.Vector3(),
+    angularVelocity: new THREE.Vector3(),
+    english: { x: 0, y: 0 },
+    isPotted: false,
+    state: 'resting'
+  }];
+  billiardsEngine.setBallInHand(true);
+  assert.equal(billiardsEngine.state.isBallInHand, true);
+  billiardsEngine.placeCueBall(0.1, 0.2);
+  assert.equal(billiardsEngine.state.isBallInHand, false);
+});
