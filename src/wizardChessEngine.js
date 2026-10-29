@@ -2162,6 +2162,64 @@ export function initWizardChess() {
       return { stages: activePack.looks?.stages || [], note: activePack.looks?.note || null, items: activePack.items || {}, roles };
     }
 
+
+    // ---- Promotion chooser (PLAN §14.0 (a): auto-queen by default, under-promotion in one tap) -------------------
+    let promotionPickerOpen = false;
+    const PROMO_SPECIES_KO = { lion: '사자', tiger: '호랑이', rhino: '코뿔소', panda: '판다', kangaroo: '캥거루', meerkat: '미어캣', fox: '여우' };
+    function showPromotionPicker(color, onPick) {
+      const roles = [['queen', '♛', '퀸', 'Q'], ['rook', '♜', '룩', 'R'], ['bishop', '♝', '비숍', 'B'], ['knight', '♞', '나이트', 'N']];
+      const AUTO_MS = 2500;
+      promotionPickerOpen = true;
+      const wrap = document.createElement('div');
+      wrap.className = 'promo-picker';
+      wrap.id = 'promo-picker';
+      wrap.setAttribute('role', 'dialog');
+      wrap.setAttribute('aria-label', '승급할 기물 고르기');
+      const title = document.createElement('div');
+      title.className = 'promo-title';
+      title.textContent = '승급 — 고르지 않으면 퀸';
+      wrap.appendChild(title);
+      const row = document.createElement('div');
+      row.className = 'promo-row';
+      wrap.appendChild(row);
+      const bar = document.createElement('div');
+      bar.className = 'promo-bar';
+      const fill = document.createElement('div');
+      fill.className = 'promo-bar-fill';
+      fill.style.animationDuration = `${AUTO_MS}ms`;
+      bar.appendChild(fill);
+      wrap.appendChild(bar);
+      let done = false;
+      const finish = (role) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        window.removeEventListener('keydown', onKey, true);
+        wrap.remove();
+        promotionPickerOpen = false;
+        onPick(role);
+      };
+      for (const [role, glyph, ko, key] of roles) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = `promo-btn${role === 'queen' ? ' default' : ''}`;
+        b.dataset.role = role;
+        const model = activePack?.pieces?.[role] ? modelNameFor(activePack.pieces[role], color) : '';
+        const species = PROMO_SPECIES_KO[(model || '').replace(/_[wb]$/, '').replace(/_s\d.*$/, '')] || '';
+        b.innerHTML = `<span class="promo-glyph">${glyph}</span><span>${ko}</span>${species ? `<small>${species}</small>` : ''}<kbd>${key}</kbd>`;
+        b.addEventListener('click', (e) => { e.stopPropagation(); finish(role); });
+        row.appendChild(b);
+      }
+      const onKey = (e) => {
+        const k = e.key.toLowerCase();
+        const hit = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight', enter: 'queen' }[k];
+        if (hit) { e.preventDefault(); e.stopPropagation(); finish(hit); }
+      };
+      window.addEventListener('keydown', onKey, true);
+      const timer = setTimeout(() => finish('queen'), AUTO_MS);
+      document.body.appendChild(wrap);
+    }
+
     function switchChessSkin(newSkin) {
       if (typeof window !== 'undefined') {
         window.__chessSkin = newSkin;
@@ -4255,7 +4313,7 @@ export function initWizardChess() {
       if (subEl) {
         const baseSub = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
         if (winnerColor === playerColor) {
-          subEl.innerHTML = `${baseSub}<br/><span style="color:#f59e0b;font-size:0.9rem;margin-top:6px;display:inline-block;">🔥 대성당 화로 소각 처형 완료 • +250G | +3💎 | +5 성회 | +5 대리석</span>`;
+          subEl.innerHTML = `${baseSub}<br/><span style="color:#f59e0b;font-size:0.9rem;margin-top:6px;display:inline-block;">🏆 승리 보상 • +250G | +3💎 | +5 성회 | +5 대리석</span>`;
           if (typeof window !== 'undefined' && window.__juiceEngine) {
             window.__juiceEngine.registerWin();
             window.__juiceEngine.progressQuest('q_checkmate');
@@ -4402,6 +4460,42 @@ export function initWizardChess() {
       const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
       innerRing.position.set(homePos.x, BOARD_SURFACE_Y + 0.014, homePos.z);
       squareHighlightsGroup.add(innerRing);
+
+      // Rigged animals (2026-10-30): no toppling, no brazier — the defeated king kneels (clamped Kneel clip) and
+      // every piece of the winning side cheers. Mild, cartoon-like (PLAN §14.0 rating notes). Statues keep the
+      // topple below.
+      if (kingPiece.rig && kingPiece.rig !== 'statue') {
+        checkmateState.phase = 'kneel';
+        playPieceClip(kingPiece, 'kneel', false, 0.2);
+        let i = 0;
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const p = boardState[r][c];
+            if (!p || p.color !== actualWinner) continue;
+            const delay = 250 + (i++ % 6) * 90;           // a ripple, not a unison
+            setTimeout(() => {
+              if (checkmateState.active && boardState[r][c] === p) playPieceClip(p, 'victory', true, 0.25);
+            }, delay);
+          }
+        }
+        if (heldCameraKeys.size === 0) {
+          const camSideX = homePos.x >= 0 ? -1.2 : 1.2;
+          smoothCameraTo(
+            new THREE.Vector3(homePos.x + camSideX, BOARD_SURFACE_Y + 1.05, homePos.z + forwardDirZ * 1.6),
+            new THREE.Vector3(homePos.x, BOARD_SURFACE_Y + 0.3, homePos.z),
+            0.95
+          );
+        }
+        setTimeout(() => {
+          if (!checkmateState.active) return;
+          checkmateState.phase = 'fallen';
+          showCheckmateBanner(actualWinner, defeatedColor);
+          if (actualWinner === playerColor && typeof window !== 'undefined' && window.__farmEngine) {
+            window.__farmEngine.awardCheckmateVictory();
+          }
+        }, 1300);
+        return true;
+      }
 
       // Pause the King's idle mixer so its stone statue mesh pivots cleanly as a rigid monument
       if (kingPiece.currentAction) {
@@ -4768,6 +4862,7 @@ export function initWizardChess() {
       }
 
       if (clickedR === -1) return;
+      if (promotionPickerOpen) return;          // the promotion chooser owns the next click
 
       if (typeof window !== 'undefined' && window.__arcaneTileHandler && window.__arcaneTileHandler(clickedR, clickedC)) {
         if (preMoveHighlightTask) preMoveHighlightTask = null;
@@ -4792,6 +4887,14 @@ export function initWizardChess() {
             (m.castle && m.r === clickedR && m.rookFromC === clickedC)
         );
         if (move) {
+          const mover = boardState[selectedSquare.r][selectedSquare.c];
+          if (mover && mover.type === 'pawn' && (move.r === 0 || move.r === 7)) {
+            const from = { r: selectedSquare.r, c: selectedSquare.c };
+            showPromotionPicker(mover.color, (choice) => {
+              executeChessMove(from.r, from.c, move.r, move.c, { promotion: choice });
+            });
+            return;
+          }
           executeChessMove(selectedSquare.r, selectedSquare.c, move.r, move.c);
           return;
         }
@@ -5496,6 +5599,8 @@ export function initWizardChess() {
       getCosmetics,
       setCosmetics,
       debugRenderCalls: () => renderer.info.render.calls,
+      // Debug: open the promotion chooser; resolves with the picked role
+      debugPromotionPicker: (color = 'w') => new Promise((res) => showPromotionPicker(color, res)),
       // Debug: bone sockets of a piece template (model space, bind pose)
       debugSockets: (type, color = 'w') => {
         const look = cosmetics?.[color]?.[type];

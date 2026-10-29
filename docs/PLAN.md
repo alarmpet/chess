@@ -423,6 +423,11 @@ v0.7 까지의 진영별 다른 종(늑대/호랑이, 유니콘/드래곤…) �
 2. Phase 0a 착수: 역할→클립 어댑터 + `keepMaterials` + 대성당 매니페스트.
 3. Phase 1 병행: 도구 개조 4건 → 사자 콘셉트 A/B → 로컬 TRELLIS 밤 큐.
 
+**2026-10-30 처리한 것**
+- **체크메이트 연출 (동물 기물)**: 진 킹을 넘어뜨려 화로에 던지던 석상용 연출을 동물 팩에서는 쓰지 않는다. 진 킹은 Kneel 로 무릎 꿇고, 이긴 쪽 기물이 물결처럼 차례로 Cheer. 1.3초 뒤 결과 창. 결과 창의 "화로 소각 처형" 문구는 "승리 보상" 으로. 석상 팩(`?pack=cathedral`)은 기존 연출 유지. 야생 모드의 화로 문구는 야생 모드 전용이라 남겼다.
+- **승급 하드코딩 결함(§11) 수정**: 클릭으로 승급할 때 선택 창 — 퀸이 미리 선택, 2.5초 뒤 자동 확정, 룩·비숍·나이트는 한 번 탭(Q/R/B/N 키). 버튼에 그 역할의 동물 이름. §14.0 (a) "자동 퀸 기본 + 언더프로모션 1탭". AI 수는 지금처럼 퀸.
+- **CI**: `.github/workflows/ci.yml` — 푸시·PR 마다 `npm ci` → `npm test` → `npm run build`. 타입 검사(`npm run lint`)는 기존 오류 2건(farmData.ts · styles.css) 때문에 아직 넣지 않았다.
+
 ### 참고 자료
 - 라운드 대조표: `docs/research/agent-rounds/2026-10-27-design-wild-crown/README.md` · `2026-10-28-meta-wild-crown/README.md` · `2026-10-28-popular-wild-crown/README.md`(3차, Steam 덤프 15개 포함) · `2026-10-28-break-wild-crown/README.md`(4차, §14 깨뜨리기)
 - 등급: Apple 연령 등급 정의 https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions/ · Play 콘텐츠 등급(IARC) https://support.google.com/googleplay/android-developer/answer/9898843 · GRAC 등급분류 기준 https://www.grac.or.kr/Institution/EtcForm01.aspx · chess.com 자동 퀸 https://support.chess.com/en/articles/8614542-what-is-auto-queen-and-how-do-i-enable-it
