@@ -1,3 +1,4 @@
+import LookPanel from './LookPanel';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
@@ -24,6 +25,7 @@ export default function App() {
   const [xpState, setXpState] = useState<XPState>(juiceEngine.getXPState());
   const [quests, setQuests] = useState<DailyQuest[]>(juiceEngine.getQuests());
   const [pieceSkin, setPieceSkin] = useState<'pack' | '3d_beasts'>('pack');
+  const [lookOpen, setLookOpen] = useState(false);
   // Wild mode (PLAN §10-10 · §12.8): spells and hazard tiles are non-rated and off by default.
   const [wildMode, setWildModeState] = useState<boolean>(() => {
     try {
@@ -376,7 +378,7 @@ export default function App() {
             className="hud-btn skin-toggle-btn"
             id="btn-skin-toggle"
             onClick={handleToggleSkin}
-            title={pieceSkin === '3d_beasts' ? 'WILD CROWN 동물(사자·호랑이·코뿔소·여우·캥거루·미어캣)로 전환' : '3D 성소 영수단(동물 신수 조각상)으로 전환'}
+            title={pieceSkin === '3d_beasts' ? 'WILD CROWN 동물(사자·호랑이·코뿔소·판다·캥거루·미어캣)로 전환' : '3D 성소 영수단(동물 신수 조각상)으로 전환'}
             style={{
               borderColor: pieceSkin === '3d_beasts' ? 'rgba(234, 179, 8, 0.7)' : 'rgba(255, 255, 255, 0.2)',
               color: pieceSkin === '3d_beasts' ? '#fef08a' : '#94a3b8'
@@ -398,6 +400,17 @@ export default function App() {
             }}
           >
             {wildMode ? '🌿 야생 모드 켜짐' : '♟️ 표준 체스'}
+          </button>
+
+          {/* Appearance (PLAN §14.2 · §14.3): stages and trinkets — looks only */}
+          <button
+            type="button"
+            className="hud-btn"
+            id="btn-looks"
+            onClick={() => { setLookOpen(true); setMobileSheetOpen(false); }}
+            title="외형 단계와 장식 고르기 — 외형만 바뀌고 수는 같습니다"
+          >
+            🎨 외형
           </button>
 
           {/* Beast Codex (성소 영수 도감) Button */}
@@ -621,6 +634,8 @@ export default function App() {
           </div>
         </div>
       ) : null}
+
+      <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
 
       {/* SEED & FACILITY SHOP MODAL */}
       {farmState.isShopOpen && (

@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
-import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES } from './packs/packManifest.js';
+import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
 import { SanctuaryGarden3D } from './farm3D';
 import { createBeastMesh, updateBeastTokens, getBeastInfo, getRuneTexture } from './beastModels';
@@ -881,6 +881,18 @@ export function initWizardChess() {
       return DEFAULT_PACK_ID;
     }
     const activeMixers = [];
+    // Appearance (PLAN §14.2 · §14.3, 2026-10-29): a stage per side and role, plus non-weapon trinkets on bone
+    // sockets. Looks only — the referee never sees any of it. Saved per browser; loaded lazily per stage.
+    const COSMETICS_KEY = 'wildcrown.cosmetics.v1';
+    let cosmetics = { w: {}, b: {} };
+    let assetApi = null;            // { buildTemplate, loadGltfModel, base } — set once the pack has loaded
+    const itemTemplates = {};
+    function loadSavedCosmetics() {
+      try { return JSON.parse(window.localStorage.getItem(COSMETICS_KEY) || 'null'); } catch (e) { return null; }
+    }
+    function saveCosmetics() {
+      try { window.localStorage.setItem(COSMETICS_KEY, JSON.stringify(cosmetics)); } catch (e) {}
+    }
     const shatterDebris = [];
     const clock = new THREE.Clock();
 
@@ -1730,6 +1742,9 @@ export function initWizardChess() {
         }
         bumpProgress(`Summoned ${type.toUpperCase()}...`);
       }
+      assetApi = { buildTemplate, loadGltfModel, base: packAssetBase };
+      cosmetics = sanitizeCosmetics(activePack, loadSavedCosmetics());
+      await ensureCosmeticAssets();
 
       document.getElementById('loading-overlay')?.classList.add('hidden');
     }
@@ -1861,7 +1876,9 @@ export function initWizardChess() {
       // (legend animals, savanna, or cathedral statues via ?pack=cathedral). '3d_beasts' = main's procedural
       // Sanctuary Beast sculptures (beastModels.ts). main's old 'classic' value maps to the pack path.
       const skinMode = (typeof window !== 'undefined' && window.__chessSkin) ? window.__chessSkin : 'pack';
-      const tpl = skinMode === '3d_beasts' ? null : pieceTemplates[`${type}_${color}`];
+      const look = cosmetics?.[color]?.[type];
+      const tpl = skinMode === '3d_beasts' ? null
+        : (look && pieceTemplates[`${type}_${color}_${look.stage}`]) || pieceTemplates[`${type}_${color}`];
       let root;
       let mixer = null;
       const actions = {};
@@ -1914,6 +1931,7 @@ export function initWizardChess() {
           model.position.set(-center.x * s, -tpl.bbox.min.y * s, -center.z * s);
           root.add(model);
           root.userData.animalModel = model;
+          if (look) attachTrinkets(model, tpl, look);
         }
         for (const clip of tpl.animations) {
           actions[clip.name] = mixer.clipAction(clip);
@@ -1954,6 +1972,194 @@ export function initWizardChess() {
 
       playPieceClip(pieceObj, 'Idle', true, 0);
       return pieceObj;
+    }
+
+    // ---- Appearance: stage templates, trinket templates, bone sockets -------------------------------------------
+    async function ensureCosmeticAssets() {
+      if (!activePack || !assetApi) return;
+      const jobs = [];
+      for (const color of ['w', 'b']) {
+        for (const type of PIECE_TYPES) {
+          const def = activePack.pieces?.[type];
+          const look = cosmetics[color]?.[type];
+          if (!def || !look) continue;
+          const key = `${type}_${color}_${look.stage}`;
+          if (!pieceTemplates[key]) {
+            const name = stageModelFor(def, look.stage, color);
+            jobs.push(assetApi.buildTemplate(type, def, name)
+              .then((t) => { pieceTemplates[key] = t; })
+              .catch((e) => console.warn(`Look load warning (${key}):`, e)));
+          }
+          for (const slot of ITEM_SLOTS) {
+            const id = look[slot];
+            if (id && itemTemplates[id] === undefined) jobs.push(loadItemTemplate(id));
+          }
+        }
+      }
+      await Promise.all(jobs);
+    }
+
+    const itemLoads = {};
+    function loadItemTemplate(id) {
+      if (itemLoads[id]) return itemLoads[id];
+      const def = activePack?.items?.[id];
+      if (!def || !assetApi) return Promise.resolve(null);
+      itemLoads[id] = assetApi.loadGltfModel(def.model, assetApi.base).then((gltf) => {
+        gltf.scene.updateMatrixWorld(true);
+        itemTemplates[id] = { scene: gltf.scene, bbox: new THREE.Box3().setFromObject(gltf.scene), def };
+        return itemTemplates[id];
+      }).catch((e) => {
+        console.warn(`Item load warning (${id}):`, e);
+        itemTemplates[id] = null;
+        return null;
+      });
+      return itemLoads[id];
+    }
+
+    // Sockets from the bind pose: vertices skinned mostly to Head give the head top and width; vertices skinned
+    // mostly to Chest give the neck line. Computed once per template, in the template's model space.
+    function computeSockets(tpl) {
+      if (tpl.sockets !== undefined) return tpl.sockets;
+      tpl.sockets = null;
+      let skinned = null;
+      tpl.scene.traverse((o) => { if (!skinned && o.isSkinnedMesh) skinned = o; });
+      if (!skinned) return null;
+      tpl.scene.updateMatrixWorld(true);
+      const bones = skinned.skeleton.bones;
+      const idx = (n) => bones.findIndex((b) => b.name === n);
+      const iHead = idx('Head');
+      const iChest = idx('Chest');
+      if (iHead < 0 || iChest < 0) return null;
+      const g = skinned.geometry;
+      const pos = g.attributes.position;
+      const si = g.attributes.skinIndex;
+      const sw = g.attributes.skinWeight;
+      const v = new THREE.Vector3();
+      const headBox = new THREE.Box3();
+      const chestPts = [];
+      const weightOf = (i, bi) => {
+        let w = 0;
+        for (let k = 0; k < 4; k++) if (si.getComponent(i, k) === bi) w += sw.getComponent(i, k);
+        return w;
+      };
+      for (let i = 0; i < pos.count; i++) {
+        const wh = weightOf(i, iHead);
+        const wc = weightOf(i, iChest);
+        if (wh < 0.6 && wc < 0.5) continue;
+        v.fromBufferAttribute(pos, i);
+        skinned.applyBoneTransform(i, v);          // rest pose as the bones see it (bind matrices are not identity)
+        v.applyMatrix4(skinned.matrixWorld);
+        if (wh >= 0.6) headBox.expandByPoint(v);
+        else chestPts.push(v.clone());
+      }
+      if (headBox.isEmpty() || chestPts.length < 8) return null;
+      let chestTop = -Infinity;
+      let chestLow = Infinity;
+      for (const p of chestPts) { chestTop = Math.max(chestTop, p.y); chestLow = Math.min(chestLow, p.y); }
+      const ring = chestPts.filter((p) => p.y > chestTop - 0.25 * (chestTop - chestLow));
+      const ringBox = new THREE.Box3().setFromPoints(ring);
+      const hc = headBox.getCenter(new THREE.Vector3());
+      const rc = ringBox.getCenter(new THREE.Vector3());
+      // Chibi heads overhang the neck, so the neck trinket hangs on the front of the upper chest instead: the
+      // frontmost (+Z = model forward) chest point in a band 10–35 % below the chest top.
+      const span = chestTop - chestLow;
+      const hangY = chestTop - 0.15 * span;
+      const band = chestPts.filter((p) => Math.abs(p.y - hangY) < 0.06 * span);
+      const frontZ = band.length ? Math.max(...band.map((p) => p.z)) : ringBox.max.z;
+      const front = new THREE.Vector3(rc.x, hangY, frontZ);
+      tpl.sockets = {
+        dbg: { chestTop, chestLow, headMinY: headBox.min.y, headMaxY: headBox.max.y, n: chestPts.length },
+        head: { bone: bones[iHead], at: new THREE.Vector3(hc.x, headBox.max.y, hc.z), width: headBox.max.x - headBox.min.x },
+        // width = the chest band's x extent (the very top ring can be a handful of points); never under half a head
+        neck: {
+          bone: bones[iChest],
+          at: new THREE.Vector3(rc.x, front.y, front.z),
+          width: Math.max(
+            band.length ? Math.max(...band.map((p) => p.x)) - Math.min(...band.map((p) => p.x)) : 0,
+            ringBox.max.x - ringBox.min.x,
+            0.5 * (headBox.max.x - headBox.min.x)
+          )
+        }
+      };
+      return tpl.sockets;
+    }
+
+    function attachTrinkets(model, tpl, look) {
+      const sockets = computeSockets(tpl);
+      if (!sockets) return;
+      for (const slot of ITEM_SLOTS) {
+        const id = look[slot];
+        const item = id && itemTemplates[id];
+        const sock = sockets[slot];
+        if (!item || !sock) continue;
+        let bone = null;
+        model.traverse((o) => { if (!bone && o.isBone && o.name === sock.bone.name) bone = o; });
+        if (!bone) continue;
+        const fit = item.def.fit || {};
+        const size = item.bbox.getSize(new THREE.Vector3());
+        const center = item.bbox.getCenter(new THREE.Vector3());
+        const inner = SkeletonUtils.clone(item.scene);   // safe for skinned trinkets too
+        // origin: 'bottom' (hats, bows) sits on the anchor; 'center' (collars) is centred on it
+        inner.position.set(-center.x, fit.origin === 'center' ? -center.y : -item.bbox.min.y, -center.z);
+        // no shadow pass for trinkets: they are small and each one would add a draw call to the shadow map (§14.0)
+        inner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });
+        const holder = new THREE.Group();
+        holder.name = `trinket_${slot}_${id}`;
+        holder.add(inner);
+        const w = sock.width;
+        const at = fit.at || [0, 0, 0];
+        const P = sock.at.clone().add(new THREE.Vector3(at[0] * w, at[1] * w, at[2] * w));
+        const t = (fit.tilt || [0, 0, 0]).map((d) => THREE.MathUtils.degToRad(d));
+        const Q = new THREE.Quaternion().setFromEuler(new THREE.Euler(t[0], t[1], t[2]));
+        const S = ((fit.size || 0.5) * w) / Math.max(size.x, size.z, 1e-6);
+        const want = new THREE.Matrix4().compose(P, Q, new THREE.Vector3(S, S, S));
+        // bone-local = (bind-pose bone world)^-1 · wanted model-space transform
+        const local = sock.bone.matrixWorld.clone().invert().multiply(want);
+        local.decompose(holder.position, holder.quaternion, holder.scale);
+        bone.add(holder);
+      }
+    }
+
+    function rebuildAllPieces() {
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = boardState[r][c];
+          if (p && p.mesh) {
+            scene.remove(p.mesh);
+            if (p.mixer) {
+              const i = activeMixers.indexOf(p.mixer);
+              if (i >= 0) activeMixers.splice(i, 1);
+            }
+            const newInst = instantiatePiece(p.type, p.color, r, c);
+            newInst.hasMoved = p.hasMoved;
+            boardState[r][c] = newInst;
+          }
+        }
+      }
+    }
+
+    async function setCosmetics(next) {
+      cosmetics = sanitizeCosmetics(activePack, next);
+      saveCosmetics();
+      await ensureCosmeticAssets();
+      rebuildAllPieces();
+      try { window.dispatchEvent(new CustomEvent('cosmeticschange', { detail: getCosmetics() })); } catch (e) {}
+      return getCosmetics();
+    }
+
+    function getCosmetics() {
+      return JSON.parse(JSON.stringify(cosmetics));
+    }
+
+    function getLookCatalog() {
+      if (!activePack) return null;
+      const roles = {};
+      const ids = stageIds(activePack);
+      for (const type of PIECE_TYPES) {
+        const def = activePack.pieces?.[type];
+        roles[type] = { slots: slotsFor(def), stages: ids.filter((id, i) => i === 0 || def?.stages?.[id]) };
+      }
+      return { stages: activePack.looks?.stages || [], note: activePack.looks?.note || null, items: activePack.items || {}, roles };
     }
 
     function switchChessSkin(newSkin) {
@@ -5285,6 +5491,19 @@ export function initWizardChess() {
       hazardTiles,
       impactFlashLight,
       switchChessSkin,
+      // Appearance (PLAN §14.2 · §14.3): looks only — stages and trinkets never change a move.
+      getLookCatalog,
+      getCosmetics,
+      setCosmetics,
+      debugRenderCalls: () => renderer.info.render.calls,
+      // Debug: bone sockets of a piece template (model space, bind pose)
+      debugSockets: (type, color = 'w') => {
+        const look = cosmetics?.[color]?.[type];
+        const tpl = (look && pieceTemplates[`${type}_${color}_${look.stage}`]) || pieceTemplates[`${type}_${color}`];
+        const s = tpl && computeSockets(tpl);
+        const bb = tpl && tpl.bbox;
+        return s && { bbox: bb && [bb.min.toArray(), bb.max.toArray()], head: { at: s.head.at.toArray(), width: s.head.width }, neck: { at: s.neck.at.toArray(), width: s.neck.width }, dbg: s.dbg };
+      },
       playerColor: () => playerColor,
       setCameraPreset,
       setCameraPose,

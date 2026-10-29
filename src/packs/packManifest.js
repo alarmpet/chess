@@ -10,6 +10,13 @@ export const OPTIONAL_CLIP_ROLES = ['charge', 'hit', 'victory', 'kneel', 'bored'
 
 export const RIG_KINDS = ['statue', 'animal', 'biped'];
 
+// Appearance (PLAN §14.2 · §14.3, 2026-10-29): stages and trinkets change the look only — never a move, never a
+// number. Stage 0 is the piece's own `model`; later stages come from `pieces.<role>.stages[id]`. Trinkets sit on bone
+// sockets; only non-weapon slots exist (4th round verdict: weapons and shields are out).
+export const ITEM_SLOTS = ['head', 'neck'];
+// Display rule (PLAN §14.0, 표시광고법): stage / item names must not suggest strength.
+export const FORBIDDEN_LOOK_WORDS = ['전사', '전설', '진화', '강한', '강함', '최강', 'warrior', 'legend', 'legendary', 'evolve', 'evolution', 'strong', 'power'];
+
 // Attack timing used by the capture choreography. Manifest keys are in seconds of clip
 // time (`*Sec`); the engine keeps its historical `*Clip` names internally.
 const ATTACK_SYNC_KEYS = ['timeScale', 'swingStartSec', 'contactSec', 'blowSec', 'maxLunge', 'standoff'];
@@ -123,8 +130,89 @@ export function validatePackManifest(manifest) {
       }
     }
     if (def.dropRate !== undefined) errors.push(`pieces.${role}.dropRate is forbidden (PLAN §12.3)`);
+    if (def.stages !== undefined) {
+      const ids = stageIds(manifest);
+      if (typeof def.stages !== 'object') errors.push(`pieces.${role}.stages must be an object`);
+      else for (const [id, m] of Object.entries(def.stages)) {
+        if (!ids.includes(id)) errors.push(`pieces.${role}.stages.${id} is not declared in looks.stages`);
+        if (!modelNameFor({ model: m }, 'w') || !modelNameFor({ model: m }, 'b')) errors.push(`pieces.${role}.stages.${id} must be a string or { w, b }`);
+      }
+    }
+    if (def.slots !== undefined && (!Array.isArray(def.slots) || def.slots.some((x) => !ITEM_SLOTS.includes(x)))) {
+      errors.push(`pieces.${role}.slots must be a subset of ${ITEM_SLOTS.join('|')}`);
+    }
+  }
+  if (manifest.looks !== undefined) {
+    const st = manifest.looks?.stages;
+    if (!Array.isArray(st) || st.length === 0) errors.push('looks.stages must be a non-empty array');
+    else {
+      const seen = new Set();
+      for (const x of st) {
+        if (!x || typeof x.id !== 'string' || !x.id) { errors.push('looks.stages[].id must be a string'); continue; }
+        if (seen.has(x.id)) errors.push(`looks.stages id ${x.id} is duplicated`);
+        seen.add(x.id);
+        if (badLookName(x.name)) errors.push(`looks.stages.${x.id}.name uses a strength word (PLAN §14.0)`);
+      }
+    }
+  }
+  if (manifest.items !== undefined) {
+    if (typeof manifest.items !== 'object') errors.push('items must be an object');
+    else for (const [id, it] of Object.entries(manifest.items)) {
+      if (!it || typeof it.model !== 'string') errors.push(`items.${id}.model must be a string`);
+      if (!ITEM_SLOTS.includes(it?.slot)) errors.push(`items.${id}.slot must be one of ${ITEM_SLOTS.join('|')}`);
+      if (badLookName(it?.name)) errors.push(`items.${id}.name uses a strength word (PLAN §14.0)`);
+      for (const k of ['dropRate', 'price', 'power', 'stat']) {
+        if (it && it[k] !== undefined) errors.push(`items.${id}.${k} is forbidden — trinkets are looks only (PLAN §12.3 · §14.3)`);
+      }
+    }
   }
   return { ok: errors.length === 0, errors };
+}
+
+function badLookName(name) {
+  const texts = typeof name === 'string' ? [name] : name && typeof name === 'object' ? Object.values(name) : [];
+  return texts.some((t) => typeof t === 'string' && FORBIDDEN_LOOK_WORDS.some((w) => t.toLowerCase().includes(w)));
+}
+
+/** Stage ids in order; the first is the base look (the piece's own `model`). */
+export function stageIds(manifest) {
+  const st = manifest?.looks?.stages;
+  return Array.isArray(st) && st.length ? st.map((x) => x.id) : ['base'];
+}
+
+/** Model name for a piece at a stage and colour; falls back to the base model when that stage has none. */
+export function stageModelFor(pieceDef, stageId, color) {
+  const m = pieceDef?.stages?.[stageId];
+  return (m && modelNameFor({ model: m }, color)) || modelNameFor(pieceDef, color);
+}
+
+/** Slots a role accepts (default: every slot). The king keeps his crown — PLAN §14.3. */
+export function slotsFor(pieceDef) {
+  return Array.isArray(pieceDef?.slots) ? pieceDef.slots.filter((x) => ITEM_SLOTS.includes(x)) : ITEM_SLOTS.slice();
+}
+
+/**
+ * Clean a saved appearance choice against the pack: unknown stages fall back to the base, unknown items or items in
+ * the wrong slot (or a slot the role does not have) are dropped. Shape: { w: { pawn: { stage, head?, neck? } … }, b: … }.
+ */
+export function sanitizeCosmetics(manifest, raw) {
+  const ids = stageIds(manifest);
+  const items = manifest?.items || {};
+  const out = { w: {}, b: {} };
+  for (const color of ['w', 'b']) {
+    for (const role of PIECE_ROLES) {
+      const def = manifest?.pieces?.[role];
+      const src = raw?.[color]?.[role] || {};
+      const stage = ids.includes(src.stage) && (src.stage === ids[0] || def?.stages?.[src.stage]) ? src.stage : ids[0];
+      const entry = { stage };
+      for (const slot of slotsFor(def)) {
+        const id = src[slot];
+        if (typeof id === 'string' && items[id] && items[id].slot === slot) entry[slot] = id;
+      }
+      out[color][role] = entry;
+    }
+  }
+  return out;
 }
 
 /** Candidate clip names for a clip role, in priority order. */

@@ -1,5 +1,6 @@
 # Generate a concept image with the local ComfyUI (Flux GGUF graph recovered from an earlier output PNG).
 #   python -I tools/comfy_concept.py --prefix lion --seed 7 --steps 4 --unet flux1-schnell-Q4_K_S.gguf "prompt text"
+#   img2img (keeps the face of an earlier concept): add --init docs/concepts/lion.png --denoise 0.62
 # Writes <ComfyUI>/output/<prefix>_*.png and copies them to .reports/concepts/.
 import json, sys, time, urllib.request, os, shutil, glob
 
@@ -13,6 +14,8 @@ def opt(name, default):
 prefix = opt('--prefix', 'concept'); seed = int(opt('--seed', '1')); steps = int(opt('--steps', '4'))
 unet = opt('--unet', 'flux1-schnell-Q4_K_S.gguf'); t5 = opt('--t5', 't5-v1_1-xxl-encoder-Q3_K_L.gguf')
 guidance = float(opt('--guidance', '3.5')); size = int(opt('--size', '1024'))
+init = opt('--init', None); denoise = float(opt('--denoise', '1.0'))
+COMFY_IN = os.path.join(os.path.dirname(COMFY_OUT), 'input')
 prompt = args[0]
 
 wf = {
@@ -28,6 +31,16 @@ wf = {
     '9': {'class_type': 'VAEDecode', 'inputs': {'samples': ['8', 0], 'vae': ['3', 0]}},
     '10': {'class_type': 'SaveImage', 'inputs': {'images': ['9', 0], 'filename_prefix': prefix}},
 }
+if init:
+    # img2img: encode the earlier concept and only partly re-noise it, so the face and palette survive.
+    name = f'chess_init_{os.path.basename(init)}'
+    shutil.copy(init, os.path.join(COMFY_IN, name))
+    wf['11'] = {'class_type': 'LoadImage', 'inputs': {'image': name}}
+    wf['12'] = {'class_type': 'ImageScale', 'inputs': {'image': ['11', 0], 'upscale_method': 'lanczos', 'width': size, 'height': size, 'crop': 'center'}}
+    wf['13'] = {'class_type': 'VAEEncode', 'inputs': {'pixels': ['12', 0], 'vae': ['3', 0]}}
+    wf['8']['inputs']['latent_image'] = ['13', 0]
+    wf['8']['inputs']['denoise'] = denoise
+    del wf['7']
 
 def post(path, data):
     req = urllib.request.Request(URL + path, data=json.dumps(data).encode(), headers={'Content-Type': 'application/json'})

@@ -116,9 +116,9 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 | 기물 | 동물 | 출처 | 콘셉트 · 리그 렌더 |
 | :--- | :--- | :--- | :--- |
 | 킹 | 🦁 사자 | ComfyUI(Flux schnell) 콘셉트 seed 11 → 로컬 TRELLIS best-of-3(seed 11, 몸통깊이/키 0.573) → `bake_low` 8k·1024 → `biped_rig` → `pack-statue` → `legend_add_clips` | `docs/concepts/lion.png` · `lion_rig.png` |
-| 퀸 | 🐯 호랑이 | study-game `char_tiger` + Attack/Hit/Kneel | — |
+| 퀸 | 🐯 호랑이 | ~~study-game `char_tiger`~~ → 2026-10-29 자체 제작으로 교체(정면 A자세 콘셉트, §2.2.2) | `tiger.png` |
 | 룩 | 🦏 코뿔소 | 콘셉트 seed 23 → TRELLIS **seed 13** (0.681). seed 12(0.784)는 등에 판 모양 가짜 지오메트리 — **두께 지표가 속았다** → 이후 시드마다 `render_vc` 렌더를 남겨 눈으로 고른다. seed 11 은 어깨 좌우 비대칭(UpperArm.L 11 정점) → 팔 찢김. 둥근 등을 꼬리로 오인해 찢기는 문제는 `tools/biped_rig.py`(chess 사본) 의 `NO_TAIL=1` 로 | `rhino.png` · `rhino_rig.png` |
-| 비숍 | 🦊 여우 | study-game `char_fox` + 클립 | — |
+| 비숍 | 🐼 **판다** | 사용자 요청으로 여우에서 교체(2026-10-29), 자체 제작(§2.2.2) | `panda.png` |
 | 나이트 | 🦘 캥거루 | **v2** 콘셉트("THICK chunky rounded arms … sturdy plump body", seed 47) → TRELLIS seed 11 (0.384). v1(0.305)은 팔이 칼날처럼 얇아 교체 — 원인은 콘셉트 그림 자체였다 | `kangaroo.png` · `kangaroo_rig.png` |
 | 폰 | 🦦 미어캣 | 콘셉트 seed 11 → TRELLIS seed 12 (0.317) | `meerkat.png` · `meerkat_rig.png` |
 
@@ -129,6 +129,25 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 v0.7 까지의 진영별 다른 종(늑대/호랑이, 유니콘/드래곤…) 과 대역(판다·사슴·토끼·드래곤) 은 폐기. 남은 두 발 캐릭터(늑대·판다·얼룩말·유니콘·토끼·드래곤·펭귄·사슴·오리·시바·고양이·햄스터·닭)는 §12.3 상점 외형 후보.
 
 클립: `tools/legend_add_clips.py` 가 기존 Idle·Walk·Run·Sit·Cheer 에 **Attack·Hit·Kneel** 을 키프레임으로 더했다(Blender 5.2 헤드리스, 가중치 불변). 잡기 접촉 0.40 s.
+
+#### 2.2.2 진영 색 · 외형 단계 · 장식 (2026-10-29 제작)
+
+사용자 질문("처음 캐릭터와 점점 고도화되거나 아이템 장착 캐릭터도 만들어야 하지 않나") 에 대한 답. §14.0 판정을 지킨다 — **외형만, 수는 같음**, 이름에 강함·전사·전설·진화 금지, 무기·방패 없음, 단계 보상은 슬롯을 차지하지 않는 체형·털색·재질.
+
+**비숍 교체**: 사용자 요청으로 여우 → **판다**(옥색 학자 조끼). 호랑이도 study-game 모델 대신 자체 제작으로 바꿨다 — 비스듬히 선 기존 모델을 시작 그림으로 쓰면 팔이 접혀 A자세 리깅이 안 되고, 새 정면 콘셉트에서 1~3단계를 모두 뽑아야 단계마다 얼굴이 같다.
+
+| 항목 | 방법 | 도구 |
+| :--- | :--- | :--- |
+| 진영 색 (해의 왕국 w / 달의 왕국 b) | 텍스처를 다시 굽는다. w = 밝고 따뜻한 털 + 금색 띠, b = 어둡고 차가운 털 + 보라 띠. 띠는 몸통 뼈(Hips·Spine·Chest) 가중치로 가려 팔·머리에 묻지 않는다. 런타임 `teamTint` 폐지 | `tools/kingdom_variant.py` (한 벌 약 4초) |
+| 외형 단계 1 아기 | 기존 콘셉트 그대로 | — |
+| 단계 2 자람 · 3 의젓함 | 1단계 콘셉트에서 **팔 선 아래 몸통·다리만 세로로 늘리고**(1.4배 · 1.75배) img2img 0.55 로 이음새를 다듬는다. img2img 만으로는 denoise 0.8 에서도 체형이 그대로였다(실측). 얼굴은 움직이지 않으므로 같다 | `tools/stage_warp.py` · `tools/comfy_concept.py --init` → `make_biped.py` |
+| 단계 4 별빛 털 | 3단계 형상에 보로노이 별 점 + 밤하늘 톤을 기본색으로, 별 점을 발광 맵으로 굽는다 | `tools/starlit_variant.py` |
+| 장식 4종 (리본·꽃핀·밀짚모자·방울) | 콘셉트 → TRELLIS → 굽기(2500면, 512) → 압축. 뼈대 없음 | `tools/make_prop.py` → `public/packs/legend/items/` |
+| 뼈 소켓 | 바인드 자세에서 Head 가중치 정점으로 머리 꼭대기·폭, Chest 가중치 정점으로 가슴 앞면을 구한다(정점에 `applyBoneTransform` 을 적용해야 뼈와 같은 공간 — 안 하면 머리 꼭대기가 절반 높이로 잡혔다). 치비는 머리가 목보다 앞으로 나와 방울은 목이 아니라 가슴 앞면에 단다. 킹은 왕관이 있어 머리 슬롯 없음(§14.3) | `computeSockets` · `attachTrinkets` (`src/wizardChessEngine.js`) |
+
+매니페스트: `looks.stages`(id·이름·설명) · `pieces.<role>.stages.<id> = {w,b}` · `pieces.<role>.slots` · `items.<id> = { model, slot, name, fit }`. 검증기가 강함 단어·`power`·`price`·`dropRate` 를 거부한다(`test/looks.test.mjs`). 선택은 브라우저에 저장(`wildcrown.cosmetics.v1`), HUD "🎨 외형" 패널에서 고른다 — 첫 문장 "외형만 바뀌고 수는 같습니다". 지금은 모든 단계가 열려 있고, 대국으로 얻는 방식은 Phase 5b 도감 기록에서 붙인다.
+
+**드로우콜 실측 (§14.0 실험)**: 장식 54개를 단 판에서 한 번 렌더의 호출 수가 151 → 198, **+47 (장식 1개 ≈ 1회)**. 장식은 그림자를 드리우지 않게 해 그림자 패스 증가는 없다. 32기물 전부 2개씩은 기준 40 을 넘으므로, 그 경우를 열기 전에 **기물+장식 사전 굽기**(변형별 GLB)로 간다. 한두 기물만 꾸미는 지금 사용 범위는 문제없다.
 
 ### 2.3 집콕 왕국 (3번째 팩) · 2.4 승급 연출 — v0.2 와 같음
 
