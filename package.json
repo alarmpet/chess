@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview --port=3000 --host=0.0.0.0",
-    "test": "node test/applet.test.mjs && node test/arcane.test.mjs && node test/farm.test.mjs && node test/juice.test.mjs && node --experimental-strip-types test/beast.test.mjs"
+    "test": "node test/applet.test.mjs && node test/arcane.test.mjs && node test/farm.test.mjs && node test/juice.test.mjs && node --experimental-strip-types test/beast.test.mjs && node --experimental-strip-types test/billiards.test.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

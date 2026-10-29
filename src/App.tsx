@@ -13,9 +13,11 @@ import {
   triggerCardDealAnimation,
 } from './juiceEngine';
 import { BeastInfo, ALL_BEASTS } from './beastModels';
+import { BilliardsView } from './billiards/BilliardsView.tsx';
 
 export default function App() {
   const initializedRef = useRef(false);
+  const [appMode, setAppMode] = useState<'billiards' | 'chess'>('billiards');
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
@@ -142,7 +144,11 @@ export default function App() {
 
   return (
     <>
-      <div id="loading-overlay">
+      {appMode === 'billiards' && (
+        <BilliardsView onBackToChess={() => setAppMode('chess')} />
+      )}
+
+      <div id="loading-overlay" className={appMode === 'billiards' ? 'hidden' : ''}>
         <div className="loader-title">{t.loadingTitle}</div>
         <div className="loader-bar-wrap">
           <div className="loader-bar" id="loader-bar"></div>
@@ -164,6 +170,24 @@ export default function App() {
 
       <div id="hud-top">
         <div className="hud-group" id="hud-left">
+          {/* Mode Switcher: 3D Billiards vs Magic Chess */}
+          <div className="app-mode-switch-pill">
+            <button
+              type="button"
+              className={`app-mode-pill-btn ${appMode === 'billiards' ? 'active' : ''}`}
+              onClick={() => setAppMode('billiards')}
+            >
+              🎱 3D 당구장
+            </button>
+            <button
+              type="button"
+              className={`app-mode-pill-btn ${appMode === 'chess' ? 'active' : ''}`}
+              onClick={() => setAppMode('chess')}
+            >
+              ♚ 마법 체스
+            </button>
+          </div>
+
           <div className="brand-pill">
             <span className="brand-title">
               {lang === 'ko' ? '성소의 정원: 아케인 팜' : 'Sanctuary Garden: Chess & Farm'}
