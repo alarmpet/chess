@@ -109,20 +109,22 @@ farm 팩(Cow·Horse·Zebra 28본)은 **Attack 이 없다**(agy) → 쓰지 않�
 > **미어캣**은 `biped_rig.py` 보강(FOOT_Y=0 · Attack/Hit/Kneel 3클립, 1회 작업)이 끝나야 들어온다. 보강 전 임시 폰 = 임팔라(Deer 공여).
 > **기린·코끼리**는 공여 리그에 코·긴 목 뼈가 없다. Alpaca·Donkey 로 시도하고 안 되면 UniRig(MIT, 저장소에 `examples/giraffe.glb` 있음 — grok 확인).
 
-#### 2.2.1 프로토타입 캐스팅 `legend` (2026-10-28~29, 두 발 의인화 — study-game 자체 캐릭터 15종으로 최종 캐스팅을 흉내 냄)
+#### 2.2.1 `legend` 팩 — 최종 캐스팅 6종 전부 자체 제작 완료 (2026-10-29)
 
-기준은 **기물의 기능(움직임·사거리·값어치·역할) → 동물의 습성·체형·상징**. 사자·코뿔소·캥거루·미어캣 모델이 아직 없어 가장 가까운 캐릭터로 대신하고, **양 진영 같은 종 + 팀 틴트**로 §10-17 을 지금부터 적용한다.
+사자·코뿔소·캥거루·미어캣 4종을 **로컬 파이프라인**으로 하루에 만들었다(콘셉트 → 반입 한 종 약 9분). 호랑이·여우는 study-game 기존 캐릭터. 양 진영 같은 종 + 팀 틴트(§10-17).
 
-| 기물 | 최종(§2.2) | 프로토타입 대역 | 대역 이유 |
+| 기물 | 동물 | 출처 | 콘셉트 · 리그 렌더 |
 | :--- | :--- | :--- | :--- |
-| 킹 | 🦁 사자 | 🐯 호랑이 | 고양잇과 왕, 빨간 옷 = 왕의 예복 |
-| 퀸 | 🐯 호랑이 | 🐉 드래곤 | 판 위 최강·비행(호랑이는 킹 대역으로 썼다) |
-| 룩 | 🦏 코뿔소 | 🐼 판다 | 무겁고 버티는 몸 |
-| 비숍 | 🦊 여우 | 🦊 여우 | 그대로 |
-| 나이트 | 🦘 캥거루 | 🦌 사슴 | 뛰는 네발 체형 |
-| 폰 | 🦦 미어캣 | 🐰 토끼 | 작고 많은 초식 (예비: 시바·오리·햄스터·닭) |
+| 킹 | 🦁 사자 | ComfyUI(Flux schnell) 콘셉트 seed 11 → 로컬 TRELLIS best-of-3(seed 11, 몸통깊이/키 0.573) → `bake_low` 8k·1024 → `biped_rig` → `pack-statue` → `legend_add_clips` | `docs/concepts/lion.png` · `lion_rig.png` |
+| 퀸 | 🐯 호랑이 | study-game `char_tiger` + Attack/Hit/Kneel | — |
+| 룩 | 🦏 코뿔소 | 콘셉트 seed 23 → TRELLIS seed 12 (0.784) | `rhino.png` · `rhino_rig.png` |
+| 비숍 | 🦊 여우 | study-game `char_fox` + 클립 | — |
+| 나이트 | 🦘 캥거루 | 콘셉트 seed 11 → TRELLIS seed 12 (0.305 — 얇은 편, 재생성 후보) | `kangaroo.png` · `kangaroo_rig.png` |
+| 폰 | 🦦 미어캣 | 콘셉트 seed 11 → TRELLIS seed 12 (0.317) | `meerkat.png` · `meerkat_rig.png` |
 
-v0.7 까지의 진영별 다른 종(늑대/호랑이, 유니콘/드래곤…) 은 §10-17 로 폐기.
+도구: `tools/comfy_concept.py`(ComfyUI API, 과거 출력 PNG 에서 복원한 Flux schnell GGUF 그래프) · `tools/make_biped.py`(TRELLIS best-of-N → 굽기 → 리깅 → 압축 → 클립 → 팩 반입). GPU 8GB 라 ComfyUI 와 TRELLIS 는 번갈아 띄운다. Phase 1(§9 "사자 1종 파이프라인 검증") 은 이것으로 끝났고, 화풍 A/B(§10-7) 는 "ComfyUI 콘셉트의 치비 3D 렌더 화풍" 이 사실상 채택됐다 — 사용자 확인 대기. 품질 다듬기(코뿔소 팔 판정·캥거루 두께·`fitHeight`·접촉 시각)는 Phase 2.
+
+v0.7 까지의 진영별 다른 종(늑대/호랑이, 유니콘/드래곤…) 과 대역(판다·사슴·토끼·드래곤) 은 폐기. 남은 두 발 캐릭터(늑대·판다·얼룩말·유니콘·토끼·드래곤·펭귄·사슴·오리·시바·고양이·햄스터·닭)는 §12.3 상점 외형 후보.
 
 클립: `tools/legend_add_clips.py` 가 기존 Idle·Walk·Run·Sit·Cheer 에 **Attack·Hit·Kneel** 을 키프레임으로 더했다(Blender 5.2 헤드리스, 가중치 불변). 잡기 접촉 0.40 s.
 
