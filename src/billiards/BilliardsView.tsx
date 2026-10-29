@@ -22,9 +22,10 @@ import { billiardsAudio } from './billiardsAudio.ts';
 
 interface BilliardsViewProps {
   onBackToChess?: () => void;
+  onSwitchMode?: (mode: 'ballstorm' | 'billiards' | 'chess') => void;
 }
 
-export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) => {
+export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess, onSwitchMode }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const spinCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -221,25 +222,31 @@ export const BilliardsView: React.FC<BilliardsViewProps> = ({ onBackToChess }) =
       {/* Top Billiards Header Bar */}
       <header className="billiards-top-bar">
         <div className="billiards-top-left">
-          {onBackToChess && (
-            <div className="app-mode-switch-pill">
-              <button
-                type="button"
-                className="app-mode-pill-btn active"
-                title="3D 당구 모드"
-              >
-                🎱 3D 당구장
-              </button>
-              <button
-                type="button"
-                className="app-mode-pill-btn"
-                onClick={onBackToChess}
-                title="마법 체스 대국장으로 전환"
-              >
-                ♚ 마법 체스
-              </button>
-            </div>
-          )}
+          <div className="app-mode-switch-pill">
+            <button
+              type="button"
+              className="app-mode-pill-btn"
+              onClick={() => onSwitchMode?.('ballstorm')}
+              title="볼 스톰 카오스 (초고속 3D 합성 로그라이크)로 전환"
+            >
+              ⚡ 볼 스톰
+            </button>
+            <button
+              type="button"
+              className="app-mode-pill-btn active"
+              title="3D 당구 모드"
+            >
+              🎱 3D 당구장
+            </button>
+            <button
+              type="button"
+              className="app-mode-pill-btn"
+              onClick={() => (onSwitchMode ? onSwitchMode('chess') : onBackToChess?.())}
+              title="마법 체스 대국장으로 전환"
+            >
+              ♚ 마법 체스
+            </button>
+          </div>
 
           <div className="billiards-title-pill">
             <span className="billiards-logo-icon">🎱</span>

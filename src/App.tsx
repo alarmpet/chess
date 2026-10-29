@@ -14,10 +14,11 @@ import {
 } from './juiceEngine';
 import { BeastInfo, ALL_BEASTS } from './beastModels';
 import { BilliardsView } from './billiards/BilliardsView.tsx';
+import { BallStormView } from './ballstorm/BallStormView.tsx';
 
 export default function App() {
   const initializedRef = useRef(false);
-  const [appMode, setAppMode] = useState<'billiards' | 'chess'>('billiards');
+  const [appMode, setAppMode] = useState<'ballstorm' | 'billiards' | 'chess'>('ballstorm');
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
@@ -144,11 +145,15 @@ export default function App() {
 
   return (
     <>
-      {appMode === 'billiards' && (
-        <BilliardsView onBackToChess={() => setAppMode('chess')} />
+      {appMode === 'ballstorm' && (
+        <BallStormView onSwitchMode={setAppMode} />
       )}
 
-      <div id="loading-overlay" className={appMode === 'billiards' ? 'hidden' : ''}>
+      {appMode === 'billiards' && (
+        <BilliardsView onSwitchMode={setAppMode} onBackToChess={() => setAppMode('chess')} />
+      )}
+
+      <div id="loading-overlay" className={appMode !== 'chess' ? 'hidden' : ''}>
         <div className="loader-title">{t.loadingTitle}</div>
         <div className="loader-bar-wrap">
           <div className="loader-bar" id="loader-bar"></div>
@@ -170,8 +175,15 @@ export default function App() {
 
       <div id="hud-top">
         <div className="hud-group" id="hud-left">
-          {/* Mode Switcher: 3D Billiards vs Magic Chess */}
+          {/* Universal 3-Mode Switcher: Ball Storm vs 3D Billiards vs Magic Chess */}
           <div className="app-mode-switch-pill">
+            <button
+              type="button"
+              className={`app-mode-pill-btn ${appMode === 'ballstorm' ? 'active' : ''}`}
+              onClick={() => setAppMode('ballstorm')}
+            >
+              ⚡ 볼 스톰
+            </button>
             <button
               type="button"
               className={`app-mode-pill-btn ${appMode === 'billiards' ? 'active' : ''}`}
