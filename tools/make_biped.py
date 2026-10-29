@@ -1,5 +1,5 @@
 # Concept image → two-legged chess piece GLB, using the study-game pipeline end to end (PLAN §1.2 · §5).
-#   python -I tools/make_biped.py <name> <concept.png> [--seeds 11,12,13] [--yaw 0] [--hip 0.27] [--tri 8000] [--tex 1024]
+#   python tools/make_biped.py <name> <concept.png> [--seeds 11,12,13] [--yaw 0] [--hip 0.27] [--tri 20000] [--tex 1024] [--lowpoly keepuv|bake]
 # Steps (all local): TRELLIS v1 fp16 server (best-of-N by body thickness) → bake_low.py (Blender) → biped_rig.py (Blender)
 # → pack-statue.mjs (meshopt + WebP) → tools/legend_add_clips.py (Attack/Hit/Kneel) → public/packs/legend/<name>.glb
 # Intermediates land in .reports/biped/<name>/. Requires the TRELLIS server on :7960 (D:\trellis-local\app\run.bat --precision half).
@@ -14,7 +14,10 @@ def opt(name, default):
         i = args.index(name); v = args[i + 1]; del args[i:i + 2]; return v
     return default
 seeds = [int(s) for s in opt('--seeds', '11,12,13').split(',')]
-yaw = opt('--yaw', '0'); hip = opt('--hip', ''); tri = opt('--tri', '8000'); tex = opt('--tex', '1024')
+yaw = opt('--yaw', '0'); hip = opt('--hip', ''); tri = opt('--tri', '20000'); tex = opt('--tex', '1024')
+# Low-poly step: 'keepuv' (default since 2026-10-30) decimates TRELLIS's own mesh and keeps its UVs/texture; 'bake'
+# is the old study-game bake_low.py re-projection, which left black cracks and smeared patches (PLAN §2.2.3).
+lowpoly = opt('--lowpoly', 'keepuv')
 name, concept = args[0], os.path.abspath(args[1])
 d = os.path.join(CHESS, '.reports', 'biped', name)
 os.makedirs(d, exist_ok=True)
@@ -73,7 +76,10 @@ for k in ('NO_TAIL', 'ARM_NEAR', 'ARM_FALL', 'ARM_DOWN', 'TAILW', 'LEGSIGN'):
     if os.environ.get(k): env[k] = os.environ[k]
 RIG = os.path.join(CHESS, 'tools', 'biped_rig.py')
 if not os.path.exists(bake):
-    run([BLENDER, '--background', '--python', 'tools/legend/bake_low.py', '--', raw, bake, tri, tex], env=env)
+    if lowpoly == 'keepuv':
+        run([sys.executable, os.path.join(CHESS, 'tools', 'keepuv_low.py'), raw, bake, '--tri', tri, '--tex', tex], cwd=CHESS)
+    else:
+        run([BLENDER, '--background', '--python', 'tools/legend/bake_low.py', '--', raw, bake, tri, tex], env=env)
 if not os.path.exists(rig):
     run([BLENDER, '--background', '--python', RIG, '--', bake, rig, os.path.join(d, 'rig')], env=env)
 if not os.path.exists(packed):

@@ -4740,7 +4740,10 @@ export function initWizardChess() {
       const py = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       const hoverRay = new THREE.Raycaster();
       hoverRay.setFromCamera(new THREE.Vector2(px, py), camera);
-      const hits = hoverRay.intersectObjects([...pieceMeshes, ...boardSquareMeshes], true);
+      // (fix 2026-10-30: this handler referenced the click handler's local `pieceMeshes` → ReferenceError on every move)
+      const hoverPieceMeshes = [];
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (boardState[r][c]?.mesh) hoverPieceMeshes.push(boardState[r][c].mesh);
+      const hits = hoverRay.intersectObjects([...hoverPieceMeshes, ...boardSquareMeshes], true);
       if (hits.length > 0) {
         let obj = hits[0].object;
         let hR = -1, hC = -1;
