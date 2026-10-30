@@ -131,6 +131,12 @@ legm &= ~((Y - by) > _d0 * 0.8)
 for sd, sg in (('L', 1), ('R', -1)):
     side = smooth(sg * X / max(lx, 1e-3), -0.15, 0.35)
     k = side * (1 - smooth(zH, HR - 0.05, HR + 0.03)); up = smooth(zH, HR * 0.4, HR * 0.62)
+    # SKIRT (chess copy, 2026-10-30): a gown/robe hides the legs (fusion queen · bishop). Cloth vertices far from the
+    # leg bones follow the hips instead of being dragged forward by the stride. Value = leg radius in heights.
+    if os.environ.get('SKIRT'):
+        R_ = float(os.environ['SKIRT']) * H
+        dleg = np.minimum(seg_dist(P, *B[f'UpperLeg.{sd}']), seg_dist(P, *B[f'LowerLeg.{sd}']))
+        k = k * (1 - smooth(dleg, R_, R_ * 1.8))
     put(legm, f'UpperLeg.{sd}', k * up); put(legm, f'LowerLeg.{sd}', k * (1 - up))
 W[legm, col['Hips']] *= 1 - np.clip(sum(W[legm, col[f'{a}Leg.{s}']] for a in ('Upper', 'Lower') for s in ('L', 'R')), 0, 1)
 # 3) 팔 — 몸통 축보다 팔 뼈가 확실히 가까운 정점만

@@ -72,3 +72,16 @@ test('the king keeps his crown: no head slot', () => {
   assert.deepEqual(slotsFor(legend.pieces.king), ['neck']);
   assert.deepEqual(slotsFor(legend.pieces.pawn), ['head', 'neck']);
 });
+
+test('pedestal colours and sizes are validated', () => {
+  assert.ok(legend.pedestal && legend.pedestal.w && legend.pedestal.b, 'legend has an ivory/ebony pedestal');
+  const bad = structuredClone(legend);
+  bad.pedestal = { w: 'white', b: '#000000', height: -1 };
+  const errs = validatePackManifest(bad).errors;
+  assert.ok(errs.some((e) => e.includes('pedestal.w')));
+  assert.ok(errs.some((e) => e.includes('pedestal.height')));
+});
+
+test('role signatures stay visible: king, bishop and rook have no head slot', () => {
+  for (const r of ['king', 'bishop', 'rook']) assert.deepEqual(slotsFor(legend.pieces[r]), ['neck'], r);
+});

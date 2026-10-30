@@ -72,7 +72,7 @@ env = {'VOXEL': '0', 'CAGE': '0.015', 'YAW': yaw}
 if hip: env['HIP'] = hip
 # Rigger knobs added in the chess copy (tools/biped_rig.py): NO_TAIL=1 (chunky backs mistaken for a tail → torn by the
 # wag, rhino 2026-10-29), ARM_NEAR / ARM_FALL (arm weight capture radius). Pass through from the environment.
-for k in ('NO_TAIL', 'ARM_NEAR', 'ARM_FALL', 'ARM_DOWN', 'TAILW', 'LEGSIGN'):
+for k in ('NO_TAIL', 'ARM_NEAR', 'ARM_FALL', 'ARM_DOWN', 'TAILW', 'LEGSIGN', 'SKIRT'):
     if os.environ.get(k): env[k] = os.environ[k]
 RIG = os.path.join(CHESS, 'tools', 'biped_rig.py')
 if not os.path.exists(bake):

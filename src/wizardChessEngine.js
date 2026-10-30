@@ -1929,6 +1929,14 @@ export function initWizardChess() {
           model.scale.setScalar(s);
           model.rotation.y = tpl.yawOffset;
           model.position.set(-center.x * s, -tpl.bbox.min.y * s, -center.z * s);
+          // Staunton-style turned pedestal under the animal (2026-10-30, PLAN §2.2.4): reads as "a chess piece" at
+          // a glance and carries the side colour (ivory / ebony). The animal stands on top of it.
+          const ped = activePack?.pedestal;
+          if (ped) {
+            const base = makePedestal(ped, color);
+            root.add(base);
+            model.position.y += base.userData.height;
+          }
           root.add(model);
           root.userData.animalModel = model;
           if (look) attachTrinkets(model, tpl, look);
@@ -1972,6 +1980,34 @@ export function initWizardChess() {
 
       playPieceClip(pieceObj, 'Idle', true, 0);
       return pieceObj;
+    }
+
+
+    // ---- Pedestal (Staunton base) -------------------------------------------------------------------------------
+    const pedestalCache = {};
+    function makePedestal(ped, color) {
+      const R = typeof ped.radius === 'number' ? ped.radius : 0.36;
+      const H = typeof ped.height === 'number' ? ped.height : 0.09;
+      const key = `${R}_${H}`;
+      if (!pedestalCache[key]) {
+        // profile (x = radius, y = height): wide foot, bead, cove, narrow top collar
+        const pts = [
+          [0, 0], [R, 0], [R, H * 0.18], [R * 0.96, H * 0.3], [R * 0.9, H * 0.36], [R * 0.93, H * 0.48],
+          [R * 0.86, H * 0.6], [R * 0.74, H * 0.74], [R * 0.7, H * 0.86], [R * 0.74, H * 0.94], [R * 0.72, H], [0, H]
+        ].map(([x, y]) => new THREE.Vector2(x, y));
+        pedestalCache[key] = new THREE.LatheGeometry(pts, 40);
+      }
+      const matKey = `mat_${color}`;
+      if (!pedestalCache[matKey]) {
+        const hex = (color === 'w' ? ped.w : ped.b) || (color === 'w' ? '#efe4cf' : '#2a2420');
+        pedestalCache[matKey] = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.38, metalness: 0.05 });
+      }
+      const m = new THREE.Mesh(pedestalCache[key], pedestalCache[matKey]);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      m.name = 'pedestal';
+      m.userData.height = H;
+      return m;
     }
 
     // ---- Appearance: stage templates, trinket templates, bone sockets -------------------------------------------

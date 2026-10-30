@@ -71,6 +71,14 @@ export function validatePackManifest(manifest) {
       if (manifest.teamTint[k] !== undefined && !isHex(manifest.teamTint[k])) errors.push(`teamTint.${k} must be a #rrggbb colour`);
     }
   }
+  if (manifest.pedestal !== undefined) {
+    const pd = manifest.pedestal;
+    if (!pd || typeof pd !== 'object') errors.push('pedestal must be an object');
+    else {
+      for (const k of ['w', 'b']) if (pd[k] !== undefined && !isHex(pd[k])) errors.push(`pedestal.${k} must be a #rrggbb colour`);
+      for (const k of ['radius', 'height']) if (pd[k] !== undefined && !(typeof pd[k] === 'number' && pd[k] > 0)) errors.push(`pedestal.${k} must be a positive number (board squares)`);
+    }
+  }
   const pieces = manifest.pieces;
   if (!pieces || typeof pieces !== 'object') {
     errors.push('pieces must be an object');
