@@ -5,6 +5,8 @@ import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.j
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
+import { createImpactFx } from './fx/impactFx.js';
+import { IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -945,6 +947,7 @@ export function initWizardChess() {
       return cosmetics?.[color]?.[type];
     }
     const shatterDebris = [];
+    const impactFx = createImpactFx(scene);
     const clock = new THREE.Clock();
 
     const boardGroup = new THREE.Group();
@@ -1769,21 +1772,26 @@ export function initWizardChess() {
 
     // Captured animals play their death clip and sink away instead of shattering into stone.
     const fadingPieces = [];
+    // A captured animal is bonked off the board, not killed: it wobbles, then bounces away to the side.
     function retireAnimalPiece(piece) {
       if (!piece || !piece.mesh) return;
-      // Long enough for a 1.2 s kneel/death clip to land before the sink starts at 55 %.
-      fadingPieces.push({ piece, life: 1.9, total: 1.9, baseY: piece.mesh.position.y });
+      const start = piece.mesh.position.clone();
+      const side = start.x <= 0 ? -1 : 1;
+      fadingPieces.push({ piece, life: 1.25, total: 1.25, start, endX: side * BOARD_SQ_SIZE * 5.4, spin: side * 7 });
     }
     function stepFadingPieces(dt) {
       for (let i = fadingPieces.length - 1; i >= 0; i--) {
         const f = fadingPieces[i];
         f.life -= dt;
         const u = 1 - Math.max(0, f.life / f.total);
-        if (u > 0.55) {
-          const k = (u - 0.55) / 0.45;
-          f.piece.mesh.position.y = f.baseY - k * k * 0.35;
-          const sc = BOARD_SQ_SIZE * (1 - k * 0.6);
-          f.piece.mesh.scale.set(sc, sc, sc);
+        if (u > 0.26) {
+          const k = (u - 0.26) / 0.74;
+          const mesh = f.piece.mesh;
+          mesh.position.x = f.start.x + (f.endX - f.start.x) * k;
+          mesh.position.y = f.start.y + Math.abs(Math.sin(k * Math.PI * 3)) * 0.2 * (1 - k * 0.6);
+          mesh.rotation.y += f.spin * dt;
+          const sc = BOARD_SQ_SIZE * (1 - Math.max(0, k - 0.7) / 0.3);
+          mesh.scale.set(sc, sc, sc);
         }
         if (f.life <= 0) {
           scene.remove(f.piece.mesh);
@@ -2717,6 +2725,28 @@ export function initWizardChess() {
     }
 
     const dustMat = new THREE.MeshStandardMaterial({ color: 0xc9b58a, roughness: 1.0, metalness: 0.0 });
+    // The moment of the hit: freeze both pieces briefly so the blow registers, while the effects keep flying.
+    let impactCount = 0;
+    let hitStopLeft = 0;
+    let slowLeft = 0;
+    function landImpact(captured, origin) {
+      const san = referee.history().at(-1)?.san || '';
+      const tierId = impactTier(captured.type, san);
+      const tier = IMPACT_TIERS[tierId];
+      const ground = new THREE.Vector3(origin.x, BOARD_SURFACE_Y, origin.z);
+      impactCount += 1;
+      hitStopLeft = tier.stopSec;
+      slowLeft = tier.slowSec;
+      impactFx.burst(ground, captured.type, tierId);
+      impactFx.ring(ground, tierId);
+      impactFx.word(ground, tierId);
+      impactFx.shake(tier.shake);
+      if (captured.rig !== 'statue' && captured.mesh) {
+        impactFx.flash(captured.mesh);
+        impactFx.squash(captured.mesh, BOARD_SQ_SIZE, 0.42, 0.32);
+      }
+    }
+
     function spawnDustPuff(worldPos) {
       for (let i = 0; i < 18; i++) {
         const sz = 0.02 + Math.random() * 0.035;
@@ -3388,10 +3418,9 @@ export function initWizardChess() {
                   scene.remove(captured.mesh);
                   spawnStoneShatter(shatterOrigin, captured.color);
                 } else {
-                  if (captured.clipMap?.hit) playPieceClip(captured, 'Shatter', false, 0.10);
                   retireAnimalPiece(captured);
-                  spawnDustPuff(shatterOrigin);
                 }
+                landImpact(captured, shatterOrigin);
               }
             }
 
@@ -5239,6 +5268,7 @@ export function initWizardChess() {
       getLookCatalog,
       getCosmetics,
       setCosmetics,
+      debugImpacts: () => impactCount,
       getRivalCatalog,
       startRival,
       getVillageRivals: () => (activePack?.rivals || []).map(({ id, name, visitsFor }) => ({ id, name, visitsFor })),
@@ -5554,6 +5584,18 @@ export function initWizardChess() {
       elapsedTotal += dt;
       const prevCamPos = camera.position.clone();
 
+      // Effects run on real time; the game itself holds during a hit stop and slows through a big capture.
+      impactFx.update(dt);
+      const realDt = dt;
+      if (hitStopLeft > 0) {
+        hitStopLeft -= realDt;
+        dt = 0;
+      } else if (slowLeft > 0) {
+        slowLeft -= realDt;
+        dt = realDt * SLOW_FACTOR;
+      }
+      impactFx.updateGame(dt);
+
       for (const mixer of activeMixers) {
         mixer.update(dt);
       }
@@ -5770,7 +5812,9 @@ export function initWizardChess() {
       }
 
       if (doRender) {
+        camera.position.add(impactFx.shakeOffset);
         renderer.render(scene, camera);
+        camera.position.sub(impactFx.shakeOffset);
       }
     }
 
