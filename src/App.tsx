@@ -14,9 +14,14 @@ import {
   triggerCardDealAnimation,
 } from './juiceEngine';
 import { BeastInfo, ALL_BEASTS } from './beastModels';
+import { BilliardsView } from './billiards/BilliardsView.tsx';
+import { BallStormView } from './ballstorm/BallStormView.tsx';
 
 export default function App() {
   const initializedRef = useRef(false);
+  const [appMode, setAppMode] = useState<'ballstorm' | 'billiards' | 'chess'>('ballstorm');
+  // The engine binds to the chess HUD once, so that DOM must exist first and stay mounted after the first visit.
+  const [chessStarted, setChessStarted] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
@@ -75,10 +80,14 @@ export default function App() {
   }, [arcaneState.hand.length]);
 
   useEffect(() => {
-    if (initializedRef.current) return;
+    if (appMode === 'chess') setChessStarted(true);
+  }, [appMode]);
+
+  useEffect(() => {
+    if (!chessStarted || initializedRef.current) return;
     initializedRef.current = true;
     initWizardChess();
-  }, []);
+  }, [chessStarted]);
 
   useEffect(() => {
     const unsubscribe = subscribeLanguage((newLang) => {
@@ -164,28 +173,66 @@ export default function App() {
 
   return (
     <>
-      <div id="loading-overlay">
-        <div className="loader-title">{t.loadingTitle}</div>
-        <div className="loader-bar-wrap">
-          <div className="loader-bar" id="loader-bar"></div>
-        </div>
-        <div id="loader-text">{t.loadingSub}</div>
-      </div>
+      {appMode === 'ballstorm' && (
+        <BallStormView onSwitchMode={setAppMode} />
+      )}
 
-      <div id="canvas-container"></div>
+      {appMode === 'billiards' && (
+        <BilliardsView onSwitchMode={setAppMode} onBackToChess={() => setAppMode('chess')} />
+      )}
 
-      <button
-        type="button"
-        className="hud-btn mobile-only-restore-ui"
-        id="btn-mobile-show-ui"
-        onClick={handleRestoreUI}
-        title={t.showUiMobile}
-      >
-        {t.showUiMobile}
-      </button>
+      <div
+        id="canvas-container"
+        style={{ display: appMode === 'chess' ? 'block' : 'none' }}
+      ></div>
 
-      <div id="hud-top">
+      {chessStarted && (
+        <div style={{ display: appMode === 'chess' ? 'contents' : 'none' }}>
+          <div id="loading-overlay">
+            <div className="loader-title">{t.loadingTitle}</div>
+            <div className="loader-bar-wrap">
+              <div className="loader-bar" id="loader-bar"></div>
+            </div>
+            <div id="loader-text">{t.loadingSub}</div>
+          </div>
+
+          <button
+            type="button"
+            className="hud-btn mobile-only-restore-ui"
+            id="btn-mobile-show-ui"
+            onClick={handleRestoreUI}
+            title={t.showUiMobile}
+          >
+            {t.showUiMobile}
+          </button>
+
+          <div id="hud-top">
         <div className="hud-group" id="hud-left">
+          {/* Universal 3-Mode Switcher: Ball Storm vs 3D Billiards vs Magic Chess */}
+          <div className="app-mode-switch-pill">
+            <button
+              type="button"
+              className="app-mode-pill-btn"
+              onClick={() => setAppMode('ballstorm')}
+            >
+              ⚡ 볼 스톰
+            </button>
+            <button
+              type="button"
+              className="app-mode-pill-btn"
+              onClick={() => setAppMode('billiards')}
+            >
+              🎱 3D 당구장
+            </button>
+            <button
+              type="button"
+              className="app-mode-pill-btn active"
+              onClick={() => setAppMode('chess')}
+            >
+              ♚ 마법 체스
+            </button>
+          </div>
+
           <div className="brand-pill">
             <span className="brand-title">
               {lang === 'ko' ? '성소의 정원: 아케인 팜' : 'Sanctuary Garden: Chess & Farm'}
@@ -1154,6 +1201,8 @@ export default function App() {
               )}
             </div>
           </div>
+        </div>
+      )}
         </div>
       )}
     </>

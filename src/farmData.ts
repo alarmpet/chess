@@ -234,6 +234,7 @@ export const RESTORATION_ZONES: Record<string, RestorationZoneDef> = {
     id: 'high_altar',
     name: '지고의 성소 제단',
     nameEn: 'Grand Sanctum High Altar',
+    icon: '🏛️',
     cost: { marbleDust: 12, sacredAsh: 12, gems: 6, gold: 400 },
     description: '모든 수도원 구역의 마력을 집대성한 궁극의 성소 중앙 제단입니다.',
     perkDescription: '킹(King) 피격 시 1회 100% 자동 부활 영약 부여 및 체크메이트 승리 보석 2배',

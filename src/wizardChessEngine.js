@@ -2,11 +2,23 @@ import * as THREE_NS from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
 import { SanctuaryGarden3D } from './farm3D';
-import { createBeastMesh, updateBeastTokens, getBeastInfo, getRuneTexture } from './beastModels';
+import {
+  createBeastMesh,
+  updateBeastTokens,
+  getBeastInfo,
+  getRuneTexture,
+  createHighEndBeastMaterials,
+  setupBeastPiece,
+  attachBeastGuardianTotem
+} from './beastModels';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -114,6 +126,31 @@ export function initWizardChess() {
     orbitControls.maxDistance = 36.0;
     orbitControls.target.set(0, 0.85, -0.15);
     orbitControls.update();
+
+    // =========================================================================
+    // Cinematic Post-Processing: UnrealBloomPass + OutputPass
+    // =========================================================================
+    let composer = null;
+    let bloomPass = null;
+    try {
+      if (typeof window !== 'undefined' && !isAutomatedTest) {
+        const renderPass = new RenderPass(scene, camera);
+        bloomPass = new UnrealBloomPass(
+          new THREE.Vector2(window.innerWidth, window.innerHeight),
+          0.58, // ethereal bloom strength
+          0.35, // bloom radius
+          0.82  // threshold for emissive runes and gold highlights
+        );
+        const outputPass = new OutputPass();
+        composer = new EffectComposer(renderer);
+        composer.addPass(renderPass);
+        composer.addPass(bloomPass);
+        composer.addPass(outputPass);
+      }
+    } catch (e) {
+      console.warn('Post-processing EffectComposer not available, using standard renderer:', e);
+      composer = null;
+    }
 
     // =========================================================================
     // Feature 5: Hold Shift + Mouse Drag (Left=Rotate, Right=Pan) Axis Lock (X or Y)
@@ -835,33 +872,16 @@ export function initWizardChess() {
     scene.add(impactFlashLight);
 
     // =========================================================================
-    // Materials for White & Black Sculpted Stone Chess Pieces
+    // High-End PBR Materials for White & Black Sculpted 3D Pieces
     // =========================================================================
-    const whitePieceMat = new THREE.MeshStandardMaterial({
-      color: 0xe6dfd0,
-      roughness: 0.34,
-      metalness: 0.06
-    });
-
-    const blackPieceMat = new THREE.MeshStandardMaterial({
-      color: 0x222630,
-      roughness: 0.28,
-      metalness: 0.24
-    });
-
-    const goldTrimMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37,
-      roughness: 0.26,
-      metalness: 0.86
-    });
-
-    const forgedSteelMat = new THREE.MeshStandardMaterial({
-      color: 0xdce4ee,
-      roughness: 0.20,
-      metalness: 0.88,
-      emissive: 0x222832,
-      emissiveIntensity: 0.25
-    });
+    const {
+      whitePieceMat,
+      goldTrimMat,
+      forgedSteelMat,
+      blackPieceMat,
+      blackGoldTrimMat,
+      blackSteelMat
+    } = createHighEndBeastMaterials();
 
     // =========================================================================
     // Asset Loading (Cathedral GLB + 12 Rigged Piece GLBs)
@@ -1455,6 +1475,8 @@ export function initWizardChess() {
       const isProceduralEnv = envDef.type === 'procedural';
       if (isProceduralEnv) buildProceduralEnvironment(envDef);
       applyBoardPalette(activePack?.board);
+      // Pale pack art (ivory pedestals, light fur) sits above the default threshold and would wash out.
+      if (bloomPass && activePack?.bloom) Object.assign(bloomPass, activePack.bloom);
 
       async function loadGltfModel(baseName, base = './assets/glb/') {
         let arrayBuffer = null;
@@ -5694,7 +5716,8 @@ export function initWizardChess() {
           enforceCathedralBoundsAndSolidColumns(prev, camera.position, orbitControls.target);
           path.push(camera.position.toArray().map((v) => Number(v.toFixed(3))));
         }
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
         return path;
       },
       setSinglePlayerSide: (color) => {
@@ -5727,7 +5750,8 @@ export function initWizardChess() {
         currentTurn = turn;
         syncRefereeFromBoard(turn);
         updateTurnUI();
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
       },
       triggerDemoCapture: () => {
         // Set up an immediate pawn capture (e4 x d5) and execute it
@@ -5799,7 +5823,8 @@ export function initWizardChess() {
         telemetry: cameraTelemetry
       }),
       captureScreenshot: async (filename) => {
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
         const outCanvas = document.createElement('canvas');
         outCanvas.width = renderer.domElement.width;
         outCanvas.height = renderer.domElement.height;
@@ -5935,7 +5960,8 @@ export function initWizardChess() {
       for (let i = 0; i < steps; i++) {
         stepScene(subDt, false);
       }
-      renderer.render(scene, camera);
+      if (composer) composer.render();
+      else renderer.render(scene, camera);
     };
 
     // =========================================================================
@@ -6172,7 +6198,11 @@ export function initWizardChess() {
       }
 
       if (doRender) {
-        renderer.render(scene, camera);
+        if (composer) {
+          composer.render();
+        } else {
+          renderer.render(scene, camera);
+        }
       }
     }
 
@@ -6194,6 +6224,9 @@ export function initWizardChess() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      if (composer) {
+        composer.setSize(window.innerWidth, window.innerHeight);
+      }
     });
 
 
