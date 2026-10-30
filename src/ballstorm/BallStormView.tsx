@@ -3,10 +3,12 @@
  *
  * Implements:
  *  - Fullscreen 3D WebGL viewport integration
- *  - Real-time Neon Cyber HUD (Score, High Score, Combo Fire, Next Ball Preview)
- *  - 3-Card Roguelike Slot Upgrade Modal (Balatro/Vampire Survivors inspiration)
- *  - Active Buff Status Badges (Magnetic, Zero-G, Slow-Mo)
- *  - Game Over Instant Restart Modal (< 0.1s recovery loop)
+ *  - Real-time Neon Cyber HUD (Score, High Score, Combo Fire, Next-2 Ball Hologram)
+ *  - Fever Overdrive Gauge & Fullscreen Adrenaline Vignette
+ *  - Floating 3D-to-Screen Score & Combo Damage Popups
+ *  - Container Tension / Danger Fill Gauge
+ *  - Balatro-Style 3D Holographic Foil Upgrade Cards with Mouse Tilt
+ *  - Rich WebAudio haptic feedback (hover, click, merge, fever)
  *  - Mode Switcher Pill ([⚡ 볼 스톰], [🎱 3D 당구장], [♚ 마법 체스])
  */
 
@@ -14,7 +16,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ballStormEngine,
   type BallStormState,
-  type CardUpgrade
+  type CardUpgrade,
+  type FloatingText
 } from './ballstormEngine.ts';
 import { BALL_TIERS } from './ballstormPhysics.ts';
 import { ballStormAudio } from './ballstormAudio.ts';
@@ -45,17 +48,59 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
   }, []);
 
   const handleToggleMute = () => {
+    ballStormAudio.playClick();
     const muted = ballStormAudio.toggleMute();
     setIsMuted(muted);
   };
 
+  const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    e.currentTarget.style.setProperty('--rx', `${-y * 22}deg`);
+    e.currentTarget.style.setProperty('--ry', `${x * 22}deg`);
+    e.currentTarget.style.setProperty('--mx', `${(x + 0.5) * 100}%`);
+    e.currentTarget.style.setProperty('--my', `${(y + 0.5) * 100}%`);
+  };
+
+  const handleCardMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.setProperty('--rx', '0deg');
+    e.currentTarget.style.setProperty('--ry', '0deg');
+    e.currentTarget.style.setProperty('--mx', '50%');
+    e.currentTarget.style.setProperty('--my', '50%');
+  };
+
   const currentTierData = BALL_TIERS[gameState.currentTier - 1] || BALL_TIERS[0];
   const nextTierData = BALL_TIERS[gameState.nextTier - 1] || BALL_TIERS[0];
+  const nextNextTierData = BALL_TIERS[gameState.nextNextTier - 1] || BALL_TIERS[0];
 
   return (
-    <div className="ballstorm-root">
+    <div className={`ballstorm-root ${gameState.isFeverActive ? 'fever-mode-active' : ''}`}>
       {/* 3D WebGL Viewport */}
       <div id="ballstorm-viewport" ref={containerRef} className="ballstorm-viewport" />
+
+      {/* Fullscreen Adrenaline Fever Vignette */}
+      {gameState.isFeverActive && <div className="fever-screen-vignette" />}
+
+      {/* Floating 3D-to-Screen Score & Combo Damage Popups */}
+      <div className="floating-text-layer" aria-hidden="true">
+        {gameState.floatingTexts.map((ft: FloatingText) => (
+          <div
+            key={ft.id}
+            className="floating-score-item"
+            style={{
+              left: `${ft.x}px`,
+              top: `${ft.y}px`,
+              color: ft.color,
+              transform: `scale(${ft.scale})`,
+              textShadow: `0 0 16px ${ft.color}, 0 2px 6px rgba(0,0,0,0.9)`,
+            }}
+          >
+            <div className="floating-score-num">{ft.text}</div>
+            {ft.comboText && <div className="floating-score-combo">{ft.comboText}</div>}
+          </div>
+        ))}
+      </div>
 
       {/* Top Cyber HUD Bar */}
       <header className="ballstorm-top-bar">
@@ -66,13 +111,18 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
               type="button"
               className="app-mode-pill-btn active"
               title="볼 스톰 카오스 (초고속 3D 합성 로그라이크)"
+              onMouseEnter={() => ballStormAudio.playHover()}
             >
               ⚡ 볼 스톰
             </button>
             <button
               type="button"
               className="app-mode-pill-btn"
-              onClick={() => onSwitchMode('billiards')}
+              onClick={() => {
+                ballStormAudio.playClick();
+                onSwitchMode('billiards');
+              }}
+              onMouseEnter={() => ballStormAudio.playHover()}
               title="3D 정통 당구장으로 전환"
             >
               🎱 3D 당구장
@@ -80,7 +130,11 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
             <button
               type="button"
               className="app-mode-pill-btn"
-              onClick={() => onSwitchMode('chess')}
+              onClick={() => {
+                ballStormAudio.playClick();
+                onSwitchMode('chess');
+              }}
+              onMouseEnter={() => ballStormAudio.playHover()}
               title="마법 체스 대국장으로 전환"
             >
               ♚ 마법 체스
@@ -89,12 +143,14 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
 
           <div className="ballstorm-brand-pill">
             <span className="brand-bolt">⚡</span>
-            <span className="brand-name">BALL STORM CHAOS</span>
-            <span className="brand-sub">3D 아라미스 볼 머지 로그라이크</span>
+            <div className="brand-texts">
+              <span className="brand-name">BALL STORM CHAOS</span>
+              <span className="brand-sub">3D 머지 로그라이크</span>
+            </div>
           </div>
         </div>
 
-        {/* Center: Score & Combo Multiplier */}
+        {/* Center: Score, Combo, & Fever Overdrive Gauge */}
         <div className="ballstorm-top-center">
           <div className="score-counter-pill">
             <div className="score-main-group">
@@ -106,31 +162,85 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
               <span className="score-label">BEST</span>
               <span className="score-digits best">{gameState.highScore.toLocaleString()}</span>
             </div>
+            {gameState.combo > 0 && (
+              <>
+                <div className="score-divider-line" />
+                <div className="combo-flame-group">
+                  <span className="combo-count">{gameState.combo} COMBO</span>
+                  <span className="multiplier-badge">x{gameState.comboMultiplier}</span>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Combo Multiplier Flame Badge */}
-          {gameState.combo > 0 && (
-            <div className="combo-flame-pill animate-pulse">
-              <span className="flame-icon">🔥</span>
-              <span className="combo-count">{gameState.combo} COMBO</span>
-              <span className="multiplier-badge">x{gameState.comboMultiplier}</span>
+          {/* Luxury Fever Overdrive Bar */}
+          <div
+            className={`fever-overdrive-pill ${gameState.isFeverActive ? 'fever-active' : ''}`}
+            title="합성 시 충전되는 피버 게이지! 100% 도달 시 8초간 3배 점수 & 초고속 머신건 연사!"
+          >
+            <div className="fever-pill-header">
+              <span className="fever-bolt">{gameState.isFeverActive ? '🔥' : '⚡'}</span>
+              <span className="fever-title">
+                {gameState.isFeverActive
+                  ? `FEVER OVERDRIVE 3X (${gameState.feverTimeRemaining}s)`
+                  : `FEVER GAUGE ${gameState.feverEnergy}%`}
+              </span>
+              {gameState.feverEnergy >= 100 && !gameState.isFeverActive && (
+                <span className="fever-ready-badge">READY!</span>
+              )}
             </div>
-          )}
+            <div className="fever-bar-track">
+              <div
+                className="fever-bar-fill"
+                style={{ width: `${gameState.feverEnergy}%` }}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Top Right: Next Ball Preview & Settings */}
+        {/* Top Right: Holographic Next-2 Ball Queue & Controls */}
         <div className="ballstorm-top-right">
-          {/* Next Ball Holographic Preview */}
-          <div className="next-ball-preview-card" title="다음에 투하될 볼">
-            <span className="next-label">NEXT</span>
-            <div
-              className="preview-ball-sphere"
-              style={{
-                backgroundColor: `#${nextTierData.color.toString(16).padStart(6, '0')}`,
-                boxShadow: `0 0 16px #${nextTierData.color.toString(16).padStart(6, '0')}88`,
-              }}
-            >
-              <span className="preview-ball-num">{nextTierData.label}</span>
+          {/* Holographic Next-2 Ball Queue Capsule */}
+          <div className="next-ball-queue-capsule" title="투하 대기 큐 (Next 1 & Next 2)">
+            <div className="queue-slot current-slot" title={`현재 조준 중: ${currentTierData.label}번 볼`}>
+              <span className="slot-label">HOLD</span>
+              <div
+                className="queue-ball-sphere current"
+                style={{
+                  backgroundColor: `#${currentTierData.color.toString(16).padStart(6, '0')}`,
+                  boxShadow: `0 0 14px #${currentTierData.color.toString(16).padStart(6, '0')}aa`,
+                }}
+              >
+                <span>{currentTierData.label}</span>
+              </div>
+            </div>
+
+            <div className="queue-arrow">▶</div>
+
+            <div className="queue-slot next1-slot" title={`다음 볼: ${nextTierData.label}번 볼`}>
+              <span className="slot-label">NEXT</span>
+              <div
+                className="queue-ball-sphere next1"
+                style={{
+                  backgroundColor: `#${nextTierData.color.toString(16).padStart(6, '0')}`,
+                  boxShadow: `0 0 16px #${nextTierData.color.toString(16).padStart(6, '0')}cc`,
+                }}
+              >
+                <span>{nextTierData.label}</span>
+              </div>
+            </div>
+
+            <div className="queue-slot next2-slot" title={`그 다음 볼: ${nextNextTierData.label}번 볼`}>
+              <span className="slot-label">+1</span>
+              <div
+                className="queue-ball-sphere next2"
+                style={{
+                  backgroundColor: `#${nextNextTierData.color.toString(16).padStart(6, '0')}`,
+                  boxShadow: `0 0 10px #${nextNextTierData.color.toString(16).padStart(6, '0')}77`,
+                }}
+              >
+                <span>{nextNextTierData.label}</span>
+              </div>
             </div>
           </div>
 
@@ -138,7 +248,11 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
           <button
             type="button"
             className="ballstorm-icon-btn"
-            onClick={() => setRuleModalOpen(true)}
+            onClick={() => {
+              ballStormAudio.playClick();
+              setRuleModalOpen(true);
+            }}
+            onMouseEnter={() => ballStormAudio.playHover()}
             title="게임 방법 및 볼 합성 도감"
           >
             📖
@@ -148,7 +262,11 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
           <button
             type="button"
             className="ballstorm-icon-btn"
-            onClick={() => ballStormEngine.resetGame()}
+            onClick={() => {
+              ballStormAudio.playClick();
+              ballStormEngine.resetGame();
+            }}
+            onMouseEnter={() => ballStormAudio.playHover()}
             title="게임 새로 시작 (R)"
           >
             🔄
@@ -159,12 +277,34 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
             type="button"
             className="ballstorm-icon-btn"
             onClick={handleToggleMute}
+            onMouseEnter={() => ballStormAudio.playHover()}
             title={isMuted ? '음소거 해제' : '음소거'}
           >
             {isMuted ? '🔇' : '🔊'}
           </button>
         </div>
       </header>
+
+      {/* Vertical Container Tension / Danger Gauge (Right Edge) */}
+      <aside className="container-tension-meter" title="경기장 높이 적재 긴장도">
+        <span className="tension-label">TENSION</span>
+        <div className="tension-track">
+          <div
+            className={`tension-fill ${
+              gameState.fillPercent > 80
+                ? 'critical'
+                : gameState.fillPercent > 50
+                ? 'warning'
+                : 'normal'
+            }`}
+            style={{ height: `${gameState.fillPercent}%` }}
+          />
+          <div className="tension-danger-marker" style={{ bottom: '85%' }} title="위험 한계선" />
+        </div>
+        <span className={`tension-percent ${gameState.fillPercent > 80 ? 'critical' : ''}`}>
+          {gameState.fillPercent}%
+        </span>
+      </aside>
 
       {/* Active Modifiers Bar */}
       <div className="active-buffs-bar">
@@ -201,16 +341,16 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
       {/* Bottom Floating Hint */}
       <footer className="ballstorm-bottom-hint">
         <span className="hint-pill">
-          💡 마우스 좌우 이동: 조준 &nbsp;|&nbsp; 클릭 / 스페이스바: 볼 낙하 &nbsp;|&nbsp; 동일 번호 볼 충돌 시 상위 볼로 합성!
+          💡 마우스 좌우 조준 &nbsp;|&nbsp; 클릭 / Space: 낙하 &nbsp;|&nbsp; 동일 번호 충돌 시 상위 볼 합성 &nbsp;|&nbsp; 피버 시 3배 점수 & 머신건!
         </span>
       </footer>
 
-      {/* 🎰 Roguelike 3-Card Slot Machine Upgrade Modal */}
+      {/* 🎰 Roguelike 3-Card Slot Machine Upgrade Modal (Balatro Holographic 3D Tilt) */}
       {gameState.activeCards && (
         <div className="ballstorm-modal-backdrop">
           <div className="card-selection-modal">
             <div className="card-modal-header">
-              <span className="card-modal-badge">🎰 LEVEL UP REWARD</span>
+              <span className="card-modal-badge">🎰 ROGUELIKE REWARD</span>
               <h2 className="card-modal-title">로그라이크 아티팩트를 선택하세요!</h2>
               <p className="card-modal-sub">합성 연쇄를 극대화할 초능력을 1개 획득합니다</p>
             </div>
@@ -220,9 +360,19 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
                 <div
                   key={card.id}
                   className={`upgrade-card-item rarity-${card.rarity}`}
-                  onClick={() => ballStormEngine.selectCardUpgrade(card.id)}
-                  style={{ borderColor: card.color }}
+                  onMouseMove={handleCardMouseMove}
+                  onMouseLeave={handleCardMouseLeave}
+                  onMouseEnter={() => ballStormAudio.playHover()}
+                  onClick={() => {
+                    ballStormAudio.playClick();
+                    ballStormEngine.selectCardUpgrade(card.id);
+                  }}
+                  style={{
+                    borderColor: card.color,
+                    boxShadow: `0 14px 40px rgba(0,0,0,0.8), 0 0 24px ${card.color}44`,
+                  }}
                 >
+                  <div className="card-foil-overlay" />
                   <div className="card-rarity-tag" style={{ color: card.color }}>
                     {card.rarity.toUpperCase()}
                   </div>
@@ -269,7 +419,11 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
             <button
               type="button"
               className="instant-restart-btn"
-              onClick={() => ballStormEngine.resetGame()}
+              onClick={() => {
+                ballStormAudio.playClick();
+                ballStormEngine.resetGame();
+              }}
+              onMouseEnter={() => ballStormAudio.playHover()}
             >
               ⚡ 0.1초 즉시 재도전 (Space)
             </button>
@@ -286,7 +440,10 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
               <button
                 type="button"
                 className="modal-close-btn"
-                onClick={() => setRuleModalOpen(false)}
+                onClick={() => {
+                  ballStormAudio.playClick();
+                  setRuleModalOpen(false);
+                }}
               >
                 ✕
               </button>
@@ -297,7 +454,16 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
                 <h3>🎮 게임 핵심 규칙</h3>
                 <p>
                   하늘에서 떨어지는 3D 당구공을 좌우로 조준하여 투하하세요.
-                  <strong>동일한 번호의 볼 2개가 충돌하면 다음 상위 번호의 볼로 즉시 합성</strong>되며 폭발적인 점수와 3D 크리스털 파편 충격파가 방출됩니다!
+                  <strong> 동일한 번호의 볼 2개가 충돌하면 다음 상위 번호의 볼로 즉시 합성</strong>되며
+                  화려한 크리스털 파편 충격파와 함께 점수가 폭발합니다!
+                </p>
+              </div>
+
+              <div className="guide-section">
+                <h3>🔥 피버 오버드라이브 (Fever Overdrive)</h3>
+                <p>
+                  볼이 합성될 때마다 상단 피버 게이지가 급속 충전됩니다. <strong>100% 충전 시 8초간 피버 모드가 발동</strong>하여
+                  모든 점수가 <strong>3배로 폭증</strong>하며, 볼 투하 딜레이가 <strong>0.08초 머신건 수준</strong>으로 단축됩니다!
                 </p>
               </div>
 
@@ -322,10 +488,10 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
               <div className="guide-section">
                 <h3>✨ REA 역공학 물리 & Juice 연출</h3>
                 <ul>
-                  <li><strong>서브스텝 터널링 방지:</strong> 고속 낙하 시에도 벽이나 다른 공을 뚫지 않는 무결점 충돌</li>
-                  <li><strong>방사형 충격파 (Shockwave):</strong> 합성이 터질 때마다 주변 볼들을 밀어내며 연쇄 합성 유발</li>
-                  <li><strong>페글 피치 스케일:</strong> 연속 콤보가 이어질 때마다 신스 음계가 한 음씩 상승하는 도파민 청각 피드백</li>
-                  <li><strong>슬롯머신 3택 로그라이크:</strong> 일정 점수 돌파 시 마그네틱, 무중력, 메가밤 등 6종의 파워업 선택</li>
+                  <li><strong>서브스텝 터널링 방지:</strong> 초고속 낙하 시에도 공이 뚫고 지나가지 않는 무결점 충돌</li>
+                  <li><strong>방사형 충격파 (Shockwave):</strong> 합성이 일어날 때마다 주변 볼들을 밀어내어 연쇄 합성 촉발</li>
+                  <li><strong>페글 피치 스케일:</strong> 연속 콤보마다 신스 음계가 한 음씩 상승하는 도파민 청각 피드백</li>
+                  <li><strong>3D 홀로그램 카드:</strong> 일정 점수마다 마우스 기울임에 반응하는 3D 홀로그램 카드 획득</li>
                 </ul>
               </div>
             </div>
@@ -334,7 +500,10 @@ export const BallStormView: React.FC<BallStormViewProps> = ({ onSwitchMode }) =>
               <button
                 type="button"
                 className="confirm-btn"
-                onClick={() => setRuleModalOpen(false)}
+                onClick={() => {
+                  ballStormAudio.playClick();
+                  setRuleModalOpen(false);
+                }}
               >
                 확인 및 게임 계속하기
               </button>

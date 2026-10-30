@@ -97,6 +97,17 @@ export const ALL_CARD_UPGRADES: CardUpgrade[] = [
   }
 ];
 
+export interface FloatingText {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  comboText?: string;
+  color: string;
+  scale: number;
+  createdAt: number;
+}
+
 export interface BallStormState {
   score: number;
   highScore: number;
@@ -104,11 +115,17 @@ export interface BallStormState {
   comboMultiplier: number;
   currentTier: number;
   nextTier: number;
+  nextNextTier: number;
+  feverEnergy: number; // 0 .. 100%
+  isFeverActive: boolean;
+  feverTimeRemaining: number;
+  fillPercent: number; // 0 .. 100% container level
   dropperX: number;
   isGameOver: boolean;
   dangerActive: boolean;
   activeCards: CardUpgrade[] | null;
   ballCount: number;
+  floatingTexts: FloatingText[];
   activeModifiers: {
     magneticUntil: number;
     zeroGUntil: number;
@@ -150,8 +167,19 @@ class BallStormEngine {
   private comboTimer: number = 0;
   private currentTier: number = 1;
   private nextTier: number = 1;
+  private nextNextTier: number = 1;
   private isGameOver: boolean = false;
   private dangerActive: boolean = false;
+
+  // Fever Overdrive System
+  private feverEnergy: number = 0; // 0..100
+  private isFeverActive: boolean = false;
+  private feverDuration: number = 8.0;
+  private feverTimer: number = 0;
+
+  // Visual Score Popups & Danger Fill Gauge
+  private floatingTexts: FloatingText[] = [];
+  private fillPercent: number = 0;
 
   // Roguelike Progression
   private nextCardScoreThreshold: number = 400;
@@ -202,7 +230,8 @@ class BallStormEngine {
   }
 
   public getState(): BallStormState {
-    const comboMult = 1 + this.combo * 0.4;
+    const feverMult = this.isFeverActive ? 3.0 : 1.0;
+    const comboMult = (1 + this.combo * 0.4) * feverMult;
     return {
       score: this.score,
       highScore: this.highScore,
@@ -210,11 +239,17 @@ class BallStormEngine {
       comboMultiplier: Math.round(comboMult * 10) / 10,
       currentTier: this.currentTier,
       nextTier: this.nextTier,
+      nextNextTier: this.nextNextTier,
+      feverEnergy: Math.round(this.feverEnergy),
+      isFeverActive: this.isFeverActive,
+      feverTimeRemaining: Math.max(0, Math.round(this.feverTimer * 10) / 10),
+      fillPercent: this.fillPercent,
       dropperX: this.dropperX,
       isGameOver: this.isGameOver,
       dangerActive: this.dangerActive,
       activeCards: this.activeCardChoices,
       ballCount: this.balls.length,
+      floatingTexts: this.floatingTexts,
       activeModifiers: {
         magneticUntil: this.magneticUntil,
         zeroGUntil: this.zeroGUntil,
@@ -301,6 +336,7 @@ class BallStormEngine {
 
     this.currentTier = this.randomInitialTier();
     this.nextTier = this.randomInitialTier();
+    this.nextNextTier = this.randomInitialTier();
 
     // Dropper guide line
     this.dropGuideLine = createDropIndicator();
@@ -391,7 +427,7 @@ class BallStormEngine {
     if (!this.canDrop || this.isGameOver || this.activeCardChoices || !this.scene || !this.envMap) return;
 
     this.canDrop = false;
-    this.dropCooldownTimer = 0.25; // 250ms rapid fire drop interval
+    this.dropCooldownTimer = this.isFeverActive ? 0.08 : 0.25; // 80ms during Fever, 250ms normal
 
     const dropTier = this.currentTier;
     const dropPos = new THREE.Vector3(this.dropperX, 1.95, 0);
@@ -417,7 +453,8 @@ class BallStormEngine {
 
     // Queue next ball
     this.currentTier = this.nextTier;
-    this.nextTier = this.randomInitialTier();
+    this.nextTier = this.nextNextTier;
+    this.nextNextTier = this.randomInitialTier();
     this.updateDropperMesh();
     this.emitState();
   }
@@ -516,6 +553,12 @@ class BallStormEngine {
     this.activeCardChoices = null;
     this.nextCardScoreThreshold = 400;
 
+    this.feverEnergy = 0;
+    this.isFeverActive = false;
+    this.feverTimer = 0;
+    this.floatingTexts = [];
+    this.fillPercent = 0;
+
     this.magneticUntil = 0;
     this.zeroGUntil = 0;
     this.slowMoUntil = 0;
@@ -523,6 +566,7 @@ class BallStormEngine {
 
     this.currentTier = this.randomInitialTier();
     this.nextTier = this.randomInitialTier();
+    this.nextNextTier = this.randomInitialTier();
     this.updateDropperMesh();
     this.emitState();
   }
@@ -541,6 +585,35 @@ class BallStormEngine {
     if (this.dropGuideLine) {
       this.dropGuideLine.position.x = this.dropperX;
     }
+
+    // 0b. Fever Overdrive Tick
+    if (this.isFeverActive) {
+      this.feverTimer -= dt;
+      this.feverEnergy = Math.max(0, (this.feverTimer / this.feverDuration) * 100);
+      if (this.feverTimer <= 0) {
+        this.isFeverActive = false;
+        this.feverEnergy = 0;
+        this.emitState();
+      }
+    }
+
+    // 0c. Clean up expired floating text popups (1100ms lifespan)
+    if (this.floatingTexts.length > 0) {
+      const prevLen = this.floatingTexts.length;
+      this.floatingTexts = this.floatingTexts.filter(t => now - t.createdAt < 1100);
+      if (this.floatingTexts.length !== prevLen) {
+        this.emitState();
+      }
+    }
+
+    // 0d. Calculate Container Fill Danger Gauge
+    let highestY = ARENA_FLOOR_Y;
+    for (const b of this.balls) {
+      if (b.pos.y > highestY) highestY = b.pos.y;
+    }
+    const heightRange = Math.max(0.1, DANGER_Y - ARENA_FLOOR_Y);
+    const currH = Math.max(0, highestY - ARENA_FLOOR_Y);
+    this.fillPercent = Math.min(100, Math.max(0, Math.round((currH / heightRange) * 100)));
 
     // 1. Dropper Cooldown
     if (!this.canDrop) {
@@ -598,16 +671,50 @@ class BallStormEngine {
           const newShards = createMergeExplosion(this.scene, m.center, td.color);
           this.shards.push(...newShards);
 
+          // Charge Fever Meter
+          if (!this.isFeverActive) {
+            this.feverEnergy = Math.min(100, this.feverEnergy + 14 + m.tier * 2);
+            if (this.feverEnergy >= 100) {
+              this.isFeverActive = true;
+              this.feverDuration = 8.0;
+              this.feverTimer = 8.0;
+              ballStormAudio.playFeverStart();
+              kickFlash(0.85);
+              kickShake(0.5);
+            }
+          }
+
           // Combo & Score calculation
           this.combo++;
           this.comboTimer = 2.4; // 2.4s window for next chain merge
-          const mult = (1 + this.combo * 0.4) * (now < this.slowMoUntil ? 2.0 : 1.0);
+          const feverMult = this.isFeverActive ? 3.0 : 1.0;
+          const chronoMult = now < this.slowMoUntil ? 2.0 : 1.0;
+          const mult = (1 + this.combo * 0.4) * feverMult * chronoMult;
           const pointsEarned = Math.round(m.score * mult);
           this.score += pointsEarned;
 
           if (this.score > this.highScore) {
             this.highScore = this.score;
             this.saveHighScore();
+          }
+
+          // 3D to Screen Projection for Floating Score & Combo Numbers
+          if (this.camera) {
+            const v = m.center.clone().project(this.camera);
+            const w = this.container?.clientWidth || window.innerWidth;
+            const h = this.container?.clientHeight || window.innerHeight;
+            const sx = (v.x * 0.5 + 0.5) * w;
+            const sy = (-v.y * 0.5 + 0.5) * h;
+            this.floatingTexts.push({
+              id: `${now}-${Math.random()}`,
+              x: Math.round(sx),
+              y: Math.round(sy),
+              text: `+${pointsEarned.toLocaleString()}`,
+              comboText: this.combo > 1 ? `${this.combo}x COMBO!` : undefined,
+              color: '#' + td.color.toString(16).padStart(6, '0'),
+              scale: Math.min(2.0, 1.0 + this.combo * 0.15 + m.tier * 0.05),
+              createdAt: now,
+            });
           }
 
           // Juice: Peggle crescendo sound & Screen shake

@@ -245,6 +245,81 @@ class BallStormAudio {
   }
 
   /**
+   * Subtle high-frequency UI hover feedback
+   */
+  public playHover(): void {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1400, t);
+    osc.frequency.exponentialRampToValueAtTime(1800, t + 0.025);
+    gain.gain.setValueAtTime(this.volume * 0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.025);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.025);
+  }
+
+  /**
+   * Snappy click/press UI feedback
+   */
+  public playClick(): void {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(880, t);
+    osc.frequency.exponentialRampToValueAtTime(440, t + 0.04);
+    gain.gain.setValueAtTime(this.volume * 0.35, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.04);
+  }
+
+  /**
+   * Massive explosive sweep when Fever Overdrive triggers!
+   */
+  public playFeverStart(): void {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+
+    // 1. Rising sweep
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(1320, t + 0.35);
+    gain.gain.setValueAtTime(this.volume * 0.5, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.35);
+
+    // 2. Sub-bass boom
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(150, t + 0.15);
+    sub.frequency.exponentialRampToValueAtTime(35, t + 0.7);
+    subGain.gain.setValueAtTime(this.volume * 0.9, t + 0.15);
+    subGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    sub.start(t + 0.15);
+    sub.stop(t + 0.7);
+  }
+
+  /**
    * Game Over Sound
    */
   public playGameOver(): void {
