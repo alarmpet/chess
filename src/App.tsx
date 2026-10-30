@@ -1,4 +1,5 @@
 import LookPanel from './LookPanel';
+import RivalPanel from './RivalPanel';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
@@ -8,6 +9,7 @@ export default function App() {
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
   const [lookOpen, setLookOpen] = useState(false);
+  const [rivalOpen, setRivalOpen] = useState(false);
   const t = getTranslations(lang);
 
   useEffect(() => {
@@ -165,6 +167,16 @@ export default function App() {
             🎨 외형
           </button>
 
+          <button
+            type="button"
+            className="hud-btn"
+            id="btn-rivals"
+            onClick={() => { setRivalOpen(true); setMobileSheetOpen(false); }}
+            title="소품을 입은 AI 를 이기고 소품을 하나씩 얻습니다"
+          >
+            🏆 라이벌
+          </button>
+
           <div className="hud-divider" aria-hidden="true"></div>
 
           <div className="mobile-sheet-section-label">{t.gameActions}</div>
@@ -278,6 +290,7 @@ export default function App() {
       </div>
 
       <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
     </>
   );
 }

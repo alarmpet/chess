@@ -798,3 +798,24 @@ body.cinematic-ui-hidden #hud-bottom {
 .promo-bar { height: 4px; margin-top: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; }
 .promo-bar-fill { height: 100%; width: 100%; background: #eab308; transform-origin: left; animation: promo-countdown linear forwards; }
 @keyframes promo-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* Rivals (prototype): win a trinket from a dressed-up AI */
+.rival-panel { max-width: 560px; }
+.rival-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.rival-text { flex: 1; min-width: 0; }
+.rival-name { font-weight: 700; color: #e2e8f0; }
+.rival-blurb { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+.rival-rewards { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rival-reward { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(255, 255, 255, 0.15); color: #64748b; }
+.rival-reward.owned { border-color: rgba(234, 179, 8, 0.8); color: #fef08a; }
+.rival-row.active .rival-name { color: #fde68a; }
+.trophy-line { margin-top: 8px; font-weight: 800; color: #fde68a; }
+
+/* Modal panels (appearance, rivals) */
+.panel-overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2, 6, 23, 0.6); }
+.panel-card { width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(234, 179, 8, 0.45); border-radius: 14px; color: #e2e8f0; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+.panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.panel-title { display: flex; align-items: center; gap: 8px; font-weight: 800; color: #fde68a; font-size: 17px; }
+.panel-close { background: none; border: 0; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 4px 8px; }
+.panel-close:hover { color: #e2e8f0; }
+.panel-body { padding: 14px 16px 16px; }

@@ -61,16 +61,16 @@ export default function LookPanel({ open, onClose, lang }: { open: boolean; onCl
   };
 
   return (
-    <div className="farm-modal-overlay" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="farm-modal look-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="farm-modal-header">
-          <div className="farm-modal-title">
+    <div className="panel-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="panel-card look-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="panel-header">
+          <div className="panel-title">
             <span>🎨</span>
             <span>{lang === 'en' ? 'Looks' : '외형'}</span>
           </div>
-          <button type="button" className="grimoire-close-btn" onClick={onClose}>✕</button>
+          <button type="button" className="panel-close" onClick={onClose}>✕</button>
         </div>
-        <div className="farm-modal-body">
+        <div className="panel-body">
           <p className="look-note" id="look-note">
             {L(catalog?.note) || (lang === 'en' ? 'Looks only — every piece moves exactly the same.' : '외형만 바뀌고 수는 같습니다.')}
           </p>
@@ -133,8 +133,8 @@ export default function LookPanel({ open, onClose, lang }: { open: boolean; onCl
               })}
               <p className="look-foot">
                 {lang === 'en'
-                  ? 'All stages are open for now. Earning them by playing comes with the collection book (Phase 5b).'
-                  : '지금은 모든 단계를 열어 두었습니다. 대국으로 얻는 방식은 도감 기록(Phase 5b)에서 붙습니다.'}
+                  ? 'Trinkets are won from rivals, one per win. All stages are open for now.'
+                  : '소품은 라이벌을 이기면 하나씩 얻습니다. 외형 단계는 지금 모두 열려 있습니다.'}
               </p>
             </>
           )}

@@ -470,6 +470,194 @@
           0
         ]
       }
+    },
+    "bamboo_phones": {
+      "model": "items/bamboo_phones",
+      "slot": "head",
+      "name": {
+        "ko": "대나무 헤드폰",
+        "en": "Bamboo headphones"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0,
+          -0.3,
+          0
+        ],
+        "size": 0.86,
+        "tilt": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "leaf_shades": {
+      "model": "items/leaf_shades",
+      "slot": "head",
+      "name": {
+        "ko": "나뭇잎 선글라스",
+        "en": "Leaf sunglasses"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0,
+          -0.3,
+          0.5
+        ],
+        "size": 0.62,
+        "tilt": [
+          12,
+          0,
+          0
+        ],
+        "byStage": {
+          "grown": {
+            "at": [
+              0,
+              -0.35,
+              0.5
+            ],
+            "size": 0.5
+          },
+          "adult": {
+            "at": [
+              0,
+              -0.07,
+              0.46
+            ],
+            "size": 0.45
+          },
+          "starlit": {
+            "at": [
+              0,
+              -0.07,
+              0.46
+            ],
+            "size": 0.45
+          }
+        }
+      }
+    },
+    "acorn_beads": {
+      "model": "items/acorn_beads",
+      "slot": "neck",
+      "name": {
+        "ko": "도토리 목걸이",
+        "en": "Acorn beads"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0,
+          0,
+          0
+        ],
+        "size": 0.7,
+        "tilt": [
+          0,
+          0,
+          0
+        ]
+      }
     }
-  }
+  },
+  "rivals": [
+    {
+      "id": "picnic",
+      "name": {
+        "ko": "소풍 나온 미어캣단",
+        "en": "The Picnic Gang"
+      },
+      "blurb": {
+        "ko": "밀짚모자를 쓰고 소풍을 왔습니다. 수를 자주 흘립니다.",
+        "en": "Out for a picnic in straw hats. Often careless."
+      },
+      "mistake": 0.4,
+      "rewards": [
+        "strawhat",
+        "ribbon"
+      ],
+      "wear": {
+        "pawn": {
+          "head": "strawhat"
+        },
+        "knight": {
+          "head": "ribbon"
+        }
+      }
+    },
+    {
+      "id": "bamboo_band",
+      "name": {
+        "ko": "대숲 밴드",
+        "en": "The Bamboo Band"
+      },
+      "blurb": {
+        "ko": "헤드폰을 쓴 판다의 밴드. 가끔 박자를 놓칩니다.",
+        "en": "A band in bamboo headphones. Sometimes off the beat."
+      },
+      "mistake": 0.2,
+      "rewards": [
+        "bamboo_phones",
+        "flower"
+      ],
+      "wear": {
+        "pawn": {
+          "stage": "grown",
+          "head": "bamboo_phones"
+        },
+        "bishop": {
+          "stage": "grown"
+        },
+        "queen": {
+          "stage": "grown",
+          "head": "flower"
+        }
+      }
+    },
+    {
+      "id": "acorn_court",
+      "name": {
+        "ko": "도토리 궁정",
+        "en": "The Acorn Court"
+      },
+      "blurb": {
+        "ko": "선글라스를 낀 멋쟁이들. 실수가 거의 없습니다.",
+        "en": "Sharp dressers in sunglasses. Rarely slip up."
+      },
+      "mistake": 0.05,
+      "rewards": [
+        "leaf_shades",
+        "acorn_beads",
+        "bell"
+      ],
+      "wear": {
+        "pawn": {
+          "stage": "adult",
+          "head": "leaf_shades"
+        },
+        "knight": {
+          "stage": "adult",
+          "head": "leaf_shades"
+        },
+        "queen": {
+          "stage": "adult",
+          "neck": "acorn_beads"
+        },
+        "king": {
+          "stage": "adult",
+          "neck": "bell"
+        },
+        "rook": {
+          "stage": "adult"
+        },
+        "bishop": {
+          "stage": "adult"
+        }
+      }
+    }
+  ]
 }

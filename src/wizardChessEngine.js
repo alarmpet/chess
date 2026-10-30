@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
-import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics } from './packs/packManifest.js';
+import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
 
 /** @type {any} */
@@ -890,6 +890,39 @@ export function initWizardChess() {
     function saveCosmetics() {
       try { window.localStorage.setItem(COSMETICS_KEY, JSON.stringify(cosmetics)); } catch (e) {}
     }
+
+    // Rivals (prototype, 2026-10-30): AI opponents dressed in trinkets. A checkmate over one earns its next trinket and
+    // nobody loses anything. Progress is local only — it proves the loop, it is not a ranked reward (PLAN §12.6).
+    const RIVALS_KEY = 'wildcrown.rivals.v1';
+    let rivalProgress = { unlocked: [], wins: {} };
+    let activeRivalId = null;
+    let rivalPaid = false;          // one reward per game
+    let lastTrophy = null;
+    let lastMoverType = null;
+    function loadRivalProgress() {
+      try { return JSON.parse(window.localStorage.getItem(RIVALS_KEY) || 'null'); } catch (e) { return null; }
+    }
+    function saveRivalProgress() {
+      try { window.localStorage.setItem(RIVALS_KEY, JSON.stringify(rivalProgress)); } catch (e) {}
+    }
+    function activeRival() {
+      return activeRivalId ? (activePack?.rivals || []).find((r) => r.id === activeRivalId) || null : null;
+    }
+    function rivalColor() {
+      return playerColor === 'b' ? 'w' : 'b';
+    }
+    // Packs without rivals keep every item open.
+    function unlockedItems() {
+      return activePack?.rivals?.length ? rivalProgress.unlocked : null;
+    }
+    // What a piece wears right now: the rival's outfit on its side, the player's saved look otherwise.
+    function lookFor(color, type) {
+      const rival = activeRival();
+      if (rival && color === rivalColor()) {
+        return { stage: stageIds(activePack)[0], ...(rival.wear?.[type] || {}) };
+      }
+      return cosmetics?.[color]?.[type];
+    }
     const shatterDebris = [];
     const clock = new THREE.Clock();
 
@@ -1610,7 +1643,8 @@ export function initWizardChess() {
         bumpProgress(`Summoned ${type.toUpperCase()}...`);
       }
       assetApi = { buildTemplate, loadGltfModel, base: packAssetBase };
-      cosmetics = sanitizeCosmetics(activePack, loadSavedCosmetics());
+      rivalProgress = sanitizeRivalProgress(activePack, loadRivalProgress());
+      cosmetics = sanitizeCosmetics(activePack, loadSavedCosmetics(), unlockedItems());
       await ensureCosmeticAssets();
 
       document.getElementById('loading-overlay')?.classList.add('hidden');
@@ -1738,7 +1772,7 @@ export function initWizardChess() {
     }
 
     function instantiatePiece(type, color, r, c) {
-      const look = cosmetics?.[color]?.[type];
+      const look = lookFor(color, type);
       const tpl = (look && pieceTemplates[`${type}_${color}_${look.stage}`]) || pieceTemplates[`${type}_${color}`];
       let root;
       let mixer = null;
@@ -1876,7 +1910,7 @@ export function initWizardChess() {
       for (const color of ['w', 'b']) {
         for (const type of PIECE_TYPES) {
           const def = activePack.pieces?.[type];
-          const look = cosmetics[color]?.[type];
+          const look = lookFor(color, type);
           if (!def || !look) continue;
           const key = `${type}_${color}_${look.stage}`;
           if (!pieceTemplates[key]) {
@@ -1990,7 +2024,8 @@ export function initWizardChess() {
         let bone = null;
         model.traverse((o) => { if (!bone && o.isBone && o.name === sock.bone.name) bone = o; });
         if (!bone) continue;
-        const fit = item.def.fit || {};
+        // head shape changes with the stage, so a face item can override its fit per stage
+        const fit = { ...item.def.fit, ...item.def.fit?.byStage?.[look.stage] };
         const size = item.bbox.getSize(new THREE.Vector3());
         const center = item.bbox.getCenter(new THREE.Vector3());
         const inner = SkeletonUtils.clone(item.scene);   // safe for skinned trinkets too
@@ -2034,7 +2069,7 @@ export function initWizardChess() {
     }
 
     async function setCosmetics(next) {
-      cosmetics = sanitizeCosmetics(activePack, next);
+      cosmetics = sanitizeCosmetics(activePack, next, unlockedItems());
       saveCosmetics();
       await ensureCosmeticAssets();
       rebuildAllPieces();
@@ -2046,15 +2081,64 @@ export function initWizardChess() {
       return JSON.parse(JSON.stringify(cosmetics));
     }
 
+    function getRivalCatalog() {
+      const rivals = activePack?.rivals;
+      if (!rivals?.length) return null;
+      return {
+        active: activeRivalId,
+        unlocked: rivalProgress.unlocked.slice(),
+        wins: { ...rivalProgress.wins },
+        items: activePack.items,
+        rivals: rivals.map(({ id, name, blurb, rewards }) => ({ id, name, blurb, rewards }))
+      };
+    }
+
+    function notifyRivalChange() {
+      try { window.dispatchEvent(new CustomEvent('rivalchange', { detail: getRivalCatalog() })); } catch (e) {}
+    }
+
+    async function startRival(id) {
+      if (id && !(activePack?.rivals || []).some((r) => r.id === id)) return false;
+      if (gameMode !== 'single') return false;
+      activeRivalId = id || null;
+      await ensureCosmeticAssets();
+      resetChessBoard(true);
+      notifyRivalChange();
+      return true;
+    }
+
+    // Paid at mate, worn from the next game: rebuilding now would cut the kneel and cheer short.
+    function awardRivalWin(winnerColor) {
+      const rival = activeRival();
+      if (!rival || rivalPaid || scriptedGameActive || gameMode !== 'single' || winnerColor !== playerColor) return;
+      rivalPaid = true;
+      rivalProgress.wins[rival.id] = (rivalProgress.wins[rival.id] || 0) + 1;
+      const itemId = nextRivalReward(activePack, rival.id, rivalProgress.unlocked);
+      lastTrophy = null;
+      if (itemId) {
+        rivalProgress.unlocked.push(itemId);
+        const role = trophyRole(activePack, cosmetics[playerColor], itemId, lastMoverType);
+        if (role) {
+          cosmetics[playerColor][role][activePack.items[itemId].slot] = itemId;
+          saveCosmetics();
+          ensureCosmeticAssets();
+        }
+        lastTrophy = { item: itemId, role, name: activePack.items[itemId].name };
+      }
+      saveRivalProgress();
+      notifyRivalChange();
+    }
+
     function getLookCatalog() {
       if (!activePack) return null;
+      const open = unlockedItems();
       const roles = {};
       const ids = stageIds(activePack);
       for (const type of PIECE_TYPES) {
         const def = activePack.pieces?.[type];
         roles[type] = { slots: slotsFor(def), stages: ids.filter((id, i) => i === 0 || def?.stages?.[id]) };
       }
-      return { stages: activePack.looks?.stages || [], note: activePack.looks?.note || null, items: activePack.items || {}, roles };
+      return { stages: activePack.looks?.stages || [], note: activePack.looks?.note || null, items: Object.fromEntries(Object.entries(activePack.items || {}).filter(([id]) => !open || open.includes(id))), roles };
     }
 
 
@@ -2291,6 +2375,7 @@ export function initWizardChess() {
     }
 
     function resetChessBoard(orientCamera = true, preserveScript = false) {
+      rivalPaid = false;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -2644,6 +2729,7 @@ export function initWizardChess() {
       const piece = boardState[fromR]?.[fromC];
       if (!piece || isAnimatingMove || gameOver) return false;
       if (piece.color !== currentTurn) return false;
+      lastMoverType = piece.type;
 
       const targetOnDest = boardState[toR]?.[toC];
       // Strictly forbid friendly fire (a piece can never move onto or attack a piece of the same color)
@@ -3357,6 +3443,11 @@ export function initWizardChess() {
       const legalMoves = getAllLegalMoves(color);
       if (legalMoves.length === 0) return null;
 
+      const rival = activeRival();
+      if (rival && color === rivalColor() && Math.random() < rival.mistake) {
+        return legalMoves[Math.floor(Math.random() * legalMoves.length)];
+      }
+
       let bestScore = -Infinity;
       let bestCandidates = [];
 
@@ -4013,6 +4104,15 @@ export function initWizardChess() {
       if (titleEl) titleEl.textContent = t.checkmateTitle;
       if (subEl) {
         subEl.textContent = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
+        if (lastTrophy) {
+          const ko = getCurrentLang() !== 'en';
+          const name = (ko ? lastTrophy.name?.ko : lastTrophy.name?.en) || lastTrophy.item;
+          const line = document.createElement('div');
+          line.className = 'trophy-line';
+          line.textContent = ko ? `전리품 획득: ${name}` : `Trophy won: ${name}`;
+          subEl.appendChild(line);
+          lastTrophy = null;
+        }
       }
       if (overlay) {
         overlay.classList.add('visible');
@@ -4322,6 +4422,7 @@ export function initWizardChess() {
           const winner = currentTurn === 'w' ? t.blackColor : t.whiteColor;
           turnText.textContent = t.checkmateWin(winner);
           if (!checkmateState.active) {
+            awardRivalWin(currentTurn === 'w' ? 'b' : 'w');
             triggerCheckmateSequence(currentTurn, currentTurn === 'w' ? 'b' : 'w');
           }
         } else if (endReason === 'stalemate' || legalMoves.length === 0) {
@@ -5103,6 +5204,8 @@ export function initWizardChess() {
       getLookCatalog,
       getCosmetics,
       setCosmetics,
+      getRivalCatalog,
+      startRival,
       debugRenderCalls: () => renderer.info.render.calls,
       // Debug: open the promotion chooser; resolves with the picked role
       debugPromotionPicker: (color = 'w') => new Promise((res) => showPromotionPicker(color, res)),

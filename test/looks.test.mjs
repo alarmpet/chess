@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
-import { validatePackManifest, sanitizeCosmetics, stageModelFor, slotsFor, stageIds, PIECE_ROLES } from '../src/packs/packManifest.js';
+import { validatePackManifest, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole, stageModelFor, slotsFor, stageIds, PIECE_ROLES } from '../src/packs/packManifest.js';
 
 const legend = JSON.parse(readFileSync(new URL('../public/packs/legend/pack.json', import.meta.url), 'utf8'));
 
@@ -84,4 +84,46 @@ test('pedestal colours and sizes are validated', () => {
 
 test('role signatures stay visible: king, bishop and rook have no head slot', () => {
   for (const r of ['king', 'bishop', 'rook']) assert.deepEqual(slotsFor(legend.pieces[r]), ['neck'], r);
+});
+
+test('rivals give one trinket per win, in order, and only real items', () => {
+  const [first] = legend.rivals;
+  assert.ok(legend.rivals.length >= 3, 'three rivals');
+  assert.equal(nextRivalReward(legend, first.id, []), first.rewards[0]);
+  assert.equal(nextRivalReward(legend, first.id, first.rewards.slice(0, 1)), first.rewards[1]);
+  assert.equal(nextRivalReward(legend, first.id, first.rewards), null);
+  const given = legend.rivals.flatMap((r) => r.rewards);
+  assert.equal(new Set(given).size, given.length, 'each trinket has one home');
+  const bad = structuredClone(legend);
+  bad.rivals[0].rewards = ['nope'];
+  bad.rivals[1].mistake = 2;
+  bad.rivals[2].wear = { king: { head: Object.keys(legend.items)[0] } };
+  bad.rivals.push({ ...legend.rivals[0], id: 'x', name: { ko: '전설의 라이벌' } });
+  const errs = validatePackManifest(bad).errors;
+  assert.ok(errs.some((e) => e.includes('unknown item')));
+  assert.ok(errs.some((e) => e.includes('mistake')));
+  assert.ok(errs.some((e) => e.includes('no head slot')));
+  assert.ok(errs.some((e) => e.includes('strength word')));
+});
+
+test('natural start: no trinket is open until it is won', () => {
+  const headItem = Object.entries(legend.items).find(([, it]) => it.slot === 'head')[0];
+  const raw = { w: { pawn: { stage: stageIds(legend)[0], head: headItem } } };
+  assert.equal(sanitizeCosmetics(legend, raw, []).w.pawn.head, undefined);
+  assert.equal(sanitizeCosmetics(legend, raw, [headItem]).w.pawn.head, headItem);
+  assert.deepEqual(sanitizeRivalProgress(legend, null), { unlocked: [], wins: {} });
+  const id = legend.rivals[0].id;
+  assert.deepEqual(sanitizeRivalProgress(legend, { unlocked: [headItem, 'ghost', headItem], wins: { [id]: 2, gone: 1 } }).wins, { [id]: 2 });
+  assert.ok(!sanitizeRivalProgress(legend, { unlocked: ['ghost'] }).unlocked.includes('ghost'));
+});
+
+test('a won trinket goes to the mating piece, never over what is worn, never over a role mark', () => {
+  const head = Object.entries(legend.items).find(([, it]) => it.slot === 'head')[0];
+  const neck = Object.entries(legend.items).find(([, it]) => it.slot === 'neck')[0];
+  assert.equal(trophyRole(legend, {}, head, 'knight'), 'knight');
+  assert.equal(trophyRole(legend, {}, head, 'king'), 'pawn', 'the king has no head slot');
+  assert.equal(trophyRole(legend, {}, neck, 'king'), 'king');
+  assert.equal(trophyRole(legend, { knight: { head: 'x' } }, head, 'knight'), 'pawn');
+  const full = Object.fromEntries(['pawn', 'knight', 'queen'].map((r) => [r, { head: 'x' }]));
+  assert.equal(trophyRole(legend, full, head, 'pawn'), null);
 });

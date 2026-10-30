@@ -174,6 +174,33 @@ export function validatePackManifest(manifest) {
       }
     }
   }
+  if (manifest.rivals !== undefined) {
+    if (!Array.isArray(manifest.rivals)) errors.push('rivals must be an array');
+    else {
+      const seen = new Set();
+      const items = manifest.items || {};
+      for (const r of manifest.rivals) {
+        const id = r?.id;
+        if (typeof id !== 'string' || !id) { errors.push('rivals[].id must be a string'); continue; }
+        if (seen.has(id)) errors.push(`rivals id ${id} is duplicated`);
+        seen.add(id);
+        if (badLookName(r.name)) errors.push(`rivals.${id}.name uses a strength word (PLAN §14.0)`);
+        if (!(typeof r.mistake === 'number' && r.mistake >= 0 && r.mistake <= 1)) errors.push(`rivals.${id}.mistake must be 0..1`);
+        if (!Array.isArray(r.rewards) || r.rewards.length === 0) errors.push(`rivals.${id}.rewards must list items`);
+        for (const it of r.rewards || []) if (!items[it]) errors.push(`rivals.${id}.rewards: unknown item ${it}`);
+        for (const [role, look] of Object.entries(r.wear || {})) {
+          if (!PIECE_ROLES.includes(role)) { errors.push(`rivals.${id}.wear.${role} is not a role`); continue; }
+          const slots = slotsFor(pieces[role]);
+          for (const slot of ITEM_SLOTS) {
+            const it = look?.[slot];
+            if (it === undefined) continue;
+            if (!slots.includes(slot)) errors.push(`rivals.${id}.wear.${role}: ${role} has no ${slot} slot`);
+            if (items[it]?.slot !== slot) errors.push(`rivals.${id}.wear.${role}.${slot}: ${it} does not fit`);
+          }
+        }
+      }
+    }
+  }
   return { ok: errors.length === 0, errors };
 }
 
@@ -202,8 +229,9 @@ export function slotsFor(pieceDef) {
 /**
  * Clean a saved appearance choice against the pack: unknown stages fall back to the base, unknown items or items in
  * the wrong slot (or a slot the role does not have) are dropped. Shape: { w: { pawn: { stage, head?, neck? } … }, b: … }.
+ * With `unlocked` (item ids), items the player has not earned yet are dropped too.
  */
-export function sanitizeCosmetics(manifest, raw) {
+export function sanitizeCosmetics(manifest, raw, unlocked = null) {
   const ids = stageIds(manifest);
   const items = manifest?.items || {};
   const out = { w: {}, b: {} };
@@ -215,12 +243,41 @@ export function sanitizeCosmetics(manifest, raw) {
       const entry = { stage };
       for (const slot of slotsFor(def)) {
         const id = src[slot];
-        if (typeof id === 'string' && items[id] && items[id].slot === slot) entry[slot] = id;
+        if (typeof id === 'string' && items[id] && items[id].slot === slot && (!unlocked || unlocked.includes(id))) entry[slot] = id;
       }
       out[color][role] = entry;
     }
   }
   return out;
+}
+
+/** Clean saved rival progress: only items the pack can still give, wins as plain counts. */
+export function sanitizeRivalProgress(manifest, raw) {
+  const given = new Set((manifest?.rivals || []).flatMap((r) => r.rewards || []));
+  const unlocked = [...new Set(Array.isArray(raw?.unlocked) ? raw.unlocked : [])].filter((id) => given.has(id));
+  const wins = {};
+  for (const r of manifest?.rivals || []) {
+    const n = raw?.wins?.[r.id];
+    if (Number.isInteger(n) && n > 0) wins[r.id] = n;
+  }
+  return { unlocked, wins };
+}
+
+/** The next item a win over this rival gives (one per win, in listed order), or null once all are owned. */
+export function nextRivalReward(manifest, rivalId, unlocked) {
+  const rival = (manifest?.rivals || []).find((r) => r.id === rivalId);
+  return rival?.rewards?.find((id) => !unlocked.includes(id)) || null;
+}
+
+/**
+ * Which role wears a newly won item: the piece that gave mate if its slot is free, otherwise the first free role,
+ * pawns first. Never replaces what the player already put on. Null when every role's slot is taken.
+ */
+export function trophyRole(manifest, look, itemId, preferredRole) {
+  const slot = manifest?.items?.[itemId]?.slot;
+  if (!slot) return null;
+  const order = [preferredRole, 'pawn', 'knight', 'queen', 'bishop', 'rook', 'king'];
+  return order.find((role) => role && slotsFor(manifest.pieces?.[role]).includes(slot) && !look?.[role]?.[slot]) || null;
 }
 
 /** Candidate clip names for a clip role, in priority order. */
