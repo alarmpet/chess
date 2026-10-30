@@ -7,6 +7,7 @@ import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion
 import { Referee } from './rules/referee.js';
 import { sfx } from './audio/sfx.js';
 import { createImpactFx } from './fx/impactFx.js';
+import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
 
 /** @type {any} */
@@ -3003,8 +3004,20 @@ export function initWizardChess() {
         Math.abs(toR - fromR) >= 1 &&
         piece.type !== 'knight';
 
+      // Each animal crosses the board its own way. The solver below still keeps it clear of bystanders.
+      const styled = piece.rig !== 'statue';
+      const restScale = piece.mesh.scale.y;
+      if (styled) piece.mesh.rotation.order = 'YXZ';
+      function applyStylePose(style) {
+        const side = restScale * (1 - (style.stretch - 1) * 0.5);
+        piece.mesh.rotation.set(style.pitch, moveHeading + style.yaw, style.roll);
+        piece.mesh.scale.set(side, restScale * style.stretch, side);
+      }
+
       function applyConcreteTrajectory(u, fromVec, toVec) {
-        const ease = isCapture ? (0.28 * u + 0.72 * easeInOutCubic(u)) : easeInOutCubic(u);
+        const style = styled ? moveStyle(piece.type, u, squaresMoved) : null;
+        const shaped = style ? style.progress : easeInOutCubic(u);
+        const ease = isCapture ? (0.28 * u + 0.72 * shaped) : shaped;
         let bx = fromVec.x + (toVec.x - fromVec.x) * ease;
         let bz = fromVec.z + (toVec.z - fromVec.z) * ease;
         let by = BOARD_SURFACE_Y;
@@ -3075,6 +3088,13 @@ export function initWizardChess() {
           }
         }
 
+        if (style) {
+          // Added after the solver: a tumble's height must not read as having cleared the pieces beside it.
+          if (knightVaultPeak === 0) by += style.lift;
+          bx += dirX * style.forward;
+          bz += dirZ * style.forward;
+          applyStylePose(style);
+        }
         piece.mesh.position.set(bx, by, bz);
       }
 
@@ -3227,6 +3247,12 @@ export function initWizardChess() {
 
       function finishMove() {
         resetBystandersToHome();
+        if (styled) {
+          applyStylePose(moveStyle(piece.type, 1, squaresMoved));
+          if (!isCapture && !promotionType && LANDING_SQUASH[piece.type]) {
+            impactFx.squash(piece.mesh, restScale, LANDING_SQUASH[piece.type], 0.24);
+          }
+        }
         boardState[fromR][fromC] = null;
         boardState[toR][toC] = piece;
         piece.r = toR;
@@ -3347,6 +3373,7 @@ export function initWizardChess() {
             phaseName = 'strike';
             if (!attackAnimStarted) {
               attackAnimStarted = true;
+              if (styled) applyStylePose(moveStyle(piece.type, 1, squaresMoved));
               playPieceClip(piece, 'Attack', false, 0.08);
             }
 
