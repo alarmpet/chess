@@ -5,6 +5,7 @@ import { loadVillage, settleFinishedGame } from './village/store';
 import { stageForHearts } from './village/economy.js';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
+import { sfx } from './audio/sfx.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
   const [rivalOpen, setRivalOpen] = useState(false);
   const [villageOpen, setVillageOpen] = useState(false);
   const [lastGame, setLastGame] = useState<any>(null);
+  const [soundOn, setSoundOn] = useState(!sfx.isMuted());
   const t = getTranslations(lang);
 
   // A finished game pays the village at once; the card below is the way in.
@@ -281,6 +283,18 @@ export default function App() {
             onClick={() => setMobileSheetOpen(false)}
           >
             {t.hideUi}
+          </button>
+
+          <button
+            className="hud-btn"
+            id="btn-sound"
+            aria-pressed={soundOn}
+            onClick={() => {
+              sfx.setMuted(soundOn);
+              setSoundOn(!soundOn);
+            }}
+          >
+            {soundOn ? (lang === 'en' ? '🔊 Sound on' : '🔊 소리 켜짐') : (lang === 'en' ? '🔇 Sound off' : '🔇 소리 꺼짐')}
           </button>
 
           <div className="mobile-sheet-hint">

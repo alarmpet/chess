@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { BUILDINGS, PET_DAILY_CAP, buildBlocked, pet, stageForHearts, startBuild, tickVillage } from './village/economy.js';
 import { villageTiles } from './village/roster.js';
+import { sfx } from './audio/sfx.js';
 import { loadVillage, saveVillage, villageRivals } from './village/store';
 
 const FILES = 'abcdefgh';
@@ -269,6 +270,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
       saveVillage(v);
       setVillage({ ...v });
       const a = actors.find((x) => x.slot === slot);
+      if (gained) sfx.voice(slotRole(slot));
       a?.play('Cheer');
       setTimeout(() => a?.play('Idle'), 1600);
       setNote(gained ? `${slotLabel(slot, v.names)}: 💗 ${v.hearts[slot]}` : `오늘은 충분히 쓰다듬었어요. 내일 또 만나요.`);

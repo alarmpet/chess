@@ -5,6 +5,7 @@ import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.j
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
+import { sfx } from './audio/sfx.js';
 import { createImpactFx } from './fx/impactFx.js';
 import { IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
 
@@ -2729,7 +2730,7 @@ export function initWizardChess() {
     let impactCount = 0;
     let hitStopLeft = 0;
     let slowLeft = 0;
-    function landImpact(captured, origin) {
+    function landImpact(captured, origin, attackerType) {
       const san = referee.history().at(-1)?.san || '';
       const tierId = impactTier(captured.type, san);
       const tier = IMPACT_TIERS[tierId];
@@ -2741,9 +2742,25 @@ export function initWizardChess() {
       impactFx.ring(ground, tierId);
       impactFx.word(ground, tierId);
       impactFx.shake(tier.shake);
+      sfx.impact(tierId, attackerType);
       if (captured.rig !== 'statue' && captured.mesh) {
         impactFx.flash(captured.mesh);
         impactFx.squash(captured.mesh, BOARD_SQ_SIZE, 0.42, 0.32);
+      }
+    }
+
+    // The move is already on the referee when a piece lands, so its notation says what the landing meant.
+    function playMoveOutcomeSound(moverColor, quietMove, promoted) {
+      const san = referee.history().at(-1)?.san || '';
+      if (quietMove) sfx.play('place');
+      if (promoted) sfx.play('promote');
+      if (san.endsWith('#')) {
+        const playerLost = gameMode === 'single' && playerColor !== 'spectator' && moverColor !== playerColor;
+        sfx.play(playerLost ? 'lose' : 'mate', 0.15);
+      } else if (referee.gameOverReason()) {
+        sfx.play('draw', 0.15);
+      } else if (san.endsWith('+')) {
+        sfx.play('check', 0.08);
       }
     }
 
@@ -3263,15 +3280,20 @@ export function initWizardChess() {
             retireAnimalPiece(enPassantVictim);
             spawnDustPuff(origin);
           }
+          landImpact(enPassantVictim, origin, piece.type);
           if (piece.color === 'w') capturedByWhite += 1;
           else capturedByBlack += 1;
         }
+
+        playMoveOutcomeSound(piece.color, !isCapture && !enPassantVictim, Boolean(promotionType));
 
         currentTurn = currentTurn === 'w' ? 'b' : 'w';
         isAnimatingMove = false;
         updateTurnUI();
         maybeScheduleAIMove();
       }
+
+      sfx.move(piece.type, isCapture ? tApproach : stdMoveDuration);
 
       function stepMove(dt) {
         elapsed += dt;
@@ -3420,7 +3442,7 @@ export function initWizardChess() {
                 } else {
                   retireAnimalPiece(captured);
                 }
-                landImpact(captured, shatterOrigin);
+                landImpact(captured, shatterOrigin, piece.type);
               }
             }
 
@@ -5269,6 +5291,7 @@ export function initWizardChess() {
       getCosmetics,
       setCosmetics,
       debugImpacts: () => impactCount,
+      debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
       getRivalCatalog,
       startRival,
       getVillageRivals: () => (activePack?.rivals || []).map(({ id, name, visitsFor }) => ({ id, name, visitsFor })),
