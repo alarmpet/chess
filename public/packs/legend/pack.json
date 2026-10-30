@@ -49,7 +49,6 @@
     "dark": "#5e7f3c",
     "rim": "#6b4a2b"
   },
-  "bloom": { "strength": 0.22, "threshold": 0.96 },
   "pedestal": {
     "w": "#efe4cf",
     "b": "#2a2420",
