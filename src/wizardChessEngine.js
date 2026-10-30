@@ -899,11 +899,32 @@ export function initWizardChess() {
     let rivalPaid = false;          // one reward per game
     let lastTrophy = null;
     let lastMoverType = null;
+    let gameReported = false;       // the village is paid once per finished game
+    let renderPaused = false;       // the village screen draws its own scene on top
+    let slotStages = {};            // start square → look stage earned in the village, e.g. { w_e2: 'grown' }
+    function slotRole(id) {
+      if (id[3] === '2' || id[3] === '7') return 'pawn';
+      return { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' }[id[2]];
+    }
     function loadRivalProgress() {
       try { return JSON.parse(window.localStorage.getItem(RIVALS_KEY) || 'null'); } catch (e) { return null; }
     }
     function saveRivalProgress() {
       try { window.localStorage.setItem(RIVALS_KEY, JSON.stringify(rivalProgress)); } catch (e) {}
+    }
+    // A piece standing on its own start square at set-up is that individual. Promotions never land on one of these
+    // for their own side, so a promoted piece keeps the role look.
+    function slotAt(color, type, r, c) {
+      const rank = 8 - r;
+      if (color === 'w' ? rank > 2 : rank < 7) return null;
+      if ((rank === 2 || rank === 7) !== (type === 'pawn')) return null;
+      return `${color}_${'abcdefgh'[c]}${rank}`;
+    }
+    function reportGameEnd(result) {
+      if (gameReported || gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
+      gameReported = true;
+      const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId };
+      try { window.dispatchEvent(new CustomEvent('gamefinished', { detail })); } catch (e) {}
     }
     function activeRival() {
       return activeRivalId ? (activePack?.rivals || []).find((r) => r.id === activeRivalId) || null : null;
@@ -1772,7 +1793,9 @@ export function initWizardChess() {
     }
 
     function instantiatePiece(type, color, r, c) {
-      const look = lookFor(color, type);
+      let look = lookFor(color, type);
+      const slot = slotAt(color, type, r, c);
+      if (slot && slotStages[slot] && look) look = { ...look, stage: slotStages[slot] };
       const tpl = (look && pieceTemplates[`${type}_${color}_${look.stage}`]) || pieceTemplates[`${type}_${color}`];
       let root;
       let mixer = null;
@@ -1912,6 +1935,14 @@ export function initWizardChess() {
           const def = activePack.pieces?.[type];
           const look = lookFor(color, type);
           if (!def || !look) continue;
+          for (const stage of new Set(Object.entries(slotStages).filter(([id]) => id[0] === color && slotRole(id) === type).map(([, st]) => st))) {
+            const key = `${type}_${color}_${stage}`;
+            if (!pieceTemplates[key]) {
+              jobs.push(assetApi.buildTemplate(type, def, stageModelFor(def, stage, color))
+                .then((t) => { pieceTemplates[key] = t; })
+                .catch((e) => console.warn(`Look load warning (${key}):`, e)));
+            }
+          }
           const key = `${type}_${color}_${look.stage}`;
           if (!pieceTemplates[key]) {
             const name = stageModelFor(def, look.stage, color);
@@ -2376,6 +2407,7 @@ export function initWizardChess() {
 
     function resetChessBoard(orientCamera = true, preserveScript = false) {
       rivalPaid = false;
+      gameReported = false;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -4425,10 +4457,13 @@ export function initWizardChess() {
             awardRivalWin(currentTurn === 'w' ? 'b' : 'w');
             triggerCheckmateSequence(currentTurn, currentTurn === 'w' ? 'b' : 'w');
           }
+          reportGameEnd(currentTurn === playerColor ? 'loss' : 'win');
         } else if (endReason === 'stalemate' || legalMoves.length === 0) {
           turnText.textContent = t.stalemate;
+          reportGameEnd('draw');
         } else {
           turnText.textContent = (t.drawBy && t.drawBy(endReason)) || t.stalemate;
+          reportGameEnd('draw');
         }
       } else {
         const turnLabel = currentTurn === 'w' ? t.turnWhite : t.turnBlack;
@@ -5206,6 +5241,14 @@ export function initWizardChess() {
       setCosmetics,
       getRivalCatalog,
       startRival,
+      getVillageRivals: () => (activePack?.rivals || []).map(({ id, name, visitsFor }) => ({ id, name, visitsFor })),
+      setRenderPaused: (on) => { renderPaused = Boolean(on); },
+      // Hearts earned in the village grow that one individual on the board; the model set already has every stage.
+      setSlotStages: async (map) => {
+        slotStages = map || {};
+        await ensureCosmeticAssets();
+        rebuildAllPieces();
+      },
       debugRenderCalls: () => renderer.info.render.calls,
       // Debug: open the promotion chooser; resolves with the picked role
       debugPromotionPicker: (color = 'w') => new Promise((res) => showPromotionPicker(color, res)),
@@ -5742,6 +5785,7 @@ export function initWizardChess() {
       }
       if (manualStepMode) return;
       const dt = Math.min(clock.getDelta(), 0.1);
+      if (renderPaused) return;
       stepScene(dt || 0.016, true);
     }
 

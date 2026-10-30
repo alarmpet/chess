@@ -195,6 +195,7 @@ LEG = float(os.environ.get('LEGSIGN', '1'))
 TAILW = float(os.environ.get('TAILW', '8'))   # 꼬리 흔들기(도) — 18° 는 옆으로 말린 큰 꼬리(시바)가 찢어졌다
 ARM_DOWN = float(os.environ.get('ARM_DOWN', '38'))   # A자 팔을 몸 옆으로 내리는 각도(로컬 Z · L 양수 = 내림)   # 다리 앞뒤 회전 방향(렌더로 확인해 뒤집을 수 있다)
 def stride(f, amp, arm_amp, bob, lean, n):
+    amp *= float(os.environ.get('STRIDE', '1'))   # chibi legs are short: a small waddle reads cuter and does not tear
     k = {}
     for i in range(n + 1):
         ph = 2 * math.pi * i / n; s = math.sin(ph)

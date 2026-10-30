@@ -15,9 +15,9 @@ assert SIDE in ('w', 'b'), SIDE
 
 STYLE = {
     # hsv: (hue, sat, val) of the Hue/Saturation/Value node; tint: multiplied over the fur
-    'w': dict(hsv=(0.5, 0.92, 1.10), tint=(1.0, 0.97, 0.90, 1), tint_fac=0.25,
+    'w': dict(hsv=(0.5, 0.95, 1.02), tint=(1.0, 0.97, 0.90, 1), tint_fac=0.25,
               sash=(0.98, 0.72, 0.10, 1), trim=(1.0, 0.93, 0.70, 1)),
-    'b': dict(hsv=(0.5, 0.70, 0.58), tint=(0.62, 0.68, 0.95, 1), tint_fac=1.0,
+    'b': dict(hsv=(0.5, 0.92, 0.84), tint=(0.82, 0.84, 1.0, 1), tint_fac=1.0,
               sash=(0.46, 0.24, 0.88, 1), trim=(0.86, 0.88, 1.0, 1)),
 }[SIDE]
 TORSO = ('Hips', 'Spine', 'Chest')

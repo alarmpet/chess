@@ -587,7 +587,8 @@
         "knight": {
           "head": "ribbon"
         }
-      }
+      },
+      "visitsFor": "bench"
     },
     {
       "id": "bamboo_band",
@@ -616,7 +617,8 @@
           "stage": "grown",
           "head": "flower"
         }
-      }
+      },
+      "visitsFor": "stage"
     },
     {
       "id": "acorn_court",
@@ -657,7 +659,8 @@
         "bishop": {
           "stage": "adult"
         }
-      }
+      },
+      "visitsFor": "fountain"
     }
   ]
 }

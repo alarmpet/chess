@@ -1,5 +1,8 @@
 import LookPanel from './LookPanel';
 import RivalPanel from './RivalPanel';
+import VillageView from './VillageView';
+import { loadVillage, settleFinishedGame } from './village/store';
+import { stageForHearts } from './village/economy.js';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
@@ -10,7 +13,24 @@ export default function App() {
   const [lang, setLang] = useState<Language>(getCurrentLang());
   const [lookOpen, setLookOpen] = useState(false);
   const [rivalOpen, setRivalOpen] = useState(false);
+  const [villageOpen, setVillageOpen] = useState(false);
+  const [lastGame, setLastGame] = useState<any>(null);
   const t = getTranslations(lang);
+
+  // A finished game pays the village at once; the card below is the way in.
+  useEffect(() => {
+    const onFinished = (e: Event) => setLastGame(settleFinishedGame((e as CustomEvent).detail));
+    window.addEventListener('gamefinished', onFinished);
+    return () => window.removeEventListener('gamefinished', onFinished);
+  }, []);
+
+  // Coming back to the board, each piece shows the look its hearts earned.
+  useEffect(() => {
+    if (villageOpen) return;
+    const hearts = loadVillage().hearts as Record<string, number>;
+    const stages = Object.fromEntries(Object.entries(hearts).map(([slot, n]) => [slot, stageForHearts(n)]).filter(([, st]) => st !== 'baby'));
+    (window as any).wizardChess?.setSlotStages?.(stages);
+  }, [villageOpen]);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -177,6 +197,16 @@ export default function App() {
             🏆 라이벌
           </button>
 
+          <button
+            type="button"
+            className="hud-btn"
+            id="btn-village"
+            onClick={() => { setVillageOpen(true); setMobileSheetOpen(false); }}
+            title="내 말들이 사는 마을"
+          >
+            🏡 마을
+          </button>
+
           <div className="hud-divider" aria-hidden="true"></div>
 
           <div className="mobile-sheet-section-label">{t.gameActions}</div>
@@ -291,6 +321,12 @@ export default function App() {
 
       <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      {lastGame && !villageOpen && (
+        <button type="button" className="village-toast" id="village-toast" onClick={() => setVillageOpen(true)}>
+          🌰 +{lastGame.coins} · 💗 +{lastGame.hearts} — 마을로 가기
+        </button>
+      )}
+      <VillageView open={villageOpen} onClose={() => { setVillageOpen(false); setLastGame(null); }} lang={lang === 'en' ? 'en' : 'ko'} summary={lastGame} />
     </>
   );
 }
