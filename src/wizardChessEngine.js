@@ -7,6 +7,7 @@ import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion
 import { Referee } from './rules/referee.js';
 import { sfx } from './audio/sfx.js';
 import { createImpactFx } from './fx/impactFx.js';
+import { fxSettings } from './fx/settings.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
 
@@ -1666,7 +1667,7 @@ export function initWizardChess() {
             console.warn(`Piece load warning (${type}/${color}):`, err);
           }
         }
-        bumpProgress(`Summoned ${type.toUpperCase()}...`);
+        bumpProgress(getTranslations(getCurrentLang()).loadingPiece(type));
       }
       assetApi = { buildTemplate, loadGltfModel, base: packAssetBase };
       rivalProgress = sanitizeRivalProgress(activePack, loadRivalProgress());
@@ -2325,6 +2326,7 @@ export function initWizardChess() {
       checkmateState.winnerColor = null;
       checkmateState.kingFallAngleDeg = 0;
       checkmateState.phase = 'none';
+      drawBannerShown = false;
       const overlay = document.getElementById('checkmate-overlay');
       if (overlay) {
         overlay.classList.remove('visible');
@@ -2747,21 +2749,51 @@ export function initWizardChess() {
       if (captured.rig !== 'statue' && captured.mesh) {
         impactFx.flash(captured.mesh);
         impactFx.squash(captured.mesh, BOARD_SQ_SIZE, 0.42, 0.32);
+        impactFx.dizzy(captured.mesh, 1.1);
       }
     }
 
+    function kingOf(color) {
+      for (const row of boardState) {
+        for (const p of row) {
+          if (p && p.type === 'king' && p.color === color) return p;
+        }
+      }
+      return null;
+    }
+
     // The move is already on the referee when a piece lands, so its notation says what the landing meant.
-    function playMoveOutcomeSound(moverColor, quietMove, promoted) {
+    // Everything here plays over the next turn instead of delaying it.
+    function playMoveOutcome(moverColor, quietMove, promoted, landing, castleRookPiece) {
       const san = referee.history().at(-1)?.san || '';
+      const ground = new THREE.Vector3(landing.x, BOARD_SURFACE_Y, landing.z);
+      const enemyKing = kingOf(moverColor === 'w' ? 'b' : 'w');
+      const kingGround = enemyKing?.mesh ? new THREE.Vector3(enemyKing.mesh.position.x, BOARD_SURFACE_Y, enemyKing.mesh.position.z) : ground;
       if (quietMove) sfx.play('place');
-      if (promoted) sfx.play('promote');
+      if (castleRookPiece) {
+        sfx.play('clap');
+        impactFx.burst(ground, 'king', 'small');
+        impactFx.label(ground, '짝!', 0.14);
+        if (castleRookPiece.mesh) impactFx.squash(castleRookPiece.mesh, BOARD_SQ_SIZE, 0.14, 0.24);
+      }
+      if (promoted) {
+        sfx.play('promote');
+        impactFx.burst(ground, 'queen', 'big');
+        impactFx.ring(ground, 'big');
+        impactFx.label(ground, '승급!', 0.16);
+      }
       if (san.endsWith('#')) {
         const playerLost = gameMode === 'single' && playerColor !== 'spectator' && moverColor !== playerColor;
         sfx.play(playerLost ? 'lose' : 'mate', 0.15);
+        impactFx.burst(kingGround, 'king', 'big');
+        impactFx.ring(kingGround, 'big');
+        impactFx.label(kingGround, '메이트!', 0.2);
       } else if (referee.gameOverReason()) {
         sfx.play('draw', 0.15);
       } else if (san.endsWith('+')) {
         sfx.play('check', 0.08);
+        impactFx.label(kingGround, '체크!', 0.13);
+        if (enemyKing?.mesh && enemyKing.rig !== 'statue') impactFx.hop(enemyKing.mesh, 0.09, 0.34);
       }
     }
 
@@ -3216,7 +3248,9 @@ export function initWizardChess() {
       const tStrikeDone = isCapture ? (tImpact + 0.48) : stdMoveDuration;
       // Slower, distance-aware post-attack camera return (~1.30s - 1.60s instead of 0.64s)
       const camReturnDist = savedCamPos.distanceTo(duelCamClose);
-      const returnDuration = isCapture ? Number((1.18 + Math.min(0.42, camReturnDist * 0.10)).toFixed(3)) : 0;
+      const quickMove = fxSettings().quick;
+      const fullReturn = 0.7 + Math.min(0.2, camReturnDist * 0.05);
+      const returnDuration = isCapture ? Number((quickMove ? 0.22 : fullReturn).toFixed(3)) : 0;
       const totalDuration = isCapture ? (tStrikeDone + returnDuration) : stdMoveDuration;
 
       if (!isCapture) {
@@ -3311,7 +3345,7 @@ export function initWizardChess() {
           else capturedByBlack += 1;
         }
 
-        playMoveOutcomeSound(piece.color, !isCapture && !enPassantVictim, Boolean(promotionType));
+        playMoveOutcome(piece.color, !isCapture && !enPassantVictim, Boolean(promotionType), endPos, isCastling ? castleRook : null);
 
         currentTurn = currentTurn === 'w' ? 'b' : 'w';
         isAnimatingMove = false;
@@ -3360,8 +3394,10 @@ export function initWizardChess() {
           // Single unbroken C-infinity camera arc across both approach and strike (never stops at tApproach!)
           const uActive = Math.min(1, elapsed / tStrikeDone);
           const sActive = 0.38 * uActive + 0.62 * easeInOutCubic(uActive);
-          evalQuadraticBezier(camera.position, savedCamPos, duelCamMid, duelCamClose, sActive);
-          evalQuadraticBezier(orbitControls.target, savedTarget, duelTargetStart, duelTargetEnd, sActive);
+          if (!quickMove) {
+            evalQuadraticBezier(camera.position, savedCamPos, duelCamMid, duelCamClose, sActive);
+            evalQuadraticBezier(orbitControls.target, savedTarget, duelTargetStart, duelTargetEnd, sActive);
+          }
 
           if (elapsed <= tApproach) {
             // Phase 1: Smooth Glide-In to Concrete Standoff Position
@@ -3373,7 +3409,10 @@ export function initWizardChess() {
             phaseName = 'strike';
             if (!attackAnimStarted) {
               attackAnimStarted = true;
-              if (styled) applyStylePose(moveStyle(piece.type, 1, squaresMoved));
+              if (styled) {
+                applyStylePose(moveStyle(piece.type, 1, squaresMoved));
+                impactFx.squash(piece.mesh, restScale, 0.14, 0.2);
+              }
               playPieceClip(piece, 'Attack', false, 0.08);
             }
 
@@ -3482,7 +3521,7 @@ export function initWizardChess() {
             }
 
             // Subtle damped perpendicular impact vibration right when the blow shatters the defender
-            if (shatterTriggered && elapsed >= impactActualTime && elapsed <= impactActualTime + 0.26) {
+            if (!quickMove && shatterTriggered && elapsed >= impactActualTime && elapsed <= impactActualTime + 0.26) {
               const shakeProgress = (elapsed - impactActualTime) / 0.26;
               const decay = (1 - shakeProgress) * (1 - shakeProgress);
               const amp = 0.024 * decay;
@@ -3497,8 +3536,10 @@ export function initWizardChess() {
           const pieceAdvanceBlend = 0.35 * uReturn + 0.65 * easeRet;
 
           piece.mesh.position.lerpVectors(postStrikePiecePos, endPos, pieceAdvanceBlend);
-          camera.position.lerpVectors(duelCamClose, savedCamPos, easeRet);
-          orbitControls.target.lerpVectors(duelTargetEnd, savedTarget, easeRet);
+          if (!quickMove) {
+            camera.position.lerpVectors(duelCamClose, savedCamPos, easeRet);
+            orbitControls.target.lerpVectors(duelTargetEnd, savedTarget, easeRet);
+          }
         }
 
         camera.lookAt(orbitControls.target);
@@ -4203,9 +4244,22 @@ export function initWizardChess() {
       impactFlashLight.intensity = 6.2;
     }
 
+    let drawBannerShown = false;
+    function showDrawBanner(subtitle) {
+      if (drawBannerShown) return;
+      drawBannerShown = true;
+      const t = getTranslations(getCurrentLang());
+      document.getElementById('checkmate-crown').textContent = '🤝';
+      document.getElementById('checkmate-title').textContent = t.drawTitle;
+      document.getElementById('checkmate-subtitle').textContent = subtitle;
+      document.getElementById('btn-checkmate-replay').style.display = 'none';
+      document.getElementById('checkmate-overlay').classList.add('visible');
+    }
+
     function showCheckmateBanner(winnerColor, defeatedColor) {
       const overlay = document.getElementById('checkmate-overlay');
       const crownEl = document.getElementById('checkmate-crown');
+      document.getElementById('btn-checkmate-replay').style.display = '';
       const titleEl = document.getElementById('checkmate-title');
       const subEl = document.getElementById('checkmate-subtitle');
 
@@ -4538,9 +4592,11 @@ export function initWizardChess() {
           reportGameEnd(currentTurn === playerColor ? 'loss' : 'win');
         } else if (endReason === 'stalemate' || legalMoves.length === 0) {
           turnText.textContent = t.stalemate;
+          showDrawBanner(t.stalemate);
           reportGameEnd('draw');
         } else {
           turnText.textContent = (t.drawBy && t.drawBy(endReason)) || t.stalemate;
+          showDrawBanner(turnText.textContent);
           reportGameEnd('draw');
         }
       } else {

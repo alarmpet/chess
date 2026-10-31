@@ -76,7 +76,8 @@ export const SOUNDS = {
   mate: notes([523, 659, 784, 1047, 1319, 1568], 'triangle', 0.3, 0.2, 0.1),
   lose: notes([659, 554, 440, 370], 'triangle', 0.28, 0.14, 0.16),
   draw: notes([587, 587, 659], 'triangle', 0.22, 0.13, 0.15),
-  button: [tone(0, 0.03, 'sine', [1250, 900], 0.07)]
+  button: [tone(0, 0.03, 'sine', [1250, 900], 0.07)],
+  clap: [puff(0, 0.03, 3800, 0.42), puff(0.06, 0.04, 3200, 0.36), chirp(0.1, 1500, 2100, 0.08, 0.1)]
 };
 
 /** The latest moment any tone in a recipe is still ringing. */

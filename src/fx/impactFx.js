@@ -2,10 +2,11 @@
 // The stars are one InstancedMesh, so a burst costs one draw call however many fly.
 import * as THREE from 'three';
 import { IMPACT_TIERS, PIECE_SPARK } from './impactTier.js';
+import { fxSettings } from './settings.js';
 
 const MAX_SPARKS = 160;
 const GRAVITY = 1.6;
-const FX_SETTINGS_KEY = 'wildcrown.fx.v1';
+const DIZZY_HEIGHT = 0.46;
 
 function starGeometry() {
   const s = new THREE.Shape();
@@ -24,7 +25,9 @@ function wordTexture(text) {
   c.width = 256;
   c.height = 128;
   const g = c.getContext('2d');
-  g.font = '900 96px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
+  const font = (px) => `900 ${px}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`;
+  g.font = font(96);
+  g.font = font(Math.min(96, Math.floor((96 * 224) / g.measureText(text).width)));
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   g.lineJoin = 'round';
@@ -41,7 +44,7 @@ function wordTexture(text) {
 export function shakeAllowed() {
   try {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
-    return JSON.parse(window.localStorage.getItem(FX_SETTINGS_KEY) || '{}').shake !== false;
+    return fxSettings().shake;
   } catch (e) {
     return true;
   }
@@ -61,6 +64,10 @@ export function createImpactFx(scene) {
   const words = [];
   const squashes = [];
   const flashes = [];
+  const hops = [];
+  const dizzies = [];
+  const dizzyGeometry = starGeometry();
+  const dizzyMaterial = new THREE.MeshBasicMaterial({ color: 0xffe14d });
   let shakeLeft = 0;
   let shakePower = 0;
   const m = new THREE.Matrix4();
@@ -105,12 +112,16 @@ export function createImpactFx(scene) {
 
   function word(pos, tierId) {
     const tier = IMPACT_TIERS[tierId];
-    wordTex[tier.word] ||= wordTexture(tier.word);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: wordTex[tier.word], transparent: true, depthTest: false }));
+    label(pos, tier.word, tier.wordSize);
+  }
+
+  function label(pos, text, size) {
+    wordTex[text] ||= wordTexture(text);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: wordTex[text], transparent: true, depthTest: false }));
     sprite.position.set(pos.x, pos.y + 0.3, pos.z);
     sprite.renderOrder = 20;
     scene.add(sprite);
-    words.push({ sprite, age: 0, dur: 0.62, size: tier.wordSize });
+    words.push({ sprite, age: 0, dur: 0.62, size });
   }
 
   // Materials are shared between pieces of a role, so the flash works on this piece's own copies.
@@ -129,6 +140,22 @@ export function createImpactFx(scene) {
 
   function squash(root, base, amount, dur) {
     squashes.push({ root, base, amount, age: 0, dur });
+  }
+
+  function hop(root, height, dur) {
+    hops.push({ root, baseY: root.position.y, height, age: 0, dur });
+  }
+
+  // Stars circling the head of a bonked piece. The piece goes on bouncing away underneath them.
+  function dizzy(root, dur) {
+    const group = new THREE.Group();
+    for (let i = 0; i < 3; i++) {
+      const star = new THREE.Mesh(dizzyGeometry, dizzyMaterial);
+      star.scale.setScalar(0.028);
+      group.add(star);
+    }
+    scene.add(group);
+    dizzies.push({ root, group, age: 0, dur });
   }
 
   function shake(power) {
@@ -212,7 +239,28 @@ export function createImpactFx(scene) {
       q2.root.scale.set(q2.base * (1 + wob * 0.7), q2.base * (1 - wob), q2.base * (1 + wob * 0.7));
       if (u >= 1) squashes.splice(i, 1);
     }
+    for (let i = hops.length - 1; i >= 0; i--) {
+      const h = hops[i];
+      h.age += dt;
+      const u = Math.min(1, h.age / h.dur);
+      h.root.position.y = h.baseY + Math.sin(u * Math.PI) * h.height;
+      if (u >= 1) hops.splice(i, 1);
+    }
+    for (let i = dizzies.length - 1; i >= 0; i--) {
+      const d = dizzies[i];
+      d.age += dt;
+      d.group.children.forEach((star, n) => {
+        const a = d.age * 9 + (n / 3) * Math.PI * 2;
+        star.position.set(Math.cos(a) * 0.11, 0, Math.sin(a) * 0.11);
+        star.rotation.z = a;
+      });
+      d.group.position.set(d.root.position.x, d.root.position.y + DIZZY_HEIGHT, d.root.position.z);
+      if (d.age >= d.dur) {
+        scene.remove(d.group);
+        dizzies.splice(i, 1);
+      }
+    }
   }
 
-  return { burst, ring, word, flash, squash, shake, update, updateGame, shakeOffset };
+  return { burst, ring, word, label, flash, squash, hop, dizzy, shake, update, updateGame, shakeOffset };
 }

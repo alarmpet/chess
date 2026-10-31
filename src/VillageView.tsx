@@ -27,8 +27,12 @@ const modelFor = (slot: string, hearts: number) => {
   return `./packs/legend/${sp}${suffix}_${c}.glb`;
 };
 export const slotLabel = (slot: string, names: Record<string, string>) => {
+  if (names[slot]) return names[slot];
   const role = slotRole(slot);
-  return names[slot] || `${slot.slice(2)} ${SPECIES_KO[SPECIES[role]]}`;
+  const species = SPECIES_KO[SPECIES[role]];
+  if (role === 'pawn') return `${species} ${FILES.indexOf(slot[2]) + 1}호`;
+  if (role === 'king' || role === 'queen') return species;
+  return `${FILES.indexOf(slot[2]) < 4 ? '왼쪽' : '오른쪽'} ${species}`;
 };
 
 function mesh(geo: THREE.BufferGeometry, color: number) {
@@ -102,6 +106,8 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
 
   useEffect(() => {
     if (!open) return;
+    setPicking(null);
+    setNote('');
     const v = loadVillage();
     const t = Date.now();
     const events = tickVillage(v, villageRivals(), t);
@@ -336,7 +342,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
       <div className="village-canvas" ref={hostRef} />
       <div className="village-top">
         <span className="village-pill">🌰 {village?.coins ?? 0}</span>
-        <span className="village-pill">💗 오늘 {Math.min(village?.petCount ?? 0, PET_DAILY_CAP)}/{PET_DAILY_CAP}</span>
+        <span className="village-pill">🤚 오늘 쓰다듬기 {Math.min(village?.petCount ?? 0, PET_DAILY_CAP)}/{PET_DAILY_CAP}</span>
         {village?.build && <span className="village-pill">🔨 {BUILDINGS[village.build.kind as keyof typeof BUILDINGS].ko} {leftText}</span>}
         <button type="button" className="hud-btn village-close" onClick={onClose}>{lang === 'en' ? 'Back to the board' : '♟ 체스로'}</button>
       </div>
@@ -350,7 +356,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
               {summary.added.houses.length > 0 && ' · 승급한 폰의 집'}
             </div>
           )}
-          {hero && <div>{slotLabel(hero, village?.names || {})}이(가) 오늘 지나간 길을 다시 걷고 있어요.</div>}
+          {hero && <div>{slotLabel(hero, village?.names || {})}, 오늘 지나간 길을 다시 걷는 중이에요.</div>}
           {away.map((e, i) => (
             <div key={i}>
               {e.type === 'built' && `🔨 ${BUILDINGS[e.kind as keyof typeof BUILDINGS].ko} 완성!`}

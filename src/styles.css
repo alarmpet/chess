@@ -238,7 +238,7 @@ body.cinematic-ui-hidden #hud-bottom {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 78px;
+  padding-top: 118px;
   pointer-events: none;
   opacity: 0;
   transform: translateY(-12px) scale(0.97);
@@ -257,114 +257,126 @@ body.cinematic-ui-hidden #hud-bottom {
 .checkmate-banner {
   pointer-events: none;
   position: relative;
-  min-width: 480px;
+  min-width: 340px;
   max-width: 92vw;
-  padding: 22px 44px 20px;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.24), transparent 72%),
-    linear-gradient(180deg, rgba(14, 17, 26, 0.94) 0%, rgba(8, 10, 16, 0.96) 100%);
-  border: 1.5px solid rgba(212, 175, 55, 0.78);
-  border-radius: 6px;
-  box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.88),
-    0 0 42px rgba(212, 175, 55, 0.25),
-    inset 0 0 24px rgba(212, 175, 55, 0.12);
+  padding: 16px 28px 16px;
+  background: #fff8e4;
+  border: 3px solid #ffd27a;
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(90, 45, 12, 0.28);
   text-align: center;
-  backdrop-filter: blur(12px);
-}
-
-.checkmate-banner::before {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border: 1px solid rgba(212, 175, 55, 0.34);
-  border-radius: 3px;
-  pointer-events: none;
 }
 
 .checkmate-ornament {
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-  color: rgba(212, 175, 55, 0.85);
-  margin-bottom: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #a8743a;
+  margin-bottom: 2px;
 }
 
 .checkmate-crown {
-  font-size: 1.85rem;
-  line-height: 1;
-  color: var(--gold-bright);
-  text-shadow: 0 0 18px rgba(245, 215, 110, 0.75);
-  margin-bottom: 4px;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  color: #e0a11c;
 }
 
 .checkmate-title {
-  font-family: 'Cinzel', 'Georgia', 'Times New Roman', serif;
-  font-size: 2.35rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, #fff6d1 0%, #f5d76e 48%, #b8891e 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85));
-  margin: 2px 0 6px;
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #5a2d0c;
+  margin: 2px 0 2px;
 }
 
 .checkmate-rule {
-  width: 72%;
-  height: 1px;
-  margin: 8px auto 10px;
-  background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.85) 50%, transparent 100%);
+  display: none;
 }
 
 .checkmate-subtitle {
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 0.96rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #f0ece1;
-  margin-bottom: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #7a4a22;
+  margin-bottom: 12px;
+}
+
+.trophy-line {
+  margin-top: 4px;
+  color: #d9622b;
 }
 
 .checkmate-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .checkmate-btn {
-  background: rgba(212, 175, 55, 0.16);
-  border: 1px solid rgba(212, 175, 55, 0.62);
-  color: var(--gold-bright);
-  padding: 7px 16px;
-  border-radius: 4px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  background: #ffd27a;
+  border: none;
+  color: #5a2d0c;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .checkmate-btn:hover {
-  background: rgba(212, 175, 55, 0.30);
-  border-color: var(--gold-bright);
+  background: #ffc14d;
   transform: translateY(-1px);
 }
 
 .checkmate-btn.secondary {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: var(--muted);
+  background: #f1e6cc;
+  color: #7a4a22;
 }
 
 .checkmate-btn.secondary:hover {
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: #e8d8b4;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-icon {
+  font-size: 1.3rem;
+}
+
+.settings-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-text small {
+  opacity: 0.72;
+}
+
+.settings-switch {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.settings-switch.on {
+  background: #ffd27a;
+  color: #5a2d0c;
 }
 
 /* Initial Loading Overlay */

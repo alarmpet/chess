@@ -1,11 +1,11 @@
 import LookPanel from './LookPanel';
 import RivalPanel from './RivalPanel';
+import SettingsPanel from './SettingsPanel';
 import VillageView from './VillageView';
 import { loadVillage, settleFinishedGame } from './village/store';
 import { stageForHearts } from './village/economy.js';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
-import { sfx } from './audio/sfx.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
 
 export default function App() {
@@ -16,7 +16,7 @@ export default function App() {
   const [rivalOpen, setRivalOpen] = useState(false);
   const [villageOpen, setVillageOpen] = useState(false);
   const [lastGame, setLastGame] = useState<any>(null);
-  const [soundOn, setSoundOn] = useState(!sfx.isMuted());
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const t = getTranslations(lang);
 
   // A finished game pays the village at once; the card below is the way in.
@@ -287,14 +287,13 @@ export default function App() {
 
           <button
             className="hud-btn"
-            id="btn-sound"
-            aria-pressed={soundOn}
+            id="btn-settings"
             onClick={() => {
-              sfx.setMuted(soundOn);
-              setSoundOn(!soundOn);
+              setSettingsOpen(true);
+              setMobileSheetOpen(false);
             }}
           >
-            {soundOn ? (lang === 'en' ? '🔊 Sound on' : '🔊 소리 켜짐') : (lang === 'en' ? '🔇 Sound off' : '🔇 소리 꺼짐')}
+            {lang === 'en' ? '⚙️ Settings' : '⚙️ 설정'}
           </button>
 
           <div className="mobile-sheet-hint">
@@ -335,6 +334,7 @@ export default function App() {
 
       <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (
         <button type="button" className="village-toast" id="village-toast" onClick={() => setVillageOpen(true)}>
           🌰 +{lastGame.coins} · 💗 +{lastGame.hearts} — 마을로 가기
