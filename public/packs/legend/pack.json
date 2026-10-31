@@ -1,0 +1,674 @@
+{
+  "schema": 1,
+  "id": "legend",
+  "name": {
+    "ko": "레전드 — 두 발로 선 동물들",
+    "en": "Legend — animals on two legs"
+  },
+  "credits": "All six final-cast pieces are own assets made locally (ComfyUI Flux schnell concept -> local TRELLIS -> biped_rig.py), 2026-10-29. Attack/Hit/Kneel clips by tools/legend_add_clips.py. Kingdom colours by tools/kingdom_variant.py, starlit stage by tools/starlit_variant.py, trinkets by tools/make_prop.py. Remaining extra bipeds (wolf, zebra, unicorn, ...) are study-game characters.",
+  "assetBase": "./packs/legend/",
+  "environment": {
+    "type": "procedural",
+    "background": "#a7d8ff",
+    "fog": {
+      "color": "#bfe0b5",
+      "density": 0.04
+    },
+    "ground": {
+      "color": "#55803d",
+      "radius": 40
+    },
+    "hemi": {
+      "sky": "#d6ecff",
+      "ground": "#3b4d2c",
+      "intensity": 1.0
+    },
+    "sun": {
+      "color": "#fff4de",
+      "intensity": 2.3
+    },
+    "trees": {
+      "count": 70,
+      "innerRadius": 3.4,
+      "outerRadius": 16,
+      "canopy": [
+        "#2f7a3a",
+        "#3f8f45",
+        "#57a04f",
+        "#2b6b47"
+      ],
+      "trunk": "#5a3b23"
+    },
+    "rocks": {
+      "count": 24,
+      "color": "#8a8578"
+    }
+  },
+  "board": {
+    "light": "#e2cf97",
+    "dark": "#5e7f3c",
+    "rim": "#6b4a2b"
+  },
+  "pedestal": {
+    "w": "#efe4cf",
+    "b": "#2a2420",
+    "radius": 0.36,
+    "height": 0.09
+  },
+  "pieces": {
+    "pawn": {
+      "model": {
+        "w": "meerkat_w",
+        "b": "meerkat_b"
+      },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.0,
+      "clips": {
+        "idle": "Idle",
+        "move": "Walk",
+        "charge": "Run",
+        "attack": "Attack",
+        "hit": "Hit",
+        "shatter": "Kneel",
+        "victory": "Cheer",
+        "kneel": "Kneel",
+        "bored": "Sit",
+        "yawn": "Yawn",
+        "lookout": "Lookout"
+      },
+      "attackSync": {
+        "timeScale": 1.0,
+        "swingStartSec": 0.23,
+        "contactSec": 0.4,
+        "blowSec": 0.57,
+        "maxLunge": 0.1,
+        "standoff": 0.34
+      },
+      "stages": {
+        "grown": {
+          "w": "meerkat_s2_w",
+          "b": "meerkat_s2_b"
+        },
+        "adult": {
+          "w": "meerkat_s3_w",
+          "b": "meerkat_s3_b"
+        },
+        "starlit": {
+          "w": "meerkat_s4_w",
+          "b": "meerkat_s4_b"
+        }
+      }
+    },
+    "rook": {
+      "model": {
+        "w": "rhino_w",
+        "b": "rhino_b"
+      },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.22,
+      "clips": {
+        "idle": "Idle",
+        "move": "Walk",
+        "charge": "Run",
+        "attack": "Attack",
+        "hit": "Hit",
+        "shatter": "Kneel",
+        "victory": "Cheer",
+        "kneel": "Kneel",
+        "bored": "Sit",
+        "yawn": "Yawn"
+      },
+      "attackSync": {
+        "timeScale": 1.0,
+        "swingStartSec": 0.23,
+        "contactSec": 0.4,
+        "blowSec": 0.57,
+        "maxLunge": 0.07,
+        "standoff": 0.34
+      },
+      "stages": {
+        "grown": {
+          "w": "rhino_s2_w",
+          "b": "rhino_s2_b"
+        },
+        "adult": {
+          "w": "rhino_s3_w",
+          "b": "rhino_s3_b"
+        },
+        "starlit": {
+          "w": "rhino_s4_w",
+          "b": "rhino_s4_b"
+        }
+      },
+      "slots": [
+        "neck"
+      ]
+    },
+    "knight": {
+      "model": {
+        "w": "kangaroo_w",
+        "b": "kangaroo_b"
+      },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.3,
+      "clips": {
+        "idle": "Idle",
+        "move": "Run",
+        "charge": "Run",
+        "attack": "Attack",
+        "hit": "Hit",
+        "shatter": "Kneel",
+        "victory": "Cheer",
+        "kneel": "Kneel",
+        "bored": "Sit",
+        "yawn": "Yawn"
+      },
+      "attackSync": {
+        "timeScale": 1.0,
+        "swingStartSec": 0.23,
+        "contactSec": 0.4,
+        "blowSec": 0.57,
+        "maxLunge": 0.08,
+        "standoff": 0.34
+      },
+      "stages": {
+        "grown": {
+          "w": "kangaroo_s2_w",
+          "b": "kangaroo_s2_b"
+        },
+        "adult": {
+          "w": "kangaroo_s3_w",
+          "b": "kangaroo_s3_b"
+        },
+        "starlit": {
+          "w": "kangaroo_s4_w",
+          "b": "kangaroo_s4_b"
+        }
+      }
+    },
+    "bishop": {
+      "model": {
+        "w": "panda_w",
+        "b": "panda_b"
+      },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.36,
+      "clips": {
+        "idle": "Idle",
+        "move": "Walk",
+        "charge": "Run",
+        "attack": "Attack",
+        "hit": "Hit",
+        "shatter": "Kneel",
+        "victory": "Cheer",
+        "kneel": "Kneel",
+        "bored": "Sit",
+        "yawn": "Yawn"
+      },
+      "attackSync": {
+        "timeScale": 1.0,
+        "swingStartSec": 0.23,
+        "contactSec": 0.4,
+        "blowSec": 0.57,
+        "maxLunge": 0.07,
+        "standoff": 0.34
+      },
+      "stages": {
+        "grown": {
+          "w": "panda_s2_w",
+          "b": "panda_s2_b"
+        },
+        "adult": {
+          "w": "panda_s3_w",
+          "b": "panda_s3_b"
+        },
+        "starlit": {
+          "w": "panda_s4_w",
+          "b": "panda_s4_b"
+        }
+      },
+      "slots": [
+        "neck"
+      ]
+    },
+    "queen": {
+      "model": {
+        "w": "tiger_w",
+        "b": "tiger_b"
+      },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.48,
+      "clips": {
+        "idle": "Idle",
+        "move": "Walk",
+        "charge": "Run",
+        "attack": "Attack",
+        "hit": "Hit",
+        "shatter": "Kneel",
+        "victory": "Cheer",
+        "kneel": "Kneel",
+        "bored": "Sit",
+        "yawn": "Yawn"
+      },
+      "attackSync": {
+        "timeScale": 1.0,
+        "swingStartSec": 0.23,
+        "contactSec": 0.4,
+        "blowSec": 0.57,
+        "maxLunge": 0.09,
+        "standoff": 0.34
+      },
+      "stages": {
+        "grown": {
+          "w": "tiger_s2_w",
+          "b": "tiger_s2_b"
+        },
+        "adult": {
+          "w": "tiger_s3_w",
+          "b": "tiger_s3_b"
+        },
+        "starlit": {
+          "w": "tiger_s4_w",
+          "b": "tiger_s4_b"
+        }
+      }
+    },
+    "king": {
+      "model": {
+        "w": "lion_w",
+        "b": "lion_b"
+      },
+      "rig": "biped",
+      "keepMaterials": true,
+      "fitHeight": 1.6,
+      "clips": {
+        "idle": "Idle",
+        "move": "Walk",
+        "charge": "Run",
+        "attack": "Attack",
+        "hit": "Hit",
+        "shatter": "Kneel",
+        "victory": "Cheer",
+        "kneel": "Kneel",
+        "bored": "Sit",
+        "yawn": "Yawn",
+        "roar": "Roar"
+      },
+      "attackSync": {
+        "timeScale": 1.0,
+        "swingStartSec": 0.23,
+        "contactSec": 0.4,
+        "blowSec": 0.57,
+        "maxLunge": 0.08,
+        "standoff": 0.34
+      },
+      "slots": [
+        "neck"
+      ],
+      "stages": {
+        "grown": {
+          "w": "lion_s2_w",
+          "b": "lion_s2_b"
+        },
+        "adult": {
+          "w": "lion_s3_w",
+          "b": "lion_s3_b"
+        },
+        "starlit": {
+          "w": "lion_s4_w",
+          "b": "lion_s4_b"
+        }
+      }
+    }
+  },
+  "casting": {
+    "principle": "양 진영 같은 종(§10-17), 팀 틴트로 구분. 최종 캐스팅 전부 자체 제작: 사자·호랑이·코뿔소·판다·캥거루·미어캣.",
+    "king": "사자 — 로컬 ComfyUI 콘셉트 → TRELLIS → biped_rig (2026-10-29, 첫 자체 제작 기물)",
+    "queen": "호랑이 — 2026-10-29 자체 제작으로 교체(정면 A자세 콘셉트, 단계마다 같은 얼굴)",
+    "rook": "코뿔소 (자체 제작 2026-10-29)",
+    "bishop": "판다 — 2026-10-29 사용자 요청으로 여우에서 교체(자체 제작, 정면 A자세 콘셉트, 단계마다 같은 얼굴)",
+    "knight": "캥거루 (자체 제작 2026-10-29)",
+    "pawn": "미어캣 (자체 제작 2026-10-29)",
+    "kingdoms": "진영은 모델 자체로 구분(tools/kingdom_variant.py, 2026-10-29): 해의 왕국(w) 밝고 따뜻한 털 + 금색 띠, 달의 왕국(b) 어둡고 차가운 털 + 보라 띠. 런타임 teamTint 없음.",
+    "looks": "외형 단계 4개(아기·자람·의젓함·별빛 털)와 비무기 장식 4개(리본·꽃핀·밀짚모자·방울), 2026-10-29. 단계 2·3 은 1단계 콘셉트를 몸만 늘려(tools/stage_warp.py) img2img 로 다듬어 같은 얼굴을 유지, 4 는 3단계 + 별 무늬 굽기(tools/starlit_variant.py). 킹은 왕관이 있어 머리 슬롯 없음(§14.3).",
+    "fusion": "역할 퓨전(2026-10-30, PLAN §2.2.4): 정수리 = 스탠턴 표식 — 킹 십자 왕관 · 퀸 구슬 왕관 · 비숍 갈라진 주교관 · 나이트 말갈기·굴레 · 룩 성가퀴 관 · 폰 둥근 머리+털 고리. 발밑 상아/흑단 받침대. 콘셉트 Google Flow Nano Banana 2.1. 킹·비숍·룩은 표식을 가리지 않게 머리 슬롯 없음."
+  },
+  "looks": {
+    "note": {
+      "ko": "외형만 바뀌고 수는 같습니다.",
+      "en": "Looks only — every piece moves exactly the same."
+    },
+    "stages": [
+      {
+        "id": "baby",
+        "name": {
+          "ko": "아기",
+          "en": "Little"
+        },
+        "desc": {
+          "ko": "처음 모습. 둥근 머리, 큰 눈.",
+          "en": "The first look: round head, big eyes."
+        }
+      },
+      {
+        "id": "grown",
+        "name": {
+          "ko": "자람",
+          "en": "Growing up"
+        },
+        "desc": {
+          "ko": "같은 얼굴, 키와 다리가 자란 모습.",
+          "en": "Same face, taller with longer legs."
+        }
+      },
+      {
+        "id": "adult",
+        "name": {
+          "ko": "의젓함",
+          "en": "Grown-up"
+        },
+        "desc": {
+          "ko": "같은 얼굴, 어른 비율.",
+          "en": "Same face, grown-up proportions."
+        }
+      },
+      {
+        "id": "starlit",
+        "name": {
+          "ko": "별빛 털",
+          "en": "Starlit fur"
+        },
+        "desc": {
+          "ko": "의젓한 모습에 별 무늬 털.",
+          "en": "Grown-up look with star-speckled fur."
+        }
+      }
+    ]
+  },
+  "items": {
+    "ribbon": {
+      "model": "items/ribbon",
+      "slot": "head",
+      "name": {
+        "ko": "리본",
+        "en": "Ribbon bow"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0.3,
+          -0.12,
+          0.02
+        ],
+        "size": 0.4,
+        "tilt": [
+          0,
+          0,
+          -28
+        ]
+      }
+    },
+    "flower": {
+      "model": "items/flower",
+      "slot": "head",
+      "name": {
+        "ko": "꽃핀",
+        "en": "Flower clip"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          -0.2,
+          -0.16,
+          0.1
+        ],
+        "size": 0.3,
+        "tilt": [
+          0,
+          0,
+          22
+        ]
+      }
+    },
+    "strawhat": {
+      "model": "items/strawhat",
+      "slot": "head",
+      "name": {
+        "ko": "밀짚모자",
+        "en": "Straw hat"
+      },
+      "fit": {
+        "origin": "bottom",
+        "at": [
+          0,
+          -0.06,
+          0
+        ],
+        "size": 0.8,
+        "tilt": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "bell": {
+      "model": "items/bell",
+      "slot": "neck",
+      "name": {
+        "ko": "방울",
+        "en": "Jingle bell"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0,
+          0,
+          0.08
+        ],
+        "size": 0.34,
+        "tilt": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "bamboo_phones": {
+      "model": "items/bamboo_phones",
+      "slot": "head",
+      "name": {
+        "ko": "대나무 헤드폰",
+        "en": "Bamboo headphones"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0,
+          -0.3,
+          0
+        ],
+        "size": 0.86,
+        "tilt": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "leaf_shades": {
+      "model": "items/leaf_shades",
+      "slot": "head",
+      "name": {
+        "ko": "나뭇잎 선글라스",
+        "en": "Leaf sunglasses"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0,
+          -0.3,
+          0.5
+        ],
+        "size": 0.62,
+        "tilt": [
+          12,
+          0,
+          0
+        ],
+        "byStage": {
+          "grown": {
+            "at": [
+              0,
+              -0.35,
+              0.5
+            ],
+            "size": 0.5
+          },
+          "adult": {
+            "at": [
+              0,
+              -0.07,
+              0.46
+            ],
+            "size": 0.45
+          },
+          "starlit": {
+            "at": [
+              0,
+              -0.07,
+              0.46
+            ],
+            "size": 0.45
+          }
+        }
+      }
+    },
+    "acorn_beads": {
+      "model": "items/acorn_beads",
+      "slot": "neck",
+      "name": {
+        "ko": "도토리 목걸이",
+        "en": "Acorn beads"
+      },
+      "fit": {
+        "origin": "center",
+        "at": [
+          0,
+          0,
+          0
+        ],
+        "size": 0.7,
+        "tilt": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "rivals": [
+    {
+      "id": "picnic",
+      "name": {
+        "ko": "소풍 나온 미어캣단",
+        "en": "The Picnic Gang"
+      },
+      "blurb": {
+        "ko": "밀짚모자를 쓰고 소풍을 왔습니다. 수를 자주 흘립니다.",
+        "en": "Out for a picnic in straw hats. Often careless."
+      },
+      "mistake": 0.4,
+      "rewards": [
+        "strawhat",
+        "ribbon"
+      ],
+      "wear": {
+        "pawn": {
+          "head": "strawhat"
+        },
+        "knight": {
+          "head": "ribbon"
+        }
+      },
+      "visitsFor": "bench"
+    },
+    {
+      "id": "bamboo_band",
+      "name": {
+        "ko": "대숲 밴드",
+        "en": "The Bamboo Band"
+      },
+      "blurb": {
+        "ko": "헤드폰을 쓴 판다의 밴드. 가끔 박자를 놓칩니다.",
+        "en": "A band in bamboo headphones. Sometimes off the beat."
+      },
+      "mistake": 0.2,
+      "rewards": [
+        "bamboo_phones",
+        "flower"
+      ],
+      "wear": {
+        "pawn": {
+          "stage": "grown",
+          "head": "bamboo_phones"
+        },
+        "bishop": {
+          "stage": "grown"
+        },
+        "queen": {
+          "stage": "grown",
+          "head": "flower"
+        }
+      },
+      "visitsFor": "stage"
+    },
+    {
+      "id": "acorn_court",
+      "name": {
+        "ko": "도토리 궁정",
+        "en": "The Acorn Court"
+      },
+      "blurb": {
+        "ko": "선글라스를 낀 멋쟁이들. 실수가 거의 없습니다.",
+        "en": "Sharp dressers in sunglasses. Rarely slip up."
+      },
+      "mistake": 0.05,
+      "rewards": [
+        "leaf_shades",
+        "acorn_beads",
+        "bell"
+      ],
+      "wear": {
+        "pawn": {
+          "stage": "adult",
+          "head": "leaf_shades"
+        },
+        "knight": {
+          "stage": "adult",
+          "head": "leaf_shades"
+        },
+        "queen": {
+          "stage": "adult",
+          "neck": "acorn_beads"
+        },
+        "king": {
+          "stage": "adult",
+          "neck": "bell"
+        },
+        "rook": {
+          "stage": "adult"
+        },
+        "bishop": {
+          "stage": "adult"
+        }
+      },
+      "visitsFor": "fountain"
+    }
+  ]
+}

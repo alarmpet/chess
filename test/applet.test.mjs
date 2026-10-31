@@ -44,16 +44,13 @@ test('Simplified Single-Player HUD in src/App.tsx excludes speed sliders, notati
   }
 });
 
-test('All 7 compressed 3D assets (.glb.gz.b64) decode and gunzip to valid glTF 2.0 binary models', () => {
+test('All compressed 3D assets referenced by the cathedral pack (.glb.gz.b64) decode and gunzip to valid glTF 2.0 binary models', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/packs/cathedral/pack.json'), 'utf-8'));
   const expectedModels = [
-    'option8_cathedral',
-    'pawn_white',
-    'rook_white',
-    'knight_white',
-    'bishop_white',
-    'queen_white',
-    'king_white'
+    manifest.environment.model,
+    ...Object.values(manifest.pieces).map((p) => p.model)
   ];
+  assert.equal(expectedModels.length, 7);
 
   for (const name of expectedModels) {
     const b64Path = path.join(ROOT, 'public/assets/glb', `${name}.glb.gz.b64`);
