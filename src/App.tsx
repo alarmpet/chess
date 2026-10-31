@@ -1,6 +1,7 @@
 import LookPanel from './LookPanel';
 import RivalPanel from './RivalPanel';
 import SettingsPanel from './SettingsPanel';
+import CardLayer from './cards/CardLayer';
 import VillageView from './VillageView';
 import { loadVillage, settleFinishedGame } from './village/store';
 import { stageForHearts } from './village/economy.js';
@@ -17,6 +18,7 @@ export default function App() {
   const [villageOpen, setVillageOpen] = useState(false);
   const [lastGame, setLastGame] = useState<any>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cardsOpen, setCardsOpen] = useState(false);
   const t = getTranslations(lang);
 
   // A finished game pays the village at once; the card below is the way in.
@@ -287,6 +289,16 @@ export default function App() {
 
           <button
             className="hud-btn"
+            id="btn-cards"
+            onClick={() => {
+              setCardsOpen(true);
+              setMobileSheetOpen(false);
+            }}
+          >
+            {lang === 'en' ? '🃏 Cards' : '🃏 카드'}
+          </button>
+          <button
+            className="hud-btn"
             id="btn-settings"
             onClick={() => {
               setSettingsOpen(true);
@@ -335,6 +347,7 @@ export default function App() {
       <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (
         <button type="button" className="village-toast" id="village-toast" onClick={() => setVillageOpen(true)}>
           🌰 +{lastGame.coins} · 💗 +{lastGame.hearts} — 마을로 가기

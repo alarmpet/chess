@@ -905,6 +905,7 @@ export function initWizardChess() {
     let lastTrophy = null;
     let lastMoverType = null;
     let gameReported = false;       // the village is paid once per finished game
+    let gameId = Date.now() >>> 0;  // changes with every new game; cards use it to seed their rolls
     let renderPaused = false;       // the village screen draws its own scene on top
     let slotStages = {};            // start square → look stage earned in the village, e.g. { w_e2: 'grown' }
     function slotRole(id) {
@@ -928,7 +929,7 @@ export function initWizardChess() {
     function reportGameEnd(result) {
       if (gameReported || gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
       gameReported = true;
-      const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId };
+      const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId, gameId };
       try { window.dispatchEvent(new CustomEvent('gamefinished', { detail })); } catch (e) {}
     }
     function activeRival() {
@@ -2461,6 +2462,7 @@ export function initWizardChess() {
     function resetChessBoard(orientCamera = true, preserveScript = false) {
       rivalPaid = false;
       gameReported = false;
+      gameId = (gameId + 1) >>> 0;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -2788,6 +2790,7 @@ export function initWizardChess() {
       impactFx.word(ground, tierId);
       impactFx.shake(tier.shake);
       sfx.impact(tierId, attackerType);
+      reportCapture(captured, ground);
       if (captured.rig !== 'statue' && captured.mesh) {
         impactFx.flash(captured.mesh);
         impactFx.squash(captured.mesh, BOARD_SQ_SIZE, 0.42, 0.32);
@@ -2838,6 +2841,14 @@ export function initWizardChess() {
         impactFx.label(kingGround, '체크!', 0.13);
         if (enemyKing?.mesh && enemyKing.rig !== 'statue') impactFx.hop(enemyKing.mesh, 0.09, 0.34);
       }
+    }
+
+    // Only what happened on the board goes out; cards are decided elsewhere and cannot touch the game.
+    function reportCapture(captured, ground) {
+      if (gameMode !== 'single' || scriptedGameActive || captured.color === playerColor || playerColor === 'spectator') return;
+      const at = ground.clone().project(camera);
+      const detail = { gameId, ply: referee.history().length, type: captured.type, x: (at.x + 1) * 50, y: (1 - at.y) * 50 };
+      window.dispatchEvent(new CustomEvent('piececaptured', { detail }));
     }
 
     function spawnDustPuff(worldPos) {

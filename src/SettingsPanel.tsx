@@ -9,7 +9,7 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
   if (!open) return null;
 
   const en = lang === 'en';
-  const setOption = (key: 'shake' | 'quick', value: boolean) => {
+  const setOption = (key: 'shake' | 'quick' | 'cards', value: boolean) => {
     const next = { ...fx, [key]: value };
     setFx(next);
     writeFxSettings(window.localStorage, next);
@@ -17,6 +17,7 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
   const rows = [
     { id: 'sound', icon: soundOn ? '🔊' : '🔇', label: en ? 'Sound' : '소리', hint: en ? 'Animal voices and effects' : '동물 목소리와 효과음', on: soundOn, toggle: () => { sfx.setMuted(soundOn); setSoundOn(!soundOn); } },
     { id: 'shake', icon: '📳', label: en ? 'Screen shake' : '화면 흔들림', hint: en ? 'Shake on big captures' : '큰 잡기 때 화면이 흔들립니다', on: fx.shake, toggle: () => setOption('shake', !fx.shake) },
+    { id: 'cards', icon: '🃏', label: en ? 'Capture cards' : '잡기 카드', hint: en ? 'Captures drop cards' : '말을 잡으면 카드가 나옵니다', on: fx.cards, toggle: () => setOption('cards', !fx.cards) },
     { id: 'quick', icon: '⚡', label: en ? 'Quick games' : '빠른 대국', hint: en ? 'Skips the capture close-up' : '잡을 때 카메라가 다가가지 않습니다', on: fx.quick, toggle: () => setOption('quick', !fx.quick) }
   ];
 
