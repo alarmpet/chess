@@ -846,7 +846,7 @@ body.cinematic-ui-hidden #hud-bottom {
 .village-build-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .village-toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 30; padding: 12px 20px; border: 0; border-radius: 999px; background: #ffdf8a; color: #4a3b2a; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); }
 
-/* Capture cards. The foil is plain gradients blended over the art, so rarity costs no extra images. */
+/* Capture cards. The art holds the frame; the foil is a gradient cut to the same shape, so a shine costs no extra image. */
 .wc-card {
   --mx: 50%;
   --my: 30%;
@@ -855,47 +855,32 @@ body.cinematic-ui-hidden #hud-bottom {
   position: relative;
   width: 132px;
   aspect-ratio: 5 / 7;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #fff;
-  border: 4px solid #fff;
-  box-shadow: 0 4px 12px rgba(40, 24, 8, 0.28);
   transform: perspective(600px) rotateX(var(--rx)) rotateY(var(--ry));
   transition: transform 0.12s ease-out;
-  color: #4a2a0e;
+  filter: drop-shadow(0 4px 6px rgba(40, 24, 8, 0.35));
   font-family: inherit;
 }
-.wc-card.sm { width: 92px; border-width: 3px; border-radius: 11px; }
-.wc-card.lg { width: 190px; border-width: 5px; border-radius: 18px; }
-.wc-card-art { position: absolute; inset: 0 0 24% 0; z-index: 1; display: flex; align-items: center; justify-content: center; }
-.wc-card-art img { max-width: 88%; max-height: 92%; object-fit: contain; user-select: none; }
-.wc-card-foil { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-.wc-card-label { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; padding: 4px 4px 5px; text-align: center; font-weight: 800; line-height: 1.1; background: rgba(255, 255, 255, 0.88); }
-.wc-card-label span { display: block; font-size: 0.86em; }
-.wc-card-label small { display: block; font-size: 0.68em; opacity: 0.72; font-weight: 700; }
-.wc-card.sm .wc-card-label { font-size: 0.78rem; padding: 3px 2px 4px; }
-.wc-card.r-common { background: linear-gradient(160deg, #fff8e8, #ffe9c9); border-color: #fff; }
-.wc-card.r-uncommon { background: linear-gradient(160deg, #e6f4ff, #d9e6ff 55%, #f0ddff); border-color: #c9d6e6; }
-.wc-card.r-uncommon .wc-card-foil { background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.9) 50%, transparent 62%); background-size: 240% 100%; background-position: var(--mx) 0; }
-.wc-card.r-rare { background: radial-gradient(circle at 50% 40%, #6a4bd8, #2a1a6e 70%, #150c40); border-color: #b48cff; box-shadow: 0 0 14px rgba(160, 110, 255, 0.65); }
-.wc-card.r-rare .wc-card-foil { opacity: 0.8; background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.55), transparent 42%), repeating-linear-gradient(115deg, #ff7ab8 0, #ffe27a 9%, #7affc8 18%, #7ac6ff 27%, #c88aff 36%, #ff7ab8 45%); background-position: 0 0, var(--mx) var(--my); background-size: 100% 100%, 220% 220%; }
-.wc-card.r-rare .wc-card-label { background: rgba(28, 16, 80, 0.82); color: #f2e8ff; }
-.wc-card.r-hero { background: radial-gradient(circle at 50% 38%, #3a2a8a, #120a3a 62%, #060318); border-color: #ffd66b; box-shadow: 0 0 20px rgba(255, 205, 90, 0.85); }
-.wc-card.r-hero .wc-card-foil { mix-blend-mode: screen; background: radial-gradient(1.5px 1.5px at 18% 22%, #fff, transparent), radial-gradient(1.5px 1.5px at 72% 14%, #fff, transparent), radial-gradient(2px 2px at 84% 56%, #ffe9a8, transparent), radial-gradient(1.5px 1.5px at 30% 66%, #fff, transparent), radial-gradient(2px 2px at 58% 38%, #ffe9a8, transparent), linear-gradient(120deg, transparent 30%, rgba(255, 214, 107, 0.55) 50%, transparent 70%); background-size: auto, auto, auto, auto, auto, 260% 100%; animation: wc-gold 3.2s linear infinite; }
-.wc-card.r-hero .wc-card-label { background: linear-gradient(90deg, #ffcf5e, #fff0b8, #ffcf5e); }
-@keyframes wc-gold { from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 130% 0; } to { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, -130% 0; } }
-.wc-card.empty { background: #e9e1d2; border-color: #f5efe2; box-shadow: none; }
-.wc-card.empty img { filter: brightness(0) opacity(0.16); }
-.wc-card.empty .wc-card-foil { display: none; }
-.wc-card.empty .wc-card-label { background: transparent; color: #9a8a70; }
-.wc-card-new { position: absolute; z-index: 3; top: 4px; left: 4px; padding: 1px 6px; border-radius: 999px; background: #ff5a7a; color: #fff; font-size: 0.62rem; font-weight: 900; }
-.wc-card-spares { position: absolute; z-index: 3; top: 5px; right: 5px; display: flex; gap: 2px; align-items: center; }
+.wc-card.sm { width: 104px; }
+.wc-card.lg { width: 220px; }
+.wc-card > img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; }
+.wc-card-foil { position: absolute; inset: 0; pointer-events: none; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; mix-blend-mode: soft-light; opacity: 0.42; }
+.wc-card.r-rare .wc-card-foil { background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.85), transparent 46%), linear-gradient(115deg, #ff7ab8, #ffe27a 28%, #7affc8 52%, #7ac6ff 74%, #c88aff); }
+.wc-card.r-hero .wc-card-foil { background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.9), transparent 44%), linear-gradient(120deg, transparent 30%, rgba(255, 236, 170, 0.95) 50%, transparent 70%); background-size: 100% 100%, 260% 100%; animation: wc-gold 3.2s linear infinite; }
+@keyframes wc-gold { from { background-position: 0 0, 130% 0; } to { background-position: 0 0, -130% 0; } }
+.wc-card-label { position: absolute; left: 12%; right: 12%; bottom: 8%; height: 9%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 0.95rem; -webkit-text-stroke: 3px #3c2208; paint-order: stroke fill; }
+.wc-card.sm .wc-card-label { font-size: 0.74rem; -webkit-text-stroke-width: 2.5px; }
+.wc-card.lg .wc-card-label { font-size: 1.4rem; -webkit-text-stroke-width: 4px; }
+.wc-card.empty { filter: none; }
+.wc-card.empty img { filter: brightness(0) opacity(0.13); }
+.wc-card.empty .wc-card-label { color: #a89878; -webkit-text-stroke: 0; }
+.wc-card-new { position: absolute; z-index: 3; top: 7%; left: 6%; padding: 1px 6px; border-radius: 999px; background: #ff5a7a; color: #fff; font-size: 0.62rem; font-weight: 900; }
+.wc-card-spares { position: absolute; z-index: 3; top: 7%; right: 6%; padding: 2px 3px; border-radius: 8px; background: rgba(255, 255, 255, 0.82); display: flex; gap: 2px; align-items: center; }
 .wc-card-spares i { width: 7px; height: 7px; border-radius: 50%; background: rgba(0, 0, 0, 0.18); }
 .wc-card-spares i.on { background: #ffb300; box-shadow: 0 0 0 1px #fff; }
 .wc-card-spares b { font-size: 0.62rem; color: #7a4a22; background: #fff; border-radius: 6px; padding: 0 3px; }
 .card-fly { position: fixed; z-index: 40; pointer-events: none; transform: translate(-50%, -50%); animation: card-fly-away 0.9s ease-in forwards; }
 .card-fly.rare, .card-fly.hero { left: 50% !important; top: 42% !important; animation: card-show 1.5s ease-out forwards; }
-.card-fly.hero .wc-card { box-shadow: 0 0 60px 14px rgba(255, 205, 90, 0.9); }
+.card-fly.hero .wc-card { filter: drop-shadow(0 0 26px rgba(255, 205, 90, 0.95)); }
 @keyframes card-fly-away {
   0% { transform: translate(-50%, -50%) scale(0.3) rotate(-14deg); opacity: 0; }
   22% { transform: translate(-50%, -120%) scale(1) rotate(6deg); opacity: 1; }
@@ -925,7 +910,7 @@ body.cinematic-ui-hidden #hud-bottom {
 .card-gauges > div { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
 .card-gauges span { width: 72px; }
 .card-gauges meter { flex: 1; height: 10px; }
-.card-grid { display: grid; grid-template-columns: repeat(4, 92px); gap: 8px; justify-content: center; }
+.card-grid { display: grid; grid-template-columns: repeat(4, 104px); gap: 6px; justify-content: center; }
 .card-odds-toggle { display: block; margin: 12px auto 6px; border: none; background: none; color: #7a4a22; text-decoration: underline; cursor: pointer; }
 .card-odds { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .card-odds th, .card-odds td { padding: 3px 4px; text-align: right; border-bottom: 1px solid #efdfbf; }
@@ -938,6 +923,22 @@ body.cinematic-ui-hidden #hud-bottom {
   85% { transform: scale(1); opacity: 1; }
   100% { transform: scale(0.9); opacity: 0; }
 }
+.card-slot { padding: 0; border: 0; background: none; border-radius: 13px; cursor: pointer; }
+.card-slot:disabled { cursor: default; }
+.card-slot.shelved { outline: 3px solid #ff9d5c; outline-offset: 2px; }
+.card-shelf { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-weight: 700; font-size: 0.86rem; }
+.card-shelf button { padding: 4px 10px; border: none; border-radius: 999px; background: #ffd27a; color: #5a2d0c; font-weight: 800; cursor: pointer; }
+.card-shelf small { flex-basis: 100%; opacity: 0.7; font-weight: 600; }
+.card-note { position: fixed; z-index: 70; left: 50%; top: 176px; transform: translateX(-50%); padding: 8px 16px; border-radius: 999px; background: rgba(40, 24, 8, 0.86); color: #fff; font-weight: 700; pointer-events: none; }
+.mission-offer { position: fixed; z-index: 26; left: 16px; top: 176px; display: flex; flex-direction: column; gap: 6px; width: 210px; padding: 10px; border-radius: 16px; background: #fff8e4; color: #5a2d0c; box-shadow: 0 4px 14px rgba(40, 24, 8, 0.3); }
+.mission-offer button { padding: 7px 10px; border: none; border-radius: 12px; background: #ffd27a; color: #5a2d0c; font-weight: 800; text-align: left; cursor: pointer; }
+.mission-offer button.skip { background: none; font-weight: 600; text-align: center; }
+.mission-chip { position: fixed; z-index: 26; left: 16px; top: 176px; max-width: 240px; padding: 7px 12px; border-radius: 999px; background: #fff8e4; color: #5a2d0c; font-weight: 800; font-size: 0.84rem; box-shadow: 0 4px 12px rgba(40, 24, 8, 0.28); }
+.mission-chip.done { background: #bdf0b4; }
+.mission-chip.lost { opacity: 0.7; }
+.card-skills { position: fixed; z-index: 26; right: 16px; bottom: 112px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.card-skills button { padding: 8px 14px; border: none; border-radius: 999px; background: #8a6cff; color: #fff; font-weight: 800; box-shadow: 0 4px 12px rgba(40, 24, 8, 0.3); cursor: pointer; }
+.card-merge-show { flex-wrap: wrap; gap: 10px; padding: 24px; }
 @media (prefers-reduced-motion: reduce) {
   .wc-card.r-hero .wc-card-foil, .card-toast.ready { animation: none; }
 }

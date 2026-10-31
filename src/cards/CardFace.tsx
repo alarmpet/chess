@@ -1,12 +1,12 @@
 import { useRef, type PointerEvent } from 'react';
-import { RARITIES } from './economy.js';
+import { RARE, RARITIES } from './economy.js';
 
 export const RARITY_KO = ['일반', '고급', '희귀', '영웅'];
 export const RARITY_EN = ['Common', 'Uncommon', 'Rare', 'Hero'];
 export const ANIMAL_KO: Record<string, string> = { meerkat: '미어캣', kangaroo: '캥거루', panda: '판다', rhino: '코뿔소', tiger: '호랑이', lion: '사자' };
 export const ANIMAL_EN: Record<string, string> = { meerkat: 'Meerkat', kangaroo: 'Kangaroo', panda: 'Panda', rhino: 'Rhino', tiger: 'Tiger', lion: 'Lion' };
 
-// The material says the rarity at a glance: matte, silver, rainbow foil, gold. Pointer position drives the foil.
+// The art carries its own frame: wood, silver, foil, then borderless. Pointer position only adds a sheen on top.
 export default function CardFace({ animal, rarity, owned = true, isNew = false, spares = 0, lang, size = 'md' }: {
   animal: string; rarity: number; owned?: boolean; isNew?: boolean; spares?: number; lang: 'ko' | 'en'; size?: 'sm' | 'md' | 'lg';
 }) {
@@ -24,18 +24,14 @@ export default function CardFace({ animal, rarity, owned = true, isNew = false, 
   const onLeave = () => {
     for (const k of ['--mx', '--my', '--rx', '--ry']) el.current?.style.removeProperty(k);
   };
+  const art = `./packs/legend/cards/${animal}_${rarity}.webp`;
   const name = (lang === 'en' ? ANIMAL_EN : ANIMAL_KO)[animal];
   const grade = (lang === 'en' ? RARITY_EN : RARITY_KO)[rarity];
   return (
     <div ref={el} className={`wc-card r-${RARITIES[rarity]} ${size}${owned ? '' : ' empty'}`} onPointerMove={onMove} onPointerLeave={onLeave}>
-      <div className="wc-card-art">
-        <img src={`./packs/legend/cards/${animal}_${rarity}.webp`} alt={owned ? `${grade} ${name}` : ''} draggable={false} />
-      </div>
-      <div className="wc-card-foil" aria-hidden="true"></div>
-      <div className="wc-card-label">
-        <span>{owned ? name : '?'}</span>
-        <small>{grade}</small>
-      </div>
+      <img src={art} alt={owned ? `${grade} ${name}` : ''} draggable={false} />
+      {owned && rarity >= RARE && <div className="wc-card-foil" aria-hidden="true" style={{ WebkitMaskImage: `url(${art})`, maskImage: `url(${art})` }}></div>}
+      <div className="wc-card-label">{owned ? name : '?'}</div>
       {isNew && <div className="wc-card-new">NEW</div>}
       {spares > 0 && (
         <div className="wc-card-spares" aria-label={`${spares}`}>

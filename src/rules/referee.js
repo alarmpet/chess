@@ -215,4 +215,16 @@ export class Referee {
   undo() {
     return this.chess.undo();
   }
+
+  /** Squares of `color`'s pieces that the other side attacks right now. */
+  threatened(color) {
+    const enemy = color === 'w' ? 'b' : 'w';
+    const out = [];
+    for (const row of this.chess.board()) {
+      for (const p of row) {
+        if (p && p.color === color && this.chess.isAttacked(p.square, enemy)) out.push(p.square);
+      }
+    }
+    return out;
+  }
 }

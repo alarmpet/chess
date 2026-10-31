@@ -4,8 +4,10 @@ import assert from 'node:assert/strict';
 import {
   ANIMALS, COMMON, DROP_TABLE, HERO, HERO_GUARANTEE, MERGE_COST, RARE, RARE_GUARANTEE,
   awardCard, canMerge, cardId, consolationCard, mergeCard, mergeList, newCollection,
-  rarityFromRoll, sanitizeCollection, seededRoll, sparesOf
+  rarityFromRoll, sanitizeCollection, seededRoll, sparesOf,
+  DUST_HERO, DUST_RARE, RARE_KEEP, SHELF_BASE, SHELF_MAX, buyShelfSlot, convertOverflow, shelfPrice, toggleShelf
 } from '../src/cards/economy.js';
+import { advanceMission, missionChoices, MISSIONS } from '../src/cards/missions.js';
 
 const done = () => ({ ...newCollection(), firstDone: true });
 
@@ -132,4 +134,86 @@ test('the rules code knows nothing about cards', async () => {
     const text = await readFile(new URL(`../src/rules/${f}`, import.meta.url), 'utf8');
     assert.ok(!/cards\//.test(text), f);
   }
+});
+
+test('a floor lifts a drop and a boost raises it, but a boost alone never makes a hero', () => {
+  const col = done();
+  assert.equal(awardCard(col, 'pawn', 0, { floor: 1 }).rarity, 1);
+  assert.equal(awardCard(col, 'pawn', 0, { boost: true }).rarity, 1);
+  assert.equal(awardCard(col, 'queen', 0.5, { boost: true }).rarity, RARE);
+  assert.equal(awardCard(col, 'queen', 0.8, { boost: true }).rarity, RARE);
+});
+
+test('overflow turns to stardust and never touches the album copy', () => {
+  const col = done();
+  col.cards[cardId('lion', RARE)] = 1 + RARE_KEEP + 2;
+  col.cards[cardId('tiger', HERO)] = 3;
+  col.cards[cardId('panda', COMMON)] = 40;
+  assert.equal(convertOverflow(col), 2 * DUST_RARE + 2 * DUST_HERO);
+  assert.equal(sparesOf(col, 'lion', RARE), RARE_KEEP);
+  assert.equal(col.cards[cardId('tiger', HERO)], 1);
+  assert.equal(col.cards[cardId('panda', COMMON)], 40);
+  assert.equal(convertOverflow(col), 0);
+});
+
+test('the village shelf holds owned cards only, and more slots cost stardust', () => {
+  const col = done();
+  assert.equal(toggleShelf(col, 'lion_3'), false);
+  for (const a of ANIMALS) col.cards[cardId(a, COMMON)] = 1;
+  for (const a of ANIMALS.slice(0, SHELF_BASE)) assert.equal(toggleShelf(col, cardId(a, COMMON)), true);
+  assert.equal(toggleShelf(col, cardId('lion', COMMON)), false);
+  assert.equal(toggleShelf(col, cardId(ANIMALS[0], COMMON)), true);
+  assert.equal(col.shelf.length, SHELF_BASE - 1);
+  assert.equal(buyShelfSlot(col), false);
+  col.dust = shelfPrice(col);
+  assert.equal(buyShelfSlot(col), true);
+  assert.equal(col.dust, 0);
+  col.dust = 100000;
+  while (buyShelfSlot(col));
+  assert.equal(col.shelfSlots, SHELF_MAX);
+  assert.equal(shelfPrice(col), null);
+});
+
+test('older saves keep their cards and gain the new fields', () => {
+  const col = sanitizeCollection({ v: 1, cards: { lion_1: 2 }, sinceRare: 3, sinceHero: 4, firstDone: true });
+  assert.equal(col.cards.lion_1, 2);
+  assert.equal(col.dust, 0);
+  assert.equal(col.shelfSlots, SHELF_BASE);
+  assert.deepEqual(sanitizeCollection({ v: 1, cards: {}, shelf: ['lion_1'] }).shelf, []);
+});
+
+test('three different missions are offered, and the same roll offers the same ones', () => {
+  const a = missionChoices(0.37);
+  assert.equal(a.length, 3);
+  assert.equal(new Set(a.map((m) => m.id)).size, 3);
+  assert.deepEqual(a, missionChoices(0.37));
+  for (let i = 0; i < 40; i++) assert.equal(new Set(missionChoices(i / 40).map((m) => m.id)).size, 3);
+});
+
+test('a race goes to whoever captures that animal first', () => {
+  const race = MISSIONS.find((m) => m.kind === 'race' && m.target === 'bishop');
+  assert.equal(advanceMission(race, { capture: { type: 'pawn', byPlayer: true } }), null);
+  assert.equal(advanceMission(race, { capture: { type: 'bishop', byPlayer: true } }), 'done');
+  assert.equal(advanceMission(race, { capture: { type: 'bishop', byPlayer: false } }), 'lost');
+});
+
+test('a piece mission needs that piece to make the capture', () => {
+  const m = MISSIONS.find((x) => x.kind === 'with' && x.attacker === 'knight');
+  assert.equal(advanceMission(m, { capture: { type: 'pawn', byPlayer: true, attackerType: 'rook' } }), null);
+  assert.equal(advanceMission(m, { capture: { type: 'pawn', byPlayer: false, attackerType: 'knight' } }), null);
+  assert.equal(advanceMission(m, { capture: { type: 'pawn', byPlayer: true, attackerType: 'knight' } }), 'done');
+});
+
+test('a safety mission fails on losing the piece and passes by surviving', () => {
+  const m = MISSIONS.find((x) => x.kind === 'safe');
+  assert.equal(advanceMission(m, { capture: { type: m.piece, byPlayer: false } }), 'lost');
+  assert.equal(advanceMission(m, { capture: { type: m.piece, byPlayer: true } }), null);
+  assert.equal(advanceMission(m, { ply: m.plies - 1 }), null);
+  assert.equal(advanceMission(m, { ply: m.plies }), 'done');
+});
+
+test('threatened squares are read from the position', async () => {
+  const { Referee } = await import('../src/rules/referee.js');
+  const r = new Referee('4k3/8/8/4r3/8/8/8/R3K2R w - - 0 1');
+  assert.deepEqual(r.threatened('w'), ['e1']);
 });

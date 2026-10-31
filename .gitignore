@@ -9,3 +9,7 @@ Thumbs.db
 
 # tri-agent-review 라운드 작업 폴더 (완료 후 docs/research/agent-rounds/ 로 옮김)
 .reports/
+
+# Downloaded review text stays local
+docs/research/agent-rounds/2026-10-31-town-survey/steam-dumps/
+docs/research/agent-rounds/2026-10-31-town-survey/steam-dumps-A/

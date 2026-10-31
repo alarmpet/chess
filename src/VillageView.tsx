@@ -7,6 +7,7 @@ import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.j
 import { BUILDINGS, PET_DAILY_CAP, buildBlocked, pet, stageForHearts, startBuild, tickVillage } from './village/economy.js';
 import { villageTiles } from './village/roster.js';
 import { sfx } from './audio/sfx.js';
+import { loadCollection } from './cards/store';
 import { loadVillage, saveVillage, villageRivals } from './village/store';
 
 const FILES = 'abcdefgh';
@@ -178,6 +179,28 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     }
     const marks = new THREE.Group();
     scene.add(marks);
+
+    // Cards the player chose stand on a shelf behind the green, so the collection lives somewhere it can be seen.
+    const shelf = loadCollection().shelf as string[];
+    shelf.forEach((id, i) => {
+      const [animal, rarity] = id.split('_');
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 560;
+      const g = canvas.getContext('2d')!;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const img = new Image();
+      img.onload = () => {
+        g.drawImage(img, 0, 0, 400, 560);
+        texture.needsUpdate = true;
+      };
+      img.src = `./packs/legend/cards/${animal}_${rarity}.webp`;
+      const card = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.54), new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.05 }));
+      card.position.set((i - (shelf.length - 1) / 2) * 1.35, 0.95, -5);
+      card.rotation.x = -0.35;
+      scene.add(card);
+    });
 
     const loader = new GLTFLoader();
     const mixers: THREE.AnimationMixer[] = [];

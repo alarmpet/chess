@@ -2391,7 +2391,7 @@ export function initWizardChess() {
       };
     }
 
-    function restoreBoardSnapshot(snap) {
+    function restoreBoardSnapshot(snap, { keepReferee = false } = {}) {
       if (!snap) return false;
       if (aiTimer) {
         clearTimeout(aiTimer);
@@ -2443,7 +2443,9 @@ export function initWizardChess() {
           }
         }
       }
-      if (snap.fen) {
+      if (keepReferee) {
+        // The referee already stepped back with its history intact; loading a position would wipe the moves.
+      } else if (snap.fen) {
         try {
           referee.load(snap.fen);
         } catch (e) {
@@ -2463,6 +2465,7 @@ export function initWizardChess() {
       rivalPaid = false;
       gameReported = false;
       gameId = (gameId + 1) >>> 0;
+      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId } }));
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -2698,6 +2701,35 @@ export function initWizardChess() {
       }
     }
 
+    // Marks the player's pieces under attack. Purely a reading aid: the marks clear with the next selection.
+    function showThreats() {
+      if (isAnimatingMove || gameOver || currentTurn !== playerColor) return -1;
+      clearSquareHighlights();
+      const squares = referee.threatened(playerColor);
+      for (const sq of squares) {
+        const geo = new THREE.RingGeometry(0.11, 0.165, 32);
+        geo.rotateX(-Math.PI / 2);
+        const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xff5a7a, side: THREE.DoubleSide }));
+        const pos = boardToWorld(8 - Number(sq[1]), sq.charCodeAt(0) - 97);
+        mesh.position.set(pos.x, BOARD_SURFACE_Y + 0.012, pos.z);
+        squareHighlightsGroup.add(mesh);
+        impactFx.label(new THREE.Vector3(pos.x, BOARD_SURFACE_Y + 0.3, pos.z), '위험!', 0.12);
+      }
+      return squares.length;
+    }
+
+    // Takes back the player's last move and the reply. The referee undoes the moves itself, so the game record stays whole.
+    function takeBackMove() {
+      if (gameMode !== 'single' || scriptedGameActive || isAnimatingMove || gameOver || currentTurn !== playerColor) return false;
+      if (moveHistory.length < 2 || referee.history().length < 2) return false;
+      referee.undo();
+      referee.undo();
+      moveHistory.pop();
+      const entry = moveHistory.pop();
+      restoreBoardSnapshot(entry.snapshot, { keepReferee: true });
+      return true;
+    }
+
     function showSquareHighlights(r, c, moves) {
       clearSquareHighlights();
       const selGeo = new THREE.RingGeometry(0.115, 0.155, 32);
@@ -2790,7 +2822,7 @@ export function initWizardChess() {
       impactFx.word(ground, tierId);
       impactFx.shake(tier.shake);
       sfx.impact(tierId, attackerType);
-      reportCapture(captured, ground);
+      reportCapture(captured, ground, attackerType);
       if (captured.rig !== 'statue' && captured.mesh) {
         impactFx.flash(captured.mesh);
         impactFx.squash(captured.mesh, BOARD_SQ_SIZE, 0.42, 0.32);
@@ -2811,6 +2843,9 @@ export function initWizardChess() {
     // Everything here plays over the next turn instead of delaying it.
     function playMoveOutcome(moverColor, quietMove, promoted, landing, castleRookPiece) {
       const san = referee.history().at(-1)?.san || '';
+      if (gameMode === 'single' && !scriptedGameActive) {
+        window.dispatchEvent(new CustomEvent('movelanded', { detail: { gameId, ply: referee.history().length } }));
+      }
       const ground = new THREE.Vector3(landing.x, BOARD_SURFACE_Y, landing.z);
       const enemyKing = kingOf(moverColor === 'w' ? 'b' : 'w');
       const kingGround = enemyKing?.mesh ? new THREE.Vector3(enemyKing.mesh.position.x, BOARD_SURFACE_Y, enemyKing.mesh.position.z) : ground;
@@ -2844,10 +2879,11 @@ export function initWizardChess() {
     }
 
     // Only what happened on the board goes out; cards are decided elsewhere and cannot touch the game.
-    function reportCapture(captured, ground) {
-      if (gameMode !== 'single' || scriptedGameActive || captured.color === playerColor || playerColor === 'spectator') return;
+    function reportCapture(captured, ground, attackerType) {
+      if (gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
       const at = ground.clone().project(camera);
-      const detail = { gameId, ply: referee.history().length, type: captured.type, x: (at.x + 1) * 50, y: (1 - at.y) * 50 };
+      const byPlayer = captured.color !== playerColor;
+      const detail = { gameId, ply: referee.history().length, type: captured.type, attackerType, byPlayer, x: (at.x + 1) * 50, y: (1 - at.y) * 50 };
       window.dispatchEvent(new CustomEvent('piececaptured', { detail }));
     }
 
@@ -5434,6 +5470,8 @@ export function initWizardChess() {
       setCosmetics,
       debugImpacts: () => impactCount,
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
+      showThreats,
+      takeBackMove,
       debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
       getRivalCatalog,
       startRival,
