@@ -2290,7 +2290,48 @@ export function initWizardChess() {
       renderer.shadowMap.needsUpdate = true;
     }
 
+    // Short one-off acts that play over the board and never hold up a move.
+    const IDLE_FLOURISH_MIN = 9;
+    const IDLE_FLOURISH_SPREAD = 8;
+    const PAWN_LOOKOUT_CHANCE = 0.3;
+    const flourishes = [];
+    let idleFlourishIn = IDLE_FLOURISH_MIN;
+
+    function playFlourish(piece, role) {
+      const name = piece?.clipMap?.[role];
+      const action = name && piece.actions?.[name];
+      if (!action) return false;
+      clearFlourish(piece);
+      playPieceClip(piece, role, false, 0.16);
+      flourishes.push({ piece, left: action.getClip().duration / action.timeScale });
+      return true;
+    }
+
+    function clearFlourish(piece) {
+      const i = flourishes.findIndex((f) => f.piece === piece);
+      if (i >= 0) flourishes.splice(i, 1);
+    }
+
+    function stepFlourishes(dt) {
+      for (let i = flourishes.length - 1; i >= 0; i--) {
+        const f = flourishes[i];
+        f.left -= dt;
+        if (f.left <= 0) {
+          flourishes.splice(i, 1);
+          playPieceClip(f.piece, 'Idle', true, 0.2);
+        }
+      }
+      if (isAnimatingMove || gameOver || flourishes.length) return;
+      idleFlourishIn -= dt;
+      if (idleFlourishIn > 0) return;
+      idleFlourishIn = IDLE_FLOURISH_MIN + Math.random() * IDLE_FLOURISH_SPREAD;
+      const pieces = boardState.flat().filter((p) => p && p.rig !== 'statue');
+      const piece = pieces[Math.floor(Math.random() * pieces.length)];
+      if (piece) playFlourish(piece, piece.type === 'pawn' && Math.random() < 0.5 ? 'lookout' : 'yawn');
+    }
+
     function clearAllPieces() {
+      flourishes.length = 0;
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           if (boardState[r][c] && boardState[r][c].mesh) {
@@ -2739,6 +2780,7 @@ export function initWizardChess() {
       const tier = IMPACT_TIERS[tierId];
       const ground = new THREE.Vector3(origin.x, BOARD_SURFACE_Y, origin.z);
       impactCount += 1;
+      clearFlourish(captured);
       hitStopLeft = tier.stopSec;
       slowLeft = tier.slowSec;
       impactFx.burst(ground, captured.type, tierId);
@@ -2788,6 +2830,7 @@ export function initWizardChess() {
         impactFx.burst(kingGround, 'king', 'big');
         impactFx.ring(kingGround, 'big');
         impactFx.label(kingGround, '메이트!', 0.2);
+        if (playFlourish(kingOf(moverColor), 'roar')) sfx.voice('king', 0.4);
       } else if (referee.gameOverReason()) {
         sfx.play('draw', 0.15);
       } else if (san.endsWith('+')) {
@@ -2941,6 +2984,7 @@ export function initWizardChess() {
       const dirZ = dz / dist;
       const moveHeading = Math.atan2(dx, dz);
       piece.mesh.rotation.y = moveHeading;
+      clearFlourish(piece);
       playPieceClip(piece, 'Move', true, 0.10);
 
       // Detect Castling (King moves 2 files horizontally: e1->g1/c1 or e8->g8/c8) and animate the Rook simultaneously
@@ -3345,7 +3389,11 @@ export function initWizardChess() {
           else capturedByBlack += 1;
         }
 
-        playMoveOutcome(piece.color, !isCapture && !enPassantVictim, Boolean(promotionType), endPos, isCastling ? castleRook : null);
+        const quietMove = !isCapture && !enPassantVictim;
+        playMoveOutcome(piece.color, quietMove, Boolean(promotionType), endPos, isCastling ? castleRook : null);
+        if (quietMove && piece.type === 'pawn' && !promotionType && Math.random() < PAWN_LOOKOUT_CHANCE && playFlourish(piece, 'lookout')) {
+          sfx.voice('pawn', 0.5);
+        }
 
         currentTurn = currentTurn === 'w' ? 'b' : 'w';
         isAnimatingMove = false;
@@ -5374,6 +5422,7 @@ export function initWizardChess() {
       getCosmetics,
       setCosmetics,
       debugImpacts: () => impactCount,
+      debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
       debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
       getRivalCatalog,
       startRival,
@@ -5701,6 +5750,7 @@ export function initWizardChess() {
         dt = realDt * SLOW_FACTOR;
       }
       impactFx.updateGame(dt);
+      stepFlourishes(dt);
 
       for (const mixer of activeMixers) {
         mixer.update(dt);

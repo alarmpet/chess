@@ -6,7 +6,7 @@ export const PIECE_ROLES = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king']
 // Clip roles the engine plays today. A pack that lacks one of these is rejected.
 export const REQUIRED_CLIP_ROLES = ['idle', 'move', 'attack', 'shatter'];
 // Clip roles reserved for animal packs (PLAN §4.3). Optional for now.
-export const OPTIONAL_CLIP_ROLES = ['charge', 'hit', 'victory', 'kneel', 'bored'];
+export const OPTIONAL_CLIP_ROLES = ['charge', 'hit', 'victory', 'kneel', 'bored', 'yawn', 'lookout', 'roar'];
 
 export const RIG_KINDS = ['statue', 'animal', 'biped'];
 

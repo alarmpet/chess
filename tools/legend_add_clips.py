@@ -1,5 +1,6 @@
 # Add Attack / Hit / Kneel clips to an already-rigged study-game "legend" biped (PLAN §1.2 "biped 보강").
-#   "D:/tools/Blender 5.2/blender.exe" --background --python tools/legend_add_clips.py -- <in.glb> <out.glb>
+#   "D:/tools/Blender 5.2/blender.exe" --background --python tools/legend_add_clips.py -- <in.glb> <out.glb> [species]
+# With a species the Attack is that animal's own move, and Yawn plus its signature clip (Lookout, Roar) are added.
 # Keeps the existing armature, weights and the 5 original clips (Idle/Walk/Run/Sit/Cheer); only adds actions
 # and re-exports with every action on its own NLA track. Bone conventions follow study-game/tools/legend/biped_rig.py:
 #   bones Root·Hips·Spine·Chest·Head·UpperArm/LowerArm.{L,R}·UpperLeg/LowerLeg.{L,R}·Tail1/2, Euler XYZ degrees,
@@ -9,6 +10,7 @@ from mathutils import Euler, Vector
 
 argv = sys.argv[sys.argv.index('--') + 1:]
 SRC, OUT = [os.path.abspath(a) for a in argv[:2]]
+SPECIES = argv[2] if len(argv) > 2 else None
 ATTACK_SIGN = float(os.environ.get('ATTACK_SIGN', '1'))   # flip if the swing goes backwards in the viewer
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -117,7 +119,7 @@ FOLLOW = {'UpperArm.R': (-S * 60, 0, -A + 10), 'LowerArm.R': (S * 30, 0, 0), 'Up
           'Spine': (-LEG * 10, 0, 0), 'Chest': (0, 0, 10), 'Head': (0, 0, 2), 'Tail1': (0, 0, -4),
           'UpperLeg.L': (-LEG * 10, 0, 0), 'UpperLeg.R': (LEG * 14, 0, 0), 'LowerLeg.R': (-LEG * 16, 0, 0),
           'Hips': ('loc', (0, -0.02 * H, 0))}
-act('Attack', {0: dict(REST), 7: WIND, 12: STRIKE, 17: FOLLOW, 24: dict(REST)})
+if SPECIES is None: act('Attack', {0: dict(REST), 7: WIND, 12: STRIKE, 17: FOLLOW, 24: dict(REST)})
 
 # Hit (15 f = 0.5 s): recoil back, arms fly up, settle.
 HIT = {'Spine': (LEG * 22, 0, 0), 'Chest': (LEG * 8, 0, 0), 'Head': (LEG * 18, 0, 0),
@@ -132,6 +134,52 @@ KNEEL = {'UpperLeg.L': (LEG * 70, 0, 6), 'UpperLeg.R': (LEG * 70, 0, -6), 'Lower
          'Tail1': (0, 0, 0), 'Hips': ('loc', (0, -0.30 * H, 0))}
 HALF = {k: (tuple(x * 0.5 for x in v) if not (isinstance(v, tuple) and v and v[0] == 'loc') else ('loc', tuple(x * 0.5 for x in v[1]))) for k, v in KNEEL.items()}
 act('Kneel', {0: dict(REST, Spine=(LEG * 6, 0, 0), Head=(LEG * 6, 0, 0)), 14: HALF, 26: KNEEL, 36: {**KNEEL, 'Head': (-LEG * 30, 0, 0)}})
+
+# Animal moves. The head is huge on these bodies and tears when it bends more than a few degrees, so everything big is
+# done by turning the whole body on Root, which cannot tear. Root x = lean (-LEG forward), Root y = turn, Root loc z = forward.
+# Attack peaks at frame 18 (0.6 s) to meet the game's contact time, runs 1 s and ends where Idle starts.
+ARMS_OUT = lambda d: {'UpperArm.L': (0, 0, A - d), 'UpperArm.R': (0, 0, -A + d)}
+# The lion's arms are buried in its mane, which splits when they rise, so it only opens them a little.
+UP = (lambda w: ARMS_OUT(30 + w)) if SPECIES == 'lion' else (lambda w: {'UpperArm.L': (0, 0, -70 - w), 'UpperArm.R': (0, 0, 70 + w), 'LowerArm.L': (0, 0, -8), 'LowerArm.R': (0, 0, 8)})
+LEAN = lambda deg, spin=0: (LEG * deg, spin, 0)
+MOVE = lambda up, fwd: ('loc', (0, up * H, fwd * H))
+ANIMAL_ATTACKS = {
+    'meerkat': {  # hop forward into a headbutt
+        10: {'Root': LEAN(10), 'Hips': MOVE(-0.03, 0), **ARMS_OUT(10)},
+        18: {'Root': LEAN(-24), 'Hips': MOVE(0.05, 0.08), **ARMS_OUT(40)}},
+    'kangaroo': {  # big kick with one foot
+        10: {'Root': LEAN(6), 'UpperLeg.R': (-LEG * 18, 0, 0), 'LowerLeg.R': (LEG * 16, 0, 0), **REST},
+        18: {'Root': LEAN(12), 'Hips': MOVE(0.05, 0.05), 'UpperLeg.R': (LEG * 42, 0, 0), 'UpperLeg.L': (-LEG * 8, 0, 0), **ARMS_OUT(30)}},
+    'panda': {  # belly bump
+        10: {'Root': LEAN(14), 'Hips': MOVE(0, -0.04), **ARMS_OUT(25)},
+        18: {'Root': LEAN(-12), 'Hips': MOVE(0.01, 0.1), **ARMS_OUT(50)}},
+    'rhino': {  # lowers the horn and rams
+        10: {'Root': LEAN(10), 'Hips': MOVE(0, -0.05), **REST},
+        18: {'Root': LEAN(-26), 'Hips': MOVE(-0.01, 0.12), **REST}},
+    'tiger': {  # raises a paw and taps
+        10: {'Root': LEAN(6), 'Hips': MOVE(-0.04, 0), 'UpperArm.R': (0, 0, 60), 'LowerArm.R': (0, 0, 8), 'UpperArm.L': (0, 0, A)},
+        18: {'Root': LEAN(-16), 'Hips': MOVE(0.02, 0.08), 'UpperArm.R': (-S * 50, 0, -A + 10), 'UpperArm.L': (0, 0, A + 6)}},
+    'lion': {  # breath in, then a small roar that shoves
+        10: {'Root': LEAN(12), 'Hips': MOVE(0, -0.03), **ARMS_OUT(25)},
+        18: {'Root': LEAN(-14), 'Hips': MOVE(0, 0.08), **ARMS_OUT(35)}}
+}
+if SPECIES in ANIMAL_ATTACKS:
+    k = ANIMAL_ATTACKS[SPECIES]
+    act('Attack', {0: dict(REST), 10: k[10], 18: k[18], 22: k[18], 30: dict(REST)})
+
+    TALL = {**REST, 'Hips': MOVE(0.025, 0)}
+    act('Yawn', {0: dict(REST), 16: {**UP(10), 'Root': LEAN(8), 'Hips': MOVE(0.02, 0)},
+                 34: {**UP(16), 'Root': LEAN(11), 'Head': (0, 0, 5), 'Hips': MOVE(0.025, 0)},
+                 50: {**REST, 'Root': LEAN(-4)}, 60: dict(REST)})
+    if SPECIES == 'meerkat':
+        act('Lookout', {0: dict(REST), 8: TALL, 16: {**TALL, 'Root': LEAN(0, 34), 'Head': (0, 8, 0)}, 24: {**TALL, 'Root': LEAN(0, 34), 'Head': (0, 8, 0)},
+                        34: {**TALL, 'Root': LEAN(0, -34), 'Head': (0, -8, 0)}, 42: {**TALL, 'Root': LEAN(0, -34), 'Head': (0, -8, 0)}, 52: dict(REST)})
+    if SPECIES == 'lion':
+        act('Roar', {0: dict(REST), 12: {**ARMS_OUT(10), 'Root': LEAN(14), 'Hips': MOVE(-0.02, 0)},
+                     20: {**UP(0), 'Root': LEAN(-7, 8), 'Hips': MOVE(0.03, 0)},
+                     25: {**UP(6), 'Root': LEAN(-7, -8), 'Hips': MOVE(0.03, 0)},
+                     30: {**UP(0), 'Root': LEAN(-7, 8), 'Hips': MOVE(0.03, 0)},
+                     46: dict(REST)})
 
 ad.action = None
 ad.use_nla = True

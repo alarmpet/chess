@@ -73,7 +73,9 @@
         "shatter": "Kneel",
         "victory": "Cheer",
         "kneel": "Kneel",
-        "bored": "Sit"
+        "bored": "Sit",
+        "yawn": "Yawn",
+        "lookout": "Lookout"
       },
       "attackSync": {
         "timeScale": 1.0,
@@ -115,7 +117,8 @@
         "shatter": "Kneel",
         "victory": "Cheer",
         "kneel": "Kneel",
-        "bored": "Sit"
+        "bored": "Sit",
+        "yawn": "Yawn"
       },
       "attackSync": {
         "timeScale": 1.0,
@@ -160,7 +163,8 @@
         "shatter": "Kneel",
         "victory": "Cheer",
         "kneel": "Kneel",
-        "bored": "Sit"
+        "bored": "Sit",
+        "yawn": "Yawn"
       },
       "attackSync": {
         "timeScale": 1.0,
@@ -202,7 +206,8 @@
         "shatter": "Kneel",
         "victory": "Cheer",
         "kneel": "Kneel",
-        "bored": "Sit"
+        "bored": "Sit",
+        "yawn": "Yawn"
       },
       "attackSync": {
         "timeScale": 1.0,
@@ -247,7 +252,8 @@
         "shatter": "Kneel",
         "victory": "Cheer",
         "kneel": "Kneel",
-        "bored": "Sit"
+        "bored": "Sit",
+        "yawn": "Yawn"
       },
       "attackSync": {
         "timeScale": 1.0,
@@ -289,7 +295,9 @@
         "shatter": "Kneel",
         "victory": "Cheer",
         "kneel": "Kneel",
-        "bored": "Sit"
+        "bored": "Sit",
+        "yawn": "Yawn",
+        "roar": "Roar"
       },
       "attackSync": {
         "timeScale": 1.0,
