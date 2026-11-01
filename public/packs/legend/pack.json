@@ -5,7 +5,7 @@
     "ko": "레전드 — 두 발로 선 동물들",
     "en": "Legend — animals on two legs"
   },
-  "credits": "All six final-cast pieces are own assets made locally (ComfyUI Flux schnell concept -> local TRELLIS -> biped_rig.py), 2026-10-29. Attack/Hit/Kneel clips by tools/legend_add_clips.py. Kingdom colours by tools/kingdom_variant.py, starlit stage by tools/starlit_variant.py, trinkets by tools/make_prop.py. Remaining extra bipeds (wolf, zebra, unicorn, ...) are study-game characters.",
+  "credits": "All six final-cast pieces are own assets made locally (ComfyUI Flux schnell concept -> local TRELLIS -> biped_rig.py), 2026-10-29. Attack/Hit/Kneel clips by tools/legend_add_clips.py. Kingdom colours by tools/kingdom_variant.py, starlit stage by tools/starlit_variant.py, trinkets by tools/make_prop.py. Village buildings by tools/make_building.py (Google Flow concept -> local TRELLIS). Remaining extra bipeds (wolf, zebra, unicorn, ...) are study-game characters.",
   "assetBase": "./packs/legend/",
   "environment": {
     "type": "procedural",
@@ -596,7 +596,7 @@
           "head": "ribbon"
         }
       },
-      "visitsFor": "bench"
+      "visitsFor": "shelter"
     },
     {
       "id": "bamboo_band",
@@ -626,7 +626,7 @@
           "head": "flower"
         }
       },
-      "visitsFor": "stage"
+      "visitsFor": "market"
     },
     {
       "id": "acorn_court",
@@ -668,7 +668,7 @@
           "stage": "adult"
         }
       },
-      "visitsFor": "fountain"
+      "visitsFor": "spring"
     }
   ]
 }

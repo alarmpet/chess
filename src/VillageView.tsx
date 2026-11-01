@@ -1,377 +1,199 @@
-// The village screen (prototype, 2026-10-30): an 8×8 green where the last game's hero walks its real route.
-// Own small three.js scene over the board, so the chess engine stays untouched while this is open.
+// The village screen: the player's chess games as an island on water, and the captured animals who live on it.
+// The scene is in village/islandScene.ts; this file holds the save and the panels over it.
 import { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { BUILDINGS, PET_DAILY_CAP, buildBlocked, pet, stageForHearts, startBuild, tickVillage } from './village/economy.js';
-import { villageTiles } from './village/roster.js';
+import { BUILDINGS, BREAD_MAX, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage } from './village/economy.js';
+import { createIsland, slotRole } from './village/islandScene';
 import { sfx } from './audio/sfx.js';
+import CardFace, { ANIMAL_KO, RARITY_KO } from './cards/CardFace';
 import { loadCollection } from './cards/store';
-import { loadVillage, saveVillage, villageRivals } from './village/store';
+import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRivals } from './village/store';
 
 const FILES = 'abcdefgh';
-const SIZE = 1;
 const ROLE_OF: Record<string, string> = { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' };
-const ROLE_KO: Record<string, string> = { king: '킹', queen: '퀸', rook: '룩', bishop: '비숍', knight: '나이트', pawn: '폰' };
 const SPECIES: Record<string, string> = { king: 'lion', queen: 'tiger', rook: 'rhino', bishop: 'panda', knight: 'kangaroo', pawn: 'meerkat' };
-const SPECIES_KO: Record<string, string> = { lion: '사자', tiger: '호랑이', rhino: '코뿔소', panda: '판다', kangaroo: '캥거루', meerkat: '미어캣' };
-const TILE_COLORS = [0x8fd46a, 0xc9df7d, 0xe9d9a0, 0xffd1dc];
+const ROLE_OF_ANIMAL: Record<string, string> = { lion: 'king', tiger: 'queen', rhino: 'rook', panda: 'bishop', kangaroo: 'knight', meerkat: 'pawn' };
+const SHAPE_KO: Record<string, string> = { meerkat: '앞 칸', kangaroo: 'L자', panda: '대각선', rhino: '십자', tiger: '십자와 대각선', lion: '주변 8칸' };
+const PIECE_ANIMAL: Record<string, string> = { pawn: '미어캣', knight: '캥거루', bishop: '판다', rook: '코뿔소', queen: '호랑이' };
 
-const slotRole = (slot: string) => (slot[3] === '2' || slot[3] === '7' ? 'pawn' : ROLE_OF[slot[2]]);
-const squareXZ = (sq: string): [number, number] => [(FILES.indexOf(sq[0]) - 3.5) * SIZE, (4.5 - Number(sq[1])) * SIZE];
-const modelFor = (slot: string, hearts: number) => {
-  const sp = SPECIES[slotRole(slot)];
-  const stage = stageForHearts(hearts);
-  const c = slot[0];
-  const suffix = stage === 'grown' ? '_s2' : stage === 'adult' ? '_s3' : stage === 'starlit' ? '_s4' : '';
-  return `./packs/legend/${sp}${suffix}_${c}.glb`;
-};
+const role = (slot: string) => (slot[3] === '2' || slot[3] === '7' ? 'pawn' : ROLE_OF[slot[2]]);
 export const slotLabel = (slot: string, names: Record<string, string>) => {
   if (names[slot]) return names[slot];
-  const role = slotRole(slot);
-  const species = SPECIES_KO[SPECIES[role]];
-  if (role === 'pawn') return `${species} ${FILES.indexOf(slot[2]) + 1}호`;
-  if (role === 'king' || role === 'queen') return species;
+  const r = role(slot);
+  const species = ANIMAL_KO[SPECIES[r]];
+  if (r === 'pawn') return `${species} ${FILES.indexOf(slot[2]) + 1}호`;
+  if (r === 'king' || r === 'queen') return species;
   return `${FILES.indexOf(slot[2]) < 4 ? '왼쪽' : '오른쪽'} ${species}`;
 };
-
-function mesh(geo: THREE.BufferGeometry, color: number) {
-  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, roughness: 0.75 }));
-  m.castShadow = true;
-  return m;
-}
-
-// Round, toy-like buildings: no assets needed, and they read at this distance.
-function makeBuilding(kind: string) {
-  const g = new THREE.Group();
-  if (kind === 'house') {
-    const body = mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.42, 16), 0xfff1d6);
-    body.position.y = 0.21;
-    const roof = mesh(new THREE.ConeGeometry(0.46, 0.4, 16), 0xf08a8a);
-    roof.position.y = 0.62;
-    const door = mesh(new THREE.BoxGeometry(0.14, 0.22, 0.04), 0xa86f47);
-    door.position.set(0, 0.11, 0.36);
-    g.add(body, roof, door);
-  } else if (kind === 'bench') {
-    const seat = mesh(new THREE.BoxGeometry(0.62, 0.06, 0.2), 0xc98f58);
-    seat.position.y = 0.2;
-    const back = mesh(new THREE.BoxGeometry(0.62, 0.2, 0.05), 0xc98f58);
-    back.position.set(0, 0.33, -0.09);
-    for (const x of [-0.24, 0.24]) {
-      const leg = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 8), 0x8a5a33);
-      leg.position.set(x, 0.1, 0);
-      g.add(leg);
-    }
-    g.add(seat, back);
-  } else if (kind === 'stage') {
-    const floor = mesh(new THREE.CylinderGeometry(0.44, 0.46, 0.12, 20), 0xb8a4f0);
-    floor.position.y = 0.06;
-    const star = mesh(new THREE.OctahedronGeometry(0.14), 0xffe08a);
-    star.position.y = 0.42;
-    g.add(floor, star);
-  } else if (kind === 'fountain') {
-    const base = mesh(new THREE.CylinderGeometry(0.44, 0.48, 0.16, 20), 0xd8dee8);
-    base.position.y = 0.08;
-    const water = mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.04, 20), 0x8fd3f4);
-    water.position.y = 0.17;
-    const top = mesh(new THREE.SphereGeometry(0.14, 16, 12), 0xbfe8fb);
-    top.position.y = 0.34;
-    g.add(base, water, top);
-  }
-  return g;
-}
-
-function makeTree() {
-  const g = new THREE.Group();
-  const trunk = mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.24, 8), 0xa86f47);
-  trunk.position.y = 0.12;
-  const top = mesh(new THREE.SphereGeometry(0.2, 14, 10), 0x6fbf73);
-  top.position.y = 0.34;
-  g.add(trunk, top);
-  return g;
-}
 
 type Props = { open: boolean; onClose: () => void; lang: 'ko' | 'en'; summary: any | null };
 
 export default function VillageView({ open, onClose, lang, summary }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [village, setVillage] = useState<any>(null);
+  const [col, setCol] = useState<any>(null);
   const [picking, setPicking] = useState<string | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [trying, setTrying] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [away, setAway] = useState<any[]>([]);
-  const [now, setNow] = useState(Date.now());
-  const sceneApi = useRef<any>(null);
-  const pickRef = useRef<string | null>(null);
-  pickRef.current = picking;
+  const [night, setNight] = useState(false);
+  const [photos, setPhotos] = useState<any[] | null>(null);
+  const island = useRef<ReturnType<typeof createIsland> | null>(null);
+  const live = useRef({ picking, selected });
+  live.current = { picking, selected };
+
+  const commit = (v: any) => {
+    saveVillage(v);
+    setVillage({ ...v });
+  };
 
   useEffect(() => {
     if (!open) return;
     setPicking(null);
+    setSelected(null);
+    setTrying(null);
     setNote('');
-    const v = loadVillage();
+    setPhotos(null);
+    const collection = loadCollection();
+    const v = reconcileTenants(loadVillage(), collection);
     const t = Date.now();
     const events = tickVillage(v, villageRivals(), t);
     v.lastSeen = t;
     saveVillage(v);
+    setCol(collection);
     setVillage({ ...v });
+    setNight(Boolean(v.night) && nightOpen(v));
     setAway(events);
     (window as any).wizardChess?.setRenderPaused?.(true);
     return () => { (window as any).wizardChess?.setRenderPaused?.(false); };
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const id = setInterval(() => {
-      const t = Date.now();
-      setNow(t);
-      const v = loadVillage();
-      const events = tickVillage(v, villageRivals(), t);
-      if (events.length) {
-        saveVillage(v);
-        setVillage({ ...v });
-        setAway((a) => [...a, ...events]);
-      }
-    }, 1000);
-    return () => clearInterval(id);
-  }, [open]);
-
-  // Build the 3D green once per opening; later state changes redraw only the marks.
+  // Build the island once per opening; later state changes redraw only what sits on it.
   useEffect(() => {
     if (!open || !hostRef.current || !village) return;
-    const host = hostRef.current;
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(host.clientWidth, host.clientHeight);
-    renderer.shadowMap.enabled = true;
-    host.appendChild(renderer.domElement);
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xbfe9ff);
-    const camera = new THREE.PerspectiveCamera(38, host.clientWidth / host.clientHeight, 0.1, 100);
-    camera.position.set(0, 11, 11);
-    camera.lookAt(0, 0, 0.4);
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xb8e0a0, 1.5));
-    const sun = new THREE.DirectionalLight(0xfff2d8, 1.8);
-    sun.position.set(5, 10, 6);
-    sun.castShadow = true;
-    sun.shadow.camera.left = sun.shadow.camera.bottom = -7;
-    sun.shadow.camera.right = sun.shadow.camera.top = 7;
-    sun.shadow.mapSize.set(1024, 1024);
-    scene.add(sun);
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(9, 48), new THREE.MeshStandardMaterial({ color: 0x79c85f }));
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.03;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    const tileMeshes: THREE.Mesh[] = [];
-    for (let f = 0; f < 8; f++) {
-      for (let r = 1; r <= 8; r++) {
-        const sq = `${FILES[f]}${r}`;
-        const t = new THREE.Mesh(new THREE.BoxGeometry(SIZE * 0.96, 0.06, SIZE * 0.96), new THREE.MeshStandardMaterial({ color: TILE_COLORS[0], roughness: 0.9 }));
-        const [x, z] = squareXZ(sq);
-        t.position.set(x, 0, z);
-        t.receiveShadow = true;
-        t.userData.sq = sq;
-        scene.add(t);
-        tileMeshes.push(t);
+    const api = createIsland(hostRef.current, {
+      onTile(sq) {
+        const kind = live.current.picking;
+        if (!kind) {
+          setSelected(null);
+          setTrying(null);
+          return;
+        }
+        const v = loadVillage();
+        if (startBuild(v, kind, sq)) {
+          commit(v);
+          setPicking(null);
+          setSelected(v.built[v.built.length - 1].id);
+          setNote('다음 판이 끝나면 문을 엽니다.');
+        } else setNote('여기에는 지을 수 없습니다.');
+      },
+      onBuilding(id) {
+        setPicking(null);
+        setSelected(id);
+        setTrying(null);
+        setNote('');
+      },
+      onActor(slot, animal) {
+        if (!slot) {
+          sfx.voice(ROLE_OF_ANIMAL[animal]);
+          setNote(`${ANIMAL_KO[animal]}, 오늘도 일하는 중이에요.`);
+          return;
+        }
+        const v = loadVillage();
+        const gained = pet(v, slot, Date.now());
+        commit(v);
+        if (gained) sfx.voice(slotRole(slot));
+        setNote(gained ? `${slotLabel(slot, v.names)}: 💗 ${v.hearts[slot]}` : '오늘은 충분히 쓰다듬었어요. 내일 또 만나요.');
       }
-    }
-    const marks = new THREE.Group();
-    scene.add(marks);
-
-    // Cards the player chose stand on a shelf behind the green, so the collection lives somewhere it can be seen.
-    const shelf = loadCollection().shelf as string[];
-    shelf.forEach((id, i) => {
-      const [animal, rarity] = id.split('_');
-      const canvas = document.createElement('canvas');
-      canvas.width = 400;
-      canvas.height = 560;
-      const g = canvas.getContext('2d')!;
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      const img = new Image();
-      img.onload = () => {
-        g.drawImage(img, 0, 0, 400, 560);
-        texture.needsUpdate = true;
-      };
-      img.src = `./packs/legend/cards/${animal}_${rarity}.webp`;
-      const card = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.54), new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.05 }));
-      card.position.set((i - (shelf.length - 1) / 2) * 1.35, 0.95, -5);
-      card.rotation.x = -0.35;
-      scene.add(card);
     });
-
-    const loader = new GLTFLoader();
-    const mixers: THREE.AnimationMixer[] = [];
-    const actors: any[] = [];
-    const addActor = (slot: string, hearts: number, sq: string) => {
-      loader.load(modelFor(slot, hearts), (gltf: any) => {
-        const model = cloneSkeleton(gltf.scene);
-        const box = new THREE.Box3().setFromObject(model);
-        const s = 0.95 / (box.max.y - box.min.y);
-        model.scale.setScalar(s);
-        model.position.y = -box.min.y * s;
-        const root = new THREE.Group();
-        root.add(model);
-        const [x, z] = squareXZ(sq);
-        root.position.set(x, 0.03, z);
-        root.userData.slot = slot;
-        model.traverse((o: any) => { if (o.isMesh) { o.castShadow = true; o.userData.slot = slot; } });
-        scene.add(root);
-        const mixer = new THREE.AnimationMixer(model);
-        mixers.push(mixer);
-        const play = (name: string) => {
-          const clip = gltf.animations.find((c: any) => c.name === name);
-          if (!clip) return;
-          mixer.stopAllAction();
-          mixer.clipAction(clip).play();
-        };
-        play('Idle');
-        actors.push({ slot, root, play, path: [] as [number, number][] });
-        const walk = sceneApi.current?.walk;
-        if (walk && walk.slot === slot && walk.route.length > 1) {
-          const a = actors[actors.length - 1];
-          a.path = walk.route.slice(1).map(squareXZ);
-          const [sx, sz] = squareXZ(walk.route[0]);
-          root.position.set(sx, 0.03, sz);
-          a.play('Walk');
-        }
-      }, undefined, () => { /* a missing stage model just leaves the square empty */ });
-    };
-
-    const redraw = (v: any) => {
-      const tiles = villageTiles(v.map) as Record<string, number>;
-      for (const t of tileMeshes) (t.material as THREE.MeshStandardMaterial).color.setHex(TILE_COLORS[tiles[t.userData.sq] || 0]);
-      marks.clear();
-      for (const tree of v.map.trees.slice(-24)) {
-        const m = makeTree();
-        const [x, z] = squareXZ(tree.sq);
-        m.position.set(x + 0.28, 0.03, z - 0.28);
-        marks.add(m);
-      }
-      for (const b of v.built) {
-        const m = makeBuilding(b.kind);
-        const [x, z] = squareXZ(b.sq);
-        m.position.set(x, 0.03, z);
-        marks.add(m);
-      }
-      if (v.build) {
-        const m = makeBuilding(v.build.kind);
-        const [x, z] = squareXZ(v.build.sq);
-        m.position.set(x, 0.03, z);
-        m.traverse((o: any) => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.45; } });
-        marks.add(m);
-      }
-    };
-    sceneApi.current = { redraw, walk: village.walk };
-    redraw(village);
-
-    const slots = [village.walk?.slot, ...Object.entries(village.hearts).sort((a: any, b: any) => b[1] - a[1]).map(([s]) => s)].filter(Boolean) as string[];
-    const unique = [...new Set(slots)].slice(0, 3);
-    if (!unique.length) unique.push('w_e2', 'w_e1');
-    unique.forEach((slot, i) => addActor(slot, village.hearts[slot] || 0, ['e4', 'c5', 'f5'][i]));
-
-    const ray = new THREE.Raycaster();
-    const ptr = new THREE.Vector2();
-    const onClick = (e: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      ptr.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
-      ray.setFromCamera(ptr, camera);
-      if (pickRef.current) {
-        const hit = ray.intersectObjects(tileMeshes)[0];
-        if (hit) {
-          const v = loadVillage();
-          if (startBuild(v, pickRef.current, hit.object.userData.sq, Date.now())) {
-            saveVillage(v);
-            setVillage({ ...v });
-            redraw(v);
-            setPicking(null);
-          } else setNote('여기에는 지을 수 없습니다.');
-        }
-        return;
-      }
-      const hit = ray.intersectObjects(actors.map((a) => a.root), true)[0];
-      const slot = hit?.object.userData.slot;
-      if (!slot) return;
-      const v = loadVillage();
-      const gained = pet(v, slot, Date.now());
-      saveVillage(v);
-      setVillage({ ...v });
-      const a = actors.find((x) => x.slot === slot);
-      if (gained) sfx.voice(slotRole(slot));
-      a?.play('Cheer');
-      setTimeout(() => a?.play('Idle'), 1600);
-      setNote(gained ? `${slotLabel(slot, v.names)}: 💗 ${v.hearts[slot]}` : `오늘은 충분히 쓰다듬었어요. 내일 또 만나요.`);
-    };
-    renderer.domElement.addEventListener('click', onClick);
-
-    const clock = new THREE.Clock();
-    let raf = 0;
-    const loop = () => {
-      raf = requestAnimationFrame(loop);
-      const dt = clock.getDelta();
-      mixers.forEach((m) => m.update(dt));
-      for (const a of actors) {
-        if (!a.path.length) continue;
-        const [x, z] = a.path[0];
-        const dx = x - a.root.position.x;
-        const dz = z - a.root.position.z;
-        const d = Math.hypot(dx, dz);
-        if (d < 0.05) {
-          a.path.shift();
-          if (!a.path.length) a.play('Cheer');
-          continue;
-        }
-        const step = Math.min(d, dt * 1.6);
-        a.root.position.x += (dx / d) * step;
-        a.root.position.z += (dz / d) * step;
-        a.root.rotation.y = Math.atan2(dx, dz);
-      }
-      renderer.render(scene, camera);
-    };
-    loop();
-    const onResize = () => {
-      camera.aspect = host.clientWidth / host.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(host.clientWidth, host.clientHeight);
-    };
-    window.addEventListener('resize', onResize);
+    island.current = api;
+    api.draw(village);
+    api.drawShelf(loadCollection().shelf as string[]);
+    api.setNight(Boolean(village.night) && nightOpen(village));
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', onResize);
-      renderer.domElement.removeEventListener('click', onClick);
-      renderer.dispose();
-      host.innerHTML = '';
-      sceneApi.current = null;
+      api.dispose();
+      island.current = null;
     };
     // the scene is rebuilt per opening, not per coin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, !!village]);
 
   useEffect(() => {
-    if (village) sceneApi.current?.redraw(village);
+    if (village) island.current?.draw(village);
   }, [village]);
+
+  const building = village?.built.find((b: any) => b.id === selected) || null;
+
+  // The tinted squares answer "what would this do?" before anything is decided.
+  useEffect(() => {
+    const api = island.current;
+    if (!api || !village) return;
+    api.setPicking(Boolean(picking));
+    if (picking) {
+      const used = new Set([...village.built.map((b: any) => b.sq), ...village.decor.map((d: any) => d.sq)]);
+      const free: string[] = [];
+      for (const f of FILES) for (let r = 1; r <= 8; r++) if (!used.has(`${f}${r}`)) free.push(`${f}${r}`);
+      api.setOverlay(free);
+      return;
+    }
+    const card = trying || building?.tenant;
+    if (!building || !card) {
+      api.setOverlay([], [], building?.sq || null);
+      return;
+    }
+    const reach = influenceSquares(tenantAnimal(card), building.sq);
+    const homes = village.built.filter((b: any) => reach.includes(b.sq)).map((b: any) => b.sq);
+    api.setOverlay(reach, homes, building.sq);
+  }, [picking, trying, building, village]);
 
   if (!open) return null;
   const rivals = villageRivals();
   const rivalName = (id: string) => rivals.find((r: any) => r.id === id)?.name?.ko || id;
-  const left = village?.build ? Math.max(0, village.build.done - now) : 0;
-  const leftText = left >= 60000 ? `${Math.ceil(left / 60000)}분` : `${Math.ceil(left / 1000)}초`;
   const hero = village?.walk?.slot;
+  const quest = village?.quest;
+  const questHome = quest && village.built.find((b: any) => b.id === quest.buildingId);
+  const done = village && islandDone(village);
+  const owned = col ? Object.keys(col.cards).filter((id) => col.cards[id] > 0).sort((a, b) => tenantRarity(b) - tenantRarity(a)) : [];
+  const h = summary?.harvest;
+  const gains = h ? [h.grain && `🌾 +${h.grain}`, h.bread && `🥖 +${h.bread}`, h.coins && `🌰 +${h.coins}`, h.hearts && `💗 +${h.hearts}`].filter(Boolean).join(' · ') : '';
+  const reason = (id: string) => {
+    const why = tenantBlocked(village, col, building.id, id);
+    return why === 'rarity' ? `${RARITY_KO[BUILDINGS[building.kind as keyof typeof BUILDINGS].minRarity]} 이상만` : why === 'busy' ? '다른 집에 살아요' : '';
+  };
 
   return (
     <div className="village-view" id="village-view">
       <div className="village-canvas" ref={hostRef} />
       <div className="village-top">
         <span className="village-pill">🌰 {village?.coins ?? 0}</span>
-        <span className="village-pill">🤚 오늘 쓰다듬기 {Math.min(village?.petCount ?? 0, PET_DAILY_CAP)}/{PET_DAILY_CAP}</span>
-        {village?.build && <span className="village-pill">🔨 {BUILDINGS[village.build.kind as keyof typeof BUILDINGS].ko} {leftText}</span>}
-        <button type="button" className="hud-btn village-close" onClick={onClose}>{lang === 'en' ? 'Back to the board' : '♟ 체스로'}</button>
+        <span className="village-pill">🌾 {village?.grain ?? 0}/{GRAIN_MAX}</span>
+        <span className="village-pill">🥖 {village?.bread ?? 0}/{BREAD_MAX}</span>
+        <span className="village-pill">🤚 {Math.min(village?.petCount ?? 0, PET_DAILY_CAP)}/{PET_DAILY_CAP}</span>
+        <span className="village-tools">
+          <button type="button" className="hud-btn" aria-label="왼쪽으로 돌리기" onClick={() => island.current?.rotate(-1)}>⟲</button>
+          <button type="button" className="hud-btn" aria-label="오른쪽으로 돌리기" onClick={() => island.current?.rotate(1)}>⟳</button>
+          {village && nightOpen(village) && (
+            <button
+              type="button"
+              className="hud-btn"
+              id="village-night"
+              onClick={() => {
+                const on = !night;
+                setNight(on);
+                island.current?.setNight(on);
+                commit({ ...loadVillage(), night: on });
+              }}
+            >
+              {night ? '☀️ 낮' : '🌙 밤'}
+            </button>
+          )}
+          <button type="button" className="hud-btn" id="village-album" onClick={() => setPhotos(photos ? null : loadIslandPhotos())}>📷</button>
+          <button type="button" className="hud-btn" onClick={onClose}>{lang === 'en' ? 'Back to the board' : '♟ 체스로'}</button>
+        </span>
       </div>
 
-      {(summary || away.length > 0 || note) && (
-        <div className="village-card">
+      {(summary || away.length > 0 || note || questHome) && (
+        <div className="village-card" id="village-card">
           {summary && (
             <div>
               <b>이번 판</b> 🌰 +{summary.coins} · {slotLabel(summary.mvp, village?.names || {})} 💗 +{summary.hearts}
@@ -379,35 +201,113 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
               {summary.added.houses.length > 0 && ' · 승급한 폰의 집'}
             </div>
           )}
-          {hero && <div>{slotLabel(hero, village?.names || {})}, 오늘 지나간 길을 다시 걷는 중이에요.</div>}
+          {gains && <div><b>수확</b> {gains}</div>}
+          {summary?.opened?.length > 0 && <div>🎉 {summary.opened.map((k: string) => BUILDINGS[k as keyof typeof BUILDINGS].ko).join(', ')} 문을 열었어요!</div>}
+          {summary?.quest?.done && <div>🔔 의뢰 성공! 건물이 한 단계 자랐어요.{summary.quest.festival && ` ${ANIMAL_KO[summary.quest.festival]} 축제가 열렸어요!`}</div>}
+          {questHome && (
+            <div className="village-quest" id="village-quest">🔔 {BUILDINGS[questHome.kind as keyof typeof BUILDINGS].ko}의 부탁: 다음 판에 {PIECE_ANIMAL[quest.piece]}를 잡아 주세요.</div>
+          )}
+          {hero && !note && <div>{slotLabel(hero, village?.names || {})}, 오늘 지나간 길을 다시 걷는 중이에요.</div>}
           {away.map((e, i) => (
-            <div key={i}>
-              {e.type === 'built' && `🔨 ${BUILDINGS[e.kind as keyof typeof BUILDINGS].ko} 완성!`}
-              {e.type === 'visit' && `💌 ${rivalName(e.rival)} 다녀감, 🌰 +${e.coins}${e.memory ? ` — "지난번 ${slotLabel(e.memory.mvp, village?.names || {})} 멋졌어!"` : ''}`}
-            </div>
+            <div key={i}>💌 {rivalName(e.rival)} 다녀감, 🌰 +{e.coins}{e.memory ? ` — "지난번 ${slotLabel(e.memory.mvp, village?.names || {})} 멋졌어!"` : ''}</div>
           ))}
           {note && <div>{note}</div>}
         </div>
       )}
 
-      <div className="village-build">
-        {Object.entries(BUILDINGS).map(([id, b]) => {
-          const blocked = village ? buildBlocked(village, id, '') : 'busy';
-          return (
-            <button
-              key={id}
-              type="button"
-              className={`village-build-btn${picking === id ? ' active' : ''}`}
-              disabled={blocked === 'busy' || blocked === 'coins'}
-              onClick={() => { setPicking(picking === id ? null : id); setNote(picking === id ? '' : '지을 칸을 누르세요.'); }}
-            >
-              <span>{b.icon}</span>
-              <span>{b.ko}</span>
-              <small>🌰 {b.cost}</small>
-            </button>
-          );
-        })}
-      </div>
+      {photos && (
+        <div className="village-album" id="island-album">
+          {photos.length === 0 && <span>섬을 완성하면 여기에 사진이 남습니다.</span>}
+          {photos.map((p: any) => (
+            <figure key={p.island}><img src={p.photo} alt={`${p.island}번째 섬`} /><figcaption>{p.island}번째 섬 · {p.games}판</figcaption></figure>
+          ))}
+        </div>
+      )}
+
+      {building && col && (
+        <div className="village-panel" id="village-panel">
+          <div className="village-panel-head">
+            <b>{BUILDINGS[building.kind as keyof typeof BUILDINGS].icon} {BUILDINGS[building.kind as keyof typeof BUILDINGS].ko}{building.level ? ` Lv.${building.level + 1}` : ''}</b>
+            <button type="button" className="panel-close" aria-label="닫기" onClick={() => { setSelected(null); setTrying(null); }}>✕</button>
+          </div>
+          <p>{BUILDINGS[building.kind as keyof typeof BUILDINGS].effect}{influenceBonus(village, building) > 0 && ` · 이웃 영향 +${influenceBonus(village, building)}`}</p>
+          {!building.ready && <p>🔨 다음 판이 끝나면 문을 엽니다.</p>}
+          <p>
+            {building.tenant ? `주민: ${RARITY_KO[tenantRarity(building.tenant)]} ${ANIMAL_KO[tenantAnimal(building.tenant)]}` : '아직 주민이 없어요. 카드를 고르면 영향권이 보입니다.'}
+            {building.tenant && <button type="button" className="village-link" onClick={() => { const v = loadVillage(); moveOut(v, building.id); commit(v); setTrying(null); }}>내보내기</button>}
+          </p>
+          {owned.length === 0 && <p>대국에서 말을 잡으면 주민 카드가 생깁니다.</p>}
+          <div className="village-residents">
+            {owned.map((id) => {
+              const why = reason(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className={`village-resident${trying === id ? ' on' : ''}${why ? ' off' : ''}`}
+                  data-card={id}
+                  onPointerEnter={(e) => { if (e.pointerType === 'mouse') setTrying(id); }}
+                  onPointerLeave={(e) => { if (e.pointerType === 'mouse') setTrying(null); }}
+                  onClick={() => {
+                    if (why) {
+                      setTrying(id);
+                      return;
+                    }
+                    const v = loadVillage();
+                    moveIn(v, loadCollection(), building.id, id);
+                    commit(v);
+                    setNote(`${ANIMAL_KO[tenantAnimal(id)]}가 입주했어요. 영향권: ${SHAPE_KO[tenantAnimal(id)]}`);
+                  }}
+                >
+                  <CardFace animal={tenantAnimal(id)} rarity={tenantRarity(id)} lang={lang} size="sm" />
+                  {why && <small>{why}</small>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {done && !building && (
+        <button
+          type="button"
+          className="village-toast island-done"
+          id="island-done"
+          onClick={() => {
+            const shot = island.current?.photo();
+            const v = loadVillage();
+            if (shot) addIslandPhoto({ island: v.island, games: v.games, photo: shot });
+            startNewIsland(v);
+            commit(v);
+            setNote('새 섬이 떠올랐어요. 주민과 도토리는 그대로입니다.');
+          }}
+        >
+          📷 섬 완성! 사진을 찍고 새 섬으로
+        </button>
+      )}
+
+      {!building && !done && (
+        <div className="village-build" id="village-build">
+          {Object.entries(BUILDINGS).filter(([id]) => !village?.built.some((b: any) => b.kind === id)).map(([id, b]) => {
+            const blocked = village ? buildBlocked(village, id, '') : 'busy';
+            return (
+              <button
+                key={id}
+                type="button"
+                data-kind={id}
+                className={`village-build-btn${picking === id ? ' active' : ''}`}
+                disabled={Boolean(blocked)}
+                title={b.effect}
+                onClick={() => { setPicking(picking === id ? null : id); setNote(picking === id ? '' : '지을 칸을 누르세요.'); }}
+              >
+                <span>{b.icon}</span>
+                <span>{b.ko}</span>
+                <small>🌰 {b.cost}{b.minRarity > 0 ? ` · ${RARITY_KO[b.minRarity]}` : ''}</small>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

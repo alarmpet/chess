@@ -833,14 +833,38 @@ body.cinematic-ui-hidden #hud-bottom {
 .panel-body { padding: 14px 16px 16px; }
 
 /* Village screen */
-.village-view { position: fixed; inset: 0; z-index: 70; background: #bfe9ff; }
+.village-view { position: fixed; inset: 0; z-index: 70; background: #13808f; }
 .village-canvas { position: absolute; inset: 0; }
 .village-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .village-pill { padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.92); color: #4a3b2a; font-weight: 800; font-size: 15px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); }
-.village-close { margin-left: auto; }
+.village-tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; }
 .village-card { position: absolute; top: 60px; left: 12px; max-width: min(420px, calc(100vw - 24px)); padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.94); color: #4a3b2a; font-size: 14px; line-height: 1.5; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14); }
-.village-build { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; gap: 10px; padding: 0 12px; flex-wrap: wrap; }
-.village-build-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; padding: 8px 10px; border: 2px solid #fff; border-radius: 14px; background: rgba(255, 255, 255, 0.94); color: #4a3b2a; font-weight: 700; cursor: pointer; font-size: 13px; }
+.village-build { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; gap: 8px; padding: 0 12px 4px; overflow-x: auto; }
+.village-build::before, .village-build::after { content: ''; margin: auto; }
+.village-quest { font-weight: 800; color: #a0522d; }
+.village-panel { position: absolute; left: 12px; right: 12px; bottom: 12px; max-width: 640px; margin: 0 auto; padding: 10px 14px; border-radius: 16px; background: rgba(255, 252, 244, 0.96); color: #4a3b2a; font-size: 14px; line-height: 1.45; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22); }
+.village-panel p { margin: 2px 0; }
+.village-panel-head { display: flex; align-items: center; justify-content: space-between; font-size: 16px; }
+.village-link { margin-left: 8px; padding: 0; border: 0; background: none; color: #a0522d; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.village-residents { display: flex; gap: 6px; margin-top: 6px; padding-bottom: 4px; overflow-x: auto; }
+.village-resident { position: relative; flex: none; padding: 2px; border: 2px solid transparent; border-radius: 10px; background: none; cursor: pointer; }
+.village-resident .wc-card.sm { width: 76px; }
+.village-resident .wc-card.sm .wc-card-label { font-size: 0.6rem; -webkit-text-stroke-width: 2px; }
+.village-resident.on { border-color: #f5a623; }
+.village-resident.off { cursor: help; }
+.village-resident.off .wc-card { filter: grayscale(1) opacity(0.55); }
+.village-resident small { position: absolute; left: 0; right: 0; bottom: 10px; color: #fff; font-size: 11px; font-weight: 800; text-align: center; -webkit-text-stroke: 2.5px #3c2208; paint-order: stroke fill; }
+.village-album { position: absolute; top: 60px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; max-width: min(520px, calc(100vw - 24px)); padding: 10px; border-radius: 14px; background: rgba(255, 252, 244, 0.96); color: #4a3b2a; font-size: 13px; }
+.village-album figure { margin: 0; width: 150px; }
+.village-album img { width: 100%; border-radius: 8px; }
+.village-album figcaption { text-align: center; }
+.village-toast.island-done { position: absolute; bottom: 24px; }
+@media (max-width: 560px) {
+  .village-pill { padding: 5px 9px; font-size: 13px; }
+  .village-card { top: 100px; font-size: 13px; }
+  .village-album { top: 100px; }
+}
+.village-build-btn { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; padding: 8px 10px; border: 2px solid #fff; border-radius: 14px; background: rgba(255, 255, 255, 0.94); color: #4a3b2a; font-weight: 700; cursor: pointer; font-size: 13px; }
 .village-build-btn span:first-child { font-size: 24px; }
 .village-build-btn.active { border-color: #f5a623; background: #fff4d6; }
 .village-build-btn:disabled { opacity: 0.5; cursor: not-allowed; }

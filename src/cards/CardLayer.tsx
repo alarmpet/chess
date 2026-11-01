@@ -3,11 +3,12 @@ import { sfx } from '../audio/sfx.js';
 import { fxSettings } from '../fx/settings.js';
 import CardFace, { ANIMAL_EN, ANIMAL_KO, RARITY_EN, RARITY_KO } from './CardFace';
 import {
-  ANIMALS, DROP_TABLE, HERO, HERO_GUARANTEE, MERGE_COST, RARE, RARE_GUARANTEE, RARITIES, UNLOCK_GAMES,
+  ANIMALS, ANIMAL_OF, DROP_TABLE, HERO, HERO_GUARANTEE, MERGE_COST, RARE, RARE_GUARANTEE, RARITIES, UNLOCK_GAMES,
   albumProgress, awardCard, buyShelfSlot, cardId, consolationCard, convertOverflow, mergeCard, mergeList,
   seededRoll, shelfPrice, sparesOf, toggleShelf
 } from './economy.js';
 import { advanceMission, missionChoices } from './missions.js';
+import { loadVillage } from '../village/store';
 import { loadCollection, logGame, readPlaylog, saveCollection } from './store';
 
 const FLY_MS = 900;
@@ -18,11 +19,11 @@ type Won = { id: string; animal: string; rarity: number; fresh: boolean };
 type Fly = Won & { key: number; x: number; y: number };
 type Game = {
   id: number; lastPly: number; won: Won[]; started: number; captures: number;
-  mission: any; missionState: string | null; boost: boolean; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
+  mission: any; missionState: string | null; quest: string | null; boost: boolean; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
 };
 const freshGame = (id: number): Game => ({
   id, lastPly: 0, won: [], started: Date.now(), captures: 0,
-  mission: null, missionState: null, boost: false, scout: 0, rewind: 0, usedScout: false, usedRewind: false
+  mission: null, missionState: null, quest: null, boost: false, scout: 0, rewind: 0, usedScout: false, usedRewind: false
 });
 const engine = () => (window as any).wizardChess;
 
@@ -107,6 +108,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       // A taken-back move and its replay share a move number, so a capture pays only once.
       if (!d.byPlayer || d.ply <= g.lastPly) return;
       g.lastPly = d.ply;
+      if (d.type === g.quest) setMission((m) => m && { ...m, state: 'done' });
       g.captures += 1;
       const card = pay(d.type, seededRoll(d.gameId, 'capture', d.ply), d.x, d.y, { boost: g.boost });
       g.boost = false;
@@ -120,7 +122,12 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       if (!fxSettings().cards) return;
       const d = (e as CustomEvent).detail;
       startGame(d.gameId);
-      if (loadCollection().games >= UNLOCK_GAMES) setOffers(missionChoices(seededRoll(d.gameId, 'offer', 0)));
+      // Once a village resident is asking, its request replaces the card mission.
+      const quest = loadVillage().quest;
+      if (quest) {
+        game.current.quest = quest.piece;
+        setMission({ m: { ko: `마을의 부탁: ${ANIMAL_KO[ANIMAL_OF[quest.piece as keyof typeof ANIMAL_OF]]} 잡기`, en: `Village request: capture a ${ANIMAL_EN[ANIMAL_OF[quest.piece as keyof typeof ANIMAL_OF]].toLowerCase()}` }, state: null });
+      } else if (loadCollection().games >= UNLOCK_GAMES) setOffers(missionChoices(seededRoll(d.gameId, 'offer', 0)));
     };
     const onMoved = (e: Event) => {
       const d = (e as CustomEvent).detail;
