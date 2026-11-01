@@ -7,6 +7,8 @@ import { fxSettings } from './settings.js';
 const MAX_SPARKS = 160;
 const GRAVITY = 1.6;
 const DIZZY_HEIGHT = 0.46;
+// A sprite without size attenuation is drawn as if one unit away, where a 40 degree camera sees this many units top to bottom.
+const SCREEN_HEIGHT = 2 * Math.tan((40 * Math.PI) / 360);
 
 function starGeometry() {
   const s = new THREE.Shape();
@@ -22,20 +24,20 @@ function starGeometry() {
 
 function wordTexture(text) {
   const c = document.createElement('canvas');
-  c.width = 256;
-  c.height = 128;
+  c.width = 512;
+  c.height = 256;
   const g = c.getContext('2d');
   const font = (px) => `900 ${px}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`;
-  g.font = font(96);
-  g.font = font(Math.min(96, Math.floor((96 * 224) / g.measureText(text).width)));
+  g.font = font(192);
+  g.font = font(Math.min(192, Math.floor((192 * 448) / g.measureText(text).width)));
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   g.lineJoin = 'round';
-  g.lineWidth = 16;
+  g.lineWidth = 32;
   g.strokeStyle = '#5a2d0c';
-  g.strokeText(text, 128, 66);
+  g.strokeText(text, 256, 132);
   g.fillStyle = '#ffe14d';
-  g.fillText(text, 128, 66);
+  g.fillText(text, 256, 132);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
@@ -117,11 +119,16 @@ export function createImpactFx(scene) {
 
   function label(pos, text, size) {
     wordTex[text] ||= wordTexture(text);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: wordTex[text], transparent: true, depthTest: false }));
+    // Pushed off to one side and tipped, so the word sits beside the blow rather than on top of it.
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: wordTex[text], transparent: true, depthTest: false, sizeAttenuation: false, fog: false, rotation: -side * 0.12
+    }));
+    sprite.center.set(side > 0 ? 0.1 : 0.9, 0.5);
     sprite.position.set(pos.x, pos.y + 0.3, pos.z);
     sprite.renderOrder = 20;
     scene.add(sprite);
-    words.push({ sprite, age: 0, dur: 0.62, size });
+    words.push({ sprite, age: 0, dur: 0.62, size: size * SCREEN_HEIGHT });
   }
 
   // Materials are shared between pieces of a role, so the flash works on this piece's own copies.

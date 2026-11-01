@@ -7,11 +7,12 @@ import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
 import { sfx } from './audio/sfx.js';
-import { createImpactFx } from './fx/impactFx.js';
-import { buildSeaBiome } from './fx/seaBiome.js';
+import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
+import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
+import { createContactShadows } from './fx/contactShadows.js';
 import { fxSettings } from './fx/settings.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
-import { IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
+import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -107,7 +108,7 @@ export function initWizardChess() {
     }
 
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.22, 65);
-    camera.position.set(0, 2.22, 2.72);
+    camera.position.set(0, 3.0, 3.1);
 
     const orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
@@ -1045,12 +1046,19 @@ export function initWizardChess() {
       }
       // Cathedral-only light rigs off (window/brazier point lights, flame halos).
       scene.traverse((o) => {
-        if (o.isPointLight && o !== impactFlashLight) o.intensity = 0;
+        if (o.isPointLight && o !== impactFlashLight) o.visible = false;
       });
+      brazierLights.length = 0;
       for (const sp of brazierGlowSprites) sp.visible = false;
 
       const rand = mulberry32(1234);
       if (env.sea) {
+        const cathedral = scene.environment;
+        scene.environment = daylightEnvironment(renderer, env);
+        cathedral?.dispose();
+        scene.environmentIntensity = env.sea.ambient ?? 0.6;
+        renderer.toneMapping = THREE.NeutralToneMapping;
+        renderer.toneMappingExposure = env.sea.exposure ?? 1;
         seaTick = buildSeaBiome(biomeGroup, env, { halfBoard: 4 * BOARD_SQ_SIZE, surfaceY: BOARD_SURFACE_Y, rand });
         return;
       }
@@ -1763,8 +1771,10 @@ export function initWizardChess() {
       // White sits at +Z looking toward -Z (across the Obsidian Altar down the Cathedral Nave & Rose Window)
       // Black sits at -Z looking toward +Z (across the Obsidian Altar toward the South Narthex Royal Amber Triptych)
       const zSign = color === 'b' ? -1 : 1;
-      const desiredPos = new THREE.Vector3(0, 2.22, zSign * 2.72);
-      const desiredTarget = new THREE.Vector3(0, 0.85, zSign * -0.15);
+      // High enough that the near ranks do not hide the board; a narrow screen backs away until the board fits across it.
+      const fit = THREE.MathUtils.clamp(1.25 / camera.aspect, 1, 2.35);
+      const desiredTarget = new THREE.Vector3(0, 0.72, zSign * 0.06);
+      const desiredPos = new THREE.Vector3(0, 2.28 * fit, zSign * 3.04 * fit).add(desiredTarget);
       if (immediate) {
         activeCamTransition = null;
         camera.position.copy(desiredPos);
@@ -1795,6 +1805,22 @@ export function initWizardChess() {
       const start = piece.mesh.position.clone();
       const side = start.x <= 0 ? -1 : 1;
       fadingPieces.push({ piece, life: 1.25, total: 1.25, start, endX: side * BOARD_SQ_SIZE * 5.4, spin: side * 7 });
+    }
+    const contactShadows = createContactShadows(scene, { surfaceY: BOARD_SURFACE_Y, size: BOARD_SQ_SIZE * 0.92, opacity: 0.3 });
+    const shadowedMeshes = [];
+    function stepContactShadows() {
+      shadowedMeshes.length = 0;
+      for (const row of boardState) {
+        for (const p of row) {
+          if (p?.mesh && p.rig !== 'statue') shadowedMeshes.push(p.mesh);
+        }
+      }
+      // A piece bounced off the board is over the water by then, where a spot on the board's plane would hang in the air.
+      for (const f of fadingPieces) {
+        const { x, z } = f.piece.mesh.position;
+        if (Math.max(Math.abs(x), Math.abs(z)) < BOARD_SQ_SIZE * 4) shadowedMeshes.push(f.piece.mesh);
+      }
+      contactShadows.update(shadowedMeshes, BOARD_SQ_SIZE);
     }
     function stepFadingPieces(dt) {
       for (let i = fadingPieces.length - 1; i >= 0; i--) {
@@ -1930,6 +1956,7 @@ export function initWizardChess() {
       const R = typeof ped.radius === 'number' ? ped.radius : 0.36;
       const H = typeof ped.height === 'number' ? ped.height : 0.09;
       const key = `${R}_${H}`;
+      const bandKey = `band_${R}`;
       if (!pedestalCache[key]) {
         // profile (x = radius, y = height): wide foot, bead, cove, narrow top collar
         const pts = [
@@ -1937,17 +1964,27 @@ export function initWizardChess() {
           [R * 0.86, H * 0.6], [R * 0.74, H * 0.74], [R * 0.7, H * 0.86], [R * 0.74, H * 0.94], [R * 0.72, H], [0, H]
         ].map(([x, y]) => new THREE.Vector2(x, y));
         pedestalCache[key] = new THREE.LatheGeometry(pts, 40);
+        pedestalCache[bandKey] = new THREE.TorusGeometry(R * 0.98, R * 0.045, 8, 48).rotateX(Math.PI / 2);
       }
       const matKey = `mat_${color}`;
       if (!pedestalCache[matKey]) {
         const hex = (color === 'w' ? ped.w : ped.b) || (color === 'w' ? '#efe4cf' : '#2a2420');
-        pedestalCache[matKey] = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.38, metalness: 0.05 });
+        pedestalCache[matKey] = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.62, metalness: 0 });
       }
       const m = new THREE.Mesh(pedestalCache[key], pedestalCache[matKey]);
       m.castShadow = true;
       m.receiveShadow = true;
       m.name = 'pedestal';
       m.userData.height = H;
+      // The side colour as a painted band, so a piece's team reads against either square.
+      const bandHex = color === 'w' ? ped.bandW : ped.bandB;
+      if (bandHex) {
+        const bandMatKey = `bandmat_${color}`;
+        pedestalCache[bandMatKey] ||= new THREE.MeshStandardMaterial({ color: new THREE.Color(bandHex), roughness: 0.5, metalness: 0 });
+        const band = new THREE.Mesh(pedestalCache[bandKey], pedestalCache[bandMatKey]);
+        band.position.y = H * 0.24;
+        m.add(band);
+      }
       return m;
     }
 
@@ -2866,27 +2903,27 @@ export function initWizardChess() {
       if (castleRookPiece) {
         sfx.play('clap');
         impactFx.burst(ground, 'king', 'small');
-        impactFx.label(ground, '짝!', 0.14);
+        impactFx.label(ground, '짝!', 0.09);
         if (castleRookPiece.mesh) impactFx.squash(castleRookPiece.mesh, BOARD_SQ_SIZE, 0.14, 0.24);
       }
       if (promoted) {
         sfx.play('promote');
         impactFx.burst(ground, 'queen', 'big');
         impactFx.ring(ground, 'big');
-        impactFx.label(ground, '승급!', 0.16);
+        impactFx.label(ground, '승급!', 0.11);
       }
       if (san.endsWith('#')) {
         const playerLost = gameMode === 'single' && playerColor !== 'spectator' && moverColor !== playerColor;
         sfx.play(playerLost ? 'lose' : 'mate', 0.15);
         impactFx.burst(kingGround, 'king', 'big');
         impactFx.ring(kingGround, 'big');
-        impactFx.label(kingGround, '메이트!', 0.2);
+        impactFx.label(kingGround, '메이트!', 0.14);
         if (playFlourish(kingOf(moverColor), 'roar')) sfx.voice('king', 0.4);
       } else if (referee.gameOverReason()) {
         sfx.play('draw', 0.15);
       } else if (san.endsWith('+')) {
         sfx.play('check', 0.08);
-        impactFx.label(kingGround, '체크!', 0.13);
+        impactFx.label(kingGround, '체크!', 0.09);
         if (enemyKing?.mesh && enemyKing.rig !== 'statue') impactFx.hop(enemyKing.mesh, 0.09, 0.34);
       }
     }
@@ -3286,28 +3323,17 @@ export function initWizardChess() {
       const chosenPerp =
         scoreDuelPerpOcclusion(prefPerp) > scoreDuelPerpOcclusion(altPerp) + 0.25 ? altPerp : prefPerp;
 
-      // Continuous Quadratic Bezier 3/4 orbit-and-dolly arc (savedCamPos -> duelCamMid -> duelCamClose)
-      // so the attack camera glides in a single unbroken C-infinity sweep across approach + strike without ever stalling at tApproach
-      const duelCamMid = new THREE.Vector3(
-        midPoint.x + chosenPerp.x * 1.34 - dirX * 0.44,
-        BOARD_SURFACE_Y + 0.96,
-        midPoint.z + chosenPerp.z * 1.34 - dirZ * 0.44
-      );
-      const duelCamClose = new THREE.Vector3(
-        midPoint.x + chosenPerp.x * 0.92 + dirX * 0.18,
-        BOARD_SURFACE_Y + 0.74,
-        midPoint.z + chosenPerp.z * 0.92 + dirZ * 0.18
-      );
-      const duelTargetStart = new THREE.Vector3(
-        strikePos.x + dirX * 0.10,
-        BOARD_SURFACE_Y + 0.34,
-        strikePos.z + dirZ * 0.10
-      );
-      const duelTargetEnd = new THREE.Vector3(
-        endPos.x - dirX * 0.05,
-        BOARD_SURFACE_Y + 0.30,
-        endPos.z - dirZ * 0.05
-      );
+      // The camera leans in from where the player already is, so both pieces stay in frame and nothing ends up in front
+      // of the blow. Only the biggest moments swing round to the less crowded side.
+      const hitTier = isCapture ? impactTier(captured.type, referee.history().at(-1)?.san || '') : 'small';
+      const cameraLean = CAMERA_LEAN[hitTier];
+      const duelCamClose = savedCamPos.clone().lerp(midPoint, cameraLean);
+      duelCamClose.y = Math.max(duelCamClose.y, midPoint.y + 1.0);
+      if (hitTier === 'big') duelCamClose.addScaledVector(chosenPerp, 0.45);
+      const duelCamMid = savedCamPos.clone().lerp(duelCamClose, 0.5);
+      duelCamMid.y += 0.06;
+      const duelTargetStart = savedTarget.clone().lerp(midPoint, 0.35);
+      const duelTargetEnd = savedTarget.clone().lerp(midPoint, 0.75);
 
       function evalQuadraticBezier(outVec, p0, p1, p2, t) {
         const inv = 1 - t;
@@ -3353,8 +3379,9 @@ export function initWizardChess() {
       // Slower, distance-aware post-attack camera return (~1.30s - 1.60s instead of 0.64s)
       const camReturnDist = savedCamPos.distanceTo(duelCamClose);
       const quickMove = fxSettings().quick;
-      const fullReturn = 0.7 + Math.min(0.2, camReturnDist * 0.05);
-      const returnDuration = isCapture ? Number((quickMove ? 0.22 : fullReturn).toFixed(3)) : 0;
+      const camMoves = !quickMove && cameraLean > 0;
+      const fullReturn = 0.4 + Math.min(0.3, camReturnDist * 0.35);
+      const returnDuration = isCapture ? Number((camMoves ? fullReturn : 0.22).toFixed(3)) : 0;
       const totalDuration = isCapture ? (tStrikeDone + returnDuration) : stdMoveDuration;
 
       if (!isCapture) {
@@ -3502,7 +3529,7 @@ export function initWizardChess() {
           // Single unbroken C-infinity camera arc across both approach and strike (never stops at tApproach!)
           const uActive = Math.min(1, elapsed / tStrikeDone);
           const sActive = 0.38 * uActive + 0.62 * easeInOutCubic(uActive);
-          if (!quickMove) {
+          if (camMoves) {
             evalQuadraticBezier(camera.position, savedCamPos, duelCamMid, duelCamClose, sActive);
             evalQuadraticBezier(orbitControls.target, savedTarget, duelTargetStart, duelTargetEnd, sActive);
           }
@@ -3629,7 +3656,7 @@ export function initWizardChess() {
             }
 
             // Subtle damped perpendicular impact vibration right when the blow shatters the defender
-            if (!quickMove && shatterTriggered && elapsed >= impactActualTime && elapsed <= impactActualTime + 0.26) {
+            if (camMoves && shakeAllowed() && shatterTriggered && elapsed >= impactActualTime && elapsed <= impactActualTime + 0.26) {
               const shakeProgress = (elapsed - impactActualTime) / 0.26;
               const decay = (1 - shakeProgress) * (1 - shakeProgress);
               const amp = 0.024 * decay;
@@ -3644,7 +3671,7 @@ export function initWizardChess() {
           const pieceAdvanceBlend = 0.35 * uReturn + 0.65 * easeRet;
 
           piece.mesh.position.lerpVectors(postStrikePiecePos, endPos, pieceAdvanceBlend);
-          if (!quickMove) {
+          if (camMoves) {
             camera.position.lerpVectors(duelCamClose, savedCamPos, easeRet);
             orbitControls.target.lerpVectors(duelTargetEnd, savedTarget, easeRet);
           }
@@ -5954,6 +5981,7 @@ export function initWizardChess() {
       }
 
       stepFadingPieces(dt);
+      stepContactShadows();
 
       for (let i = shatterDebris.length - 1; i >= 0; i--) {
         const d = shatterDebris[i];
@@ -6068,6 +6096,7 @@ export function initWizardChess() {
         playerColor = 'b';
       }
       resetChessBoard(true, true);
+      setCameraForSide(playerColor === 'b' ? 'b' : 'w', true);
       if (navigator.webdriver) {
         window.wizardChess.stepBy(0.9, 15);
       } else {

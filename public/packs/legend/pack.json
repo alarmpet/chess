@@ -19,7 +19,9 @@
       "deep": "#0c6a80",
       "shallow": "#2aa9a6",
       "foam": "#d8fff0",
-      "islets": 9
+      "islets": 9,
+      "ambient": 0.7,
+      "exposure": 1.05
     },
     "ground": {
       "color": "#55803d",
@@ -58,8 +60,10 @@
     "matte": true
   },
   "pedestal": {
-    "w": "#efe4cf",
-    "b": "#2a2420",
+    "w": "#d9b27c",
+    "b": "#4a3022",
+    "bandW": "#f2c14e",
+    "bandB": "#8a63c9",
     "radius": 0.36,
     "height": 0.09
   },

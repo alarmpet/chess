@@ -11,8 +11,9 @@ import { advanceMission, missionChoices } from './missions.js';
 import { loadVillage } from '../village/store';
 import { loadCollection, logGame, readPlaylog, saveCollection } from './store';
 
-const FLY_MS = 900;
-const SHOW_MS = 1500;
+// Cards wait out the blow (the 0.55s delay on .card-fly), so they never cover the hit they came from.
+const FLY_MS = 1450;
+const SHOW_MS = 2050;
 const MERGE_MS = 1100;
 
 type Won = { id: string; animal: string; rarity: number; fresh: boolean };

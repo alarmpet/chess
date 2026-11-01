@@ -1,12 +1,15 @@
 // How big a capture should feel. Shaking on every capture wears out by the third minute, so size follows the moment.
-// Numbers are starting values to tune by eye (docs/plans/2026-10-30-animal-feel-plan.md §5).
+// Numbers are starting values to tune by eye (docs/plans/2026-10-30-animal-feel-plan.md §5). wordSize is a share of the screen's height.
 export const IMPACT_TIERS = {
-  small: { stopSec: 0.05, particles: 18, ring: 0.28, shake: 0, slowSec: 0, word: '뾱!', wordSize: 0.1 },
-  medium: { stopSec: 0.07, particles: 36, ring: 0.42, shake: 0.012, slowSec: 0, word: '콩!', wordSize: 0.14 },
-  big: { stopSec: 0.11, particles: 70, ring: 0.62, shake: 0.028, slowSec: 0.29, word: '쾅!', wordSize: 0.19 }
+  small: { stopSec: 0.05, particles: 18, ring: 0.28, shake: 0, slowSec: 0, word: '뾱!', wordSize: 0.07 },
+  medium: { stopSec: 0.07, particles: 36, ring: 0.42, shake: 0.012, slowSec: 0, word: '콩!', wordSize: 0.1 },
+  big: { stopSec: 0.11, particles: 70, ring: 0.62, shake: 0.028, slowSec: 0.29, word: '쾅!', wordSize: 0.14 }
 };
 
 export const SLOW_FACTOR = 0.35;
+
+/** Share of the way the camera leans toward a capture. Small ones leave it alone. */
+export const CAMERA_LEAN = { small: 0, medium: 0.16, big: 0.3 };
 
 /** `san` is the move in chess notation: it ends in + for check and # for mate. */
 export function impactTier(capturedType, san = '') {

@@ -76,9 +76,10 @@ test('the king keeps his crown: no head slot', () => {
 test('pedestal colours and sizes are validated', () => {
   assert.ok(legend.pedestal && legend.pedestal.w && legend.pedestal.b, 'legend has an ivory/ebony pedestal');
   const bad = structuredClone(legend);
-  bad.pedestal = { w: 'white', b: '#000000', height: -1 };
+  bad.pedestal = { w: 'white', b: '#000000', bandW: 'gold', height: -1 };
   const errs = validatePackManifest(bad).errors;
   assert.ok(errs.some((e) => e.includes('pedestal.w')));
+  assert.ok(errs.some((e) => e.includes('pedestal.bandW')));
   assert.ok(errs.some((e) => e.includes('pedestal.height')));
 });
 

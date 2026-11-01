@@ -902,8 +902,8 @@ body.cinematic-ui-hidden #hud-bottom {
 .wc-card-spares i { width: 7px; height: 7px; border-radius: 50%; background: rgba(0, 0, 0, 0.18); }
 .wc-card-spares i.on { background: #ffb300; box-shadow: 0 0 0 1px #fff; }
 .wc-card-spares b { font-size: 0.62rem; color: #7a4a22; background: #fff; border-radius: 6px; padding: 0 3px; }
-.card-fly { position: fixed; z-index: 40; pointer-events: none; transform: translate(-50%, -50%); animation: card-fly-away 0.9s ease-in forwards; }
-.card-fly.rare, .card-fly.hero { left: 50% !important; top: 42% !important; animation: card-show 1.5s ease-out forwards; }
+.card-fly { position: fixed; z-index: 40; pointer-events: none; transform: translate(-50%, -50%); animation: card-fly-away 0.9s ease-in 0.55s both; }
+.card-fly.rare, .card-fly.hero { left: 50% !important; top: 42% !important; animation: card-show 1.5s ease-out 0.55s both; }
 .card-fly.hero .wc-card { filter: drop-shadow(0 0 26px rgba(255, 205, 90, 0.95)); }
 @keyframes card-fly-away {
   0% { transform: translate(-50%, -50%) scale(0.3) rotate(-14deg); opacity: 0; }

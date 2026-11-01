@@ -38,6 +38,26 @@ function makeIslet(rand, leaves, trunk) {
   return g;
 }
 
+/** Soft outdoor reflections in place of the cathedral's: open sky above, sea below, and the sun's side a little warmer. */
+export function daylightEnvironment(renderer, env) {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const room = new THREE.Scene();
+  room.background = new THREE.Color(env.background);
+  const box = new THREE.BoxGeometry(1, 1, 1);
+  const panel = (color, strength, pos, size) => {
+    const m = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(strength) }));
+    m.position.fromArray(pos);
+    m.scale.fromArray(size);
+    room.add(m);
+  };
+  panel('#d8c79c', 0.8, [0, -6, 0], [60, 1, 60]);
+  panel(env.sun?.color || '#fff4de', 5, [8, 14, 9], [12, 1, 12]);
+  const texture = pmrem.fromScene(room, 0.04).texture;
+  box.dispose();
+  pmrem.dispose();
+  return texture;
+}
+
 /** Fills `group` and returns the per-frame update. */
 export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand }) {
   const sea = env.sea;

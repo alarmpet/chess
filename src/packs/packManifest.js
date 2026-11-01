@@ -75,7 +75,7 @@ export function validatePackManifest(manifest) {
     const pd = manifest.pedestal;
     if (!pd || typeof pd !== 'object') errors.push('pedestal must be an object');
     else {
-      for (const k of ['w', 'b']) if (pd[k] !== undefined && !isHex(pd[k])) errors.push(`pedestal.${k} must be a #rrggbb colour`);
+      for (const k of ['w', 'b', 'bandW', 'bandB']) if (pd[k] !== undefined && !isHex(pd[k])) errors.push(`pedestal.${k} must be a #rrggbb colour`);
       for (const k of ['radius', 'height']) if (pd[k] !== undefined && !(typeof pd[k] === 'number' && pd[k] > 0)) errors.push(`pedestal.${k} must be a positive number (board squares)`);
     }
   }
