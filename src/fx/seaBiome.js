@@ -1,0 +1,94 @@
+// The board as an island: a slice of ground under the squares, the same water as the village, and small islets out to sea.
+// Turned on by a pack's `environment.sea`, so packs with their own biome are untouched.
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { createWater } from './water.js';
+
+const material = (color, roughness = 0.9) => new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
+
+function makeIslet(rand, leaves, trunk) {
+  const g = new THREE.Group();
+  const w = 0.5 + rand() * 0.7;
+  const soil = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.9, w, 0.5, 14), material('#a8703f', 1));
+  soil.position.y = -0.2;
+  const grass = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.96, w * 0.96, 0.14, 18), material('#94ad54'));
+  grass.receiveShadow = true;
+  g.add(soil, grass);
+  const ball = new THREE.IcosahedronGeometry(1, 2);
+  const count = 1 + Math.floor(rand() * 3);
+  for (let i = 0; i < count; i++) {
+    const tree = new THREE.Group();
+    const a = rand() * Math.PI * 2;
+    const r = rand() * w * 0.5;
+    tree.position.set(Math.cos(a) * r, 0.07, Math.sin(a) * r);
+    const h = 0.26 + rand() * 0.2;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, h, 7), trunk);
+    stem.position.y = h / 2;
+    tree.add(stem);
+    const leaf = leaves[Math.floor(rand() * leaves.length)];
+    for (const [x, y, z, s] of [[0, h + 0.14, 0, 0.2], [0.13, h + 0.08, 0.05, 0.13], [-0.12, h + 0.09, -0.05, 0.14]]) {
+      const blob = new THREE.Mesh(ball, leaf);
+      blob.position.set(x, y, z);
+      blob.scale.setScalar(s);
+      blob.castShadow = true;
+      tree.add(blob);
+    }
+    g.add(tree);
+  }
+  return g;
+}
+
+/** Fills `group` and returns the per-frame update. */
+export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand }) {
+  const sea = env.sea;
+  const depth = sea.depth ?? 0.34;
+  const waterY = surfaceY - depth;
+
+  const soil = new THREE.Mesh(new RoundedBoxGeometry(halfBoard * 2 + 0.14, depth + 0.1, halfBoard * 2 + 0.14, 3, 0.03), material('#9a6438', 1));
+  soil.position.y = surfaceY - 0.05 - (depth + 0.1) / 2;
+  soil.castShadow = true;
+  soil.receiveShadow = true;
+  group.add(soil);
+
+  // Stones on the cut face and along the waterline, as on the village island.
+  const stones = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 1), material('#ffffff', 1), 96);
+  const at = new THREE.Object3D();
+  const tint = new THREE.Color();
+  const edge = halfBoard + 0.07;
+  for (let i = 0; i < stones.count; i++) {
+    const side = i % 4;
+    const along = (rand() * 2 - 1) * edge;
+    const low = i % 3 === 0;
+    const out = edge + rand() * 0.012;
+    at.position.set(side < 2 ? along : side === 2 ? out : -out, low ? waterY + 0.01 : surfaceY - 0.09 - rand() * (depth - 0.12), side < 2 ? (side === 0 ? out : -out) : along);
+    const s = low ? 0.03 + rand() * 0.035 : 0.012 + rand() * 0.02;
+    at.scale.set(s * 1.3, s, s);
+    at.rotation.set(rand() * 3, rand() * 3, 0);
+    at.updateMatrix();
+    stones.setMatrixAt(i, at.matrix);
+    stones.setColorAt(i, tint.set(low ? '#8f8a80' : '#6e4a2c').offsetHSL(0, 0, (rand() - 0.5) * 0.08));
+  }
+  group.add(stones);
+
+  const { mesh, material: water } = createWater({ islandHalf: halfBoard + 0.07, size: 160, fadeFrom: sea.fadeFrom ?? 9, fadeTo: sea.fadeTo ?? 30 });
+  mesh.position.y = waterY;
+  water.uniforms.uDeep.value.set(sea.deep);
+  water.uniforms.uShallow.value.set(sea.shallow);
+  water.uniforms.uFoam.value.set(sea.foam);
+  water.uniforms.uHorizon.value.set(env.background);
+  group.add(mesh);
+
+  const leaves = (env.trees?.canopy || ['#6fa83f']).map((c) => material(c, 0.85));
+  const trunk = material(env.trees?.trunk || '#8a5a33');
+  const islets = sea.islets ?? 9;
+  for (let i = 0; i < islets; i++) {
+    const islet = makeIslet(rand, leaves, trunk);
+    const a = (i / islets) * Math.PI * 2 + rand() * 0.4;
+    const r = 6 + rand() * 9;
+    islet.position.set(Math.cos(a) * r, waterY + 0.06, Math.sin(a) * r);
+    islet.scale.setScalar(0.8 + rand() * 0.9);
+    group.add(islet);
+  }
+
+  return (t) => { water.uniforms.uTime.value = t; };
+}

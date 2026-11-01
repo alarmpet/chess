@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
+import { createWater } from '../fx/water.js';
 import { stageForHearts, tenantAnimal, tenantRarity } from './economy.js';
 import { villageTiles } from './roster.js';
 
@@ -58,45 +59,6 @@ function mesh(geo: THREE.BufferGeometry, color: number, x = 0, y = 0, z = 0) {
   return m;
 }
 
-// Soft ripples, shoreline foam and the island's own shadow, all from the distance to the island's edge. No reflection pass.
-const WATER_VERT = `
-varying vec3 vWorld;
-void main() {
-  vec4 w = modelMatrix * vec4(position, 1.0);
-  vWorld = w.xyz;
-  gl_Position = projectionMatrix * viewMatrix * w;
-}`;
-const WATER_FRAG = `
-uniform float uTime, uGlow;
-uniform vec3 uDeep, uShallow, uFoam;
-varying vec3 vWorld;
-float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float noise(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
-}
-float box(vec2 p, float r) { vec2 q = abs(p) - vec2(r); return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0); }
-void main() {
-  vec2 p = vWorld.xz;
-  float t = uTime;
-  float d = box(p, 4.0);
-  float n = noise(p * 0.7 + t * vec2(0.06, 0.04)) + 0.5 * noise(p * 1.9 - t * vec2(0.09, 0.05));
-  vec3 col = mix(uShallow, uDeep, smoothstep(0.2, 5.0, d + (n - 0.75) * 0.9));
-  float bands = smoothstep(0.035, 0.0, abs(fract(n * 3.2 + t * 0.03) - 0.5)) * smoothstep(0.5, 2.5, d);
-  col += uFoam * bands * 0.05;
-  float shore = sin(d * 7.0 - t * 1.1 + n * 4.0) * 0.5 + 0.5;
-  float foam = smoothstep(0.86, 0.97, shore) * smoothstep(0.7, 0.08, d);
-  foam = max(foam, smoothstep(0.14, 0.02, d + (n - 0.75) * 0.14));
-  col = mix(col, uFoam, foam * 0.7);
-  float shadow = smoothstep(1.0, -0.3, box(p - vec2(0.75, 0.75), 4.0));
-  col *= 1.0 - shadow * 0.34;
-  col += vec3(1.0, 0.72, 0.32) * uGlow * smoothstep(2.4, 0.0, d) * (0.1 + 0.08 * noise(p * 3.0 + t * 0.3));
-  gl_FragColor = vec4(col, 1.0);
-  #include <tonemapping_fragment>
-  #include <colorspace_fragment>
-}`;
-
 export type IslandEvents = {
   onTile: (sq: string) => void;
   onBuilding: (id: number) => void;
@@ -142,14 +104,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   sun.shadow.normalBias = 0.02;
   scene.add(hemi, sun);
 
-  const water = new THREE.ShaderMaterial({
-    vertexShader: WATER_VERT,
-    fragmentShader: WATER_FRAG,
-    uniforms: { uTime: { value: 0 }, uGlow: { value: 0 }, uDeep: { value: new THREE.Color() }, uShallow: { value: new THREE.Color() }, uFoam: { value: new THREE.Color() } }
-  });
+  const { mesh: sea, material: water } = createWater();
   water.userData = NO_OUTLINE;
-  const sea = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), water);
-  sea.rotation.x = -Math.PI / 2;
   sea.position.y = -0.82;
   scene.add(sea);
 
@@ -788,7 +744,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   }
   confGeo.setAttribute('position', new THREE.BufferAttribute(confPos, 3));
   confGeo.setAttribute('color', new THREE.BufferAttribute(confCol, 3));
-  const confMat = new THREE.PointsMaterial({ size: 0.075, vertexColors: true, toneMapped: false });
+  const confMat = new THREE.PointsMaterial({ size: 0.2, vertexColors: true, toneMapped: false });
   confMat.userData = NO_OUTLINE;
   const confetti = new THREE.Points(confGeo, confMat);
   confetti.visible = false;

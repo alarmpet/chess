@@ -2,11 +2,13 @@ import * as THREE_NS from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
 import { sfx } from './audio/sfx.js';
 import { createImpactFx } from './fx/impactFx.js';
+import { buildSeaBiome } from './fx/seaBiome.js';
 import { fxSettings } from './fx/settings.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
@@ -961,8 +963,8 @@ export function initWizardChess() {
     const boardSquareMeshes = [];
 
     function buildChessBoardGrid() {
-      const tileH = 0.036;
-      const sqGeo = new THREE.BoxGeometry(BOARD_SQ_SIZE * 0.985, tileH, BOARD_SQ_SIZE * 0.985);
+      const tileH = 0.05;
+      const sqGeo = new RoundedBoxGeometry(BOARD_SQ_SIZE * 0.985, tileH, BOARD_SQ_SIZE * 0.985, 2, 0.012);
       const lightSqMat = new THREE.MeshStandardMaterial({
         color: 0xdcd3c2,
         roughness: 0.38,
@@ -1016,12 +1018,19 @@ export function initWizardChess() {
         if (hex) sq.material.color.set(hex);
       }
       if (board.rim) goldTrimMat.color.set(board.rim);
+      if (board.matte) {
+        for (const sq of boardSquareMeshes) {
+          sq.material.roughness = 0.72;
+          sq.material.metalness = 0;
+        }
+      }
     }
 
     // Procedural biome (PLAN §4.3 `environment.type = "procedural"`): sky, fog, ground, low-poly trees and rocks.
     // Used by animal packs until a modelled biome exists; the cathedral GLB is skipped entirely.
     const biomeGroup = new THREE.Group();
     scene.add(biomeGroup);
+    let seaTick = null;
     function buildProceduralEnvironment(env) {
       if (env.background) scene.background = new THREE.Color(env.background);
       if (env.fog) scene.fog = new THREE.FogExp2(new THREE.Color(env.fog.color).getHex(), env.fog.density);
@@ -1041,6 +1050,10 @@ export function initWizardChess() {
       for (const sp of brazierGlowSprites) sp.visible = false;
 
       const rand = mulberry32(1234);
+      if (env.sea) {
+        seaTick = buildSeaBiome(biomeGroup, env, { halfBoard: 4 * BOARD_SQ_SIZE, surfaceY: BOARD_SURFACE_Y, rand });
+        return;
+      }
       const groundR = env.ground?.radius || 40;
       const ground = new THREE.Mesh(
         new THREE.CircleGeometry(groundR, 48),
@@ -6035,6 +6048,7 @@ export function initWizardChess() {
       if (manualStepMode) return;
       const dt = Math.min(clock.getDelta(), 0.1);
       if (renderPaused) return;
+      seaTick?.(clock.elapsedTime);
       stepScene(dt || 0.016, true);
     }
 

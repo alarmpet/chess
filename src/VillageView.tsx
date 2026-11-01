@@ -15,6 +15,8 @@ const ROLE_OF_ANIMAL: Record<string, string> = { lion: 'king', tiger: 'queen', r
 const SHAPE_KO: Record<string, string> = { meerkat: '앞 칸', kangaroo: 'L자', panda: '대각선', rhino: '십자', tiger: '십자와 대각선', lion: '주변 8칸' };
 const PIECE_ANIMAL: Record<string, string> = { pawn: '미어캣', knight: '캥거루', bishop: '판다', rook: '코뿔소', queen: '호랑이' };
 
+// 받침이 있으면 앞 조사, 없으면 뒤 조사.
+const josa = (word: string, withFinal: string, without: string) => ((word.charCodeAt(word.length - 1) - 0xac00) % 28 ? withFinal : without);
 const role = (slot: string) => (slot[3] === '2' || slot[3] === '7' ? 'pawn' : ROLE_OF[slot[2]]);
 export const slotLabel = (slot: string, names: Record<string, string>) => {
   if (names[slot]) return names[slot];
@@ -205,12 +207,11 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
           {summary?.opened?.length > 0 && <div>🎉 {summary.opened.map((k: string) => BUILDINGS[k as keyof typeof BUILDINGS].ko).join(', ')} 문을 열었어요!</div>}
           {summary?.quest?.done && <div>🔔 의뢰 성공! 건물이 한 단계 자랐어요.{summary.quest.festival && ` ${ANIMAL_KO[summary.quest.festival]} 축제가 열렸어요!`}</div>}
           {questHome && (
-            <div className="village-quest" id="village-quest">🔔 {BUILDINGS[questHome.kind as keyof typeof BUILDINGS].ko}의 부탁: 다음 판에 {PIECE_ANIMAL[quest.piece]}를 잡아 주세요.</div>
+            <div className="village-quest" id="village-quest">🔔 {BUILDINGS[questHome.kind as keyof typeof BUILDINGS].ko}의 부탁: 다음 판에 {PIECE_ANIMAL[quest.piece]}{josa(PIECE_ANIMAL[quest.piece], '을', '를')} 잡아 주세요.</div>
           )}
-          {hero && !note && <div>{slotLabel(hero, village?.names || {})}, 오늘 지나간 길을 다시 걷는 중이에요.</div>}
-          {away.map((e, i) => (
-            <div key={i}>💌 {rivalName(e.rival)} 다녀감, 🌰 +{e.coins}{e.memory ? ` — "지난번 ${slotLabel(e.memory.mvp, village?.names || {})} 멋졌어!"` : ''}</div>
-          ))}
+          {hero && !note && !summary && <div>{slotLabel(hero, village?.names || {})}, 오늘 지나간 길을 다시 걷는 중이에요.</div>}
+          {away.length === 1 && <div>💌 {rivalName(away[0].rival)} 다녀감, 🌰 +{away[0].coins}{away[0].memory ? ` — "지난번 ${slotLabel(away[0].memory.mvp, village?.names || {})} 멋졌어!"` : ''}</div>}
+          {away.length > 1 && <div>💌 손님 {away.length}팀 다녀감, 🌰 +{away.reduce((n, e) => n + e.coins, 0)}</div>}
           {note && <div>{note}</div>}
         </div>
       )}
@@ -256,7 +257,8 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
                     const v = loadVillage();
                     moveIn(v, loadCollection(), building.id, id);
                     commit(v);
-                    setNote(`${ANIMAL_KO[tenantAnimal(id)]}가 입주했어요. 영향권: ${SHAPE_KO[tenantAnimal(id)]}`);
+                    const who = ANIMAL_KO[tenantAnimal(id)];
+                    setNote(`${who}${josa(who, '이', '가')} 입주했어요. 영향권: ${SHAPE_KO[tenantAnimal(id)]}`);
                   }}
                 >
                   <CardFace animal={tenantAnimal(id)} rarity={tenantRarity(id)} lang={lang} size="sm" />

@@ -9,10 +9,17 @@
   "assetBase": "./packs/legend/",
   "environment": {
     "type": "procedural",
-    "background": "#a7d8ff",
+    "background": "#a9def0",
     "fog": {
-      "color": "#bfe0b5",
-      "density": 0.04
+      "color": "#a9def0",
+      "density": 0.018
+    },
+    "sea": {
+      "depth": 0.34,
+      "deep": "#0c6a80",
+      "shallow": "#2aa9a6",
+      "foam": "#d8fff0",
+      "islets": 9
     },
     "ground": {
       "color": "#55803d",
@@ -32,12 +39,12 @@
       "innerRadius": 3.4,
       "outerRadius": 16,
       "canopy": [
-        "#2f7a3a",
-        "#3f8f45",
-        "#57a04f",
-        "#2b6b47"
+        "#7fb648",
+        "#6aa84f",
+        "#8cc44e",
+        "#94ad54"
       ],
-      "trunk": "#5a3b23"
+      "trunk": "#8a5a33"
     },
     "rocks": {
       "count": 24,
@@ -47,7 +54,8 @@
   "board": {
     "light": "#e2cf97",
     "dark": "#5e7f3c",
-    "rim": "#6b4a2b"
+    "rim": "#9a6a3c",
+    "matte": true
   },
   "pedestal": {
     "w": "#efe4cf",
