@@ -2,25 +2,47 @@
 // Turned on by a pack's `environment.sea`, so packs with their own biome are untouched.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { createWater } from './water.js';
+import { createOpenSea } from './openSea.js';
+import { populateReef } from './reefLife.js';
 
 const material = (color, roughness = 0.9) => new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
 
-function makeIslet(rand, leaves, trunk) {
+// The pale water and ring of surf around an islet, which is what makes it sit in the sea rather than on it.
+function shallowsTexture(shallow) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const fade = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  fade.addColorStop(0.3, 'rgba(255,255,255,0.9)');
+  fade.addColorStop(0.38, shallow);
+  fade.addColorStop(1, 'rgba(70,226,210,0)');
+  g.fillStyle = fade;
+  g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeIslet(rand, leaves, trunk, sand, shallows) {
   const g = new THREE.Group();
   const w = 0.5 + rand() * 0.7;
-  const soil = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.9, w, 0.5, 14), material('#a8703f', 1));
-  soil.position.y = -0.2;
-  const grass = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.96, w * 0.96, 0.14, 18), material('#94ad54'));
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(w * 3, 40).rotateX(-Math.PI / 2), shallows);
+  halo.position.y = 0.012;
+  halo.renderOrder = 3;
+  const beach = new THREE.Mesh(new THREE.SphereGeometry(w * 1.12, 28, 12), material(sand));
+  beach.scale.y = 0.15;
+  const grass = new THREE.Mesh(new THREE.SphereGeometry(w * 0.74, 24, 10), material('#8cc44e'));
+  grass.scale.y = 0.22;
+  grass.position.y = 0.05;
   grass.receiveShadow = true;
-  g.add(soil, grass);
+  g.add(halo, beach, grass);
   const ball = new THREE.IcosahedronGeometry(1, 2);
   const count = 1 + Math.floor(rand() * 3);
   for (let i = 0; i < count; i++) {
     const tree = new THREE.Group();
     const a = rand() * Math.PI * 2;
     const r = rand() * w * 0.5;
-    tree.position.set(Math.cos(a) * r, 0.07, Math.sin(a) * r);
+    tree.position.set(Math.cos(a) * r, 0.14, Math.sin(a) * r);
     const h = 0.26 + rand() * 0.2;
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, h, 7), trunk);
     stem.position.y = h / 2;
@@ -58,7 +80,7 @@ export function daylightEnvironment(renderer, env) {
   return texture;
 }
 
-/** Fills `group` and returns the per-frame update. */
+/** Fills `group`. `tick` is the per-frame update; `populate` brings in the models, which can arrive after the game has started. */
 export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand }) {
   const sea = env.sea;
   const depth = sea.depth ?? 0.34;
@@ -90,25 +112,31 @@ export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand }) {
   }
   group.add(stones);
 
-  const { mesh, material: water } = createWater({ islandHalf: halfBoard + 0.07, size: 160, fadeFrom: sea.fadeFrom ?? 9, fadeTo: sea.fadeTo ?? 30 });
-  mesh.position.y = waterY;
-  water.uniforms.uDeep.value.set(sea.deep);
-  water.uniforms.uShallow.value.set(sea.shallow);
-  water.uniforms.uFoam.value.set(sea.foam);
-  water.uniforms.uHorizon.value.set(env.background);
-  group.add(mesh);
+  const ocean = createOpenSea(group, env, { islandHalf: halfBoard + 0.07, waterY, rand });
 
   const leaves = (env.trees?.canopy || ['#6fa83f']).map((c) => material(c, 0.85));
   const trunk = material(env.trees?.trunk || '#8a5a33');
+  const shallows = new THREE.MeshBasicMaterial({ map: shallowsTexture(sea.shallow), transparent: true, depthWrite: false, fog: false });
+  const palms = [[-1.62, -1.44, 1], [1.62, -1.38, 0.95], [-1.64, 1.44, 0.7], [1.66, 1.4, 0.75]].map(([x, z, size]) => [x, waterY + 0.04, z, size]);
   const islets = sea.islets ?? 9;
   for (let i = 0; i < islets; i++) {
-    const islet = makeIslet(rand, leaves, trunk);
+    const islet = makeIslet(rand, leaves, trunk, sea.sand, shallows);
     const a = (i / islets) * Math.PI * 2 + rand() * 0.4;
-    const r = 6 + rand() * 9;
-    islet.position.set(Math.cos(a) * r, waterY + 0.06, Math.sin(a) * r);
+    const r = 7 + rand() * 9;
+    islet.position.set(Math.cos(a) * r, waterY, Math.sin(a) * r);
     islet.scale.setScalar(0.8 + rand() * 0.9);
     group.add(islet);
+    palms.push([islet.position.x + 0.2, waterY + 0.1, islet.position.z, islet.scale.x * 0.8]);
   }
 
-  return (t) => { water.uniforms.uTime.value = t; };
+  let life = null;
+  return {
+    tick(t) {
+      ocean.tick(t);
+      life?.(t);
+    },
+    async populate(load) {
+      life = await populateReef(group, ocean, load, rand, { palms });
+    }
+  };
 }

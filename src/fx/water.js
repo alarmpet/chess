@@ -1,4 +1,4 @@
-// Soft toy water shared by the board and the village: ripples, shoreline foam and the land's own shadow, all from the distance
+// Soft toy water around the village island: ripples, shoreline foam and the land's own shadow, all from the distance
 // to a square island. No reflection pass, so it costs one quad.
 import * as THREE from 'three';
 

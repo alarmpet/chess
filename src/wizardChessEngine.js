@@ -1031,7 +1031,7 @@ export function initWizardChess() {
     // Used by animal packs until a modelled biome exists; the cathedral GLB is skipped entirely.
     const biomeGroup = new THREE.Group();
     scene.add(biomeGroup);
-    let seaTick = null;
+    let seaBiome = null;
     function buildProceduralEnvironment(env) {
       if (env.background) scene.background = new THREE.Color(env.background);
       if (env.fog) scene.fog = new THREE.FogExp2(new THREE.Color(env.fog.color).getHex(), env.fog.density);
@@ -1059,7 +1059,7 @@ export function initWizardChess() {
         scene.environmentIntensity = env.sea.ambient ?? 0.6;
         renderer.toneMapping = THREE.NeutralToneMapping;
         renderer.toneMappingExposure = env.sea.exposure ?? 1;
-        seaTick = buildSeaBiome(biomeGroup, env, { halfBoard: 4 * BOARD_SQ_SIZE, surfaceY: BOARD_SURFACE_Y, rand });
+        seaBiome = buildSeaBiome(biomeGroup, env, { halfBoard: 4 * BOARD_SQ_SIZE, surfaceY: BOARD_SURFACE_Y, rand });
         return;
       }
       const groundR = env.ground?.radius || 40;
@@ -1692,6 +1692,8 @@ export function initWizardChess() {
         bumpProgress(getTranslations(getCurrentLang()).loadingPiece(type));
       }
       assetApi = { buildTemplate, loadGltfModel, base: packAssetBase };
+      // Scenery only, so the game does not wait for it.
+      seaBiome?.populate((name) => loadGltfModel(name, `${packAssetBase}sea/`)).then(() => { renderer.shadowMap.needsUpdate = true; });
       rivalProgress = sanitizeRivalProgress(activePack, loadRivalProgress());
       cosmetics = sanitizeCosmetics(activePack, loadSavedCosmetics(), unlockedItems());
       await ensureCosmeticAssets();
@@ -6076,7 +6078,7 @@ export function initWizardChess() {
       if (manualStepMode) return;
       const dt = Math.min(clock.getDelta(), 0.1);
       if (renderPaused) return;
-      seaTick?.(clock.elapsedTime);
+      seaBiome?.tick(clock.elapsedTime);
       stepScene(dt || 0.016, true);
     }
 
