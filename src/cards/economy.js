@@ -1,6 +1,8 @@
 // Capture cards: the rules of drops, guarantees and merging. No DOM and no chess in here, so the odds can be tested alone.
 // Every number is a starting value (docs/plans/2026-10-31-capture-card-plan.md).
 export const CARDS_KEY = 'wildcrown.cards.v1';
+export const POUCH_KEY = 'wildcrown.pouch.v1';
+export const SETTLED_MAX = 20;      // finished games remembered, so a repeated end event never pays twice
 
 export const RARITIES = ['common', 'uncommon', 'rare', 'hero'];
 export const COMMON = 0;
@@ -32,7 +34,7 @@ export const DROP_TABLE = {
 export const cardId = (animal, rarity) => `${animal}_${rarity}`;
 
 export function newCollection() {
-  return { v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: false, games: 0, dust: 0, shelf: [], shelfSlots: SHELF_BASE };
+  return { v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: false, games: 0, dust: 0, shelf: [], shelfSlots: SHELF_BASE, settled: [] };
 }
 
 export function sanitizeCollection(raw) {
@@ -51,6 +53,7 @@ export function sanitizeCollection(raw) {
   base.dust = Math.max(0, Math.floor(Number(raw.dust)) || 0);
   base.shelfSlots = Math.min(SHELF_MAX, Math.max(SHELF_BASE, Math.floor(Number(raw.shelfSlots)) || SHELF_BASE));
   base.shelf = (Array.isArray(raw.shelf) ? raw.shelf : []).filter((id) => base.cards[id]).slice(0, base.shelfSlots);
+  base.settled = (Array.isArray(raw.settled) ? raw.settled : []).filter(Number.isInteger).slice(-SETTLED_MAX);
   return base;
 }
 
@@ -96,26 +99,55 @@ export function awardCard(col, type, roll, { floor = COMMON, boost = false } = {
     animal = missingHeroAnimal(col, animal, roll);
   }
 
-  col.firstDone = true;
-  col.sinceRare = rarity >= RARE ? 0 : col.sinceRare + 1;
-  col.sinceHero = rarity === HERO ? 0 : col.sinceHero + 1;
-  if (rarity === HERO) col.sinceRare = 0;
+  const card = { id: cardId(animal, rarity), animal, rarity, fresh: !col.cards[cardId(animal, rarity)] };
+  addCard(col, card);
+  return card;
+}
 
-  const id = cardId(animal, rarity);
-  const fresh = !col.cards[id];
-  col.cards[id] = (col.cards[id] || 0) + 1;
-  return { id, animal, rarity, fresh };
+/** Puts one card in the collection and moves the guarantees on, the same way for a drop and for a confirmed pouch. */
+function addCard(col, card) {
+  col.cards[card.id] = (col.cards[card.id] || 0) + 1;
+  if (!card.comfort) col.firstDone = true;
+  col.sinceRare = card.rarity >= RARE ? 0 : col.sinceRare + 1;
+  col.sinceHero = card.rarity === HERO ? 0 : col.sinceHero + 1;
+  if (card.rarity === HERO) col.sinceRare = 0;
 }
 
 /** A game with no card at all still pays one common card: beginners lose often and should not leave empty-handed. */
 export function consolationCard(col, roll) {
   const animal = ANIMALS[Math.floor(roll * ANIMALS.length)];
-  const id = cardId(animal, COMMON);
-  const fresh = !col.cards[id];
-  col.cards[id] = (col.cards[id] || 0) + 1;
-  col.sinceRare += 1;
-  col.sinceHero += 1;
-  return { id, animal, rarity: COMMON, fresh };
+  const card = { id: cardId(animal, COMMON), animal, rarity: COMMON, fresh: !col.cards[cardId(animal, COMMON)], comfort: true };
+  addCard(col, card);
+  return card;
+}
+
+// ---- This game's pouch (docs/plans/2026-11-02-island-economy-plan.md §2) ----------------------------------
+// Cards caught during a game wait here and join the collection only when the game ends. A game left unfinished
+// loses its pouch, but a reload resumes the game, so only quitting on purpose costs anything.
+
+export function newPouch(gameId) {
+  return { v: 1, gameId: gameId >>> 0, cards: [] };
+}
+
+export function sanitizePouch(raw) {
+  if (!raw || raw.v !== 1 || !Array.isArray(raw.cards)) return null;
+  const cards = raw.cards.filter((c) => c && typeof c.id === 'string' && ANIMALS.includes(c.animal) && Number.isInteger(c.rarity) && c.rarity >= 0 && c.rarity < RARITIES.length && c.id === cardId(c.animal, c.rarity));
+  return { v: 1, gameId: Number(raw.gameId) >>> 0, cards };
+}
+
+/** The collection as it will be once the pouch is confirmed. Drops during the game roll against this, so guarantees still count up inside one game. */
+export function withPouch(col, pouch) {
+  const out = sanitizeCollection(JSON.parse(JSON.stringify(col)));
+  for (const card of pouch?.cards || []) addCard(out, card);
+  return out;
+}
+
+/** Confirms a finished game's pouch. Returns false, changing nothing, if this game was already settled. */
+export function commitPouch(col, pouch) {
+  if (col.settled.includes(pouch.gameId)) return false;
+  for (const card of pouch.cards) addCard(col, card);
+  col.settled = [...col.settled, pouch.gameId].slice(-SETTLED_MAX);
+  return true;
 }
 
 /** Spare copies beyond the one that fills the album slot. */

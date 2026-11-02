@@ -6,6 +6,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
 import { Referee } from './rules/referee.js';
+import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry } from './rules/resume.js';
 import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
@@ -929,10 +930,11 @@ export function initWizardChess() {
       if ((rank === 2 || rank === 7) !== (type === 'pawn')) return null;
       return `${color}_${'abcdefgh'[c]}${rank}`;
     }
-    function reportGameEnd(result) {
+    function reportGameEnd(result, extra = {}) {
+      saveResume();
       if (gameReported || gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
       gameReported = true;
-      const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId, gameId };
+      const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId, gameId, ...extra };
       try { window.dispatchEvent(new CustomEvent('gamefinished', { detail })); } catch (e) {}
     }
     function activeRival() {
@@ -1769,14 +1771,17 @@ export function initWizardChess() {
       };
     }
 
-    function setCameraForSide(color, immediate = false) {
-      // White sits at +Z looking toward -Z (across the Obsidian Altar down the Cathedral Nave & Rose Window)
-      // Black sits at -Z looking toward +Z (across the Obsidian Altar toward the South Narthex Royal Amber Triptych)
+    // White sits at +Z looking toward -Z, black at -Z looking toward +Z.
+    // High enough that the near ranks do not hide the board; a narrow screen backs away until the board fits across it.
+    function defaultCameraFor(color, aspect = camera.aspect) {
       const zSign = color === 'b' ? -1 : 1;
-      // High enough that the near ranks do not hide the board; a narrow screen backs away until the board fits across it.
-      const fit = THREE.MathUtils.clamp(1.25 / camera.aspect, 1, 2.35);
-      const desiredTarget = new THREE.Vector3(0, 0.72, zSign * 0.06);
-      const desiredPos = new THREE.Vector3(0, 2.28 * fit, zSign * 3.04 * fit).add(desiredTarget);
+      const fit = THREE.MathUtils.clamp(1.25 / aspect, 1, 2.35);
+      const target = new THREE.Vector3(0, 0.72, zSign * 0.06);
+      return { target, pos: new THREE.Vector3(0, 2.28 * fit, zSign * 3.04 * fit).add(target) };
+    }
+
+    function setCameraForSide(color, immediate = false) {
+      const { target: desiredTarget, pos: desiredPos } = defaultCameraFor(color);
       if (immediate) {
         activeCamTransition = null;
         camera.position.copy(desiredPos);
@@ -2513,11 +2518,12 @@ export function initWizardChess() {
       return true;
     }
 
-    function resetChessBoard(orientCamera = true, preserveScript = false) {
+    // `announce` is false only on a start that is about to resume a saved game: no new game begins.
+    function resetChessBoard(orientCamera = true, preserveScript = false, announce = true) {
       rivalPaid = false;
       gameReported = false;
       gameId = (gameId + 1) >>> 0;
-      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId } }));
+      if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId } }));
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -2554,6 +2560,7 @@ export function initWizardChess() {
         boardState[0][c] = instantiatePiece(backRow[c], 'b', 0, c);
       }
       referee.reset();
+      saveResume();
 
       if (orientCamera) {
         const viewSide = playerColor === 'b' ? 'b' : 'w';
@@ -2779,6 +2786,53 @@ export function initWizardChess() {
       moveHistory.pop();
       const entry = moveHistory.pop();
       restoreBoardSnapshot(entry.snapshot, { keepReferee: true });
+      saveResume();
+      return true;
+    }
+
+    // An unfinished single game survives a reload: the move list is kept after every move and replayed on start
+    // (src/rules/resume.js). A finished, multiplayer, scripted or empty game keeps nothing.
+    function saveResume() {
+      try {
+        const history = referee.history();
+        if (gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator' || gameOver || !history.length) {
+          window.localStorage.removeItem(RESUME_KEY);
+          return;
+        }
+        window.localStorage.setItem(RESUME_KEY, JSON.stringify(resumeRecord({ gameId, color: playerColor, rivalId: activeRivalId, history })));
+      } catch (e) { /* a blocked store only loses the resume */ }
+    }
+
+    function readResume() {
+      try {
+        return sanitizeResume(JSON.parse(window.localStorage.getItem(RESUME_KEY) || 'null'));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Same game id, so the cards and the island treat the rest of the game as the same game.
+    async function resumeGame(record) {
+      const back = record && replayResume(record);
+      if (!back) return false;
+      gameMode = 'single';
+      scriptedGameActive = false;
+      playerColor = record.color;
+      activeRivalId = (activePack?.rivals || []).some((r) => r.id === record.rivalId) ? record.rivalId : null;
+      if (activeRivalId) await ensureCosmeticAssets();
+      rivalPaid = false;
+      gameReported = false;
+      gameId = record.gameId;
+      referee.adopt(back.chess);
+      restoreBoardSnapshot({
+        fen: back.chess.fen(), currentTurn: back.turn, gameOver: false, capturedByWhite: back.capturedByWhite,
+        capturedByBlack: back.capturedByBlack, scriptCursor: 0, scriptedGameActive: false, scriptDeviated: false, cells: back.cells
+      }, { keepReferee: true });
+      moveHistory = back.before.map(takebackEntry);
+      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: record.moves.length } }));
+      notifyRivalChange();
+      saveResume();
+      maybeScheduleAIMove();
       return true;
     }
 
@@ -2898,6 +2952,7 @@ export function initWizardChess() {
       if (gameMode === 'single' && !scriptedGameActive) {
         window.dispatchEvent(new CustomEvent('movelanded', { detail: { gameId, ply: referee.history().length } }));
       }
+      saveResume();
       const ground = new THREE.Vector3(landing.x, BOARD_SURFACE_Y, landing.z);
       const enemyKing = kingOf(moverColor === 'w' ? 'b' : 'w');
       const kingGround = enemyKing?.mesh ? new THREE.Vector3(enemyKing.mesh.position.x, BOARD_SURFACE_Y, enemyKing.mesh.position.z) : ground;
@@ -5312,13 +5367,69 @@ export function initWizardChess() {
       triggerAIMoveNow();
     });
 
-    document.getElementById('btn-side-toggle')?.addEventListener('click', () => {
+    // Leaving a game the player has started asks first: its cards only count when the game ends (plan §2).
+    const RESIGN_KEEP_MOVES = 10;     // a resignation this late counts as a lost game; earlier it is just leaving
+    function quitInfo() {
+      const history = referee.history();
+      const myMoves = history.filter((m) => m.color === playerColor).length;
+      const active = gameMode === 'single' && !scriptedGameActive && !gameOver && playerColor !== 'spectator' && myMoves > 0;
+      return { active, myMoves, keepMoves: RESIGN_KEEP_MOVES, keeps: myMoves >= RESIGN_KEEP_MOVES };
+    }
+
+    function askToQuit(kind) {
+      const info = quitInfo();
+      if (!info.active) return false;
+      window.dispatchEvent(new CustomEvent('quitrequest', { detail: { kind, ...info } }));
+      return true;
+    }
+
+    function switchSide() {
       if (gameMode !== 'single') return;
       playerColor = playerColor === 'w' ? 'b' : 'w';
       resetChessBoard(true, scriptedGameActive);
+    }
+
+    // A late resignation ends the game as a loss, so its cards and the island are paid; an early one is a new game.
+    function resign() {
+      const info = quitInfo();
+      if (!info.active) return false;
+      if (!info.keeps) {
+        resetChessBoard(true, false);
+        return true;
+      }
+      if (isAnimatingMove) {
+        setTimeout(resign, 150);
+        return true;
+      }
+      if (aiTimer) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+      }
+      gameOver = true;
+      showDrawBanner(getCurrentLang() === 'en' ? 'You resigned. Your cards are in.' : '기권했어요. 이번 판 카드는 받았어요.');
+      document.getElementById('checkmate-crown').textContent = '🏳️';
+      document.getElementById('checkmate-title').textContent = getCurrentLang() === 'en' ? 'Game over' : '대국 끝';
+      reportGameEnd('loss', { resigned: true });
+      return true;
+    }
+
+    function quitNow(kind) {
+      if (kind === 'resign') return resign();
+      if (kind === 'side') return switchSide();
+      return resetChessBoard(true, false);
+    }
+
+    document.getElementById('btn-side-toggle')?.addEventListener('click', () => {
+      if (gameMode !== 'single' || askToQuit('side')) return;
+      switchSide();
+    });
+
+    document.getElementById('btn-resign')?.addEventListener('click', () => {
+      askToQuit('resign');
     });
 
     document.getElementById('btn-reset')?.addEventListener('click', async () => {
+      if (gameMode !== 'multi' && askToQuit('new')) return;
       if (gameMode === 'multi' && roomCode) {
         const stRoom = getStaticRoom(roomCode);
         if (stRoom) {
@@ -5514,6 +5625,8 @@ export function initWizardChess() {
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
       showThreats,
       takeBackMove,
+      quitInfo,
+      quitNow,
       debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
       getRivalCatalog,
       startRival,
@@ -6083,7 +6196,11 @@ export function initWizardChess() {
     }
 
     window.addEventListener('resize', () => {
+      // A camera still at the default view refits to the new shape; one the player has turned stays where it is.
+      const before = camera.aspect;
+      const atDefault = !activeCamTransition && ['w', 'b'].find((side) => camera.position.distanceTo(defaultCameraFor(side, before).pos) < 0.12);
       camera.aspect = window.innerWidth / window.innerHeight;
+      if (atDefault) setCameraForSide(atDefault, true);
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
@@ -6094,10 +6211,13 @@ export function initWizardChess() {
       await loadAllAssets();
       const params = new URLSearchParams(window.location.search);
       const urlSide = params.get('side');
+      const saved = urlSide ? null : readResume();
       if (urlSide === 'b' || urlSide === 'black') {
         playerColor = 'b';
       }
-      resetChessBoard(true, true);
+      if (saved) playerColor = saved.color;
+      resetChessBoard(true, true, !saved);
+      if (saved) await resumeGame(saved);
       setCameraForSide(playerColor === 'b' ? 'b' : 'w', true);
       if (navigator.webdriver) {
         window.wizardChess.stepBy(0.9, 15);

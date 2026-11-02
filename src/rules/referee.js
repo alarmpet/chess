@@ -93,6 +93,11 @@ export class Referee {
     this.chess.load(fen);
   }
 
+  /** Adopt a game already played elsewhere (a resumed save), keeping its whole history. */
+  adopt(chess) {
+    this.chess = chess;
+  }
+
   /** Mirror an arbitrary engine board (custom scenarios, demos). */
   loadCells(cells, turn = 'w', opts) {
     this.chess.load(fenFromCells(cells, turn, opts));

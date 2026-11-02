@@ -4,12 +4,12 @@ import { fxSettings } from '../fx/settings.js';
 import CardFace, { ANIMAL_EN, ANIMAL_KO, RARITY_EN, RARITY_KO } from './CardFace';
 import {
   ANIMALS, ANIMAL_OF, DROP_TABLE, HERO, HERO_GUARANTEE, MERGE_COST, RARE, RARE_GUARANTEE, RARITIES, UNLOCK_GAMES,
-  albumProgress, awardCard, buyShelfSlot, cardId, consolationCard, convertOverflow, mergeCard, mergeList,
+  albumProgress, awardCard, buyShelfSlot, cardId, commitPouch, consolationCard, convertOverflow, mergeCard, mergeList, newPouch, withPouch,
   seededRoll, shelfPrice, sparesOf, toggleShelf
 } from './economy.js';
 import { advanceMission, missionChoices } from './missions.js';
 import { loadVillage } from '../village/store';
-import { loadCollection, logGame, readPlaylog, saveCollection } from './store';
+import { clearPouch, loadCollection, loadPouch, logGame, readPlaylog, saveCollection, savePouch } from './store';
 
 // Cards wait out the blow (the 0.55s delay on .card-fly), so they never cover the hit they came from.
 const FLY_MS = 1450;
@@ -44,9 +44,9 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [note, setNote] = useState('');
   const en = lang === 'en';
 
-  const say = (text: string) => {
+  const say = (text: string, ms = 2400) => {
     setNote(text);
-    setTimeout(() => setNote((n) => (n === text ? '' : n)), 2400);
+    setTimeout(() => setNote((n) => (n === text ? '' : n)), ms);
   };
 
   const startGame = (id: number) => {
@@ -74,10 +74,13 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   };
 
   const pay = (type: string | null, roll: number, x?: number, y?: number, options?: { floor?: number; boost?: boolean }) => {
-    const fresh = loadCollection();
-    const card = type ? awardCard(fresh, type, roll, options) : consolationCard(fresh, roll);
-    saveCollection(fresh);
-    setCol(fresh);
+    // The card goes into this game's pouch; the album gets it when the game ends (economy.js commitPouch).
+    const held = loadPouch();
+    const pouch = held && held.gameId === game.current.id ? held : newPouch(game.current.id);
+    const preview = withPouch(loadCollection(), pouch);
+    const card = type ? awardCard(preview, type, roll, options) : consolationCard(preview, roll);
+    pouch.cards.push(card);
+    savePouch(pouch);
     game.current.won.push(card);
     setCount(game.current.won.length);
     show(card, x, y);
@@ -120,15 +123,23 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       }
     };
     const onStarted = (e: Event) => {
-      if (!fxSettings().cards) return;
       const d = (e as CustomEvent).detail;
+      if (d.resumed) say(en ? 'Picking up the last game where you left it.' : '지난 판을 이어서 둡니다.', 6000);
+      // A pouch from any other game was left unfinished: those cards are not kept.
+      const held = loadPouch();
+      if (held && held.gameId !== d.gameId) clearPouch();
+      if (!fxSettings().cards) return;
       startGame(d.gameId);
+      if (d.resumed && held?.gameId === d.gameId) {
+        game.current.won = [...held.cards];
+        setCount(held.cards.length);
+      }
       // Once a village resident is asking, its request replaces the card mission.
       const quest = loadVillage().quest;
       if (quest) {
         game.current.quest = quest.piece;
         setMission({ m: { ko: `마을의 부탁: ${ANIMAL_KO[ANIMAL_OF[quest.piece as keyof typeof ANIMAL_OF]]} 잡기`, en: `Village request: capture a ${ANIMAL_EN[ANIMAL_OF[quest.piece as keyof typeof ANIMAL_OF]].toLowerCase()}` }, state: null });
-      } else if (loadCollection().games >= UNLOCK_GAMES) setOffers(missionChoices(seededRoll(d.gameId, 'offer', 0)));
+      } else if (!d.resumed && loadCollection().games >= UNLOCK_GAMES) setOffers(missionChoices(seededRoll(d.gameId, 'offer', 0)));
     };
     const onMoved = (e: Event) => {
       const d = (e as CustomEvent).detail;
@@ -139,11 +150,15 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     const onFinished = (e: Event) => {
       if (!fxSettings().cards) return;
       const d = (e as CustomEvent).detail;
+      if (loadCollection().settled.includes(d.gameId >>> 0)) return;
       startGame(d.gameId);
       if (d.result === 'win') pay('king', seededRoll(d.gameId, 'mate', 0));
       if (!game.current.won.length) pay(null, seededRoll(d.gameId, 'comfort', 0));
       const g = game.current;
       const saved = loadCollection();
+      const pouch = loadPouch();
+      if (pouch?.gameId === (d.gameId >>> 0)) commitPouch(saved, pouch);
+      clearPouch();
       saved.games += 1;
       const dust = convertOverflow(saved);
       saveCollection(saved);

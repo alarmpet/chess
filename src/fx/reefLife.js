@@ -11,8 +11,9 @@ const SWIMMERS = {
   reeffish: { yaw: TURN, size: 0.22, bend: 'fish' },
   angelfish: { yaw: TURN, size: 0.28, bend: 'fish' },
   parrotfish: { yaw: 0, size: 0.28, bend: 'fish' },
-  turtle: { yaw: -TURN, size: 0.72, bend: 'flipper' },
-  manta: { yaw: TURN, size: 1.7, bend: 'wing' }
+  // The big swimmers pass over deep water, so they glow harder to keep their colour through it.
+  turtle: { yaw: -TURN, size: 0.72, bend: 'flipper', glow: 0.72 },
+  manta: { yaw: TURN, size: 1.7, bend: 'wing', glow: 0.68 }
 };
 const CORALS = { brain: [10, 0.3, 0.55], staghorn: [12, 0.34, 0.6], fan: [10, 0.34, 0.6], tube: [9, 0.26, 0.46] };
 const SCHOOLS = [
@@ -29,7 +30,7 @@ const SCHOOLS = [
 const CRUISERS = [
   ['turtle', 1.0, -0.2, 0.05, 0],
   ['turtle', 1.5, -0.24, -0.038, 2.4],
-  ['manta', 2.9, -0.55, 0.022, 4.2]
+  ['manta', 2.9, -0.42, 0.022, 4.2]
 ];
 
 const BENDS = {
@@ -55,16 +56,16 @@ const BENDS = {
 const swimTime = { value: 0 };
 
 // Lit a little from within, so a colour survives the water over it.
-function glowing(material) {
+function glowing(material, glow = 0.42) {
   const m = material.clone();
   m.emissive = new THREE.Color('#ffffff');
   m.emissiveMap = m.map;
-  m.emissiveIntensity = 0.42;
+  m.emissiveIntensity = glow;
   return m;
 }
 
-function bendable(material, bend) {
-  const m = glowing(material);
+function bendable(material, bend, glow) {
+  const m = glowing(material, glow);
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uSwim = swimTime;
     shader.vertexShader = `uniform float uSwim;\n${shader.vertexShader}`.replace('#include <begin_vertex>', `#include <begin_vertex>\n${BENDS[bend]}`);
@@ -284,7 +285,7 @@ export async function populateReef(group, ocean, load, rand, { palms = [] } = {}
   const s = new THREE.Vector3();
   for (const [name, mover] of Object.entries(movers)) {
     const spec = SWIMMERS[name];
-    mover.mesh = new THREE.InstancedMesh(models[name].geometry, bendable(models[name].material, spec.bend), mover.list.length);
+    mover.mesh = new THREE.InstancedMesh(models[name].geometry, bendable(models[name].material, spec.bend, spec.glow), mover.list.length);
     mover.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     mover.mesh.frustumCulled = false;
     mover.size = spec.size;

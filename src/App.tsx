@@ -3,6 +3,7 @@ import RivalPanel from './RivalPanel';
 import SettingsPanel from './SettingsPanel';
 import CardLayer from './cards/CardLayer';
 import VillageView from './VillageView';
+import QuitDialog from './QuitDialog';
 import { loadVillage, settleFinishedGame } from './village/store';
 import { stageForHearts } from './village/economy.js';
 import { useEffect, useRef, useState } from 'react';
@@ -23,7 +24,10 @@ export default function App() {
 
   // A finished game pays the village at once; the card below is the way in.
   useEffect(() => {
-    const onFinished = (e: Event) => setLastGame(settleFinishedGame((e as CustomEvent).detail));
+    const onFinished = (e: Event) => {
+      const summary = settleFinishedGame((e as CustomEvent).detail);
+      if (summary) setLastGame(summary);
+    };
     window.addEventListener('gamefinished', onFinished);
     return () => window.removeEventListener('gamefinished', onFinished);
   }, []);
@@ -239,6 +243,14 @@ export default function App() {
           >
             {t.newGame}
           </button>
+          <button
+            className="hud-btn"
+            id="btn-resign"
+            title={lang === 'ko' ? '이번 판 기권하기' : 'Resign this game'}
+            onClick={() => setMobileSheetOpen(false)}
+          >
+            {lang === 'ko' ? '🏳️ 기권' : '🏳️ Resign'}
+          </button>
 
           <div className="hud-divider" aria-hidden="true"></div>
           <div className="mobile-sheet-section-label">
@@ -344,6 +356,7 @@ export default function App() {
         </div>
       </div>
 
+      <QuitDialog lang={lang === 'en' ? 'en' : 'ko'} />
       <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />

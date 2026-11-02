@@ -203,7 +203,12 @@ function settleQuest(v, moves, color) {
 }
 
 /** Pay out one finished game. `result` is the player's: win, draw or loss. Losing never takes anything away. */
-export function settleGame(v, { moves, color, result, rivalId = null }) {
+export function settleGame(v, { moves, color, result, rivalId = null, gameId = null }) {
+  // A game is paid once, even if its end is reported again (a resumed game, a second listener).
+  if (gameId !== null) {
+    if ((v.settled || []).includes(gameId)) return null;
+    v.settled = [...(v.settled || []), gameId].slice(-20);
+  }
   const game = replayGame(moves);
   const coins = COINS[result] ?? 0;
   const mvp = pickMvp(game, color);

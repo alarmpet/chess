@@ -32,9 +32,9 @@ export function villageRivals(): any[] {
   return (window as any).wizardChess?.getVillageRivals?.() || [];
 }
 
-export function settleFinishedGame(detail: { moves: any[]; color: 'w' | 'b'; result: string; rivalId: string | null }) {
+export function settleFinishedGame(detail: { moves: any[]; color: 'w' | 'b'; result: string; rivalId: string | null; gameId?: number }) {
   const v = loadVillage();
   const summary = settleGame(v, detail as any);
-  saveVillage(v);
+  if (summary) saveVillage(v);
   return summary;
 }
