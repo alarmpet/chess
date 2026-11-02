@@ -67,10 +67,10 @@
     "matte": true
   },
   "pedestal": {
-    "w": "#d9b27c",
-    "b": "#4a3022",
-    "bandW": "#f2c14e",
-    "bandB": "#8a63c9",
+    "w": "#f3e6c8",
+    "b": "#232845",
+    "bandW": "#ffc93c",
+    "bandB": "#ff4f6d",
     "radius": 0.36,
     "height": 0.09
   },

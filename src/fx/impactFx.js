@@ -135,7 +135,8 @@ export function createImpactFx(scene) {
   function flash(root) {
     const mats = [];
     root.traverse((o) => {
-      if (!o.isMesh || !o.material) return;
+      // Only lit materials have an emissive slot; the flat side ring under a piece does not.
+      if (!o.isMesh || !o.material || !('emissive' in o.material)) return;
       o.material = o.material.clone();
       o.material.emissive = new THREE.Color(0xffffff);
       o.material.emissiveMap = null;

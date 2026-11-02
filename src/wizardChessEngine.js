@@ -5,7 +5,8 @@ import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.j
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
-import { Referee } from './rules/referee.js';
+import { Referee, TYPE_FROM_LETTER, squareRC } from './rules/referee.js';
+import { chooseMove, positionKey } from './rules/ai.js';
 import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry } from './rules/resume.js';
 import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
@@ -1971,7 +1972,8 @@ export function initWizardChess() {
           [R * 0.86, H * 0.6], [R * 0.74, H * 0.74], [R * 0.7, H * 0.86], [R * 0.74, H * 0.94], [R * 0.72, H], [0, H]
         ].map(([x, y]) => new THREE.Vector2(x, y));
         pedestalCache[key] = new THREE.LatheGeometry(pts, 40);
-        pedestalCache[bandKey] = new THREE.TorusGeometry(R * 0.98, R * 0.045, 8, 48).rotateX(Math.PI / 2);
+        pedestalCache[bandKey] = new THREE.TorusGeometry(R * 0.98, R * 0.09, 8, 48).rotateX(Math.PI / 2);
+        pedestalCache[`ring_${R}`] = new THREE.RingGeometry(R * 1.04, R * 1.24, 48).rotateX(-Math.PI / 2);
       }
       const matKey = `mat_${color}`;
       if (!pedestalCache[matKey]) {
@@ -1991,6 +1993,17 @@ export function initWizardChess() {
         const band = new THREE.Mesh(pedestalCache[bandKey], pedestalCache[bandMatKey]);
         band.position.y = H * 0.24;
         m.add(band);
+        // A flat ring of the side colour on the square: from the high default view the bases hide behind the
+        // animals, but the ring still shows whose piece it is.
+        pedestalCache[`ringmat_${color}`] ||= new THREE.MeshBasicMaterial({
+          color: new THREE.Color(bandHex), transparent: true, opacity: 0.9, depthWrite: false, toneMapped: false,
+          polygonOffset: true, polygonOffsetFactor: -2
+        });
+        const ring = new THREE.Mesh(pedestalCache[`ring_${R}`], pedestalCache[`ringmat_${color}`]);
+        ring.position.y = 0.004;
+        ring.renderOrder = 1;
+        ring.name = 'side-ring';
+        m.add(ring);
       }
       return m;
     }
@@ -3782,80 +3795,26 @@ export function initWizardChess() {
     // =========================================================================
     // Single-Player Tactical AI (Auto-Plays Opponent Turn + Manual AI Button)
     // =========================================================================
+    // A short search (src/rules/ai.js): the AI guards its own pieces and finishes won games instead of shuffling.
+    // The one-ply scorer it replaced drew 14 of 20 games against itself (island economy round, 2026-11-02).
+    // A rival plays at its own level: a careless one searches less and slips more.
     function chooseSmartAIMove(color) {
-      const legalMoves = getAllLegalMoves(color);
-      if (legalMoves.length === 0) return null;
-
-      const rival = activeRival();
-      if (rival && color === rivalColor() && Math.random() < rival.mistake) {
-        return legalMoves[Math.floor(Math.random() * legalMoves.length)];
-      }
-
-      let bestScore = -Infinity;
-      let bestCandidates = [];
-
-      for (const m of legalMoves) {
-        const piece = boardState[m.fromR][m.fromC];
-        const target = boardState[m.toR][m.toC];
-        let score = 0;
-
-        // Material gain on capture
-        if (target) {
-          score += PIECE_VALUES[target.type] * 1.15 - PIECE_VALUES[piece.type] * 0.08;
-        }
-
-        // Center control bonus
-        const centerDist = Math.abs(3.5 - m.toR) + Math.abs(3.5 - m.toC);
-        score += (7 - centerDist) * 8;
-
-        // Pawn advancement bonus
-        if (piece.type === 'pawn') {
-          const advance = color === 'w' ? (6 - m.toR) : (m.toR - 1);
-          score += advance * 12;
-        }
-
-        // Simulate move to check if destination is hanging or gives check
-        boardState[m.toR][m.toC] = piece;
-        boardState[m.fromR][m.fromC] = null;
-        const oppColor = color === 'w' ? 'b' : 'w';
-        if (isKingInCheck(oppColor, boardState)) {
-          score += 45;
-        }
-        // Check if opponent can recapture on destination square
-        for (let rr = 0; rr < 8; rr++) {
-          for (let cc = 0; cc < 8; cc++) {
-            const opp = boardState[rr][cc];
-            if (opp && opp.color === oppColor) {
-              const oppMoves = getPseudoMovesForPiece(rr, cc, boardState);
-              if (oppMoves.some((om) => om.r === m.toR && om.c === m.toC)) {
-                score -= PIECE_VALUES[piece.type] * 0.75;
-                break;
-              }
-            }
-          }
-        }
-        boardState[m.fromR][m.fromC] = piece;
-        boardState[m.toR][m.toC] = target;
-
-        // Small jitter so AI varies openings
-        score += (Math.random() - 0.5) * 14;
-
-        if (score > bestScore + 1) {
-          bestScore = score;
-          bestCandidates = [m];
-        } else if (Math.abs(score - bestScore) <= 1) {
-          bestCandidates.push(m);
-        }
-      }
-
-      return bestCandidates[Math.floor(Math.random() * bestCandidates.length)] || legalMoves[0];
+      if (referee.turn() !== color) return null;
+      const rival = color === rivalColor() ? activeRival() : null;
+      const level = rival ? (rival.mistake >= 0.3 ? 'easy' : 'normal') : 'normal';
+      const history = referee.history().map((m) => positionKey(m.after));
+      const pick = chooseMove(referee.fen(), { level, history, slip: rival ? rival.mistake : undefined });
+      if (!pick) return null;
+      const from = squareRC(pick.from);
+      const to = squareRC(pick.to);
+      return { fromR: from.r, fromC: from.c, toR: to.r, toC: to.c, promotion: pick.promotion ? TYPE_FROM_LETTER[pick.promotion] : undefined };
     }
 
     function triggerAIMoveNow() {
       if (isAnimatingMove || gameOver) return false;
       const chosen = chooseSmartAIMove(currentTurn);
       if (!chosen) return false;
-      return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC);
+      return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion });
     }
 
     function maybeScheduleAIMove() {

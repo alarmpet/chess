@@ -21,6 +21,14 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cardsOpen, setCardsOpen] = useState(false);
   const t = getTranslations(lang);
+  const en = lang === 'en';
+
+  useEffect(() => {
+    if (!mobileSheetOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMobileSheetOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileSheetOpen]);
 
   // A finished game pays the village at once; the card below is the way in.
   useEffect(() => {
@@ -122,16 +130,28 @@ export default function App() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className={`hud-btn mobile-controls-trigger ${mobileSheetOpen ? 'active' : ''}`}
-          id="btn-mobile-controls"
-          aria-expanded={mobileSheetOpen}
-          aria-controls="hud-right"
-          onClick={() => setMobileSheetOpen((prev) => !prev)}
-        >
-          {mobileSheetOpen ? t.close : t.controls}
-        </button>
+        {/* Always on screen: the four places a player goes between moves. Everything else sits in the menu. */}
+        <div className="hud-group" id="hud-quick">
+          <button type="button" className="hud-btn quick-btn" id="btn-cards" onClick={() => setCardsOpen(true)} title={en ? 'Card album' : '카드 도감'}>
+            <span aria-hidden="true">🃏</span><span className="quick-label">{en ? 'Cards' : '카드'}</span>
+          </button>
+          <button type="button" className="hud-btn quick-btn" id="btn-village" onClick={() => setVillageOpen(true)} title={en ? 'Your island village' : '내 말들이 사는 섬 마을'}>
+            <span aria-hidden="true">🏡</span><span className="quick-label">{en ? 'Village' : '마을'}</span>
+          </button>
+          <button type="button" className="hud-btn quick-btn" id="btn-rivals" onClick={() => setRivalOpen(true)} title={en ? 'Beat a rival to win its item' : '라이벌을 이기고 소품 얻기'}>
+            <span aria-hidden="true">🏆</span><span className="quick-label">{en ? 'Rivals' : '라이벌'}</span>
+          </button>
+          <button
+            type="button"
+            className={`hud-btn quick-btn menu-trigger ${mobileSheetOpen ? 'active' : ''}`}
+            id="btn-mobile-controls"
+            aria-expanded={mobileSheetOpen}
+            aria-controls="hud-right"
+            onClick={() => setMobileSheetOpen((prev) => !prev)}
+          >
+            <span aria-hidden="true">☰</span><span className="quick-label">{en ? 'Menu' : '메뉴'}</span>
+          </button>
+        </div>
 
         <div
           className={`mobile-sheet-backdrop ${mobileSheetOpen ? 'open' : ''}`}
@@ -142,23 +162,9 @@ export default function App() {
           aria-hidden="true"
         ></div>
 
-        <div
-          className={`hud-group ${mobileSheetOpen ? 'mobile-sheet-open' : ''}`}
-          id="hud-right"
-        >
-          <div
-            className="mobile-sheet-handle-wrap"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMobileSheetOpen(false);
-            }}
-            aria-hidden="true"
-          >
-            <div className="mobile-sheet-handle"></div>
-          </div>
-
+        <div className={`hud-group ${mobileSheetOpen ? 'mobile-sheet-open' : ''}`} id="hud-right" role="menu">
           <div className="mobile-sheet-header">
-            <span className="mobile-sheet-title">{t.controls}</span>
+            <span className="mobile-sheet-title">{en ? 'Menu' : '메뉴'}</span>
             <button
               type="button"
               className="mobile-sheet-close"
@@ -169,160 +175,40 @@ export default function App() {
               }}
               aria-label={t.close}
             >
-              {t.close}
+              ✕
             </button>
           </div>
 
-          {/* Language Switch Button */}
-          <button
-            type="button"
-            className="hud-btn lang-toggle-btn"
-            id="btn-lang-toggle"
-            onClick={handleToggleLang}
-            title={lang === 'ko' ? 'Switch to English' : '한국어로 전환'}
-          >
-            🌐 {t.langSwitchLabel}
+          <div className="mobile-sheet-section-label">{en ? 'This game' : '이번 판'}</div>
+          <button className="hud-btn" id="btn-reset" title={en ? 'Start a fresh game' : '새 판 시작'} onClick={() => setMobileSheetOpen(false)}>
+            {en ? '♻️ New game' : '♻️ 새 판'}
           </button>
-
-          {/* Appearance (PLAN §14.2 · §14.3): stages and trinkets — looks only */}
-          <button
-            type="button"
-            className="hud-btn"
-            id="btn-looks"
-            onClick={() => { setLookOpen(true); setMobileSheetOpen(false); }}
-            title="외형 단계와 장식 고르기 — 외형만 바뀌고 수는 같습니다"
-          >
-            🎨 외형
+          <button className="hud-btn" id="btn-resign" title={en ? 'Resign this game' : '이번 판 기권하기'} onClick={() => setMobileSheetOpen(false)}>
+            {en ? '🏳️ Resign' : '🏳️ 기권'}
           </button>
-
-          <button
-            type="button"
-            className="hud-btn"
-            id="btn-rivals"
-            onClick={() => { setRivalOpen(true); setMobileSheetOpen(false); }}
-            title="소품을 입은 AI 를 이기고 소품을 하나씩 얻습니다"
-          >
-            🏆 라이벌
-          </button>
-
-          <button
-            type="button"
-            className="hud-btn"
-            id="btn-village"
-            onClick={() => { setVillageOpen(true); setMobileSheetOpen(false); }}
-            title="내 말들이 사는 마을"
-          >
-            🏡 마을
-          </button>
-
-          <div className="hud-divider" aria-hidden="true"></div>
-
-          <div className="mobile-sheet-section-label">{t.gameActions}</div>
-
-          <button
-            className="hud-btn"
-            id="btn-side-toggle"
-            title={lang === 'ko' ? '백/흑 진영 바꾸기' : 'Switch between White and Black'}
-            onClick={() => setMobileSheetOpen(false)}
-          >
+          <button className="hud-btn" id="btn-side-toggle" title={en ? 'Switch between White and Black' : '백/흑 바꾸기'} onClick={() => setMobileSheetOpen(false)}>
             {t.playAsBlack}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-ai-move"
-            title={lang === 'ko' ? 'AI에게 다음 수 두게 하기' : 'Let AI make the next move'}
-            onClick={() => setMobileSheetOpen(false)}
-          >
-            {t.aiMove}
-          </button>
-          <button
-            className="hud-btn"
-            id="btn-reset"
-            title={lang === 'ko' ? '체스판 초기화 및 새 게임 시작' : 'Start a fresh game'}
-            onClick={() => setMobileSheetOpen(false)}
-          >
-            {t.newGame}
-          </button>
-          <button
-            className="hud-btn"
-            id="btn-resign"
-            title={lang === 'ko' ? '이번 판 기권하기' : 'Resign this game'}
-            onClick={() => setMobileSheetOpen(false)}
-          >
-            {lang === 'ko' ? '🏳️ 기권' : '🏳️ Resign'}
-          </button>
 
-          <div className="hud-divider" aria-hidden="true"></div>
-          <div className="mobile-sheet-section-label">
-            <span>{t.cameraViews}</span>
-            <span className="mobile-sheet-section-sub">{t.cameraSub}</span>
-          </div>
+          <div className="mobile-sheet-section-label">{en ? 'View' : '보기'}</div>
+          <button className="hud-btn active" id="btn-cam-player" title={t.camPlayer}>{t.camPlayer}</button>
+          <button className="hud-btn" id="btn-cam-top" title={t.camTop}>{t.camTop}</button>
+          <button className="hud-btn" id="btn-cam-side" title={t.camSide}>{t.camSide}</button>
+          <button className="hud-btn" id="btn-cam-wide" title={t.camWide}>{t.camWide}</button>
 
-          <button
-            className="hud-btn active"
-            id="btn-cam-player"
-            title={t.camPlayer}
-          >
-            {t.camPlayer}
+          <div className="mobile-sheet-section-label">{en ? 'More' : '더 보기'}</div>
+          <button type="button" className="hud-btn" id="btn-looks" onClick={() => { setLookOpen(true); setMobileSheetOpen(false); }} title={en ? 'Looks only; the moves stay the same' : '외형만 바뀌고 수는 같습니다'}>
+            {en ? '🎨 Looks' : '🎨 외형'}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-cam-top"
-            title={t.camTop}
-          >
-            {t.camTop}
+          <button className="hud-btn" id="btn-settings" onClick={() => { setSettingsOpen(true); setMobileSheetOpen(false); }}>
+            {en ? '⚙️ Settings' : '⚙️ 설정'}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-cam-side"
-            title={t.camSide}
-          >
-            {t.camSide}
+          <button type="button" className="hud-btn" id="btn-lang-toggle" onClick={handleToggleLang} title={lang === 'ko' ? 'Switch to English' : '한국어로 전환'}>
+            🌐 {t.langSwitchLabel}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-cam-wide"
-            title={t.camWide}
-          >
-            {t.camWide}
-          </button>
-
-          <div className="hud-divider" aria-hidden="true"></div>
-          <div className="mobile-sheet-section-label">{t.displayAndGestures}</div>
-
-          <button
-            className="hud-btn"
-            id="btn-hide-ui"
-            title={t.hideUi}
-            onClick={() => setMobileSheetOpen(false)}
-          >
+          <button className="hud-btn" id="btn-hide-ui" title={t.hideUi} onClick={() => setMobileSheetOpen(false)}>
             {t.hideUi}
           </button>
-
-          <button
-            className="hud-btn"
-            id="btn-cards"
-            onClick={() => {
-              setCardsOpen(true);
-              setMobileSheetOpen(false);
-            }}
-          >
-            {lang === 'en' ? '🃏 Cards' : '🃏 카드'}
-          </button>
-          <button
-            className="hud-btn"
-            id="btn-settings"
-            onClick={() => {
-              setSettingsOpen(true);
-              setMobileSheetOpen(false);
-            }}
-          >
-            {lang === 'en' ? '⚙️ Settings' : '⚙️ 설정'}
-          </button>
-
-          <div className="mobile-sheet-hint">
-            {t.mobileHint}
-          </div>
         </div>
       </div>
 

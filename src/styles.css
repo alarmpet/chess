@@ -439,8 +439,151 @@ body.cinematic-ui-hidden #hud-bottom {
   display: none;
 }
 
+/* ---- Top bar: four quick buttons, everything else in one menu panel (2026-11-02) ---- */
+#hud-quick {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.86rem;
+  padding: 9px 15px;
+}
+
+.menu-trigger {
+  border-color: var(--hud-border);
+  color: var(--gold-bright);
+}
+
+.mobile-sheet-backdrop.open {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  background: transparent;
+}
+
+#hud-right {
+  position: fixed;
+  top: 66px;
+  right: 20px;
+  width: 340px;
+  z-index: 29;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 14px 14px;
+  background: linear-gradient(180deg, rgba(14, 18, 28, 0.97) 0%, rgba(8, 10, 16, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#hud-right.mobile-sheet-open {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+#hud-right .mobile-sheet-header {
+  grid-column: span 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#hud-right .mobile-sheet-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+#hud-right .mobile-sheet-close {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+#hud-right .mobile-sheet-section-label {
+  grid-column: span 6;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 6px 2px 0;
+}
+
+#hud-right .hud-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 8px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+#btn-reset,
+#btn-resign,
+#btn-side-toggle {
+  grid-column: span 2;
+}
+
+#btn-cam-player,
+#btn-cam-top,
+#btn-cam-side,
+#btn-cam-wide,
+#btn-looks,
+#btn-settings,
+#btn-lang-toggle,
+#btn-hide-ui {
+  grid-column: span 3;
+}
+
+body.cinematic-ui-hidden .mobile-only-restore-ui {
+  display: inline-flex;
+  align-items: center;
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 22;
+  pointer-events: auto;
+}
+
 /* Mobile Responsive View Optimization */
 @media (max-width: 768px) {
+  .quick-label,
+  .brand-pill {
+    display: none;
+  }
+
+  .quick-btn {
+    min-width: 38px;
+    min-height: 38px;
+    padding: 7px 10px;
+    justify-content: center;
+  }
+
+  #hud-quick {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
   #hud-top {
     top: 12px;
     left: 12px;
@@ -541,6 +684,8 @@ body.cinematic-ui-hidden #hud-bottom {
   /* Transform #hud-right into a slide-up Bottom Sheet on mobile */
   #hud-right {
     position: fixed;
+    top: auto;
+    width: auto;
     left: 0;
     right: 0;
     bottom: 0;
@@ -666,26 +811,6 @@ body.cinematic-ui-hidden #hud-bottom {
     font-size: 0.8rem;
     width: 100%;
     white-space: nowrap;
-  }
-
-  /* 3 Game Action buttons in a 3-column row */
-  #btn-side-toggle,
-  #btn-ai-move,
-  #btn-reset {
-    grid-column: span 2;
-  }
-
-  /* 4 Camera View buttons in a 2x2 grid */
-  #btn-cam-player,
-  #btn-cam-top,
-  #btn-cam-side,
-  #btn-cam-wide {
-    grid-column: span 3;
-  }
-
-  /* Full-width Hide UI button */
-  #btn-hide-ui {
-    grid-column: span 6;
   }
 
   .mobile-sheet-hint {

@@ -9,11 +9,12 @@ const ROOT = process.cwd();
 test('Simplified Single-Player HUD in src/App.tsx excludes speed sliders, notation script bar, and multiplayer lobby', () => {
   const appTsx = fs.readFileSync(path.join(ROOT, 'src/App.tsx'), 'utf-8');
 
-  // Must include simplified game & camera controls
+  // Must include simplified game & camera controls. "Let the AI move for me" was dropped in the 2026-11-02 HUD cleanup.
   for (const requiredId of [
     'btn-side-toggle',
-    'btn-ai-move',
     'btn-reset',
+    'btn-resign',
+    'btn-mobile-controls',
     'btn-cam-player',
     'btn-cam-top',
     'btn-cam-side',
