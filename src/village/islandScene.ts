@@ -859,12 +859,59 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   };
   window.addEventListener('resize', onResize);
 
+  // Rival flags (desire plan D4): one tall flag per rival beaten at least once, on the island's corners, its cloth
+  // showing the wins. A gold ball tops the pole once every trinket of that rival is won.
+  const rivalFlags = new THREE.Group();
+  island.add(rivalFlags);
+  const CORNERS: [number, number][] = [[-3.82, 3.82], [3.82, 3.82], [-3.82, -3.82], [3.82, -3.82]];
+  function drawRivalFlags(rivals: { id: string; wins: number; complete: boolean; flag?: string }[]) {
+    rivalFlags.traverse((o: any) => {
+      o.geometry?.dispose?.();
+      o.material?.map?.dispose?.();
+      o.material?.dispose?.();
+    });
+    rivalFlags.clear();
+    rivals.forEach((r, i) => {
+      if (!r.wins || i >= CORNERS.length) return;
+      const g = new THREE.Group();
+      g.name = `rival-flag-${r.id}`;
+      g.add(mesh(new THREE.CylinderGeometry(0.018, 0.024, 0.95, 8), 0x8a5a33, 0, 0.475, 0));
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 80;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = r.flag || '#f0606a';
+        ctx.fillRect(0, 0, 128, 80);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 54px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(r.wins), 64, 44);
+      }
+      const map = new THREE.CanvasTexture(canvas);
+      map.colorSpace = THREE.SRGBColorSpace;
+      const clothMat = new THREE.MeshStandardMaterial({ map, roughness: 0.9, side: THREE.DoubleSide });
+      const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.25), clothMat);
+      cloth.position.set(0.21, 0.8, 0);
+      cloth.castShadow = true;
+      g.add(cloth);
+      if (r.complete) g.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), 0xffc23d, 0, 0.97, 0));
+      const [x, z] = CORNERS[i];
+      g.position.set(x, TILE_TOP, z);
+      g.rotation.y = x < 0 ? 0 : Math.PI;
+      g.scale.setScalar(1.8);   // taller than the mate flags, so it reads from the opening camera
+      rivalFlags.add(g);
+    });
+  }
+
   return {
     draw(v: any) {
       draw(v);
       syncActors(v);
     },
     drawShelf,
+    drawRivalFlags,
     /** Tints squares: `cover` for reach, `strong` for reach that lands on a building, `origin` for the source. */
     setOverlay(cover: string[], strong: string[] = [], origin: string | null = null) {
       overlay.count = 0;

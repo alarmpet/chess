@@ -1,5 +1,6 @@
 import LookPanel from './LookPanel';
 import RivalPanel from './RivalPanel';
+import RivalEntrance from './RivalEntrance';
 import SettingsPanel from './SettingsPanel';
 import CardLayer from './cards/CardLayer';
 import VillageView from './VillageView';
@@ -245,6 +246,7 @@ export default function App() {
       <QuitDialog lang={lang === 'en' ? 'en' : 'ko'} />
       <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <RivalEntrance lang={lang === 'en' ? 'en' : 'ko'} />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (

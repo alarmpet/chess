@@ -615,6 +615,7 @@
           "head": "ribbon"
         }
       },
+      "flag": "#f4a63a",
       "visitsFor": "shelter"
     },
     {
@@ -645,6 +646,7 @@
           "head": "flower"
         }
       },
+      "flag": "#4fae6a",
       "visitsFor": "market"
     },
     {
@@ -687,6 +689,7 @@
           "stage": "adult"
         }
       },
+      "flag": "#b0662c",
       "visitsFor": "spring"
     }
   ]

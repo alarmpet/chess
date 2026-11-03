@@ -111,6 +111,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     island.current = api;
     api.draw(village);
     api.drawShelf(loadCollection().shelf as string[]);
+    api.drawRivalFlags(villageRivals());
     api.setNight(Boolean(village.night) && nightOpen(village));
     return () => {
       api.dispose();

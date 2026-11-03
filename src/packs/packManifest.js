@@ -278,6 +278,45 @@ export function nextRivalReward(manifest, rivalId, unlocked) {
 }
 
 /**
+ * What a rival shows off when it walks on (desire plan D4): each dressed role with its stage and items, marked
+ * `ahead` where the rival's stage is above the one the player has earned for that role (`caps`, as in sanitizeCosmetics),
+ * and `owned` per item. `next` is the item one more win gives. Null for an unknown rival.
+ */
+export function rivalShowcase(manifest, rivalId, unlocked = [], wins = {}, caps = {}) {
+  const rival = (manifest?.rivals || []).find((r) => r.id === rivalId);
+  if (!rival) return null;
+  const ids = stageIds(manifest);
+  const stageName = (id) => manifest?.looks?.stages?.find((s) => s.id === id)?.name || null;
+  const wears = [];
+  for (const role of PIECE_ROLES) {
+    const look = rival.wear?.[role];
+    if (!look) continue;
+    const stage = ids.includes(look.stage) ? look.stage : ids[0];
+    const items = ITEM_SLOTS.filter((slot) => look[slot]).map((slot) => ({
+      id: look[slot],
+      name: manifest.items?.[look[slot]]?.name || null,
+      owned: unlocked.includes(look[slot])
+    }));
+    const ahead = ids.indexOf(stage) > Math.max(0, ids.indexOf(caps?.[role]));
+    wears.push({ role, stage, stageName: stageName(stage), ahead, items });
+  }
+  const next = nextRivalReward(manifest, rivalId, unlocked);
+  return {
+    id: rival.id,
+    name: rival.name || null,
+    wins: wins[rival.id] || 0,
+    next: next ? { id: next, name: manifest.items?.[next]?.name || null } : null,
+    wears
+  };
+}
+
+/** The role on a rival's side that wears this item, so a won trophy can fly off that piece. */
+export function rivalWearer(manifest, rivalId, itemId) {
+  const rival = (manifest?.rivals || []).find((r) => r.id === rivalId);
+  return PIECE_ROLES.find((role) => ITEM_SLOTS.some((slot) => rival?.wear?.[role]?.[slot] === itemId)) || null;
+}
+
+/**
  * Which role wears a newly won item: the piece that gave mate if its slot is free, otherwise the first free role,
  * pawns first. Never replaces what the player already put on. Null when every role's slot is taken.
  */

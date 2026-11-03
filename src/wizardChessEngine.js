@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
-import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, capStage, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
+import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, capStage, sanitizeRivalProgress, nextRivalReward, trophyRole, rivalShowcase, rivalWearer } from './packs/packManifest.js';
 import { Referee, TYPE_FROM_LETTER, squareRC } from './rules/referee.js';
 import { chooseMove, positionKey } from './rules/ai.js';
 import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry } from './rules/resume.js';
@@ -907,6 +907,8 @@ export function initWizardChess() {
     let rivalProgress = { unlocked: [], wins: {} };
     let activeRivalId = null;
     let rivalPaid = false;          // one reward per game
+    let entranceDrops = [];         // pieces still falling in a rival's entrance (desire plan D4)
+    let entranceT = 0;
     let lastTrophy = null;
     let lastMoverType = null;
     let gameReported = false;       // the village is paid once per finished game
@@ -2228,8 +2230,100 @@ export function initWizardChess() {
       activeRivalId = id || null;
       await ensureCosmeticAssets();
       resetChessBoard(true);
+      if (activeRivalId) playRivalEntrance();
       notifyRivalChange();
       return true;
+    }
+
+    // Desire plan D4: a rival walks on. Its pieces drop onto their squares, then yours, all inside two seconds, and the
+    // card (RivalEntrance) says what it wears that you have not got. A move or the skip button lands everything at once.
+    const ENTRANCE_DROP = 1.4;      // height the pieces fall from
+    const ENTRANCE_FALL = 0.3;      // seconds one piece takes to land
+    const ENTRANCE_STEP = 0.045;    // seconds between pieces: 32 pieces land in about 1.7 s
+    function playRivalEntrance() {
+      const show = rivalShowcase(activePack, activeRivalId, rivalProgress.unlocked, rivalProgress.wins, stageCaps()[playerColor] || {});
+      try { window.dispatchEvent(new CustomEvent('rivalentrance', { detail: show })); } catch (e) {}
+      entranceDrops = [];
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+      const them = rivalColor();
+      // The rival comes first, back rank before pawns; then the player's side the same way.
+      const rows = them === 'b' ? [0, 1, 7, 6] : [7, 6, 0, 1];
+      for (const r of rows) {
+        for (let c = 0; c < 8; c++) {
+          const mesh = boardState[r][c]?.mesh;
+          if (!mesh) continue;
+          entranceDrops.push({ mesh, y: mesh.position.y, delay: entranceDrops.length * ENTRANCE_STEP });
+          mesh.position.y += ENTRANCE_DROP;
+          mesh.visible = false;
+        }
+      }
+      entranceT = 0;
+    }
+    function stepEntrance(dt) {
+      if (isAnimatingMove) return landEntrance();
+      entranceT += dt;
+      let falling = false;
+      for (const d of entranceDrops) {
+        const k = Math.min(1, Math.max(0, (entranceT - d.delay) / ENTRANCE_FALL));
+        d.mesh.visible = entranceT >= d.delay;
+        d.mesh.position.y = d.y + ENTRANCE_DROP * (1 - k * k);
+        if (k < 1) falling = true;
+      }
+      renderer.shadowMap.needsUpdate = true;
+      if (!falling) entranceDrops = [];
+    }
+    function landEntrance() {
+      for (const d of entranceDrops) {
+        d.mesh.visible = true;
+        d.mesh.position.y = d.y;
+      }
+      entranceDrops = [];
+      renderer.shadowMap.needsUpdate = true;
+    }
+
+    // The won trinket comes off the rival piece that wore it and lands on the banner line (desire plan D4).
+    function flyTrophy(target, itemId, label) {
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || typeof target.animate !== 'function') return;
+      const role = rivalWearer(activePack, activeRivalId, itemId);
+      let from = null;
+      for (const type of [role, 'king']) {
+        for (let r = 0; r < 8 && !from; r++) {
+          for (let c = 0; c < 8 && !from; c++) {
+            const p = boardState[r][c];
+            if (p?.mesh && p.color === rivalColor() && p.type === type) from = p.mesh.position.clone();
+          }
+        }
+        if (from) break;
+      }
+      let sx = window.innerWidth / 2;
+      let sy = window.innerHeight * 0.15;
+      if (from) {
+        from.y += 0.45;
+        const at = from.project(camera);
+        sx = ((at.x + 1) / 2) * window.innerWidth;
+        sy = ((1 - at.y) / 2) * window.innerHeight;
+      }
+      const chip = document.createElement('div');
+      chip.className = 'trophy-fly';
+      chip.textContent = `🎁 ${label}`;
+      document.body.appendChild(chip);
+      target.style.visibility = 'hidden';
+      requestAnimationFrame(() => {
+        const box = target.getBoundingClientRect();
+        const tx = box.left + box.width / 2;
+        const ty = box.top + box.height / 2;
+        const at = (x, y, s) => `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${s})`;
+        const anim = chip.animate([
+          { transform: at(sx, sy, 0.5), opacity: 0 },
+          { transform: at(sx, sy - 70, 1.2), opacity: 1, offset: 0.3 },
+          { transform: at(tx, ty, 1), opacity: 1 }
+        ], { duration: 1100, easing: 'cubic-bezier(.3,.7,.3,1)' });
+        anim.onfinish = () => {
+          chip.remove();
+          target.style.visibility = '';
+          target.classList.add('landed');
+        };
+      });
     }
 
     // Paid at mate, worn from the next game: rebuilding now would cut the kneel and cheer short.
@@ -2546,6 +2640,7 @@ export function initWizardChess() {
     // `announce` is false only on a start that is about to resume a saved game: no new game begins.
     function resetChessBoard(orientCamera = true, preserveScript = false, announce = true) {
       rivalPaid = false;
+      entranceDrops = [];
       gameReported = false;
       gameId = (gameId + 1) >>> 0;
       if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId } }));
@@ -4438,6 +4533,7 @@ export function initWizardChess() {
           line.className = 'trophy-line';
           line.textContent = ko ? `전리품 획득: ${name}` : `Trophy won: ${name}`;
           subEl.appendChild(line);
+          flyTrophy(line, lastTrophy.item, name);
           lastTrophy = null;
         }
       }
@@ -5601,7 +5697,15 @@ export function initWizardChess() {
       debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
       getRivalCatalog,
       startRival,
-      getVillageRivals: () => (activePack?.rivals || []).map(({ id, name, visitsFor }) => ({ id, name, visitsFor })),
+      skipEntrance: landEntrance,
+      getVillageRivals: () => (activePack?.rivals || []).map(({ id, name, visitsFor, flag, rewards }) => ({
+        id,
+        name,
+        visitsFor,
+        flag,
+        wins: rivalProgress.wins[id] || 0,
+        complete: rewards.every((x) => rivalProgress.unlocked.includes(x))
+      })),
       setRenderPaused: (on) => { renderPaused = Boolean(on); },
       // Hearts earned in the village grow that one individual on the board; the model set already has every stage.
       setSlotStages: async (map) => {
@@ -5950,6 +6054,7 @@ export function initWizardChess() {
         const done = activeMoveTweens[i](dt);
         if (done) activeMoveTweens.splice(i, 1);
       }
+      if (entranceDrops.length) stepEntrance(dt);
 
       // Feature 4: Video-game style WASD + R/F camera translation AND Arrow-key camera rotation
       // with separate UI-configurable Move Speed & Rot Speed (both default 10%) and smooth ease-in / ease-out velocity damping

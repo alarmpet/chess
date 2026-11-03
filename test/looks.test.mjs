@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
-import { validatePackManifest, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole, stageModelFor, slotsFor, stageIds, PIECE_ROLES } from '../src/packs/packManifest.js';
+import { validatePackManifest, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole, rivalShowcase, rivalWearer,stageModelFor, slotsFor, stageIds, PIECE_ROLES } from '../src/packs/packManifest.js';
 
 const legend = JSON.parse(readFileSync(new URL('../public/packs/legend/pack.json', import.meta.url), 'utf8'));
 
@@ -127,6 +127,23 @@ test('a won trinket goes to the mating piece, never over what is worn, never ove
   assert.equal(trophyRole(legend, { knight: { head: 'x' } }, head, 'knight'), 'pawn');
   const full = Object.fromEntries(['pawn', 'knight', 'queen'].map((r) => [r, { head: 'x' }]));
   assert.equal(trophyRole(legend, full, head, 'pawn'), null);
+});
+
+test('a rival shows off what it wears, what is ahead of mine, and the next prize (desire plan D4)', () => {
+  const court = legend.rivals.find((r) => r.id === 'acorn_court');
+  const show = rivalShowcase(legend, court.id, ['leaf_shades'], { [court.id]: 1 }, { pawn: 'adult', knight: 'grown' });
+  assert.equal(show.wins, 1);
+  assert.equal(show.next.id, 'acorn_beads');
+  const pawn = show.wears.find((w) => w.role === 'pawn');
+  assert.equal(pawn.ahead, false, 'my pawns are already grown-up');
+  assert.deepEqual(pawn.items.map((i) => [i.id, i.owned]), [['leaf_shades', true]]);
+  assert.equal(show.wears.find((w) => w.role === 'knight').ahead, true);
+  assert.equal(show.wears.find((w) => w.role === 'king').items[0].owned, false);
+  assert.equal(show.wears.find((w) => w.role === 'queen').stageName.ko, '의젓함');
+  assert.equal(rivalShowcase(legend, 'nobody'), null);
+  assert.equal(rivalShowcase(legend, court.id, court.rewards).next, null);
+  assert.equal(rivalWearer(legend, 'picnic', 'ribbon'), 'knight');
+  assert.equal(rivalWearer(legend, 'picnic', 'bell'), null);
 });
 
 test('earned stages cap the saved look (desire plan D1)', () => {
