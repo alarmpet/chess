@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Chess } from 'chess.js';
-import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX } from '../src/village/economy.js';
+import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX } from '../src/village/economy.js';
 import { replayGame } from '../src/village/roster.js';
 
 const line = (sans) => { const c = new Chess(); return sans.map((s) => c.move(s)); };
@@ -299,4 +299,18 @@ test('marks money cannot buy each say how to get them (desire plan D6)', async (
   assert.match(by['island-photo'].how, /0\/8/);
   assert.ok(marks.every((m) => m.how), 'every mark says how to get it');
   assert.deepEqual(marks.slice(0, 2).map((m) => m.earned), [true, true], 'earned marks first');
+});
+
+test('the three-step loop names one thing to do: build, then a resident, then the game that grows it (garden-short G1)', () => {
+  const v = newVillage();
+  assert.equal(loopStep(v).next, 'build');
+  assert.ok(startBuild(v, 'field', 'c3'));
+  assert.deepEqual(loopStep(v), { next: 'play', working: 0, waiting: 1, empty: 0 });
+  finish(v);
+  assert.deepEqual(loopStep(v), { next: 'resident', working: 0, waiting: 0, empty: 1 });
+  v.built[0].tenant = 'meerkat_0';
+  assert.deepEqual(loopStep(v), { next: 'play', working: 1, waiting: 0, empty: 0 });
+  const grain = v.grain;
+  finish(v);
+  assert.ok(v.grain > grain, 'the game is what makes the planted field give');
 });

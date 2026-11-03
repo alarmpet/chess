@@ -227,6 +227,18 @@ export function nextQuest(v) {
   return { buildingId: b.id, piece: QUEST_PIECES[(v.games * 3) % QUEST_PIECES.length] };
 }
 
+/**
+ * The island's three-step loop, plant → one game → harvest (garden-short plan G1), read from the save.
+ * `next` is the one thing to do now: build somewhere, give a building a resident, or play the game that grows it.
+ */
+export function loopStep(v) {
+  const working = v.built.filter((b) => b.ready && b.tenant).length;
+  const waiting = v.built.filter((b) => !b.ready).length;
+  const empty = v.built.filter((b) => b.ready && !b.tenant).length;
+  const next = empty ? 'resident' : working || waiting ? 'play' : 'build';
+  return { next, working, waiting, empty };
+}
+
 function settleQuest(v, moves, color) {
   const q = v.quest;
   if (!q) return null;

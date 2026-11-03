@@ -9,6 +9,7 @@ import { loadCollection } from './cards/store';
 import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRivals } from './village/store';
 import { certificateLines, drawCertificate } from './village/certificate.js';
 import { earnedMarks } from './village/marks.js';
+import LoopStrip from './village/LoopStrip';
 
 const FILES = 'abcdefgh';
 const ROLE_OF: Record<string, string> = { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' };
@@ -192,8 +193,6 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
   const questHome = quest && village.built.find((b: any) => b.id === quest.buildingId);
   const done = village && islandDone(village);
   const owned = col ? Object.keys(col.cards).filter((id) => col.cards[id] > 0).sort((a, b) => tenantRarity(b) - tenantRarity(a)) : [];
-  const h = summary?.harvest;
-  const gains = h ? [h.grain && `🌾 +${h.grain}`, h.bread && `🥖 +${h.bread}`, h.coins && `🌰 +${h.coins}`, h.hearts && `💗 +${h.hearts}`].filter(Boolean).join(' · ') : '';
   const reason = (id: string) => {
     const why = tenantBlocked(village, col, building.id, id);
     return why === 'rarity' ? `${RARITY_KO[BUILDINGS[building.kind as keyof typeof BUILDINGS].minRarity]} 이상만` : why === 'busy' ? '다른 집에 살아요' : '';
@@ -232,16 +231,17 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
         </span>
       </div>
 
+      <LoopStrip village={village} summary={summary} hasCards={owned.length > 0} onPlay={onClose} />
+
       {(summary || away.length > 0 || note || questHome) && (
         <div className="village-card" id="village-card">
           {summary && (
             <div>
-              <b>이번 판</b> 🌰 +{summary.coins} · {slotLabel(summary.mvp, village?.names || {})} 💗 +{summary.hearts}
+              <b>이번 판 활약</b> {slotLabel(summary.mvp, village?.names || {})}
               {summary.added.trees.length > 0 && ` · 나무 ${summary.added.trees.length}그루`}
               {summary.added.houses.length > 0 && ' · 승급한 폰의 집'}
             </div>
           )}
-          {gains && <div><b>수확</b> {gains}</div>}
           {summary?.opened?.length > 0 && <div>🎉 {summary.opened.map((k: string) => BUILDINGS[k as keyof typeof BUILDINGS].ko).join(', ')} 문을 열었어요!</div>}
           {summary?.quest?.done && <div>🔔 의뢰 성공! 건물이 한 단계 자랐어요.{summary.quest.festival && ` ${ANIMAL_KO[summary.quest.festival]} 축제가 열렸어요!`}</div>}
           {questHome && (

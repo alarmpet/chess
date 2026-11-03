@@ -7,6 +7,7 @@ import VillageView from './VillageView';
 import QuitDialog from './QuitDialog';
 import { loadVillage, settleFinishedGame } from './village/store';
 import { stageForHearts } from './village/economy.js';
+import { gainText } from './village/LoopStrip';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
@@ -251,7 +252,7 @@ export default function App() {
       <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (
         <button type="button" className="village-toast" id="village-toast" onClick={() => setVillageOpen(true)}>
-          🌰 +{lastGame.coins} · 💗 +{lastGame.hearts} — 마을로 가기
+          🌱 심기 → ♟ 한 판 ✓ → 🧺 거두기 {gainText(lastGame)} — 섬으로
         </button>
       )}
       <VillageView open={villageOpen} onClose={() => { setVillageOpen(false); setLastGame(null); }} lang={lang === 'en' ? 'en' : 'ko'} summary={lastGame} />
