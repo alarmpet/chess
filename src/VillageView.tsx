@@ -8,6 +8,7 @@ import CardFace, { ANIMAL_KO, RARITY_KO } from './cards/CardFace';
 import { loadCollection } from './cards/store';
 import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRivals } from './village/store';
 import { certificateLines, drawCertificate } from './village/certificate.js';
+import { earnedMarks } from './village/marks.js';
 
 const FILES = 'abcdefgh';
 const ROLE_OF: Record<string, string> = { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' };
@@ -42,6 +43,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
   const [night, setNight] = useState(false);
   const [photos, setPhotos] = useState<any[] | null>(null);
   const [cert, setCert] = useState<{ url: string; file: File } | null>(null);
+  const [marks, setMarks] = useState<any[] | null>(null);
   const island = useRef<ReturnType<typeof createIsland> | null>(null);
   const live = useRef({ picking, selected });
   live.current = { picking, selected };
@@ -151,11 +153,16 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     api.setOverlay(reach, homes, building.sq);
   }, [picking, trying, building, village]);
 
+  function currentMarks() {
+    return earnedMarks({ rivals: villageRivals(), v: loadVillage(), col: loadCollection(), photos: loadIslandPhotos() });
+  }
+
   // Lord's certificate (desire plan D5): the island with its record, shared through the phone's own sheet or saved.
   async function makeCert() {
     const shot = island.current?.photo(1080);
     if (!shot) return;
     const lines = certificateLines(loadVillage(), loadCollection(), villageRivals());
+    lines.marks = currentMarks().filter((m) => m.earned).map((m) => `${m.icon} ${m.name}`);
     const blob = await drawCertificate(lines, shot);
     if (!blob) return;
     const file = new File([blob], `wildcrown-${lines.date.replace(/\./g, '')}.png`, { type: 'image/png' });
@@ -219,6 +226,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
             </button>
           )}
           <button type="button" className="hud-btn" id="village-album" onClick={() => setPhotos(photos ? null : loadIslandPhotos())}>📷</button>
+          <button type="button" className="hud-btn" id="village-marks" aria-label="표식" onClick={() => setMarks(marks ? null : currentMarks())}>🏅</button>
           <button type="button" className="hud-btn" id="village-cert" aria-label="영주 증명서" onClick={makeCert}>📜</button>
           <button type="button" className="hud-btn" onClick={onClose}>{lang === 'en' ? 'Back to the board' : '♟ 체스로'}</button>
         </span>
@@ -256,6 +264,30 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
               <button type="button" className="hud-btn" onClick={closeCert}>닫기</button>
             </div>
             <small>사진에는 섬과 기록만 담깁니다. 말 이름은 넣지 않아요.</small>
+          </div>
+        </div>
+      )}
+
+      {marks && (
+        <div className="panel-overlay" role="dialog" aria-modal="true" onClick={() => setMarks(null)}>
+          <div className="panel-card marks-panel" id="marks-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="panel-header">
+              <div className="panel-title"><span>🏅</span><span>표식</span></div>
+              <button type="button" className="panel-close" onClick={() => setMarks(null)}>✕</button>
+            </div>
+            <div className="panel-body">
+              <p className="look-note">표식은 플레이로만 얻습니다. 상점에서 팔지 않아요.</p>
+              {marks.map((m) => (
+                <div className={`mark-row${m.earned ? ' earned' : ''}`} key={m.id} data-mark={m.id}>
+                  <span className="mark-icon">{m.earned ? m.icon : '🔒'}</span>
+                  <div className="mark-text">
+                    <b>{m.name}</b> <small>{m.have}/{m.need}</small>
+                    <div className="mark-bar"><i style={{ width: `${Math.min(100, (100 * m.have) / Math.max(1, m.need))}%` }} /></div>
+                    <div className="mark-how">{m.how}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

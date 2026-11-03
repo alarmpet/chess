@@ -13,7 +13,8 @@ export function certificateLines(v, col, rivals = [], date = new Date()) {
     island: `${v.island}번째 섬`,
     rows: [`🏠 건물 ${ready}/${KIND_ORDER.length}`, `🃏 도감 ${album.owned}/${album.total}`, `♟ ${v.games}판`],
     flags: rivals.filter((r) => r.wins > 0).map((r) => ({ name: r.name?.ko || r.id, wins: r.wins, complete: Boolean(r.complete), color: r.flag || '#f0606a' })),
-    date: `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`
+    date: `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`,
+    marks: /** @type {string[]} */ ([])   // earned marks, filled by the village screen (desire plan D6)
   };
 }
 
@@ -67,7 +68,7 @@ export async function drawCertificate(lines, photo) {
   ctx.fillText(lines.rows.join('    '), W / 2, 950);
 
   // Rival flags: a coloured pennant per rival beaten, with its wins; a star once every trinket is won.
-  const flags = lines.flags.slice(0, 4);
+  const flags = lines.flags.slice(0, 3);
   ctx.font = 'bold 34px sans-serif';
   if (flags.length === 0) {
     ctx.fillStyle = '#9a7a5c';
@@ -86,6 +87,13 @@ export async function drawCertificate(lines, photo) {
     ctx.fillText(`${f.name} ${f.wins}승${f.complete ? ' ★' : ''}`, 330, y + 6);
     ctx.textAlign = 'center';
   });
+
+  // Earned marks (desire plan D6) in one line; only what was earned, never what is missing.
+  if (lines.marks?.length) {
+    ctx.font = 'bold 34px sans-serif';
+    ctx.fillStyle = '#b7791f';
+    ctx.fillText(lines.marks.slice(0, 4).join('   '), W / 2, 1206);
+  }
 
   ctx.font = '30px sans-serif';
   ctx.fillStyle = '#9a7a5c';

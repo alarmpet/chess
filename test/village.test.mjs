@@ -277,3 +277,26 @@ test('the lord certificate shows the island record and nothing the player typed 
   assert.equal(c.date, '2026.11.03');
   assert.ok(!JSON.stringify(c).includes('민수'), 'piece names stay out of the picture');
 });
+
+test('marks money cannot buy each say how to get them (desire plan D6)', async () => {
+  const { earnedMarks } = await import('../src/village/marks.js');
+  const { newCollection } = await import('../src/cards/economy.js');
+  const v = newVillage();
+  v.hearts = { w_d1: 64, w_e2: 25, b_g8: 40 };
+  const rivals = [
+    { id: 'picnic', name: { ko: '소풍 나온 미어캣단' }, owned: 2, total: 2 },
+    { id: 'court', name: { ko: '도토리 궁정' }, owned: 1, total: 3 }
+  ];
+  const marks = earnedMarks({ rivals, v, col: newCollection(), photos: [] });
+  const by = Object.fromEntries(marks.map((m) => [m.id, m]));
+  assert.equal(by['sweep-picnic'].earned, true);
+  assert.equal(by['sweep-court'].earned, false);
+  assert.equal(by['sweep-court'].have, 1);
+  assert.equal(by['gold-frame'].earned, true, 'the queen reached the starlit look');
+  assert.equal(by['gold-frame'].have, 1);
+  assert.match(by['gold-frame'].how, /캥거루 40\/60/, 'the closest role is named with its hearts');
+  assert.equal(by.album.earned, false);
+  assert.match(by['island-photo'].how, /0\/8/);
+  assert.ok(marks.every((m) => m.how), 'every mark says how to get it');
+  assert.deepEqual(marks.slice(0, 2).map((m) => m.earned), [true, true], 'earned marks first');
+});

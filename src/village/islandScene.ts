@@ -714,6 +714,15 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       card.position.set(i % 2 ? 0.28 : -0.28, 0.42, 0.5 - Math.floor(i / 2) * 0.5);
       raft.add(card);
       easels.push(card);
+      // Rare and hero cards stand in a glowing frame, blue and gold as in the pouch reveal (desire plan D6).
+      const glow = Number(rarity) >= 3 ? 0xffc23d : Number(rarity) === 2 ? 0x5aa9ff : null;
+      if (glow !== null) {
+        const frameMat = new THREE.MeshBasicMaterial({ color: glow, transparent: true, opacity: 0.85, toneMapped: false });
+        frameMat.userData = NO_OUTLINE;
+        const frame = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.81), frameMat);
+        frame.position.z = -0.006;   // a child of the card, so it turns with it towards the camera
+        card.add(frame);
+      }
     });
   }
 

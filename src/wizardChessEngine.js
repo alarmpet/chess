@@ -5704,6 +5704,8 @@ export function initWizardChess() {
         visitsFor,
         flag,
         wins: rivalProgress.wins[id] || 0,
+        owned: rewards.filter((x) => rivalProgress.unlocked.includes(x)).length,
+        total: rewards.length,
         complete: rewards.every((x) => rivalProgress.unlocked.includes(x))
       })),
       setRenderPaused: (on) => { renderPaused = Boolean(on); },
