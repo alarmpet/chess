@@ -74,6 +74,65 @@ function mesh(geo: THREE.BufferGeometry, color: number, x = 0, y = 0, z = 0) {
   return m;
 }
 
+// How bare each tile level is (villageTiles: grass, worn, path, meadow). It sets how much of the dirt shows through.
+const WEAR = [0.06, 0.3, 1, 0];
+
+// The tile tops after three-stylized's terrain and folio-2025's floor (docs/research/2026-11-03-village-detail-rea):
+// soft light and dark patches in the grass, bare earth that grows with wear, and flagstones where the path is worn through.
+// The noise runs in island space, so patches carry across tile edges and the checker colours still show under them.
+function groundShader(shader: THREE.WebGLProgramParametersWithUniforms) {
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', `#include <common>
+attribute float aWear;
+varying float vWear;
+varying float vUp;
+varying vec2 vGround;`)
+    .replace('#include <begin_vertex>', `#include <begin_vertex>
+vWear = aWear;
+vUp = normal.y;
+vGround = (instanceMatrix * vec4(transformed, 1.0)).xz;`);
+  shader.fragmentShader = shader.fragmentShader
+    .replace('#include <common>', `#include <common>
+varying float vWear;
+varying float vUp;
+varying vec2 vGround;
+float gHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float gNoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(gHash(i), gHash(i + vec2(1, 0)), f.x), mix(gHash(i + vec2(0, 1)), gHash(i + vec2(1, 1)), f.x), f.y);
+}
+// Distance to the nearest edge between stones, and which stone this is.
+vec2 gStones(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  float d1 = 9.0, d2 = 9.0, id = 0.0;
+  for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+    vec2 c = vec2(x, y);
+    vec2 o = c + 0.15 + 0.7 * vec2(gHash(i + c), gHash(i + c + 17.0)) - f;
+    float d = dot(o, o);
+    if (d < d1) { d2 = d1; d1 = d; id = gHash(i + c + 5.0); } else if (d < d2) d2 = d;
+  }
+  return vec2(sqrt(d2) - sqrt(d1), id);
+}`)
+    .replace('#include <color_fragment>', `#include <color_fragment>
+{
+  float top = smoothstep(0.6, 0.9, vUp);
+  float mottle = gNoise(vGround * 1.7) * 0.65 + gNoise(vGround * 4.3 + 7.0) * 0.35;
+  vec3 col = diffuseColor.rgb * (0.91 + 0.18 * mottle);
+  float earth = gNoise(vGround * 2.3 + 3.0) * 0.7 + gNoise(vGround * 6.1 + 11.0) * 0.3;
+  float bare = smoothstep(0.66 - vWear * 0.5, 0.76 - vWear * 0.5, earth);
+  vec3 dirt = mix(vec3(0.40, 0.25, 0.10), vec3(0.58, 0.38, 0.16), gNoise(vGround * 9.0));
+  col = mix(col, dirt, bare * 0.75 * top);
+  if (vWear > 0.9) {
+    vec2 s = gStones(vGround * 3.4);
+    vec3 stone = diffuseColor.rgb * (0.86 + 0.2 * s.y);
+    col = mix(col, stone, top * 0.9);
+    col = mix(col, diffuseColor.rgb * 0.62, smoothstep(0.08, 0.02, s.x) * top);
+  }
+  diffuseColor.rgb = col;
+}`);
+}
+
 export type IslandEvents = {
   onTile: (sq: string) => void;
   onBuilding: (id: number) => void;
@@ -142,8 +201,11 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   const dummy = new THREE.Object3D();
   const tint = new THREE.Color();
   const capGeo = new RoundedBoxGeometry(0.985, 0.2, 0.985, 3, 0.07);
+  const capWear = new THREE.InstancedBufferAttribute(new Float32Array(64), 1);
+  capGeo.setAttribute('aWear', capWear);
   const capMat = toon(0xffffff, 0.95);
   capMat.userData = NO_OUTLINE;
+  capMat.onBeforeCompile = groundShader;
   const caps = new THREE.InstancedMesh(capGeo, capMat, 64);
   caps.receiveShadow = true;
   caps.castShadow = true;
@@ -475,6 +537,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       const dark = (f + r) % 2 === 0;       // the board stays readable under the grass
       const base = level === 0 ? (dark ? 0x7f9c47 : 0x94ad54) : level === 1 ? (dark ? 0xa3a35a : 0xb3b166) : level === 2 ? (dark ? 0xb3a97a : 0xc2b888) : (dark ? 0x8fa850 : 0xa2b95c);
       caps.setColorAt(i, tint.setHex(base).offsetHSL((rnd() - 0.5) * 0.01, 0, (rnd() - 0.5) * 0.02));
+      capWear.setX(i, WEAR[level] ?? 0);
       if (occupied.has(sq)) return;
       const count = level === 0 ? 0 : level === 1 ? 7 : 20;
       for (let k = 0; k < count && nP < pebbles.count; k++) {
@@ -514,6 +577,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       }
     });
     caps.instanceColor!.needsUpdate = true;
+    capWear.needsUpdate = true;
     pebbles.count = nP;
     flowers.count = nF;
     tufts.count = nT;
