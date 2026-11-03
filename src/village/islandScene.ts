@@ -76,6 +76,20 @@ function mesh(geo: THREE.BufferGeometry, color: number, x = 0, y = 0, z = 0) {
 
 // How bare each tile level is (villageTiles: grass, worn, path, meadow). It sets how much of the dirt shows through.
 const WEAR = [0.06, 0.3, 1, 0];
+const BLADES = [60, 20, 0, 45];                  // grass blades per tile at each level, in clumps of five
+
+// Noise shared by the tile tops and the grass, so a blade never grows out of a bare patch.
+const GROUND_NOISE = `
+float gHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float gNoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(gHash(i), gHash(i + vec2(1, 0)), f.x), mix(gHash(i + vec2(0, 1)), gHash(i + vec2(1, 1)), f.x), f.y);
+}
+float gBare(vec2 p, float wear) {
+  float earth = gNoise(p * 2.3 + 3.0) * 0.7 + gNoise(p * 6.1 + 11.0) * 0.3;
+  return smoothstep(0.66 - wear * 0.5, 0.76 - wear * 0.5, earth);
+}`;
 
 // The tile tops after three-stylized's terrain and folio-2025's floor (docs/research/2026-11-03-village-detail-rea):
 // soft light and dark patches in the grass, bare earth that grows with wear, and flagstones where the path is worn through.
@@ -96,12 +110,7 @@ vGround = (instanceMatrix * vec4(transformed, 1.0)).xz;`);
 varying float vWear;
 varying float vUp;
 varying vec2 vGround;
-float gHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float gNoise(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(gHash(i), gHash(i + vec2(1, 0)), f.x), mix(gHash(i + vec2(0, 1)), gHash(i + vec2(1, 1)), f.x), f.y);
-}
+${GROUND_NOISE}
 // Distance to the nearest edge between stones, and which stone this is.
 vec2 gStones(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -119,8 +128,7 @@ vec2 gStones(vec2 p) {
   float top = smoothstep(0.6, 0.9, vUp);
   float mottle = gNoise(vGround * 1.7) * 0.65 + gNoise(vGround * 4.3 + 7.0) * 0.35;
   vec3 col = diffuseColor.rgb * (0.91 + 0.18 * mottle);
-  float earth = gNoise(vGround * 2.3 + 3.0) * 0.7 + gNoise(vGround * 6.1 + 11.0) * 0.3;
-  float bare = smoothstep(0.66 - vWear * 0.5, 0.76 - vWear * 0.5, earth);
+  float bare = gBare(vGround, vWear);
   vec3 dirt = mix(vec3(0.40, 0.25, 0.10), vec3(0.58, 0.38, 0.16), gNoise(vGround * 9.0));
   col = mix(col, dirt, bare * 0.75 * top);
   if (vWear > 0.9) {
@@ -131,6 +139,47 @@ vec2 gStones(vec2 p) {
   }
   diffuseColor.rgb = col;
 }`);
+}
+
+// Grass blades after three-stylized (GrassLayer, shaders.ts): one instanced mesh, two crossing sines for wind with the
+// tip moving most, light taken as if every blade faced up so they do not flicker, dark at the root and bright at the tip.
+const grassWind = { value: 0 };
+const GRASS_DARK = 0.72;
+function grassShader(shader: THREE.WebGLProgramParametersWithUniforms) {
+  shader.uniforms.uWind = grassWind;
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', `#include <common>
+uniform float uWind;
+attribute float aWear;
+varying float vTip;
+${GROUND_NOISE}`)
+    .replace('#include <begin_vertex>', `#include <begin_vertex>
+vTip = position.y;
+vec2 root = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
+// A blade standing in bare earth on the tile below is not drawn.
+transformed *= step(gBare(root, aWear), 0.25);
+float bend = position.y * position.y * length(instanceMatrix[1].xyz);
+vec2 dir = vec2(0.85, 0.53);
+float sway = sin(dot(root, dir) * 3.0 + uWind * 1.1) * 0.22 + sin(dot(root, vec2(-dir.y, dir.x)) * 5.1 + uWind * 0.8) * 0.12;`)
+    // Wind pushes in island space, after the blade is placed and turned.
+    .replace('#include <project_vertex>', `vec4 mvPosition = instanceMatrix * vec4(transformed, 1.0);
+mvPosition.xz += dir * (sway + 0.035) * bend;
+mvPosition = modelViewMatrix * mvPosition;
+gl_Position = projectionMatrix * mvPosition;`);
+  shader.fragmentShader = shader.fragmentShader
+    .replace('#include <common>', `#include <common>
+varying float vTip;`)
+    .replace('#include <color_fragment>', `#include <color_fragment>
+diffuseColor.rgb *= mix(${GRASS_DARK.toFixed(2)}, 1.12, smoothstep(0.05, 1.0, vTip));`);
+}
+
+function grassBlade() {
+  const geo = new THREE.PlaneGeometry(1, 1, 1, 4).translate(0, 0.5, 0);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setX(i, pos.getX(i) * Math.pow(1 - pos.getY(i), 1.2));
+  const up = geo.attributes.normal;
+  for (let i = 0; i < up.count; i++) up.setXYZ(i, 0, 1, 0);
+  return geo;
 }
 
 export type IslandEvents = {
@@ -206,6 +255,10 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   const capMat = toon(0xffffff, 0.95);
   capMat.userData = NO_OUTLINE;
   capMat.onBeforeCompile = groundShader;
+  const bladeGeo = grassBlade();
+  const bladeMat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  bladeMat.userData = NO_OUTLINE;
+  bladeMat.onBeforeCompile = grassShader;
   const caps = new THREE.InstancedMesh(capGeo, capMat, 64);
   caps.receiveShadow = true;
   caps.castShadow = true;
@@ -522,10 +575,13 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     const flowers = new THREE.InstancedMesh(flowerGeo, flowerMat, 64 * 7);
     let nF = 0;
     const FLOWER = [0xff8fb0, 0xffd34d, 0xc79bff, 0xffffff, 0xff7a5c];
-    const tuftGeo = new THREE.ConeGeometry(0.022, 0.09, 4);
-    const tuftMat = toon(0xffffff, 1);
-    tuftMat.userData = NO_OUTLINE;
-    const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, 64 * 8);
+    const tufts = new THREE.InstancedMesh(bladeGeo, bladeMat, 64 * BLADES[0]);
+    tufts.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+    tufts.frustumCulled = false;
+    tufts.receiveShadow = true;
+    const tuftWear = new THREE.InstancedBufferAttribute(new Float32Array(tufts.count), 1);
+    tufts.geometry = bladeGeo.clone();
+    tufts.geometry.setAttribute('aWear', tuftWear);
     let nT = 0;
 
     squares.forEach((sq, i) => {
@@ -564,16 +620,26 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
           nF += 1;
         }
       }
-      if (level < 2) {
-        for (let k = 0; k < 6; k++) {
-          dummy.position.set(x + (rnd() - 0.5) * 0.82, TILE_TOP + 0.03, z + (rnd() - 0.5) * 0.82);
-          dummy.rotation.set((rnd() - 0.5) * 0.5, rnd() * 3, (rnd() - 0.5) * 0.5);
-          dummy.scale.setScalar(0.8 + rnd() * 0.7);
-          dummy.updateMatrix();
-          tufts.setMatrixAt(nT, dummy.matrix);
-          tufts.setColorAt(nT, tint.setHex(rnd() < 0.5 ? 0x74b03f : 0x8cc44e));
-          nT += 1;
+      // Clumps fan out from one root, which reads as grass from the island camera where single blades read as hatching.
+      let cx = 0;
+      let cz = 0;
+      for (let k = 0; k < BLADES[level] && nT < tufts.count; k++) {
+        if (k % 5 === 0) {
+          cx = x + (rnd() - 0.5) * 0.86;
+          cz = z + (rnd() - 0.5) * 0.86;
         }
+        const turn = rnd() * Math.PI * 2;
+        dummy.position.set(cx + Math.cos(turn) * 0.02, TILE_TOP - 0.01, cz + Math.sin(turn) * 0.02);
+        dummy.rotation.set(0, 0, 0);
+        dummy.rotateY(turn);
+        dummy.rotateZ(-(0.15 + rnd() * 0.35));
+        const tall = 0.1 + rnd() * 0.1;
+        dummy.scale.set(0.05 + rnd() * 0.04, tall, 1);
+        dummy.updateMatrix();
+        tufts.setMatrixAt(nT, dummy.matrix);
+        tufts.setColorAt(nT, tint.setHex(base).offsetHSL(0.01 + (rnd() - 0.5) * 0.03, 0.08, 0.04 + (rnd() - 0.5) * 0.06));
+        tuftWear.setX(nT, WEAR[level] ?? 0);
+        nT += 1;
       }
     });
     caps.instanceColor!.needsUpdate = true;
@@ -581,6 +647,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     pebbles.count = nP;
     flowers.count = nF;
     tufts.count = nT;
+    tuftWear.needsUpdate = true;
     for (const inst of [pebbles, flowers, tufts]) if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
     ground.add(pebbles, flowers, tufts);
   }
@@ -924,6 +991,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.elapsedTime;
     biome.tick(t);
+    grassWind.value = t;
     island.position.y = Math.sin(t * 0.7) * 0.012;
     if (Math.abs(azimuthGoal - azimuth) > 0.001) {
       azimuth += (azimuthGoal - azimuth) * Math.min(1, dt * 6);
