@@ -273,6 +273,60 @@ function flowerCard() {
   return geo;
 }
 
+// A bush as one soft blob: a few balls merged, then every normal bent 85% towards the middle so it shades as one
+// rounded mass and not as a pile of balls (folio-2025 Foliage.js:72).
+function bushGeometry() {
+  const parts = [[0, 0.09, 0, 0.11], [0.09, 0.06, 0.03, 0.08], [-0.08, 0.06, -0.03, 0.085], [0.02, 0.06, -0.08, 0.075]].map(([x, y, z, r]) =>
+    new THREE.IcosahedronGeometry(r, 2).translate(x, y, z));
+  const geo = mergeGeometries(parts);
+  const pos = geo.attributes.position;
+  const nor = geo.attributes.normal;
+  const n = new THREE.Vector3();
+  const out = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    out.set(pos.getX(i), pos.getY(i) - 0.05, pos.getZ(i)).normalize();
+    n.set(nor.getX(i), nor.getY(i), nor.getZ(i)).lerp(out, 0.85).normalize();
+    nor.setXYZ(i, n.x, n.y, n.z);
+  }
+  return geo;
+}
+
+// Wild corners grow in clumps (hexcastle NatureGenerator: a seed square, neighbours joining with less chance the
+// further they are, and more when a neighbour already belongs). Bushes and stones keep to the tile edges so the
+// middle of every square stays clear to build on and walk across, and a square that gets built on simply loses them.
+const NATURE = { clumps: 3, size: 5, bushes: [1, 3], stones: [0, 3] };
+export function natureSquares(free: Set<string>, seed: string) {
+  const rnd = seeded(seed);
+  const near = (sq: string) => {
+    const f = FILES.indexOf(sq[0]);
+    const r = Number(sq[1]);
+    return [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([df, dr]) => `${FILES[f + df] ?? ''}${r + dr}`).filter((n) => free.has(n));
+  };
+  const rim = [...free].filter((sq) => /[ah]/.test(sq[0]) || /[18]/.test(sq[1]));
+  const picked = new Set<string>();
+  for (let c = 0; c < NATURE.clumps; c++) {
+    const pool = (rim.length ? rim : [...free]).filter((sq) => !picked.has(sq));
+    if (!pool.length) break;
+    const start = pool[Math.floor(rnd() * pool.length)];
+    const clump = [start];
+    picked.add(start);
+    for (let tries = 0; tries < NATURE.size * 5 && clump.length < NATURE.size; tries++) {
+      const from = clump[Math.floor(rnd() * clump.length)];
+      const options = near(from).filter((n) => !picked.has(n));
+      if (!options.length) continue;
+      const weights = options.map((n) => 1 + 0.5 * near(n).filter((m) => picked.has(m)).length);
+      let roll = rnd() * weights.reduce((a, b) => a + b, 0);
+      const next = options.find((_, i) => (roll -= weights[i]) <= 0) ?? options[0];
+      const away = Math.abs(FILES.indexOf(next[0]) - FILES.indexOf(start[0])) + Math.abs(Number(next[1]) - Number(start[1]));
+      if (rnd() < Math.max(0.1, 1 - away / NATURE.size)) {
+        clump.push(next);
+        picked.add(next);
+      }
+    }
+  }
+  return [...picked];
+}
+
 export type IslandEvents = {
   onTile: (sq: string) => void;
   onBuilding: (id: number) => void;
@@ -350,6 +404,12 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   const bladeMat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
   bladeMat.userData = NO_OUTLINE;
   bladeMat.onBeforeCompile = grassShader;
+  const bushGeo = bushGeometry();
+  const bushMat = toon(0xffffff, 0.9);
+  bushMat.userData = NO_OUTLINE;
+  const stoneGeo = new THREE.DodecahedronGeometry(1, 0);
+  const stoneMat = toon(0xffffff, 1);
+  stoneMat.userData = NO_OUTLINE;
   const flowerGeo = flowerCard();
   const flowerMat = new THREE.MeshLambertMaterial({ color: 0xffffff, map: flowerAtlas(), side: THREE.DoubleSide });
   flowerMat.userData = NO_OUTLINE;
@@ -559,12 +619,6 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     return g;
   }
 
-  function makeBush(rnd: () => number) {
-    const b = mesh(new THREE.IcosahedronGeometry(0.1 + rnd() * 0.04, 2), rnd() < 0.5 ? 0x6fa83f : 0x83b84a);
-    b.scale.y = 0.8;
-    return b;
-  }
-
   function makeFlag(game: number) {
     const g = new THREE.Group();
     g.add(mesh(new THREE.CylinderGeometry(0.014, 0.018, 0.58, 6), 0x8a5a33, 0, 0.29, 0));
@@ -760,6 +814,57 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     ground.add(pebbles, flowers, tufts);
   }
 
+  function drawNature(v: any, occupied: Set<string>) {
+    const tiles = villageTiles(v.map) as Record<string, number>;
+    const busy = new Set([...occupied, ...v.map.trees.map((t: any) => t.sq), ...v.flags.map((f: any) => f.sq)]);
+    const free = new Set(squares.filter((sq) => !busy.has(sq) && tiles[sq] !== 2));
+    const wild = natureSquares(free, `wild${v.island}`);
+    const bushes = new THREE.InstancedMesh(bushGeo, bushMat, wild.length * NATURE.bushes[1]);
+    const stones = new THREE.InstancedMesh(stoneGeo, stoneMat, wild.length * NATURE.stones[1]);
+    bushes.castShadow = stones.castShadow = true;
+    bushes.receiveShadow = stones.receiveShadow = true;
+    let nb = 0;
+    let ns = 0;
+    // A spot along the tile's edge band, never in its middle.
+    const edgeSpot = (rnd: () => number, x: number, z: number) => {
+      const side = Math.floor(rnd() * 4);
+      const along = (rnd() - 0.5) * 0.8;
+      const out = 0.3 + rnd() * 0.12;
+      return [x + (side < 2 ? along : side === 2 ? out : -out), z + (side < 2 ? (side === 0 ? out : -out) : along)];
+    };
+    for (const sq of wild) {
+      const rnd = seeded(`wild${sq}${v.island}`);
+      const [x, z] = squareXZ(sq);
+      const nBush = NATURE.bushes[0] + Math.floor(rnd() * (NATURE.bushes[1] - NATURE.bushes[0] + 1));
+      for (let k = 0; k < nBush; k++) {
+        const [bx, bz] = edgeSpot(rnd, x, z);
+        dummy.position.set(bx, TILE_TOP - 0.02, bz);
+        dummy.rotation.set(0, rnd() * Math.PI * 2, 0);
+        dummy.scale.setScalar(0.8 + rnd() * 0.7);
+        dummy.updateMatrix();
+        bushes.setMatrixAt(nb, dummy.matrix);
+        bushes.setColorAt(nb, tint.setHex(rnd() < 0.5 ? 0x6fa83f : 0x83b84a).offsetHSL((rnd() - 0.5) * 0.03, 0, (rnd() - 0.5) * 0.06));
+        nb += 1;
+      }
+      const nStone = NATURE.stones[0] + Math.floor(rnd() * (NATURE.stones[1] - NATURE.stones[0] + 1));
+      for (let k = 0; k < nStone; k++) {
+        const [sx, sz] = edgeSpot(rnd, x, z);
+        const size = 0.04 + rnd() * 0.05;
+        dummy.position.set(sx, TILE_TOP + size * 0.3, sz);
+        dummy.rotation.set(rnd() * 3, rnd() * 3, 0);
+        dummy.scale.set(size * 1.3, size * 0.8, size);
+        dummy.updateMatrix();
+        stones.setMatrixAt(ns, dummy.matrix);
+        stones.setColorAt(ns, tint.setHex(0x9a958a).offsetHSL(0, 0, (rnd() - 0.5) * 0.12));
+        ns += 1;
+      }
+    }
+    bushes.count = nb;
+    stones.count = ns;
+    for (const inst of [bushes, stones]) if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    marks.add(bushes, stones);
+  }
+
   function draw(v: any) {
     marks.clear();
     spinners.length = 0;
@@ -779,16 +884,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       m.scale.setScalar(occupied.has(tree.sq) ? 0.6 : 1);
       marks.add(m);
     }
-    // Quiet corners get a few bushes so an early island is not bare.
-    const edge = seeded(`bush${v.island}`);
-    for (let i = 0; i < 12; i++) {
-      const sq = `${FILES[Math.floor(edge() * 8)]}${edge() < 0.5 ? 1 + Math.floor(edge() * 2) * 7 : 1 + Math.floor(edge() * 8)}`;
-      const b = makeBush(edge);
-      if (occupied.has(sq)) continue;
-      const [x, z] = squareXZ(sq);
-      b.position.set(x + (edge() - 0.5) * 0.7, TILE_TOP + 0.05, z + (edge() - 0.5) * 0.7);
-      marks.add(b);
-    }
+    drawNature(v, occupied);
     for (const b of v.built) placeBuilding(b, v);
     for (const d of v.decor) {
       const at = new THREE.Group();
