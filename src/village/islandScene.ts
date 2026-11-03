@@ -37,7 +37,10 @@ const LOOKS: Record<string, { size: number; yaw: number; hub?: { angle: number; 
 };
 
 const PALETTES = {
-  day: { hemiSky: 0xfff0d8, hemiGround: 0x7f8fb8, hemi: 1.4, sun: 0xffdca8, sunPower: 2.6, deep: 0x0c6a80, shallow: 0x2aa9a6, foam: 0xd8fff0, exposure: 1, glow: 0 },
+  // Shade is lit by the sky part only, so a lavender sky gives shadows a colour of their own and the sunny side stays warm;
+  // faces turned down catch the sand and grass under them (folio-2025 shadowColor and light bounce, done with the lights
+  // so every material, the TRELLIS models too, gets it at no cost).
+  day: { hemiSky: 0xc2b6f2, hemiGround: 0xc2b071, hemi: 1.4, sun: 0xffd9a0, sunPower: 2.8, deep: 0x0c6a80, shallow: 0x2aa9a6, foam: 0xd8fff0, exposure: 1, glow: 0 },
   night: { hemiSky: 0x3f5fa8, hemiGround: 0x24345a, hemi: 1.25, sun: 0x9db8ff, sunPower: 0.7, deep: 0x07233f, shallow: 0x0f6a78, foam: 0x9fd8ff, exposure: 1.15, glow: 1 }
 };
 
