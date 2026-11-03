@@ -411,13 +411,27 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   const camera = new THREE.PerspectiveCamera(24, host.clientWidth / host.clientHeight, 1, 120);
   let azimuth = Math.PI / 4;
   let azimuthGoal = azimuth;
-  const placeCamera = () => {
+  // Zoom 1 shows the whole island; ZOOM_MIN brings two or three squares across the screen. Pan moves the point looked at
+  // over the island, and the further out the camera is the less room it has, so at zoom 1 it is always centred.
+  const PITCH = 0.74;
+  const ZOOM_MIN = 0.3;
+  let zoom = 1;
+  let zoomGoal = 1;
+  const pan = new THREE.Vector2();
+  const panGoal = new THREE.Vector2();
+  const fitDistance = () => {
     const aspect = host.clientWidth / host.clientHeight;
     const halfH = THREE.MathUtils.degToRad(camera.fov / 2);
-    const fit = Math.max(6.7 / Math.tan(halfH), 7.2 / (Math.tan(halfH) * aspect));   // the whole island fits, whatever the window
-    const pitch = 0.74;
-    camera.position.set(Math.sin(azimuth) * Math.cos(pitch) * fit, Math.sin(pitch) * fit, Math.cos(azimuth) * Math.cos(pitch) * fit);
-    camera.lookAt(0, -0.85, 0);
+    return Math.max(6.7 / Math.tan(halfH), 7.2 / (Math.tan(halfH) * aspect));   // the whole island fits, whatever the window
+  };
+  const clampPan = (v: THREE.Vector2, z: number) => {
+    const room = 4.2 * (1 - z) / (1 - ZOOM_MIN);
+    return v.clampScalar(-room, room);
+  };
+  const placeCamera = () => {
+    const dist = fitDistance() * zoom;
+    camera.position.set(pan.x + Math.sin(azimuth) * Math.cos(PITCH) * dist, Math.sin(PITCH) * dist, pan.y + Math.cos(azimuth) * Math.cos(PITCH) * dist);
+    camera.lookAt(pan.x, -0.85, pan.y);
   };
   placeCamera();
 
@@ -1244,6 +1258,10 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   };
   let picking = false;
   const onClick = (e: MouseEvent) => {
+    if (dragged) {
+      dragged = false;
+      return;
+    }
     aim(e);
     if (!picking) {
       const body = ray.intersectObject(actorRoots, true)[0];
@@ -1269,6 +1287,79 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   };
   renderer.domElement.addEventListener('click', onClick);
 
+  // Wheel and pinch zoom, drag to look around once zoomed in. A drag never counts as a tap on a square.
+  const zoomTo = (next: number, x?: number, y?: number) => {
+    next = THREE.MathUtils.clamp(next, ZOOM_MIN, 1);
+    if (x !== undefined && y !== undefined && next < zoomGoal) {
+      // Close in on the point under the finger or cursor, not on the middle of the screen.
+      const rect = renderer.domElement.getBoundingClientRect();
+      ptr.set(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
+      ray.setFromCamera(ptr, camera);
+      const hit = ray.ray.intersectPlane(groundPlane, new THREE.Vector3());
+      if (hit) panGoal.add(new THREE.Vector2(hit.x - panGoal.x, hit.z - panGoal.y).multiplyScalar(1 - next / zoomGoal));
+    }
+    zoomGoal = next;
+    clampPan(panGoal, zoomGoal);
+  };
+  const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const onWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    zoomTo(zoomGoal * Math.exp(e.deltaY * 0.0015), e.clientX, e.clientY);
+  };
+  const pointers = new Map<number, { x: number; y: number }>();
+  let dragged = false;
+  let travel = 0;
+  let pinchFrom = 0;
+  let pinchZoom = 1;
+  const spread = () => {
+    const [a, b] = [...pointers.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+  const onDown = (e: PointerEvent) => {
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      dragged = false;
+      travel = 0;
+    }
+    if (pointers.size === 2) {
+      pinchFrom = spread();
+      pinchZoom = zoomGoal;
+    }
+  };
+  const onMove = (e: PointerEvent) => {
+    const was = pointers.get(e.pointerId);
+    if (!was) return;
+    const dx = e.clientX - was.x;
+    const dy = e.clientY - was.y;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    travel += Math.hypot(dx, dy);
+    if (travel > 6) dragged = true;
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      if (pinchFrom > 0) zoomTo(pinchZoom * (pinchFrom / spread()), (a.x + b.x) / 2, (a.y + b.y) / 2);
+      return;
+    }
+    if (!dragged || zoomGoal >= 0.999) return;
+    // One screen pixel in island units at the distance looked at; the ground is foreshortened by the pitch.
+    const unit = (2 * fitDistance() * zoom * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) / host.clientHeight;
+    const right = new THREE.Vector2(Math.cos(azimuth), -Math.sin(azimuth));
+    const away = new THREE.Vector2(-Math.sin(azimuth), -Math.cos(azimuth));
+    panGoal.addScaledVector(right, -dx * unit).addScaledVector(away, (dy * unit) / Math.sin(PITCH));
+    clampPan(panGoal, zoomGoal);
+  };
+  const onUp = (e: PointerEvent) => {
+    pointers.delete(e.pointerId);
+    pinchFrom = 0;
+  };
+  const canvas = renderer.domElement;
+  canvas.style.touchAction = 'none';
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  canvas.addEventListener('pointerdown', onDown);
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('pointerleave', onUp);
+
   const clock = new THREE.Clock();
   let raf = 0;
   let frame = 0;
@@ -1279,8 +1370,11 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     biome.tick(t);
     grassWind.value = t;
     island.position.y = Math.sin(t * 0.7) * 0.012;
-    if (Math.abs(azimuthGoal - azimuth) > 0.001) {
-      azimuth += (azimuthGoal - azimuth) * Math.min(1, dt * 6);
+    if (Math.abs(azimuthGoal - azimuth) > 0.001 || Math.abs(zoomGoal - zoom) > 0.0005 || pan.distanceToSquared(panGoal) > 1e-6) {
+      const k = Math.min(1, dt * 6);
+      azimuth += (azimuthGoal - azimuth) * k;
+      zoom += (zoomGoal - zoom) * Math.min(1, dt * 10);
+      pan.lerp(panGoal, Math.min(1, dt * 10));
       placeCamera();
     }
     mixers.forEach((m) => m.update(dt));
@@ -1413,7 +1507,15 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     },
     /** A small picture of the island for the album. */
     photo(w = 480) {
+      // Always the whole island, however far the player has zoomed in.
+      const [z, px, pz] = [zoom, pan.x, pan.y];
+      zoom = 1;
+      pan.set(0, 0);
+      placeCamera();
       outline.render(scene, camera);
+      zoom = z;
+      pan.set(px, pz);
+      placeCamera();
       const small = document.createElement('canvas');
       small.width = w;
       small.height = Math.round((w * host.clientHeight) / host.clientWidth);
@@ -1424,6 +1526,12 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
       renderer.domElement.removeEventListener('click', onClick);
+      canvas.removeEventListener('wheel', onWheel);
+      canvas.removeEventListener('pointerdown', onDown);
+      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointerup', onUp);
+      canvas.removeEventListener('pointercancel', onUp);
+      canvas.removeEventListener('pointerleave', onUp);
       scene.traverse((o: any) => {
         o.geometry?.dispose?.();
         for (const m of [o.material].flat()) m?.dispose?.();
