@@ -7,6 +7,7 @@ import { sfx } from './audio/sfx.js';
 import CardFace, { ANIMAL_KO, RARITY_KO } from './cards/CardFace';
 import { loadCollection } from './cards/store';
 import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRivals } from './village/store';
+import { certificateLines, drawCertificate } from './village/certificate.js';
 
 const FILES = 'abcdefgh';
 const ROLE_OF: Record<string, string> = { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' };
@@ -40,6 +41,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
   const [away, setAway] = useState<any[]>([]);
   const [night, setNight] = useState(false);
   const [photos, setPhotos] = useState<any[] | null>(null);
+  const [cert, setCert] = useState<{ url: string; file: File } | null>(null);
   const island = useRef<ReturnType<typeof createIsland> | null>(null);
   const live = useRef({ picking, selected });
   live.current = { picking, selected };
@@ -149,6 +151,32 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     api.setOverlay(reach, homes, building.sq);
   }, [picking, trying, building, village]);
 
+  // Lord's certificate (desire plan D5): the island with its record, shared through the phone's own sheet or saved.
+  async function makeCert() {
+    const shot = island.current?.photo(1080);
+    if (!shot) return;
+    const lines = certificateLines(loadVillage(), loadCollection(), villageRivals());
+    const blob = await drawCertificate(lines, shot);
+    if (!blob) return;
+    const file = new File([blob], `wildcrown-${lines.date.replace(/\./g, '')}.png`, { type: 'image/png' });
+    setCert({ url: URL.createObjectURL(file), file });
+  }
+  function closeCert() {
+    if (cert) URL.revokeObjectURL(cert.url);
+    setCert(null);
+  }
+  function canShare(file: File) {
+    const nav = navigator as any;
+    return typeof nav.share === 'function' && typeof nav.canShare === 'function' && nav.canShare({ files: [file] });
+  }
+  async function shareCert(file: File) {
+    try {
+      await (navigator as any).share({ files: [file], title: 'WILD CROWN 영주 증명서' });
+    } catch (e) {
+      // closing the share sheet is not an error worth showing
+    }
+  }
+
   if (!open) return null;
   const rivals = villageRivals();
   const rivalName = (id: string) => rivals.find((r: any) => r.id === id)?.name?.ko || id;
@@ -191,6 +219,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
             </button>
           )}
           <button type="button" className="hud-btn" id="village-album" onClick={() => setPhotos(photos ? null : loadIslandPhotos())}>📷</button>
+          <button type="button" className="hud-btn" id="village-cert" aria-label="영주 증명서" onClick={makeCert}>📜</button>
           <button type="button" className="hud-btn" onClick={onClose}>{lang === 'en' ? 'Back to the board' : '♟ 체스로'}</button>
         </span>
       </div>
@@ -214,6 +243,20 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
           {away.length === 1 && <div>💌 {rivalName(away[0].rival)} 다녀감, 🌰 +{away[0].coins}{away[0].memory ? ` — "지난번 ${slotLabel(away[0].memory.mvp, village?.names || {})} 멋졌어!"` : ''}</div>}
           {away.length > 1 && <div>💌 손님 {away.length}팀 다녀감, 🌰 +{away.reduce((n, e) => n + e.coins, 0)}</div>}
           {note && <div>{note}</div>}
+        </div>
+      )}
+
+      {cert && (
+        <div className="panel-overlay" role="dialog" aria-modal="true" onClick={closeCert}>
+          <div className="cert-view" id="cert-view" onClick={(e) => e.stopPropagation()}>
+            <img src={cert.url} alt="영주 증명서" />
+            <div className="cert-actions">
+              {canShare(cert.file) && <button type="button" className="hud-btn" id="cert-share" onClick={() => shareCert(cert.file)}>📤 공유하기</button>}
+              <a className="hud-btn" id="cert-save" href={cert.url} download={cert.file.name}>💾 저장하기</a>
+              <button type="button" className="hud-btn" onClick={closeCert}>닫기</button>
+            </div>
+            <small>사진에는 섬과 기록만 담깁니다. 말 이름은 넣지 않아요.</small>
+          </div>
         </div>
       )}
 

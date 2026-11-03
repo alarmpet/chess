@@ -944,9 +944,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       applyPalette(on ? 'night' : 'day');
     },
     /** A small picture of the island for the album. */
-    photo() {
+    photo(w = 480) {
       outline.render(scene, camera);
-      const w = 480;
       const small = document.createElement('canvas');
       small.width = w;
       small.height = Math.round((w * host.clientHeight) / host.clientWidth);

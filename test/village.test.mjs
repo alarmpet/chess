@@ -259,3 +259,21 @@ test('earned looks: the most loved piece of a role opens the panel and names the
   assert.equal(e.b.rook.stage, 'adult');
   assert.equal(earnedLooks(undefined).w.pawn.stage, 'baby');
 });
+
+test('the lord certificate shows the island record and nothing the player typed (desire plan D5)', async () => {
+  const { certificateLines } = await import('../src/village/certificate.js');
+  const { newCollection } = await import('../src/cards/economy.js');
+  const v = newVillage();
+  v.island = 2;
+  v.games = 17;
+  v.names = { w_e1: '우리집 민수' };
+  v.built = [{ kind: KIND_ORDER[0], ready: true }, { kind: KIND_ORDER[1], ready: false }];
+  const col = newCollection();
+  const rivals = [{ id: 'picnic', name: { ko: '소풍 나온 미어캣단' }, wins: 2, complete: true, flag: '#f4a63a' }, { id: 'x', name: { ko: '대숲 밴드' }, wins: 0 }];
+  const c = certificateLines(v, col, rivals, new Date(2026, 10, 3));
+  assert.equal(c.island, '2번째 섬');
+  assert.deepEqual(c.rows, [`🏠 건물 1/${KIND_ORDER.length}`, '🃏 도감 0/24', '♟ 17판']);
+  assert.deepEqual(c.flags, [{ name: '소풍 나온 미어캣단', wins: 2, complete: true, color: '#f4a63a' }]);
+  assert.equal(c.date, '2026.11.03');
+  assert.ok(!JSON.stringify(c).includes('민수'), 'piece names stay out of the picture');
+});
