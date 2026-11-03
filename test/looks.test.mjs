@@ -128,3 +128,14 @@ test('a won trinket goes to the mating piece, never over what is worn, never ove
   const full = Object.fromEntries(['pawn', 'knight', 'queen'].map((r) => [r, { head: 'x' }]));
   assert.equal(trophyRole(legend, full, head, 'pawn'), null);
 });
+
+test('earned stages cap the saved look (desire plan D1)', () => {
+  const raw = { w: { queen: { stage: 'starlit' }, pawn: { stage: 'adult' }, rook: { stage: 'grown' } } };
+  const caps = { w: { queen: 'grown', pawn: 'adult' } };
+  const out = sanitizeCosmetics(legend, raw, null, caps);
+  assert.equal(out.w.queen.stage, 'grown');
+  assert.equal(out.w.pawn.stage, 'adult');
+  assert.equal(out.w.rook.stage, 'baby', 'no hearts on a rook keeps it at the first stage');
+  assert.equal(out.b.queen.stage, 'baby');
+  assert.equal(sanitizeCosmetics(legend, raw).w.queen.stage, 'starlit', 'without caps nothing is capped');
+});

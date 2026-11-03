@@ -123,6 +123,43 @@ export function stageForHearts(hearts = 0) {
   return HEART_STAGES.find(([n]) => hearts >= n)[1];
 }
 
+/** Look stages from the smallest up: baby, grown, adult, starlit. */
+export const STAGE_ORDER = HEART_STAGES.map(([, id]) => id).reverse();
+
+/** The role of a start square id such as `w_e2` (desire plan D1 groups hearts by role). */
+export function roleOfSlot(id) {
+  if (id[3] === '2' || id[3] === '7') return 'pawn';
+  return { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' }[id[2]];
+}
+
+/**
+ * The look stages a side has earned, role by role: the most grown piece of that role sets how far the appearance panel
+ * opens. Each role also says the next stage and how many more hearts its most loved piece needs (null at the top).
+ * Shape: { w: { pawn: { stage, hearts, next: { stage, need } | null } … }, b: … }.
+ */
+export function earnedLooks(hearts = {}) {
+  const out = { w: {}, b: {} };
+  for (const color of ['w', 'b']) {
+    for (const role of ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn']) out[color][role] = 0;
+  }
+  for (const [slot, n] of Object.entries(hearts || {})) {
+    const color = slot[0];
+    const role = out[color] && roleOfSlot(slot);
+    if (!role || !Number.isFinite(n)) continue;
+    out[color][role] = Math.max(out[color][role], n);
+  }
+  const thresholds = HEART_STAGES.map(([n]) => n).reverse();
+  for (const color of ['w', 'b']) {
+    for (const [role, best] of Object.entries(out[color])) {
+      const stage = stageForHearts(best);
+      const i = STAGE_ORDER.indexOf(stage);
+      const next = i + 1 < STAGE_ORDER.length ? { stage: STAGE_ORDER[i + 1], need: thresholds[i + 1] - best } : null;
+      out[color][role] = { stage, hearts: best, next };
+    }
+  }
+  return out;
+}
+
 /** The piece of `color` that did most this game: the mating piece first, then promotions, captures and moves. */
 export function pickMvp(game, color) {
   const mine = Object.entries(game.slots).filter(([id]) => id.startsWith(`${color}_`));

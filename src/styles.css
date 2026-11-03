@@ -918,6 +918,8 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .look-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(15, 23, 42, 0.6); color: #cbd5e1; cursor: pointer; font-size: 13px; }
 .look-chip.active { border-color: rgba(234, 179, 8, 0.85); color: #fef08a; background: rgba(120, 80, 10, 0.35); }
 .look-chip:disabled, .look-slot select:disabled { opacity: 0.6; cursor: progress; }
+.look-chip.locked { opacity: 0.45; cursor: not-allowed; border-style: dashed; }
+.look-next { flex-basis: 100%; font-size: 12px; color: #fda4af; margin-top: 2px; }
 .look-slot { display: flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 13px; }
 .look-slot select { background: rgba(15, 23, 42, 0.8); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 3px 6px; }
 .look-foot { margin-top: 12px; font-size: 12px; color: #94a3b8; }
@@ -945,6 +947,8 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .rival-rewards { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .rival-reward { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(255, 255, 255, 0.15); color: #64748b; }
 .rival-reward.owned { border-color: rgba(234, 179, 8, 0.8); color: #fef08a; }
+.rival-reward.next { border-color: rgba(125, 211, 252, 0.85); color: #e0f2fe; background: rgba(14, 116, 144, 0.25); }
+.rival-path { margin-top: 4px; font-size: 12px; color: #94a3b8; }
 .rival-row.active .rival-name { color: #fde68a; }
 .trophy-line { margin-top: 8px; font-weight: 800; color: #fde68a; }
 
@@ -1054,6 +1058,28 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .card-dock, .card-toast { position: fixed; z-index: 26; right: 16px; bottom: 64px; padding: 8px 14px; border: none; border-radius: 999px; background: #fff8e4; color: #5a2d0c; font-weight: 800; box-shadow: 0 4px 14px rgba(40, 24, 8, 0.3); cursor: pointer; }
 .card-toast.ready { background: #ffd27a; animation: card-pulse 1.3s ease-in-out infinite; }
 @keyframes card-pulse { 50% { transform: scale(1.06); } }
+/* End-of-game pouch (desire plan D3): cards flip in one by one under the result banner, then the gauges and one goal. */
+.card-reveal { position: fixed; z-index: 26; left: 50%; bottom: 128px; transform: translateX(-50%); width: min(620px, calc(100vw - 32px)); padding: 12px 16px 14px; border-radius: 20px; background: #fff8e4; border: 3px solid #ffd27a; color: #5a2d0c; box-shadow: 0 10px 28px rgba(90, 45, 12, 0.3); text-align: center; }
+.card-reveal-title { font-weight: 900; margin-bottom: 8px; }
+.card-reveal-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; min-height: 70px; }
+.card-reveal-card { opacity: 0; animation: reveal-flip 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.card-reveal-card.rare { animation-name: reveal-flip-big; filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.9)); }
+.card-reveal-card.hero { animation-name: reveal-flip-big; animation-duration: 0.7s; filter: drop-shadow(0 0 14px rgba(250, 204, 21, 0.95)); }
+.card-reveal-more { font-weight: 800; color: #a8743a; }
+.card-reveal-after { opacity: 0; animation: reveal-fade 0.35s ease forwards; margin-top: 10px; }
+.card-reveal-gauges { display: flex; justify-content: center; gap: 14px; font-size: 13px; color: #7a4a22; }
+.card-reveal-goal { margin: 6px 0 8px; font-weight: 800; }
+.card-reveal-actions { display: flex; justify-content: center; gap: 8px; }
+.card-reveal-actions button { border: none; border-radius: 999px; padding: 7px 14px; font-weight: 800; background: #ffd27a; color: #5a2d0c; cursor: pointer; }
+.card-reveal-actions button.secondary { background: rgba(90, 45, 12, 0.08); }
+@keyframes reveal-flip { 0% { opacity: 0; transform: perspective(600px) rotateY(180deg) scale(0.6); } 100% { opacity: 1; transform: none; } }
+@keyframes reveal-flip-big { 0% { opacity: 0; transform: perspective(600px) rotateY(180deg) scale(0.6); } 60% { opacity: 1; transform: scale(1.25); } 100% { opacity: 1; transform: none; } }
+@keyframes reveal-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 560px) {
+  .card-reveal { bottom: 124px; padding: 10px 10px 12px; }
+  .village-toast { white-space: nowrap; padding: 10px 16px; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .card-reveal-card, .card-reveal-after { animation-duration: 0.01ms; animation-delay: 0ms !important; } }
 .card-book { max-width: 620px; background: #fff8e4; color: #5a2d0c; border-color: #ffd27a; }
 .card-book .panel-title, .card-book .panel-title span { color: #5a2d0c; -webkit-text-fill-color: #5a2d0c; background: none; }
 .card-book .panel-title small { margin-left: 6px; opacity: 0.7; }
@@ -1084,6 +1110,10 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .card-slot { padding: 0; border: 0; background: none; border-radius: 13px; cursor: pointer; }
 .card-slot:disabled { cursor: default; }
 .card-slot.shelved { outline: 3px solid #ff9d5c; outline-offset: 2px; }
+.card-slot.empty { cursor: help; }
+.card-slot.asked { outline: 3px dashed #7dd3fc; outline-offset: 2px; }
+.card-howto { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin: 10px 0 4px; padding: 8px 12px; border-radius: 12px; background: rgba(14, 116, 144, 0.18); font-size: 13px; }
+.card-howto b { flex-basis: 100%; }
 .card-shelf { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-weight: 700; font-size: 0.86rem; }
 .card-shelf button { padding: 4px 10px; border: none; border-radius: 999px; background: #ffd27a; color: #5a2d0c; font-weight: 800; cursor: pointer; }
 .card-shelf small { flex-basis: 100%; opacity: 0.7; font-weight: 600; }

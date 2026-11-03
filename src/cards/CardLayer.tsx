@@ -4,7 +4,7 @@ import { fxSettings } from '../fx/settings.js';
 import CardFace, { ANIMAL_EN, ANIMAL_KO, RARITY_EN, RARITY_KO } from './CardFace';
 import {
   ANIMALS, ANIMAL_OF, DROP_TABLE, HERO, HERO_GUARANTEE, MERGE_COST, RARE, RARE_GUARANTEE, RARITIES, UNLOCK_GAMES,
-  albumProgress, awardCard, buyShelfSlot, cardId, commitPouch, consolationCard, convertOverflow, mergeCard, mergeList, newPouch, withPouch,
+  albumProgress, howToGet, nextGoal, awardCard, buyShelfSlot, cardId, commitPouch, consolationCard, convertOverflow, mergeCard, mergeList, newPouch, withPouch,
   seededRoll, shelfPrice, sparesOf, toggleShelf
 } from './economy.js';
 import { advanceMission, missionChoices } from './missions.js';
@@ -28,6 +28,16 @@ const freshGame = (id: number): Game => ({
 });
 const engine = () => (window as any).wizardChess;
 
+// 을/를 by the last syllable's final consonant.
+function objectParticle(word: string) {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  return code >= 0 && code < 11172 && code % 28 ? '을' : '를';
+}
+
+// The end-of-game pouch flips one card at a time and the whole row is done within this many milliseconds.
+const REVEAL_MS = 3000;
+const REVEAL_MAX = 10;
+
 // Listens to the chess engine, pays cards and shows them. The engine only reports what happened on the board.
 export default function CardLayer({ open, onOpen, onClose, lang }: { open: boolean; onOpen: () => void; onClose: () => void; lang: 'ko' | 'en' }) {
   const game = useRef<Game>(freshGame(0));
@@ -35,9 +45,11 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [flies, setFlies] = useState<Fly[]>([]);
   const [count, setCount] = useState(0);
   const [result, setResult] = useState<Won[] | null>(null);
+  const [reveal, setReveal] = useState<Won[] | null>(null);
   const [col, setCol] = useState<any>(() => loadCollection());
   const [merged, setMerged] = useState<Won[] | null>(null);
   const [odds, setOdds] = useState(false);
+  const [howTo, setHowTo] = useState<{ animal: string; rarity: number } | null>(null);
   const [offers, setOffers] = useState<any[]>([]);
   const [mission, setMission] = useState<{ m: any; state: string | null } | null>(null);
   const [skills, setSkills] = useState({ scout: 0, rewind: 0 });
@@ -54,6 +66,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     game.current = freshGame(id);
     setCount(0);
     setResult(null);
+    setReveal(null);
     setOffers([]);
     setMission(null);
     setSkills({ scout: 0, rewind: 0 });
@@ -165,6 +178,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       setCol(saved);
       if (dust) say(en ? `Stardust +${dust}` : `별가루 +${dust}`);
       setResult([...g.won]);
+      setReveal([...g.won]);
       setSkills({ scout: 0, rewind: 0 });
       logGame({
         type: 'game', at: new Date().toISOString(), result: d.result, seconds: Math.round((Date.now() - g.started) / 1000),
@@ -253,6 +267,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   };
 
   const merges = mergeList(col);
+  const how = howTo ? howToGet(col, howTo.animal, howTo.rarity) : null;
   const album = albumProgress(col);
   const heroLeft = HERO_GUARANTEE - col.sinceHero;
   const rareLeft = RARE_GUARANTEE - col.sinceRare;
@@ -297,7 +312,50 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
         <button type="button" className="card-dock" id="card-dock" onClick={onOpen}>🃏 {count}</button>
       )}
 
-      {result && !open && (
+      {reveal && !open && (() => {
+        const shown = reveal.slice().sort((a, b) => a.rarity - b.rarity).slice(-REVEAL_MAX);
+        const step = Math.min(350, REVEAL_MS / Math.max(1, shown.length));
+        const doneAt = step * shown.length + 400;
+        const goal = nextGoal(col);
+        const gn = goal.animal ? `${names[goal.animal]} ${grades[goal.rarity as number]}` : '';
+        const prey = goal.animal === 'lion' ? '' : names[goal.animal as string] || '';
+        const goalText = {
+          merge: en ? `Merge now: ${gn}` : `지금 합성하면 ${gn}`,
+          spares: en ? `${gn}: ${goal.left} more spare${goal.left === 1 ? '' : 's'} to merge` : `${gn}까지 예비 ${goal.left}장`,
+          rare: en ? `A rare within ${goal.left} cards` : `${goal.left}장 안에 희귀 이상`,
+          capture: goal.animal === 'lion'
+            ? (en ? `Next: ${gn} — win by checkmate` : `다음 칸: ${gn} — 체크메이트로 이기면`)
+            : (en ? `Next: ${gn} — capture a ${prey}` : `다음 칸: ${gn} — ${prey}${objectParticle(prey)} 잡으면`),
+          full: en ? 'Album complete!' : '도감을 다 채웠어요!'
+        }[goal.kind as 'merge' | 'spares' | 'rare' | 'capture' | 'full'];
+        return (
+          <div className="card-reveal" id="card-reveal" role="dialog" aria-label={en ? 'Cards from this game' : '이번 판 카드'}>
+            <div className="card-reveal-title">🎒 {en ? `This game's pouch · ${reveal.length}` : `이번 판 주머니 · ${reveal.length}장`}</div>
+            <div className="card-reveal-row">
+              {shown.map((c, i) => (
+                <div key={i} className={`card-reveal-card${c.rarity === HERO ? ' hero' : c.rarity >= RARE ? ' rare' : ''}`} style={{ animationDelay: `${i * step}ms` }}>
+                  <CardFace animal={c.animal} rarity={c.rarity} isNew={c.fresh} lang={lang} size="sm" />
+                </div>
+              ))}
+              {reveal.length > shown.length && <span className="card-reveal-more">+{reveal.length - shown.length}</span>}
+            </div>
+            <div className="card-reveal-after" style={{ animationDelay: `${doneAt}ms` }}>
+              <div className="card-reveal-gauges">
+                <span>{en ? 'Rare within' : '희귀까지'} <b>{rareLeft}</b></span>
+                <span>{en ? 'Hero within' : '영웅까지'} <b>{heroLeft}</b></span>
+                <span>{en ? 'Album' : '도감'} <b>{album.owned}/{album.total}</b></span>
+              </div>
+              <div className="card-reveal-goal" id="card-reveal-goal">🎯 {goalText}</div>
+              <div className="card-reveal-actions">
+                <button type="button" onClick={() => { setReveal(null); onOpen(); }}>{en ? 'Open album' : '도감 열기'}</button>
+                <button type="button" className="secondary" onClick={() => setReveal(null)}>{en ? 'Close' : '닫기'}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {result && !reveal && !open && (
         <button type="button" className={`card-toast${merges.length ? ' ready' : ''}`} id="card-toast" onClick={onOpen}>
           🃏 {en ? `${result.length} cards` : `카드 ${result.length}장`}
           {merges.length > 0 && <b>{en ? ` · ${merges.length} ready to merge` : ` · 합성 ${merges.length}개`}</b>}
@@ -350,7 +408,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
                 <span>✨ {en ? 'Stardust' : '별가루'} {col.dust}</span>
                 <span>🏡 {en ? 'Village shelf' : '마을 전시'} {col.shelf.length}/{col.shelfSlots}</span>
                 {shelfPrice(col) !== null && <button type="button" onClick={onBuySlot}>{en ? 'Add slot' : '칸 늘리기'} ✨{shelfPrice(col)}</button>}
-                <small>{en ? 'Tap a card to show it in the village.' : '카드를 누르면 마을에 전시돼요.'}</small>
+                <small>{en ? 'Tap a card to show it in the village, an empty slot to see how to get it.' : '카드를 누르면 마을에 전시되고, 빈 칸을 누르면 얻는 길이 보여요.'}</small>
               </section>
 
               <section className="card-gauges">
@@ -358,9 +416,34 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
                 <div><span>{en ? 'Hero within' : '영웅까지'}</span><meter min={0} max={HERO_GUARANTEE} value={HERO_GUARANTEE - heroLeft}></meter><b>{heroLeft}</b></div>
               </section>
 
+              {how && howTo && (
+                <div className="card-howto" id="card-howto">
+                  <b>{names[howTo.animal]} {grades[howTo.rarity]}</b>
+                  <span>
+                    {howTo.animal === 'lion'
+                      ? (en ? `Checkmate: ${how.chance}%` : `체크메이트로 이기면 ${how.chance}%`)
+                      : (en ? `Capture a ${names[howTo.animal]}: ${how.chance}%` : `${names[howTo.animal]}${objectParticle(names[howTo.animal])} 잡으면 ${how.chance}%`)}
+                  </span>
+                  {how.merge && (
+                    <span>{en ? `Merge ${how.merge.need} ${grades[how.merge.from]} spares (${how.merge.have}/${how.merge.need})` : `${grades[how.merge.from]} 예비 ${how.merge.need}장 합성 (지금 ${how.merge.have}/${how.merge.need})`}</span>
+                  )}
+                  {how.guaranteeIn !== null && howTo.rarity === HERO && (
+                    <span>{en ? `Hero guarantee in ${how.guaranteeIn} cards, as a hero you still lack` : `영웅 보장까지 ${how.guaranteeIn}장 · 없는 영웅으로 나와요`}</span>
+                  )}
+                  {how.guaranteeIn !== null && howTo.rarity === RARE && (
+                    <span>{en ? `A rare or better within ${how.guaranteeIn} cards` : `${how.guaranteeIn}장 안에 희귀 이상 1장`}</span>
+                  )}
+                </div>
+              )}
+
               <div className="card-grid">
                 {ANIMALS.map((a) => RARITIES.map((_, r) => (
-                  <button key={cardId(a, r)} type="button" className={`card-slot${col.shelf.includes(cardId(a, r)) ? ' shelved' : ''}`} disabled={!col.cards[cardId(a, r)]} onClick={() => onShelf(cardId(a, r))}>
+                  <button
+                    key={cardId(a, r)}
+                    type="button"
+                    className={`card-slot${col.shelf.includes(cardId(a, r)) ? ' shelved' : ''}${!col.cards[cardId(a, r)] ? ' empty' : ''}${howTo?.animal === a && howTo?.rarity === r ? ' asked' : ''}`}
+                    onClick={() => (col.cards[cardId(a, r)] ? onShelf(cardId(a, r)) : setHowTo(howTo?.animal === a && howTo?.rarity === r ? null : { animal: a, rarity: r }))}
+                  >
                     <CardFace animal={a} rarity={r} owned={Boolean(col.cards[cardId(a, r)])} spares={sparesOf(col, a, r)} lang={lang} size="sm" />
                   </button>
                 )))}

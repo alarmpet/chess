@@ -217,3 +217,30 @@ test('threatened squares are read from the position', async () => {
   const r = new Referee('4k3/8/8/4r3/8/8/8/R3K2R w - - 0 1');
   assert.deepEqual(r.threatened('w'), ['e1']);
 });
+
+test('how to get an album slot: capture chance, merge progress, guarantee (desire plan D2)', async () => {
+  const { howToGet, newCollection, cardId } = await import('../src/cards/economy.js');
+  const col = newCollection();
+  col.cards[cardId('panda', 1)] = 3;          // album copy + 2 spares
+  col.sinceRare = 6;
+  col.sinceHero = 50;
+  assert.deepEqual(howToGet(col, 'meerkat', 0), { piece: 'pawn', chance: 90, merge: null, guaranteeIn: null });
+  assert.deepEqual(howToGet(col, 'panda', 2), { piece: 'bishop', chance: 9.5, merge: { from: 1, have: 2, need: 3 }, guaranteeIn: 4 });
+  assert.deepEqual(howToGet(col, 'lion', 3), { piece: 'king', chance: 10, merge: null, guaranteeIn: 10 });
+  assert.equal(howToGet(col, 'tiger', 1).merge.from, 0);
+});
+
+test('next goal after a game: merge first, then the closest merge, a near rare, the first empty slot (desire plan D3)', async () => {
+  const { nextGoal, newCollection, cardId, ANIMALS } = await import('../src/cards/economy.js');
+  const col = newCollection();
+  assert.deepEqual(nextGoal(col), { kind: 'capture', animal: 'meerkat', rarity: 0 });
+  col.cards[cardId('meerkat', 0)] = 3;        // two spares: one short of a merge
+  assert.deepEqual(nextGoal(col), { kind: 'spares', animal: 'meerkat', rarity: 1, left: 1 });
+  col.cards[cardId('meerkat', 0)] = 4;
+  assert.deepEqual(nextGoal(col), { kind: 'merge', animal: 'meerkat', rarity: 1, left: 0 });
+  col.cards[cardId('meerkat', 0)] = 1;
+  col.sinceRare = 8;
+  assert.deepEqual(nextGoal(col), { kind: 'rare', left: 2 });
+  for (const a of ANIMALS) for (let r = 0; r < 4; r++) col.cards[cardId(a, r)] = 1;
+  assert.deepEqual(nextGoal(col), { kind: 'full' });
+});

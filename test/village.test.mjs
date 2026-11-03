@@ -246,3 +246,16 @@ test('an old save keeps its coins and hearts, and what stood or was being built 
   v.coins = 100;
   assert.equal(buildBlocked(v, 'field', 'd4'), 'taken');
 });
+
+test('earned looks: the most loved piece of a role opens the panel and names the next stage', async () => {
+  const { earnedLooks, roleOfSlot } = await import('../src/village/economy.js');
+  assert.equal(roleOfSlot('w_e2'), 'pawn');
+  assert.equal(roleOfSlot('b_d8'), 'queen');
+  assert.equal(roleOfSlot('w_g1'), 'knight');
+  const e = earnedLooks({ w_e2: 4, w_d2: 12, w_d1: 61, b_a8: 30 });
+  assert.deepEqual(e.w.pawn, { stage: 'grown', hearts: 12, next: { stage: 'adult', need: 18 } });
+  assert.deepEqual(e.w.queen, { stage: 'starlit', hearts: 61, next: null });
+  assert.deepEqual(e.w.king, { stage: 'baby', hearts: 0, next: { stage: 'grown', need: 10 } });
+  assert.equal(e.b.rook.stage, 'adult');
+  assert.equal(earnedLooks(undefined).w.pawn.stage, 'baby');
+});

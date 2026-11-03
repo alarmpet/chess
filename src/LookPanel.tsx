@@ -1,7 +1,9 @@
 // Appearance panel (PLAN §14.2 · §14.3, 2026-10-29): pick a look stage and non-weapon trinkets per side and role.
-// Looks only — the first line says so (PLAN §14.0 display rule). Earning stages by play (Phase 5b) is not wired yet;
-// for now every stage is open so the art can be seen on the board.
+// Looks only — the first line says so (PLAN §14.0 display rule). Stages are earned: a role opens up to the stage of its
+// most loved piece (village hearts), and the next one shows how many hearts it still needs (desire plan D1).
 import { useEffect, useState } from 'react';
+import { loadVillage } from './village/store';
+import { earnedLooks } from './village/economy.js';
 
 type Named = { ko?: string; en?: string };
 type Stage = { id: string; name?: Named; desc?: Named };
@@ -34,12 +36,14 @@ export default function LookPanel({ open, onClose, lang }: { open: boolean; onCl
   const [looks, setLooks] = useState<Cosmetics | null>(null);
   const [side, setSide] = useState<'w' | 'b'>('w');
   const [busy, setBusy] = useState(false);
+  const [earned, setEarned] = useState<any>(null);
   const L = (n?: Named | null) => (n ? (lang === 'en' ? n.en || n.ko : n.ko || n.en) || '' : '');
 
   useEffect(() => {
     if (!open) return;
     setCatalog(api()?.getLookCatalog?.() || null);
     setLooks(api()?.getCosmetics?.() || null);
+    setEarned(earnedLooks(loadVillage().hearts));
   }, [open]);
 
   if (!open) return null;
@@ -96,23 +100,38 @@ export default function LookPanel({ open, onClose, lang }: { open: boolean; onCl
                 const role = catalog.roles[r.id];
                 const look = looks[side][r.id] || { stage: catalog.stages[0]?.id };
                 if (!role) return null;
+                const own = earned?.[side]?.[r.id];
+                const ids = catalog.stages.map((st) => st.id);
+                const reach = Math.max(0, ids.indexOf(own?.stage));
+                const nextName = own?.next ? L(catalog.stages.find((st) => st.id === own.next.stage)?.name) || own.next.stage : '';
                 return (
                   <div className="look-row" key={r.id} data-role={r.id}>
                     <div className="look-role">{lang === 'en' ? r.en : r.ko}</div>
                     <div className="look-stages">
-                      {catalog.stages.filter((st) => role.stages.includes(st.id)).map((st) => (
-                        <button
-                          key={st.id}
-                          type="button"
-                          disabled={busy}
-                          className={`look-chip${look.stage === st.id ? ' active' : ''}`}
-                          title={L(st.desc)}
-                          onClick={() => apply(r.id, { stage: st.id })}
-                        >
-                          {L(st.name) || st.id}
-                        </button>
-                      ))}
+                      {catalog.stages.filter((st) => role.stages.includes(st.id)).map((st) => {
+                        const locked = ids.indexOf(st.id) > reach;
+                        return (
+                          <button
+                            key={st.id}
+                            type="button"
+                            disabled={busy || locked}
+                            data-locked={locked ? 'true' : undefined}
+                            className={`look-chip${look.stage === st.id ? ' active' : ''}${locked ? ' locked' : ''}`}
+                            title={locked ? (lang === 'en' ? 'Grow a piece of this role with hearts in the village' : '마을에서 하트를 모아 이 말을 키우면 열립니다') : L(st.desc)}
+                            onClick={() => apply(r.id, { stage: st.id })}
+                          >
+                            {locked ? '🔒 ' : ''}{L(st.name) || st.id}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {own?.next && (
+                      <div className="look-next" data-need={own.next.need}>
+                        {lang === 'en'
+                          ? `${nextName} in ${own.next.need} more ♥`
+                          : `${nextName}까지 하트 ${own.next.need}개`}
+                      </div>
+                    )}
                     {role.slots.map((slot) => (
                       <label className="look-slot" key={slot}>
                         <span>{L(SLOT_LABEL[slot])}</span>
@@ -133,8 +152,8 @@ export default function LookPanel({ open, onClose, lang }: { open: boolean; onCl
               })}
               <p className="look-foot">
                 {lang === 'en'
-                  ? 'Trinkets are won from rivals, one per win. All stages are open for now.'
-                  : '소품은 라이벌을 이기면 하나씩 얻습니다. 외형 단계는 지금 모두 열려 있습니다.'}
+                  ? 'Trinkets are won from rivals, one per win. Stages grow with hearts: MVP pieces, petting and the village give them.'
+                  : '소품은 라이벌을 이기면 하나씩 얻습니다. 외형 단계는 하트로 자랍니다. MVP, 쓰다듬기, 마을이 하트를 줍니다.'}
               </p>
             </>
           )}

@@ -177,6 +177,44 @@ export function mergeCard(col, animal, rarity) {
   return { id, animal, rarity: rarity + 1, fresh };
 }
 
+/**
+ * How an album slot is earned (desire plan D2): which piece to capture and its chance, the merge that makes it with the
+ * spares in hand, and how many cards remain until the guarantee covers it. Shape:
+ * { piece, chance, merge: { from, have, need } | null, guaranteeIn: number | null }.
+ */
+export function howToGet(col, animal, rarity) {
+  const piece = Object.keys(ANIMAL_OF).find((p) => ANIMAL_OF[p] === animal);
+  const merge = rarity > COMMON && rarity - 1 < RARE
+    ? { from: rarity - 1, have: Math.min(MERGE_COST, sparesOf(col, animal, rarity - 1)), need: MERGE_COST }
+    : null;
+  const guaranteeIn = rarity === HERO ? HERO_GUARANTEE - col.sinceHero : rarity === RARE ? RARE_GUARANTEE - col.sinceRare : null;
+  return { piece, chance: DROP_TABLE[piece][rarity], merge, guaranteeIn };
+}
+
+/**
+ * The one next goal the end of a game points at (desire plan D3), first match wins: a merge ready now, the empty slot a
+ * merge is closest to, a rare guarantee three cards away, the first empty slot to capture, or a full album.
+ * Shape: { kind: 'merge' | 'spares' | 'rare' | 'capture' | 'full', animal?, rarity?, left? }.
+ */
+export function nextGoal(col) {
+  const ready = mergeList(col)[0];
+  if (ready) return { kind: 'merge', animal: ready.animal, rarity: ready.rarity + 1, left: 0 };
+  const empty = [];
+  for (let r = 0; r < RARITIES.length; r++) {
+    for (const animal of ANIMALS) if (!col.cards[cardId(animal, r)]) empty.push({ animal, rarity: r });
+  }
+  if (!empty.length) return { kind: 'full' };
+  let close = null;
+  for (const slot of empty) {
+    const m = howToGet(col, slot.animal, slot.rarity).merge;
+    if (m && m.have > 0 && (!close || m.need - m.have < close.left)) close = { ...slot, left: m.need - m.have };
+  }
+  if (close) return { kind: 'spares', ...close };
+  const rareLeft = RARE_GUARANTEE - col.sinceRare;
+  if (rareLeft <= 3 && empty.some((s) => s.rarity === RARE)) return { kind: 'rare', left: rareLeft };
+  return { kind: 'capture', ...empty[0] };
+}
+
 export function albumProgress(col) {
   const owned = ANIMALS.reduce((n, a) => n + RARITIES.filter((_, r) => col.cards[cardId(a, r)]).length, 0);
   return { owned, total: ANIMALS.length * RARITIES.length };

@@ -67,12 +67,22 @@ export default function RivalPanel({ open, onClose, lang }: { open: boolean; onC
                     <div className="rival-rewards">
                       {r.rewards.map((id) => {
                         const owned = catalog.unlocked.includes(id);
+                        const next = !owned && id === r.rewards.find((x) => !catalog.unlocked.includes(x));
                         return (
-                          <span className={`rival-reward${owned ? ' owned' : ''}`} key={id}>
+                          <span className={`rival-reward${owned ? ' owned' : ''}${next ? ' next' : ''}`} key={id} data-next={next ? 'true' : undefined}>
+                            {owned ? '✓ ' : next ? '🎁 ' : '🔒 '}
                             {L(catalog.items[id]?.name) || id}
                           </span>
                         );
                       })}
+                    </div>
+                    <div className="rival-path">
+                      {(() => {
+                        const wins = catalog.wins[r.id] || 0;
+                        const left = r.rewards.filter((x) => !catalog.unlocked.includes(x)).length;
+                        if (!left) return lang === 'en' ? `${wins} wins · every trinket won` : `${wins}승 · 소품을 모두 얻었어요`;
+                        return lang === 'en' ? `${wins} wins · win once more for 🎁` : `${wins}승 · 한 번 더 이기면 🎁`;
+                      })()}
                     </div>
                   </div>
                   <button type="button" className="hud-btn" disabled={busy} onClick={() => start(r.id)}>

@@ -230,8 +230,9 @@ export function slotsFor(pieceDef) {
  * Clean a saved appearance choice against the pack: unknown stages fall back to the base, unknown items or items in
  * the wrong slot (or a slot the role does not have) are dropped. Shape: { w: { pawn: { stage, head?, neck? } … }, b: … }.
  * With `unlocked` (item ids), items the player has not earned yet are dropped too.
+ * With `caps` ({ w: { pawn: 'grown' … } … }), a stage above the one that side has earned for that role comes down to it.
  */
-export function sanitizeCosmetics(manifest, raw, unlocked = null) {
+export function sanitizeCosmetics(manifest, raw, unlocked = null, caps = null) {
   const ids = stageIds(manifest);
   const items = manifest?.items || {};
   const out = { w: {}, b: {} };
@@ -239,7 +240,8 @@ export function sanitizeCosmetics(manifest, raw, unlocked = null) {
     for (const role of PIECE_ROLES) {
       const def = manifest?.pieces?.[role];
       const src = raw?.[color]?.[role] || {};
-      const stage = ids.includes(src.stage) && (src.stage === ids[0] || def?.stages?.[src.stage]) ? src.stage : ids[0];
+      let stage = ids.includes(src.stage) && (src.stage === ids[0] || def?.stages?.[src.stage]) ? src.stage : ids[0];
+      if (caps) stage = capStage(ids, stage, caps[color]?.[role]);
       const entry = { stage };
       for (const slot of slotsFor(def)) {
         const id = src[slot];
@@ -249,6 +251,12 @@ export function sanitizeCosmetics(manifest, raw, unlocked = null) {
     }
   }
   return out;
+}
+
+/** `stage`, or the earned `cap` when it is higher. An unknown or missing cap means only the first stage. */
+export function capStage(ids, stage, cap) {
+  const limit = Math.max(0, ids.indexOf(cap));
+  return ids.indexOf(stage) > limit ? ids[limit] : stage;
 }
 
 /** Clean saved rival progress: only items the pack can still give, wins as plain counts. */

@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
-import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
+import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, capStage, sanitizeRivalProgress, nextRivalReward, trophyRole } from './packs/packManifest.js';
 import { Referee, TYPE_FROM_LETTER, squareRC } from './rules/referee.js';
 import { chooseMove, positionKey } from './rules/ai.js';
 import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry } from './rules/resume.js';
@@ -954,7 +954,19 @@ export function initWizardChess() {
       if (rival && color === rivalColor()) {
         return { stage: stageIds(activePack)[0], ...(rival.wear?.[type] || {}) };
       }
-      return cosmetics?.[color]?.[type];
+      const look = cosmetics?.[color]?.[type];
+      return look && { ...look, stage: capStage(stageIds(activePack), look.stage, stageCaps()[color]?.[type]) };
+    }
+    // How far the appearance panel opens for each side and role: the most grown piece of that role (desire plan D1).
+    function stageCaps() {
+      const ids = stageIds(activePack);
+      const caps = { w: {}, b: {} };
+      for (const [slot, stage] of Object.entries(slotStages)) {
+        const role = slotRole(slot);
+        if (!caps[slot[0]] || !role) continue;
+        if (ids.indexOf(stage) > ids.indexOf(caps[slot[0]][role])) caps[slot[0]][role] = stage;
+      }
+      return caps;
     }
     const shatterDebris = [];
     const impactFx = createImpactFx(scene);
@@ -2182,7 +2194,7 @@ export function initWizardChess() {
     }
 
     async function setCosmetics(next) {
-      cosmetics = sanitizeCosmetics(activePack, next, unlockedItems());
+      cosmetics = sanitizeCosmetics(activePack, next, unlockedItems(), stageCaps());
       saveCosmetics();
       await ensureCosmeticAssets();
       rebuildAllPieces();

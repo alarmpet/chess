@@ -44,6 +44,7 @@ export function evaluate(chess) {
   let material = 0;
   let nonPawn = 0;
   const kings = {};
+  let kingSafety = 0;
   for (let i = 0; i < 128; i++) {
     if (i & 0x88) {
       i += 7;
@@ -55,11 +56,15 @@ export function evaluate(chess) {
     const file = i & 15;
     const at = p.color === 'w' ? row * 8 + file : (7 - row) * 8 + file;
     const sign = p.color === 'w' ? 1 : -1;
-    score += sign * (VALUE[p.type] + PST[p.type][at]);
+    if (p.type === 'k') kingSafety += sign * PST.k[at];
+    else score += sign * (VALUE[p.type] + PST[p.type][at]);
     material += sign * VALUE[p.type];
     if (p.type === 'k') kings[p.color] = i;
     else if (p.type !== 'p') nonPawn += VALUE[p.type];
   }
+  // The king table rewards hiding behind pawns; in an ending it would keep the king in its corner, so it only counts
+  // while there is enough material on the board to attack a king.
+  if (nonPawn > 1800) score += kingSafety;
   // Mop-up: the side ahead wants the other king in a corner and its own king near it.
   if (nonPawn <= 1800 && Math.abs(material) >= 300 && kings.w !== undefined && kings.b !== undefined) {
     const ahead = material > 0 ? 'w' : 'b';
