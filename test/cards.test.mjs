@@ -224,9 +224,9 @@ test('how to get an album slot: capture chance, merge progress, guarantee (desir
   col.cards[cardId('panda', 1)] = 3;          // album copy + 2 spares
   col.sinceRare = 6;
   col.sinceHero = 50;
-  assert.deepEqual(howToGet(col, 'meerkat', 0), { piece: 'pawn', chance: 90, merge: null, guaranteeIn: null });
-  assert.deepEqual(howToGet(col, 'panda', 2), { piece: 'bishop', chance: 9.5, merge: { from: 1, have: 2, need: 3 }, guaranteeIn: 4 });
-  assert.deepEqual(howToGet(col, 'lion', 3), { piece: 'king', chance: 10, merge: null, guaranteeIn: 10 });
+  assert.deepEqual(howToGet(col, 'meerkat', 0), { piece: 'pawn', chance: 90, merge: null, guaranteeIn: null, byCheck: false });
+  assert.deepEqual(howToGet(col, 'panda', 2), { piece: 'bishop', chance: 9.5, merge: { from: 1, have: 2, need: 3 }, guaranteeIn: 4, byCheck: false });
+  assert.deepEqual(howToGet(col, 'lion', 3), { piece: 'king', chance: 10, merge: null, guaranteeIn: 10, byCheck: false });
   assert.equal(howToGet(col, 'tiger', 1).merge.from, 0);
 });
 
@@ -243,4 +243,20 @@ test('next goal after a game: merge first, then the closest merge, a near rare, 
   assert.deepEqual(nextGoal(col), { kind: 'rare', left: 2 });
   for (const a of ANIMALS) for (let r = 0; r < 4; r++) col.cards[cardId(a, r)] = 1;
   assert.deepEqual(nextGoal(col), { kind: 'full' });
+});
+
+test('giving check pays the lion common, the slot no capture or merge can fill (desire plan D7)', async () => {
+  const { checkCard, howToGet, newCollection, sanitizePouch, cardId, DROP_TABLE, RARE_GUARANTEE } = await import('../src/cards/economy.js');
+  assert.equal(DROP_TABLE.king[0], 0, 'the mate drop has no common');
+  const col = newCollection();
+  const card = checkCard(col);
+  assert.deepEqual([card.id, card.fresh, card.check], [cardId('lion', 0), true, true]);
+  assert.equal(col.cards[cardId('lion', 0)], 1);
+  assert.equal(col.sinceRare, 1, 'it counts towards the guarantees like any card');
+  assert.ok(col.sinceRare < RARE_GUARANTEE);
+  assert.equal(checkCard(col).fresh, false);
+  assert.equal(howToGet(col, 'lion', 0).byCheck, true);
+  assert.equal(howToGet(col, 'lion', 1).byCheck, false);
+  const pouch = sanitizePouch({ v: 1, gameId: 7, cards: [card] });
+  assert.equal(pouch.cards[0].check, true, 'a resumed pouch still knows this game paid its check card');
 });

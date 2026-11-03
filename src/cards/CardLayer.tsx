@@ -4,7 +4,7 @@ import { fxSettings } from '../fx/settings.js';
 import CardFace, { ANIMAL_EN, ANIMAL_KO, RARITY_EN, RARITY_KO } from './CardFace';
 import {
   ANIMALS, ANIMAL_OF, DROP_TABLE, HERO, HERO_GUARANTEE, MERGE_COST, RARE, RARE_GUARANTEE, RARITIES, UNLOCK_GAMES,
-  albumProgress, howToGet, nextGoal, awardCard, buyShelfSlot, cardId, commitPouch, consolationCard, convertOverflow, mergeCard, mergeList, newPouch, withPouch,
+  albumProgress, howToGet, nextGoal, awardCard, buyShelfSlot, cardId, checkCard, commitPouch, consolationCard, convertOverflow, mergeCard, mergeList, newPouch, withPouch,
   seededRoll, shelfPrice, sparesOf, toggleShelf
 } from './economy.js';
 import { advanceMission, missionChoices } from './missions.js';
@@ -91,7 +91,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     const held = loadPouch();
     const pouch = held && held.gameId === game.current.id ? held : newPouch(game.current.id);
     const preview = withPouch(loadCollection(), pouch);
-    const card = type ? awardCard(preview, type, roll, options) : consolationCard(preview, roll);
+    const card = type === 'check' ? checkCard(preview) : type ? awardCard(preview, type, roll, options) : consolationCard(preview, roll);
     pouch.cards.push(card);
     savePouch(pouch);
     game.current.won.push(card);
@@ -159,6 +159,11 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       setOffers([]);
       const g = game.current;
       if (g.id === d.gameId && g.mission) settleMission(advanceMission(g.mission, { ply: d.ply }));
+      // The first check the player gives pays the lion common, once per game (a resumed pouch remembers it).
+      if (d.byPlayer && d.check && fxSettings().cards) {
+        startGame(d.gameId);
+        if (!game.current.won.some((c: any) => c.check)) pay('check', 0, 50, 30);
+      }
     };
     const onFinished = (e: Event) => {
       if (!fxSettings().cards) return;
@@ -323,7 +328,9 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
           merge: en ? `Merge now: ${gn}` : `지금 합성하면 ${gn}`,
           spares: en ? `${gn}: ${goal.left} more spare${goal.left === 1 ? '' : 's'} to merge` : `${gn}까지 예비 ${goal.left}장`,
           rare: en ? `A rare within ${goal.left} cards` : `${goal.left}장 안에 희귀 이상`,
-          capture: goal.animal === 'lion'
+          capture: goal.animal === 'lion' && goal.rarity === 0
+            ? (en ? `Next: ${gn} — give check` : `다음 칸: ${gn} — 킹에게 체크하면`)
+            : goal.animal === 'lion'
             ? (en ? `Next: ${gn} — win by checkmate` : `다음 칸: ${gn} — 체크메이트로 이기면`)
             : (en ? `Next: ${gn} — capture a ${prey}` : `다음 칸: ${gn} — ${prey}${objectParticle(prey)} 잡으면`),
           full: en ? 'Album complete!' : '도감을 다 채웠어요!'
@@ -420,7 +427,9 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
                 <div className="card-howto" id="card-howto">
                   <b>{names[howTo.animal]} {grades[howTo.rarity]}</b>
                   <span>
-                    {howTo.animal === 'lion'
+                    {how.byCheck
+                      ? (en ? 'Give check: once every game' : '킹에게 체크를 걸면 · 판마다 한 장')
+                      : howTo.animal === 'lion'
                       ? (en ? `Checkmate: ${how.chance}%` : `체크메이트로 이기면 ${how.chance}%`)
                       : (en ? `Capture a ${names[howTo.animal]}: ${how.chance}%` : `${names[howTo.animal]}${objectParticle(names[howTo.animal])} 잡으면 ${how.chance}%`)}
                   </span>

@@ -121,6 +121,18 @@ export function consolationCard(col, roll) {
   return card;
 }
 
+/**
+ * The first check the player gives in a game pays the lion common card (desire plan D7). The lion cannot be captured and
+ * the mate drop has no common, so without this the slot could only come from a comfort card — measured: a player who
+ * captures never filled it (docs/research/2026-11-03-album-sim). The card is marked `check` so a game pays it once.
+ */
+export function checkCard(col) {
+  const id = cardId('lion', COMMON);
+  const card = { id, animal: 'lion', rarity: COMMON, fresh: !col.cards[id], check: true };
+  addCard(col, card);
+  return card;
+}
+
 // ---- This game's pouch (docs/plans/2026-11-02-island-economy-plan.md §2) ----------------------------------
 // Cards caught during a game wait here and join the collection only when the game ends. A game left unfinished
 // loses its pouch, but a reload resumes the game, so only quitting on purpose costs anything.
@@ -180,7 +192,7 @@ export function mergeCard(col, animal, rarity) {
 /**
  * How an album slot is earned (desire plan D2): which piece to capture and its chance, the merge that makes it with the
  * spares in hand, and how many cards remain until the guarantee covers it. Shape:
- * { piece, chance, merge: { from, have, need } | null, guaranteeIn: number | null }.
+ * { piece, chance, merge: { from, have, need } | null, guaranteeIn: number | null, byCheck: boolean }.
  */
 export function howToGet(col, animal, rarity) {
   const piece = Object.keys(ANIMAL_OF).find((p) => ANIMAL_OF[p] === animal);
@@ -188,7 +200,9 @@ export function howToGet(col, animal, rarity) {
     ? { from: rarity - 1, have: Math.min(MERGE_COST, sparesOf(col, animal, rarity - 1)), need: MERGE_COST }
     : null;
   const guaranteeIn = rarity === HERO ? HERO_GUARANTEE - col.sinceHero : rarity === RARE ? RARE_GUARANTEE - col.sinceRare : null;
-  return { piece, chance: DROP_TABLE[piece][rarity], merge, guaranteeIn };
+  // The lion common comes from giving check, every game, not from the mate drop.
+  const byCheck = animal === 'lion' && rarity === COMMON;
+  return { piece, chance: DROP_TABLE[piece][rarity], merge, guaranteeIn, byCheck };
 }
 
 /**

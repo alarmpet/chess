@@ -3070,7 +3070,9 @@ export function initWizardChess() {
     function playMoveOutcome(moverColor, quietMove, promoted, landing, castleRookPiece) {
       const san = referee.history().at(-1)?.san || '';
       if (gameMode === 'single' && !scriptedGameActive) {
-        window.dispatchEvent(new CustomEvent('movelanded', { detail: { gameId, ply: referee.history().length } }));
+        // `check` lets the cards pay the lion common for a game with a check in it (desire plan D7).
+        const detail = { gameId, ply: referee.history().length, byPlayer: moverColor === playerColor, check: /[+#]$/.test(san) };
+        window.dispatchEvent(new CustomEvent('movelanded', { detail }));
       }
       saveResume();
       const ground = new THREE.Vector3(landing.x, BOARD_SURFACE_Y, landing.z);
