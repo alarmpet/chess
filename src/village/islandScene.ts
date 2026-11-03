@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { buildSeaBiome } from '../fx/seaBiome.js';
 import { stageForHearts, tenantAnimal, tenantRarity } from './economy.js';
 import { villageTiles } from './roster.js';
@@ -182,6 +183,96 @@ function grassBlade() {
   return geo;
 }
 
+// Wildflowers after three-stylized (Wildflowers.ts, flowerShapes.ts): crossed cards cut from a small drawn atlas whose
+// channels are petal, centre and stem, so one texture gives every colour; the petal colour comes from the instance.
+// Three shapes side by side: a daisy, a cluster of little bells and a cup.
+function flowerAtlas() {
+  const c = document.createElement('canvas');
+  c.width = 192;
+  c.height = 64;
+  const g = c.getContext('2d')!;
+  const stem = (x: number, top: number) => {
+    g.strokeStyle = '#0000ff';
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(x, 64);
+    g.quadraticCurveTo(x - 3, 44, x, top);
+    g.stroke();
+    g.fillStyle = '#0000ff';
+    g.beginPath();
+    g.ellipse(x + 7, 50, 7, 3, -0.6, 0, Math.PI * 2);
+    g.fill();
+  };
+  const blob = (x: number, y: number, r: number, color: string) => {
+    g.fillStyle = color;
+    g.beginPath();
+    g.arc(x, y, r, 0, Math.PI * 2);
+    g.fill();
+  };
+  // Big heads on short stems: the island camera looks down on them from far off.
+  stem(32, 30);
+  for (let k = 0; k < 6; k++) blob(32 + Math.cos(k * 1.047) * 13, 22 + Math.sin(k * 1.047) * 10, 10, '#ff0000');
+  blob(32, 22, 7, '#00ff00');
+  stem(96, 34);
+  for (const [dx, dy, r] of [[-13, 28, 10], [12, 26, 10], [0, 14, 12], [-10, 6, 8], [12, 9, 8]]) blob(96 + dx, dy, r, '#ff0000');
+  stem(160, 32);
+  g.fillStyle = '#ff0000';
+  g.beginPath();
+  g.moveTo(141, 6);
+  g.lineTo(149, 14);
+  g.lineTo(160, 2);
+  g.lineTo(171, 14);
+  g.lineTo(179, 6);
+  g.quadraticCurveTo(181, 36, 160, 38);
+  g.quadraticCurveTo(139, 36, 141, 6);
+  g.fill();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
+}
+
+const FLOWER_CENTRE = '0.95, 0.72, 0.12';
+const FLOWER_STEM = '0.26, 0.5, 0.12';
+function flowerShader(shader: THREE.WebGLProgramParametersWithUniforms) {
+  shader.uniforms.uWind = grassWind;
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', `#include <common>
+uniform float uWind;
+attribute float aWear;
+attribute float aShape;
+${GROUND_NOISE}`)
+    .replace('#include <uv_vertex>', `#include <uv_vertex>
+vMapUv.x = (vMapUv.x + aShape) / 3.0;`)
+    .replace('#include <begin_vertex>', `#include <begin_vertex>
+vec2 root = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
+transformed *= step(gBare(root, aWear), 0.25);
+float bend = position.y * position.y * length(instanceMatrix[1].xyz);
+vec2 dir = vec2(0.85, 0.53);
+float sway = (sin(dot(root, dir) * 3.0 + uWind * 1.1) * 0.22 + sin(dot(root, vec2(-dir.y, dir.x)) * 5.1 + uWind * 0.8) * 0.12) * 0.45;`)
+    .replace('#include <project_vertex>', `vec4 mvPosition = instanceMatrix * vec4(transformed, 1.0);
+mvPosition.xz += dir * (sway + 0.02) * bend;
+mvPosition = modelViewMatrix * mvPosition;
+gl_Position = projectionMatrix * mvPosition;`);
+  shader.fragmentShader = shader.fragmentShader
+    .replace('#include <map_fragment>', `vec4 petals = texture2D(map, vMapUv);
+float cover = petals.r + petals.g + petals.b;
+if (cover < 0.5) discard;
+diffuseColor.rgb = (vColor * petals.r + vec3(${FLOWER_CENTRE}) * petals.g + vec3(${FLOWER_STEM}) * petals.b) / cover;`)
+    .replace('#include <color_fragment>', '')
+    // A little light of their own, so a head seen edge-on or in a building's shadow still shows its colour.
+    .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+totalEmissiveRadiance += diffuseColor.rgb * 0.4 * (petals.r + petals.g) / cover;`);
+}
+
+function flowerCard() {
+  const a = new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0);
+  const b = a.clone().rotateY(Math.PI / 2);
+  const geo = mergeGeometries([a, b]);
+  const up = geo.attributes.normal;
+  for (let i = 0; i < up.count; i++) up.setXYZ(i, 0, 1, 0);
+  return geo;
+}
+
 export type IslandEvents = {
   onTile: (sq: string) => void;
   onBuilding: (id: number) => void;
@@ -259,6 +350,10 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   const bladeMat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
   bladeMat.userData = NO_OUTLINE;
   bladeMat.onBeforeCompile = grassShader;
+  const flowerGeo = flowerCard();
+  const flowerMat = new THREE.MeshLambertMaterial({ color: 0xffffff, map: flowerAtlas(), side: THREE.DoubleSide });
+  flowerMat.userData = NO_OUTLINE;
+  flowerMat.onBeforeCompile = flowerShader;
   const caps = new THREE.InstancedMesh(capGeo, capMat, 64);
   caps.receiveShadow = true;
   caps.castShadow = true;
@@ -569,10 +664,13 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     pebbles.castShadow = false;
     pebbles.receiveShadow = true;
     let nP = 0;
-    const flowerGeo = new THREE.SphereGeometry(1, 6, 5);
-    const flowerMat = toon(0xffffff, 0.7);
-    flowerMat.userData = NO_OUTLINE;
-    const flowers = new THREE.InstancedMesh(flowerGeo, flowerMat, 64 * 7);
+    const flowers = new THREE.InstancedMesh(flowerGeo.clone(), flowerMat, 64 * 10);
+    flowers.frustumCulled = false;
+    flowers.receiveShadow = true;
+    const flowerWear = new THREE.InstancedBufferAttribute(new Float32Array(flowers.count), 1);
+    const flowerShape = new THREE.InstancedBufferAttribute(new Float32Array(flowers.count), 1);
+    flowers.geometry.setAttribute('aWear', flowerWear);
+    flowers.geometry.setAttribute('aShape', flowerShape);
     let nF = 0;
     const FLOWER = [0xff8fb0, 0xffd34d, 0xc79bff, 0xffffff, 0xff7a5c];
     const tufts = new THREE.InstancedMesh(bladeGeo, bladeMat, 64 * BLADES[0]);
@@ -607,16 +705,24 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
         pebbles.setColorAt(nP, tint.setHex(rnd() < 0.5 ? 0xd9c7a3 : 0xbfae90).offsetHSL(0, 0, (rnd() - 0.5) * 0.06));
         nP += 1;
       }
-      if (level === 3 || (level === 0 && rnd() < 0.3)) {
-        const cx = x + (rnd() - 0.5) * 0.5;
-        const cz = z + (rnd() - 0.5) * 0.5;
-        for (let k = 0; k < 6; k++) {
-          dummy.position.set(cx + (rnd() - 0.5) * 0.24, TILE_TOP + 0.05 + rnd() * 0.04, cz + (rnd() - 0.5) * 0.24);
-          dummy.rotation.set(0, 0, 0);
-          dummy.scale.setScalar(0.03 + rnd() * 0.018);
+      // Flowers come in patches of one kind and colour, as they grow (folio-2025 Flowers.js: 3 to 10 around a point).
+      const patches = level === 3 ? 2 : level === 0 && rnd() < 0.35 ? 1 : level === 1 && rnd() < 0.12 ? 1 : 0;
+      for (let p = 0; p < patches; p++) {
+        const cx = x + (rnd() - 0.5) * 0.6;
+        const cz = z + (rnd() - 0.5) * 0.6;
+        const kind = Math.floor(rnd() * 3);
+        const hue = FLOWER[Math.floor(rnd() * FLOWER.length)];
+        const many = level === 3 ? 5 + Math.floor(rnd() * 5) : 3 + Math.floor(rnd() * 3);
+        for (let k = 0; k < many && nF < flowers.count; k++) {
+          dummy.position.set(cx + (rnd() - 0.5) * 0.3, TILE_TOP - 0.01, cz + (rnd() - 0.5) * 0.3);
+          dummy.rotation.set(0, rnd() * Math.PI, 0);
+          const tall = 0.24 + rnd() * 0.1;
+          dummy.scale.set(tall * 0.75, tall, tall * 0.75);
           dummy.updateMatrix();
           flowers.setMatrixAt(nF, dummy.matrix);
-          flowers.setColorAt(nF, tint.setHex(FLOWER[Math.floor(rnd() * FLOWER.length)]));
+          flowers.setColorAt(nF, tint.setHex(hue).offsetHSL((rnd() - 0.5) * 0.06, 0, (rnd() - 0.5) * 0.08));
+          flowerWear.setX(nF, WEAR[level] ?? 0);
+          flowerShape.setX(nF, kind);
           nF += 1;
         }
       }
@@ -646,6 +752,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     capWear.needsUpdate = true;
     pebbles.count = nP;
     flowers.count = nF;
+    flowerWear.needsUpdate = true;
+    flowerShape.needsUpdate = true;
     tufts.count = nT;
     tuftWear.needsUpdate = true;
     for (const inst of [pebbles, flowers, tufts]) if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
