@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
-import { createWater } from '../fx/water.js';
+import { buildSeaBiome } from '../fx/seaBiome.js';
 import { stageForHearts, tenantAnimal, tenantRarity } from './economy.js';
 import { villageTiles } from './roster.js';
 
@@ -39,6 +39,21 @@ const PALETTES = {
   day: { hemiSky: 0xfff0d8, hemiGround: 0x7f8fb8, hemi: 1.4, sun: 0xffdca8, sunPower: 2.6, deep: 0x0c6a80, shallow: 0x2aa9a6, foam: 0xd8fff0, exposure: 1, glow: 0 },
   night: { hemiSky: 0x3f5fa8, hemiGround: 0x24345a, hemi: 1.25, sun: 0x9db8ff, sunPower: 0.7, deep: 0x07233f, shallow: 0x0f6a78, foam: 0x9fd8ff, exposure: 1.15, glow: 1 }
 };
+
+// The chess board's sea (legend pack.json `environment`), so the village sits in the same water with the same reef and fish.
+// That sea is laid out around the 8-square board; the village's island is SEA_SCALE times wider, so the sea is drawn that much bigger.
+const SEA_ENV = {
+  background: '#a9def0',
+  sea: {
+    depth: 0.34, deep: '#0a4c92', shallow: '#46e2d2', foam: '#f2fff8', sand: '#f0cf85', lagoon: '#a2efe2', reef: '#9fb7a4',
+    floor: '#2f8fa8', caustic: '#cffff2', sky: '#bfe8fb', zenith: '#3f9fe8', islets: 9, fadeFrom: 9, fadeTo: 24
+  },
+  trees: { canopy: ['#7fb648', '#6aa84f', '#8cc44e', '#94ad54'], trunk: '#8a5a33' }
+};
+const BOARD_HALF = 4 * 0.34;                  // the chess engine's BOARD_SQ_SIZE
+const SEA_SCALE = 4.05 / (BOARD_HALF + 0.07); // our island's rim over the board's
+const WATER_Y = -0.82;
+const SEA_NIGHT = { lagoon: 0x1d5f6a, sand: 0x6f6a5a, reef: 0x3c5a5a, floor: 0x10405a, caustic: 0x5f9fc0, sky: 0x2a3f6a };
 
 // Stable per-square dither, so a tile keeps its pebbles from one opening to the next.
 function seeded(text: string) {
@@ -104,10 +119,21 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   sun.shadow.normalBias = 0.02;
   scene.add(hemi, sun);
 
-  const { mesh: sea, material: water } = createWater();
-  water.userData = NO_OUTLINE;
-  sea.position.y = -0.82;
-  scene.add(sea);
+  const seaGroup = new THREE.Group();
+  seaGroup.scale.setScalar(SEA_SCALE);
+  scene.add(seaGroup);
+  const biome = buildSeaBiome(seaGroup, SEA_ENV, {
+    halfBoard: BOARD_HALF, surfaceY: WATER_Y / SEA_SCALE + SEA_ENV.sea.depth, rand: seeded('sea'), ground: false, scale: SEA_SCALE, sky: false, lifeSize: 0.55
+  });
+  const seaDay = {
+    floor: Object.fromEntries(['uSand', 'uLagoon', 'uReef', 'uDeep', 'uCaustic'].map((k) => [k, biome.ocean.floor[k].value.clone()])),
+    water: Object.fromEntries(['uDeep', 'uShallow', 'uFoam', 'uSky', 'uHorizon'].map((k) => [k, biome.ocean.water[k].value.clone()]))
+  };
+  // The sea is drawn by its own shaders, which the ink outline must not copy.
+  const noInk = () => seaGroup.traverse((o: any) => {
+    for (const m of [o.material].flat()) if (m) m.userData = NO_OUTLINE;
+  });
+  noInk();
 
   const island = new THREE.Group();
   scene.add(island);
@@ -215,6 +241,10 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     if (!gltfs.has(url)) gltfs.set(url, new Promise((ok, no) => loader.load(url, ok, undefined, no)));
     return gltfs.get(url)!;
   };
+  biome.populate((name: string) => loadGltf(`./packs/legend/sea/${name}.glb`)).then(() => {
+    noInk();
+    renderer.shadowMap.needsUpdate = true;
+  });
 
   function addBuildingModel(kind: string, at: THREE.Group, ghost: boolean, grown = 0) {
     const look = LOOKS[kind];
@@ -558,7 +588,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       marks.add(at);
     }
     const dock = new THREE.Group();
-    dock.position.set(-1.6, -0.78, 4.75);
+    dock.position.set(-1.6, -0.78, 5.35);   // past the beach the sea brings in, so it stands in the water
     addBuildingModel('dock', dock, false);
     marks.add(dock);
     confetti.visible = Boolean(v.festival);
@@ -767,12 +797,23 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     hemi.intensity = p.hemi;
     sun.color.setHex(p.sun);
     sun.intensity = p.sunPower;
-    water.uniforms.uDeep.value.setHex(p.deep);
-    water.uniforms.uShallow.value.setHex(p.shallow);
-    water.uniforms.uFoam.value.setHex(p.foam);
-    water.uniforms.uGlow.value = p.glow;
+    const { floor, water } = biome.ocean;
+    for (const [k, c] of Object.entries(seaDay.floor)) floor[k].value.copy(c);
+    for (const [k, c] of Object.entries(seaDay.water)) water[k].value.copy(c);
+    if (name === 'night') {
+      floor.uSand.value.setHex(SEA_NIGHT.sand);
+      floor.uLagoon.value.setHex(SEA_NIGHT.lagoon);
+      floor.uReef.value.setHex(SEA_NIGHT.reef);
+      floor.uDeep.value.setHex(SEA_NIGHT.floor);
+      floor.uCaustic.value.setHex(SEA_NIGHT.caustic);
+      water.uDeep.value.setHex(p.deep);
+      water.uShallow.value.setHex(p.shallow);
+      water.uFoam.value.setHex(p.foam);
+      water.uSky.value.setHex(SEA_NIGHT.sky);
+      water.uHorizon.value.setHex(p.deep);
+    }
     renderer.toneMappingExposure = p.exposure;
-    scene.background = new THREE.Color(p.deep);
+    scene.background = name === 'night' ? new THREE.Color(p.deep) : new THREE.Color(SEA_ENV.background);
     flies.visible = name === 'night';
     for (const g of glows) g.visible = name === 'night';
   }
@@ -818,7 +859,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     raf = requestAnimationFrame(loop);
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.elapsedTime;
-    water.uniforms.uTime.value = t;
+    biome.tick(t);
     island.position.y = Math.sin(t * 0.7) * 0.012;
     if (Math.abs(azimuthGoal - azimuth) > 0.001) {
       azimuth += (azimuthGoal - azimuth) * Math.min(1, dt * 6);

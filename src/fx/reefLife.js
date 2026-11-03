@@ -132,8 +132,11 @@ function shoreRing(ocean, e) {
   return pts;
 }
 
-/** Loads what it can and returns the per-frame update; a model that fails to load just leaves that kind out. */
-export async function populateReef(group, ocean, load, rand, { palms = [] } = {}) {
+/**
+ * Loads what it can and returns the per-frame update; a model that fails to load just leaves that kind out.
+ * `size` shrinks every creature and plant but not where they go: the village shows its sea from closer than the board does.
+ */
+export async function populateReef(group, ocean, load, rand, { palms = [], size = 1 } = {}) {
   const models = {};
   const names = [...Object.keys(SWIMMERS), ...Object.keys(CORALS), 'palm'];
   await Promise.all(names.map(async (name) => {
@@ -167,7 +170,7 @@ export async function populateReef(group, ocean, load, rand, { palms = [] } = {}
       if (e < 0.42 || e > 2.0) continue;
       at.position.set(x, ocean.floorY(x, z) - 0.02, z);
       at.rotation.set(0, rand() * Math.PI * 2, 0);
-      at.scale.setScalar(small + rand() * (big - small));
+      at.scale.setScalar((small + rand() * (big - small)) * size);
       at.updateMatrix();
       mesh.setMatrixAt(n, at.matrix);
       mesh.setColorAt(n, tint.setHSL(0, 0, 0.88 + rand() * 0.12));
@@ -179,10 +182,10 @@ export async function populateReef(group, ocean, load, rand, { palms = [] } = {}
 
   if (models.palm && palms.length) {
     const mesh = new THREE.InstancedMesh(models.palm.geometry, models.palm.material, palms.length);
-    palms.forEach(([x, y, z, size], i) => {
+    palms.forEach(([x, y, z, tall], i) => {
       at.position.set(x, y, z);
       at.rotation.set(0, Math.atan2(z, -x), 0);   // the model leans toward -X, and every palm leans out over the water
-      at.scale.setScalar(size);
+      at.scale.setScalar(tall * size);
       at.updateMatrix();
       mesh.setMatrixAt(i, at.matrix);
     });
@@ -203,7 +206,7 @@ export async function populateReef(group, ocean, load, rand, { palms = [] } = {}
   homes.forEach(([x, z], i) => {
     at.position.set(x, ocean.floorY(x, z) - 0.02, z);
     at.rotation.set(0, rand() * 6, 0);
-    at.scale.setScalar(0.34);
+    at.scale.setScalar(0.34 * size);
     at.updateMatrix();
     anemones.setMatrixAt(i, at.matrix);
   });
@@ -229,7 +232,7 @@ export async function populateReef(group, ocean, load, rand, { palms = [] } = {}
     if (ocean.edge(x, z) < 0.5) continue;
     at.position.set(x, ocean.floorY(x, z), z);
     at.rotation.set(0, rand() * Math.PI, 0);
-    at.scale.setScalar(0.26 + rand() * 0.26);
+    at.scale.setScalar((0.26 + rand() * 0.26) * size);
     at.updateMatrix();
     weed.setMatrixAt(blades, at.matrix);
     weed.setColorAt(blades, tint.setHSL(0.27 + rand() * 0.12, 0.62, 0.26 + rand() * 0.12));
@@ -288,7 +291,7 @@ export async function populateReef(group, ocean, load, rand, { palms = [] } = {}
     mover.mesh = new THREE.InstancedMesh(models[name].geometry, bendable(models[name].material, spec.bend, spec.glow), mover.list.length);
     mover.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     mover.mesh.frustumCulled = false;
-    mover.size = spec.size;
+    mover.size = spec.size * size;
     group.add(mover.mesh);
   }
 

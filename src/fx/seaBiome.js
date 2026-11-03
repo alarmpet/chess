@@ -80,12 +80,47 @@ export function daylightEnvironment(renderer, env) {
   return texture;
 }
 
-/** Fills `group`. `tick` is the per-frame update; `populate` brings in the models, which can arrive after the game has started. */
-export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand }) {
+/**
+ * Fills `group`. `tick` is the per-frame update; `populate` brings in the models, which can arrive after the game has started.
+ * The village draws its own island, so it passes `ground: false`, and `scale` (the group's) with `sky: false` and a smaller `lifeSize`.
+ */
+export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand, ground = true, scale = 1, sky = true, lifeSize = 1 }) {
   const sea = env.sea;
   const depth = sea.depth ?? 0.34;
   const waterY = surfaceY - depth;
+  if (ground) addGround(group, { halfBoard, surfaceY, depth, waterY, rand });   // first, so the board's seeded layout is as it was
+  const ocean = createOpenSea(group, env, { islandHalf: halfBoard + 0.07, waterY, rand, scale, sky });
 
+  const leaves = (env.trees?.canopy || ['#6fa83f']).map((c) => material(c, 0.85));
+  const trunk = material(env.trees?.trunk || '#8a5a33');
+  const shallows = new THREE.MeshBasicMaterial({ map: shallowsTexture(sea.shallow), transparent: true, depthWrite: false, fog: false });
+  const palms = [[-1.62, -1.44, 1], [1.62, -1.38, 0.95], [-1.64, 1.44, 0.7], [1.66, 1.4, 0.75]].map(([x, z, size]) => [x, waterY + 0.04, z, size]);
+  const islets = sea.islets ?? 9;
+  for (let i = 0; i < islets; i++) {
+    const islet = makeIslet(rand, leaves, trunk, sea.sand, shallows);
+    const a = (i / islets) * Math.PI * 2 + rand() * 0.4;
+    const r = 7 + rand() * 9;
+    islet.position.set(Math.cos(a) * r, waterY, Math.sin(a) * r);
+    islet.scale.setScalar(0.8 + rand() * 0.9);
+    group.add(islet);
+    palms.push([islet.position.x + 0.2, waterY + 0.1, islet.position.z, islet.scale.x * 0.8]);
+  }
+
+  let life = null;
+  return {
+    ocean,
+    tick(t) {
+      ocean.tick(t);
+      life?.(t);
+    },
+    async populate(load) {
+      life = await populateReef(group, ocean, load, rand, { palms, size: lifeSize });
+    }
+  };
+}
+
+// The slice of ground under the board, and stones on its cut face and along the waterline, as on the village island.
+function addGround(group, { halfBoard, surfaceY, depth, waterY, rand }) {
   const soil = new THREE.Mesh(new RoundedBoxGeometry(halfBoard * 2 + 0.14, depth + 0.1, halfBoard * 2 + 0.14, 3, 0.03), material('#9a6438', 1));
   soil.position.y = surfaceY - 0.05 - (depth + 0.1) / 2;
   soil.castShadow = true;
@@ -111,32 +146,4 @@ export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand }) {
     stones.setColorAt(i, tint.set(low ? '#8f8a80' : '#6e4a2c').offsetHSL(0, 0, (rand() - 0.5) * 0.08));
   }
   group.add(stones);
-
-  const ocean = createOpenSea(group, env, { islandHalf: halfBoard + 0.07, waterY, rand });
-
-  const leaves = (env.trees?.canopy || ['#6fa83f']).map((c) => material(c, 0.85));
-  const trunk = material(env.trees?.trunk || '#8a5a33');
-  const shallows = new THREE.MeshBasicMaterial({ map: shallowsTexture(sea.shallow), transparent: true, depthWrite: false, fog: false });
-  const palms = [[-1.62, -1.44, 1], [1.62, -1.38, 0.95], [-1.64, 1.44, 0.7], [1.66, 1.4, 0.75]].map(([x, z, size]) => [x, waterY + 0.04, z, size]);
-  const islets = sea.islets ?? 9;
-  for (let i = 0; i < islets; i++) {
-    const islet = makeIslet(rand, leaves, trunk, sea.sand, shallows);
-    const a = (i / islets) * Math.PI * 2 + rand() * 0.4;
-    const r = 7 + rand() * 9;
-    islet.position.set(Math.cos(a) * r, waterY, Math.sin(a) * r);
-    islet.scale.setScalar(0.8 + rand() * 0.9);
-    group.add(islet);
-    palms.push([islet.position.x + 0.2, waterY + 0.1, islet.position.z, islet.scale.x * 0.8]);
-  }
-
-  let life = null;
-  return {
-    tick(t) {
-      ocean.tick(t);
-      life?.(t);
-    },
-    async populate(load) {
-      life = await populateReef(group, ocean, load, rand, { palms });
-    }
-  };
 }

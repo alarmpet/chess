@@ -28,7 +28,7 @@ export function seaDepth(e) {
 }
 
 const SHAPE_GLSL = `
-uniform float uHalf;
+uniform float uHalf, uScale;
 float islandEdge(vec2 p) {
   vec2 q = abs(p) - vec2(uHalf - ${CORNER.toFixed(2)});
   float box = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - ${CORNER.toFixed(2)};
@@ -76,7 +76,7 @@ float caustic(vec2 uv, float t) {
   return pow(abs(c), 8.0);
 }
 void main() {
-  vec2 p = vWorld.xz;
+  vec2 p = vWorld.xz / uScale;
   float e = islandEdge(p);
   float depth = seaDepth(e + wander(p, e));
   float grain = noise(p * 14.0) * 0.5 + noise(p * 4.0) * 0.5;
@@ -110,7 +110,7 @@ float swell(vec2 p, float t) {
   return noise(p * 2.3 + t * vec2(0.22, 0.13)) + 0.6 * noise(p * 5.1 - t * vec2(0.3, 0.2)) + 0.25 * noise(p * 11.0 + t * vec2(0.1, -0.45));
 }
 void main() {
-  vec2 p = vWorld.xz;
+  vec2 p = vWorld.xz / uScale;
   float t = uTime;
   float e = islandEdge(p);
   float h = swell(p, t);
@@ -132,7 +132,7 @@ void main() {
   col += vec3(1.0, 0.96, 0.85) * glint;
   gl_FragColor = vec4(col, max(max(alpha, foam * 0.92), min(glint, 1.0)));
   #include <tonemapping_fragment>
-  gl_FragColor.rgb = mix(gl_FragColor.rgb, uHorizon, smoothstep(uFadeFrom, uFadeTo, length(vWorld.xz)));
+  gl_FragColor.rgb = mix(gl_FragColor.rgb, uHorizon, smoothstep(uFadeFrom, uFadeTo, length(p)));
   #include <colorspace_fragment>
 }`;
 
@@ -206,14 +206,17 @@ function makeClouds(group, rand) {
   return puffs;
 }
 
-/** Sea floor, water, sky and clouds around an island whose beach sits at `waterY`. Returns the per-frame update. */
-export function createOpenSea(group, env, { islandHalf, waterY, rand }) {
+/**
+ * Sea floor, water, sky and clouds around an island whose beach sits at `waterY`. Returns the per-frame update.
+ * `scale` is the scale of `group`, for a scene drawn bigger than the board (the village); the sea keeps its proportions.
+ */
+export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1, sky: withSky = true }) {
   const sea = env.sea;
   const half = islandHalf + BEACH;
   const sun = new THREE.Vector3(3.8, 8.5, 4.2).normalize();
   const horizon = new THREE.Color(env.background);
   const color = (hex) => new THREE.Color(hex);
-  const shared = { uTime: { value: 0 }, uHalf: { value: half }, uSun: { value: sun } };
+  const shared = { uTime: { value: 0 }, uHalf: { value: half }, uScale: { value: scale }, uSun: { value: sun } };
 
   const floor = new THREE.Mesh(floorGeometry(half), new THREE.ShaderMaterial({
     vertexShader: WORLD_VERT,
@@ -252,20 +255,25 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand }) {
   water.renderOrder = 2;
   group.add(water);
 
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(SKY_RADIUS, 32, 16), new THREE.ShaderMaterial({
-    vertexShader: WORLD_VERT,
-    fragmentShader: SKY_FRAG,
-    side: THREE.BackSide,
-    depthWrite: false,
-    fog: false,
-    uniforms: { uHorizon: { value: horizon }, uZenith: { value: color(sea.zenith) }, uSun: { value: sun } }
-  }));
-  sky.renderOrder = -1;
-  group.add(sky);
+  if (withSky) {
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(SKY_RADIUS, 32, 16), new THREE.ShaderMaterial({
+      vertexShader: WORLD_VERT,
+      fragmentShader: SKY_FRAG,
+      side: THREE.BackSide,
+      depthWrite: false,
+      fog: false,
+      uniforms: { uHorizon: { value: horizon }, uZenith: { value: color(sea.zenith) }, uSun: { value: sun } }
+    }));
+    sky.renderOrder = -1;
+    group.add(sky);
+  }
 
   const clouds = makeClouds(group, rand);
 
   return {
+    /** The live colour uniforms, for a scene that changes its light (the village at night). */
+    floor: floor.material.uniforms,
+    water: water.material.uniforms,
     waterY,
     /** Height of the sea floor under a point, for anything standing on it. */
     floorY: (x, z) => waterY - seaDepth(islandEdge(x, z, half)),
