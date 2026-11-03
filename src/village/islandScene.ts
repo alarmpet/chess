@@ -330,6 +330,65 @@ export function natureSquares(free: Set<string>, seed: string) {
   return [...picked];
 }
 
+// Leafy crowns after folio-2025 (Foliage.js:36-87): small leaf cards scattered through a ball, thicker towards the
+// middle, each card's normal bent 85% outwards so the crown shades as one soft ball while its edge stays ragged.
+// A plain ball inside fills the gaps so it never looks see-through. Only the trees earned in games use it (at most 24).
+function leafTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#ffffff';
+  for (const [x, y, a, s] of [[22, 24, -0.6, 1], [42, 22, 0.5, 0.9], [32, 42, 0.1, 1.1], [16, 44, -1.1, 0.8], [48, 42, 1.0, 0.8]]) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(a);
+    g.scale(s, s);
+    g.beginPath();
+    g.moveTo(0, -13);
+    g.quadraticCurveTo(10, 0, 0, 13);
+    g.quadraticCurveTo(-10, 0, 0, -13);
+    g.fill();
+    g.restore();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function crownGeometry(rnd: () => number, cards = 46) {
+  const parts: THREE.BufferGeometry[] = [];
+  const at = new THREE.Object3D();
+  const out = new THREE.Vector3();
+  const n = new THREE.Vector3();
+  for (let i = 0; i < cards; i++) {
+    const r = 1 - Math.pow(rnd(), 3) * 0.55;          // most cards near the surface, a few deeper in
+    out.randomDirection();
+    if (out.y < -0.4) out.y = -out.y * 0.5;          // few hang under the crown
+    out.normalize();
+    at.position.copy(out).multiplyScalar(r);
+    at.lookAt(out.clone().multiplyScalar(2));
+    at.rotateZ(rnd() * Math.PI * 2);
+    at.scale.setScalar(0.55 + rnd() * 0.3);
+    at.updateMatrix();
+    const card = new THREE.PlaneGeometry(1, 1).applyMatrix4(at.matrix);
+    const pos = card.attributes.position;
+    const nor = card.attributes.normal;
+    for (let k = 0; k < pos.count; k++) {
+      n.set(nor.getX(k), nor.getY(k), nor.getZ(k)).lerp(out.set(pos.getX(k), pos.getY(k), pos.getZ(k)).normalize(), 0.85).normalize();
+      nor.setXYZ(k, n.x, n.y, n.z);
+    }
+    parts.push(card);
+  }
+  return mergeGeometries(parts);
+}
+
+const leafSway = (shader: THREE.WebGLProgramParametersWithUniforms) => {
+  shader.uniforms.uWind = grassWind;
+  shader.vertexShader = `uniform float uWind;
+${shader.vertexShader}`.replace('#include <begin_vertex>', `#include <begin_vertex>
+transformed += normal * sin(uWind * 2.1 + position.x * 7.0 + position.y * 5.0) * 0.035;`);
+};
+
 export type IslandEvents = {
   onTile: (sq: string) => void;
   onBuilding: (id: number) => void;
@@ -607,18 +666,38 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     return g;
   }
 
+  const crowns = [0, 1, 2].map((i) => crownGeometry(seeded(`crown${i}`)));
+  const crownCore = new THREE.IcosahedronGeometry(0.78, 2);
+  const leafMap = leafTexture();
+  const leafMats = new Map<number, [THREE.Material, THREE.Material]>();
+  const leavesFor = (leaf: number) => {
+    if (!leafMats.has(leaf)) {
+      const cards = new THREE.MeshLambertMaterial({ color: leaf, map: leafMap, alphaTest: 0.5, side: THREE.DoubleSide });
+      cards.userData = NO_OUTLINE;
+      cards.onBeforeCompile = leafSway;
+      const core = new THREE.MeshLambertMaterial({ color: new THREE.Color(leaf).multiplyScalar(0.85) });
+      core.userData = NO_OUTLINE;
+      leafMats.set(leaf, [cards, core]);
+    }
+    return leafMats.get(leaf)!;
+  };
+
   function makeTree(rnd: () => number, leaf: number) {
     const g = new THREE.Group();
     const h = 0.2 + rnd() * 0.08;
     const trunk = mesh(new THREE.CylinderGeometry(0.035, 0.06, h, 7), 0x8a5a33, 0, h / 2, 0);
     g.add(trunk);
-    const ball = new THREE.IcosahedronGeometry(1, 2);
-    const blobs: [number, number, number, number][] = [[0, h + 0.13, 0, 0.17], [0.11, h + 0.08, 0.04, 0.11], [-0.1, h + 0.09, -0.04, 0.12]];
-    for (const [x, y, z, r] of blobs) {
-      const b = mesh(ball, leaf, x, y, z);
-      b.scale.setScalar(r * (0.92 + rnd() * 0.2));
-      g.add(b);
-    }
+    const [cardMat, coreMat] = leavesFor(leaf);
+    const crown = new THREE.Group();
+    crown.position.set(0, h + 0.17, 0);
+    crown.scale.set(0.28, 0.25, 0.28).multiplyScalar(0.92 + rnd() * 0.2);
+    crown.rotation.y = rnd() * Math.PI * 2;
+    const cards = new THREE.Mesh(crowns[Math.floor(rnd() * crowns.length)], cardMat);
+    const core = new THREE.Mesh(crownCore, coreMat);
+    cards.castShadow = core.castShadow = true;
+    cards.receiveShadow = core.receiveShadow = true;
+    crown.add(core, cards);
+    g.add(crown);
     return g;
   }
 
