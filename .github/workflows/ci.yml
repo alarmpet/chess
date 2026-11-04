@@ -1,4 +1,5 @@
-# Tests + production build on every push and pull request (PLAN §7).
+# Tests + gates + production build on every push and pull request (PLAN §7 · 관리 계획서 §4.3 S1).
+# 순서: 타입 검사 → 빠른 테스트 → 느린 시뮬 테스트 → 에셋 게이트 → 빌드 → 번들 게이트.
 name: ci
 on:
   push:
@@ -16,5 +17,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm test
+      - run: npm run test:slow
+      - run: npm run gate:assets
       - run: npm run build
+      - run: npm run gate:bundle
