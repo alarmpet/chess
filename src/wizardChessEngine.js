@@ -2,6 +2,7 @@ import * as THREE_NS from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
 import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, capStage, sanitizeRivalProgress, nextRivalReward, trophyRole, rivalShowcase, rivalWearer } from './packs/packManifest.js';
@@ -1937,6 +1938,8 @@ export function initWizardChess() {
             const base = makePedestal(ped, color);
             root.add(base);
             model.position.y += base.userData.height;
+            const sr = base.userData.sideRing;
+            if (sr) sideRings.slots.push({ root, mesh: sideRingMesh(sr.color, sr.R, sr.hex) });
           }
           root.add(model);
           root.userData.animalModel = model;
@@ -1986,51 +1989,82 @@ export function initWizardChess() {
 
     // ---- Pedestal (Staunton base) -------------------------------------------------------------------------------
     const pedestalCache = {};
+    // 받침(엔진 선택 계획서 §5 4~6일차): 선반 + 띠를 정점색 한 지오메트리·한 재질로 합쳐 기물당 2콜 → 1콜.
+    // 바닥 링은 투명 재질이라 합칠 수 없어 진영별 InstancedMesh 하나로(32콜 → 2콜). 행렬은 매 프레임 기물 root 에서 받는다.
+    const pedestalMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, metalness: 0 });
+    const sideRings = { meshes: {}, slots: [] };
+    const SIDE_RING_CAP = 64;
+    function sideRingMesh(color, R, hex) {
+      const key = `${color}_${R}`;
+      if (!sideRings.meshes[key]) {
+        pedestalCache[`ring_${R}`] ||= new THREE.RingGeometry(R * 1.04, R * 1.24, 48).rotateX(-Math.PI / 2);
+        const mat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(hex), transparent: true, opacity: 0.9, depthWrite: false, toneMapped: false,
+          polygonOffset: true, polygonOffsetFactor: -2
+        });
+        const im = new THREE.InstancedMesh(pedestalCache[`ring_${R}`], mat, SIDE_RING_CAP);
+        im.count = 0;
+        im.renderOrder = 1;
+        im.frustumCulled = false;
+        im.name = 'side-rings';
+        scene.add(im);
+        sideRings.meshes[key] = im;
+      }
+      return sideRings.meshes[key];
+    }
+    const ringLift = new THREE.Matrix4().makeTranslation(0, 0.004, 0);
+    const ringTmp = new THREE.Matrix4();
+    const ringZero = new THREE.Matrix4().makeScale(0, 0, 0);
+    function syncSideRings() {
+      for (const im of Object.values(sideRings.meshes)) im.count = 0;
+      for (let i = sideRings.slots.length - 1; i >= 0; i--) {
+        const slot = sideRings.slots[i];
+        if (slot.root.parent !== scene) { sideRings.slots.splice(i, 1); continue; }
+        const im = slot.mesh;
+        if (im.count >= SIDE_RING_CAP) continue;
+        slot.root.updateMatrixWorld();
+        ringTmp.multiplyMatrices(slot.root.matrixWorld, ringLift);
+        im.setMatrixAt(im.count++, slot.root.visible ? ringTmp : ringZero);
+      }
+      for (const im of Object.values(sideRings.meshes)) im.instanceMatrix.needsUpdate = true;
+    }
     function makePedestal(ped, color) {
       const R = typeof ped.radius === 'number' ? ped.radius : 0.36;
       const H = typeof ped.height === 'number' ? ped.height : 0.09;
-      const key = `${R}_${H}`;
-      const bandKey = `band_${R}`;
+      const hex = (color === 'w' ? ped.w : ped.b) || (color === 'w' ? '#efe4cf' : '#2a2420');
+      const bandHex = color === 'w' ? ped.bandW : ped.bandB;
+      const key = `merged_${R}_${H}_${hex}_${bandHex || ''}`;
       if (!pedestalCache[key]) {
         // profile (x = radius, y = height): wide foot, bead, cove, narrow top collar
         const pts = [
           [0, 0], [R, 0], [R, H * 0.18], [R * 0.96, H * 0.3], [R * 0.9, H * 0.36], [R * 0.93, H * 0.48],
           [R * 0.86, H * 0.6], [R * 0.74, H * 0.74], [R * 0.7, H * 0.86], [R * 0.74, H * 0.94], [R * 0.72, H], [0, H]
         ].map(([x, y]) => new THREE.Vector2(x, y));
-        pedestalCache[key] = new THREE.LatheGeometry(pts, 40);
-        pedestalCache[bandKey] = new THREE.TorusGeometry(R * 0.98, R * 0.09, 8, 48).rotateX(Math.PI / 2);
-        pedestalCache[`ring_${R}`] = new THREE.RingGeometry(R * 1.04, R * 1.24, 48).rotateX(-Math.PI / 2);
+        const paint = (geo, h) => {
+          const col = new THREE.Color(h);
+          const n = geo.attributes.position.count;
+          const arr = new Float32Array(n * 3);
+          for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
+          geo.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+          return geo;
+        };
+        const parts = [paint(new THREE.LatheGeometry(pts, 40), hex)];
+        if (bandHex) {
+          // The side colour as a painted band, so a piece's team reads against either square.
+          parts.push(paint(new THREE.TorusGeometry(R * 0.98, R * 0.09, 8, 48).rotateX(Math.PI / 2).translate(0, H * 0.24, 0), bandHex));
+        }
+        const merged = mergeGeometries(parts.map((g) => g.toNonIndexed()), false);
+        parts.forEach((g) => g.dispose());
+        pedestalCache[key] = merged;
       }
-      const matKey = `mat_${color}`;
-      if (!pedestalCache[matKey]) {
-        const hex = (color === 'w' ? ped.w : ped.b) || (color === 'w' ? '#efe4cf' : '#2a2420');
-        pedestalCache[matKey] = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.62, metalness: 0 });
-      }
-      const m = new THREE.Mesh(pedestalCache[key], pedestalCache[matKey]);
+      const m = new THREE.Mesh(pedestalCache[key], pedestalMat);
       m.castShadow = true;
       m.receiveShadow = true;
       m.name = 'pedestal';
       m.userData.height = H;
-      // The side colour as a painted band, so a piece's team reads against either square.
-      const bandHex = color === 'w' ? ped.bandW : ped.bandB;
-      if (bandHex) {
-        const bandMatKey = `bandmat_${color}`;
-        pedestalCache[bandMatKey] ||= new THREE.MeshStandardMaterial({ color: new THREE.Color(bandHex), roughness: 0.5, metalness: 0 });
-        const band = new THREE.Mesh(pedestalCache[bandKey], pedestalCache[bandMatKey]);
-        band.position.y = H * 0.24;
-        m.add(band);
-        // A flat ring of the side colour on the square: from the high default view the bases hide behind the
-        // animals, but the ring still shows whose piece it is.
-        pedestalCache[`ringmat_${color}`] ||= new THREE.MeshBasicMaterial({
-          color: new THREE.Color(bandHex), transparent: true, opacity: 0.9, depthWrite: false, toneMapped: false,
-          polygonOffset: true, polygonOffsetFactor: -2
-        });
-        const ring = new THREE.Mesh(pedestalCache[`ring_${R}`], pedestalCache[`ringmat_${color}`]);
-        ring.position.y = 0.004;
-        ring.renderOrder = 1;
-        ring.name = 'side-ring';
-        m.add(ring);
-      }
+      // A flat ring of the side colour on the square: from the high default view the bases hide behind the
+      // animals, but the ring still shows whose piece it is. Registered on the root by the caller (needs root).
+      m.userData.sideRing = bandHex ? { color, R, hex: bandHex } : null;
       return m;
     }
 
@@ -6207,6 +6241,7 @@ export function initWizardChess() {
       }
 
       stepFadingPieces(dt);
+      syncSideRings();
       stepContactShadows();
 
       for (let i = shatterDebris.length - 1; i >= 0; i--) {

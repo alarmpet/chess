@@ -65,3 +65,8 @@ camera: top
 after click e2: highlights [{"x":0.17,"z":0.85},{"x":0.17,"z":0.51},{"x":0.17,"z":0.17}]
 after click e4: fen rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
 ALL DONE
+day3 start (pedestal merged + side rings instanced)
+start: {"total":98,"rows":{"sprite":0,"Mesh":1,"board":6,"highlights":0,"biome":25,"side-rings":2,"piece":64},"rings":[16,16],"pieceMeshes":64,"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}
+scenario(31 pieces): {"total":98,"rows":{"sprite":0,"Mesh":1,"board":6,"highlights":0,"biome":25,"side-rings":2,"piece":64},"rings":[16,16],"pieceMeshes":64,"fen":"rnbqkbnr/pppp1ppp/8/4p2Q/8/8/PPPPPPPP/RNB1KBNR w - - 0 1"}
+after Qxe5+ (30 pieces): {"total":97,"rows":{"sprite":0,"Mesh":2,"board":6,"highlights":0,"biome":25,"side-rings":2,"piece":62},"rings":[16,15],"pieceMeshes":62,"fen":"rnbqkb1r/ppppnppp/8/4Q3/8/8/PPPPPPPP/RNB1KBNR w - - 1 2"}
+ALL DONE
