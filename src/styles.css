@@ -1197,3 +1197,8 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 @media (prefers-reduced-motion: reduce) {
   .wc-card.r-hero .wc-card-foil, .card-toast.ready { animation: none; }
 }
+
+/* TA-6 (2026-11-04 시험 A): 판이 끝나면 결과 창 → 주머니 → 세 줄 고리 토스트 순으로 한 번에 하나만 보인다. */
+body:has(#checkmate-overlay.visible) #card-reveal,
+body:has(#checkmate-overlay.visible) #village-toast,
+body:has(#card-reveal) #village-toast { display: none; }

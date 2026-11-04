@@ -227,10 +227,11 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     <div className="village-view" id="village-view">
       <div className="village-canvas" ref={hostRef} />
       <div className="village-top">
-        <span className="village-pill">🌰 {village?.coins ?? 0}</span>
-        <span className="village-pill">🌾 {village?.grain ?? 0}/{GRAIN_MAX}</span>
-        <span className="village-pill">🥖 {village?.bread ?? 0}/{BREAD_MAX}</span>
-        <span className="village-pill">🤚 {Math.min(village?.petCount ?? 0, PET_DAILY_CAP)}/{PET_DAILY_CAP}</span>
+        {/* TA-5 (2026-11-04 시험 A): 그림만으로는 어린이가 못 읽어 이름을 함께 쓴다. */}
+        <span className="village-pill" title="도토리 — 판이 끝나면 받아요">🌰 도토리 {village?.coins ?? 0}</span>
+        <span className="village-pill" title="곡물 — 밭에서 자라요">🌾 곡물 {village?.grain ?? 0}/{GRAIN_MAX}</span>
+        <span className="village-pill" title="빵 — 빵집이 곡물로 구워요">🥖 빵 {village?.bread ?? 0}/{BREAD_MAX}</span>
+        <span className="village-pill" title="쓰다듬기 — 하루에 열 번까지">🤚 쓰다듬기 {Math.min(village?.petCount ?? 0, PET_DAILY_CAP)}/{PET_DAILY_CAP}</span>
         <span className="village-tools">
           <button type="button" className="hud-btn" aria-label="왼쪽으로 돌리기" onClick={() => island.current?.rotate(-1)}>⟲</button>
           <button type="button" className="hud-btn" aria-label="오른쪽으로 돌리기" onClick={() => island.current?.rotate(1)}>⟳</button>

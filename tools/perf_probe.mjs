@@ -2,7 +2,7 @@
 // 2026-11-04 교훈: ego-browser 창은 빈 페이지에서도 rAF 간격이 약 34.8ms(29Hz) 라 fps 로는 장면이 아니라 환경을 잰다
 // (docs/qa/2026-11-04-drawcalls-tiles.md). 그래서 이 탐침은
 //   ① 빈 페이지 rAF 간격(환경 대조) ② 프레임 콜백 안 JS 시간(stepScene + render 제출) ③ renderer.render 제출 시간 ④ 드로우콜
-// 을 「같은 장면을 3번 새로 열어 각 3회 표본」으로 잰다. 판정은 ② 의 로드별 중앙값 범위가 0.5ms 이하이면 「안정」.
+// 을 「같은 장면을 3번 새로 열어 각 3회 표본」으로 잰다. 판정: 로드 최대 중앙값 ≤ 5ms(상한). 빌드 비교는 로드 최소(floorMs)로, 1ms 넘게 벌어질 때만.
 //   bash ~/.claude/skills/chess-character-pipeline/scripts/flow_run.sh tools/perf_probe.mjs 400
 // 결과: docs/perf/<날짜>-<라벨>.json 과 한 줄 요약. 라벨은 .reports/look/label 이 있으면 그 값, 없으면 'probe'.
 // GPU 시간은 이 환경에서 못 잰다(해상도 절반·장면 숨김에도 간격이 안 변함). 진짜 fps 는 실제 Chrome 창에서 따로 잰다.
@@ -15,8 +15,9 @@ mkdirSync(OUT_DIR, { recursive: true });
 const LOG = `${OUT_DIR}/${DAY}-${LABEL}.log`;
 const say = (m) => { console.log(m); appendFileSync(LOG, `${m}\n`); };
 const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-const URL = 'http://localhost:3000/';
+const URL = process.env.PROBE_URL || 'http://localhost:3000/';
 const LOADS = 3, SAMPLES = 3, WARMUP_MS = 12000, SAMPLE_MS = 4000;
+const JS_CAP_MS = 5;
 const SAVE = { v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 3, dust: 0, shelf: [], shelfSlots: 3 };
 
 // rAF 간격만(환경 대조용)
@@ -77,10 +78,12 @@ try {
     gpu: await page.evaluate(() => { try { const c = document.createElement('canvas'); const g = c.getContext('webgl2'); const d = g.getExtension('WEBGL_debug_renderer_info'); return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null; } catch { return null; } }),
     blankRafMs: blank.median,
     jsMs: median(jsList), jsP95: median(loads.map((l) => l.jsP95)), renderMs: median(loads.map((l) => l.renderMs)), rafMs: median(loads.map((l) => l.rafMs)),
-    calls: loads[0].calls, spread, stable: spread <= 0.5, loads
+    // 2026-11-05 4회 실측: 로드 안 표본 범위는 0.5ms 이하지만 로드끼리는 1.1~2.9ms 로 갈린다(환경). 그래서 비교값은 로드 최소(floorMs),
+    // 상한은 로드 최대 5ms. 빌드끼리 차이는 floorMs 가 1ms 넘게 벌어질 때만 셈한다(4회 floor 범위 0.7ms).
+    calls: loads[0].calls, spread, floorMs: Math.min(...jsList), maxMs: Math.max(...jsList), withinCap: Math.max(...jsList) <= JS_CAP_MS, loads
   };
   writeFileSync(`${OUT_DIR}/${DAY}-${LABEL}.json`, JSON.stringify(result, null, 2));
-  say(`결과: 콜백 JS ${result.jsMs} ms (로드별 ${jsList.join('/')}, 범위 ${spread}${result.stable ? ' — 안정' : ' — 잡음 큼, 비교 불가'}) · p95 ${result.jsP95} · render 제출 ${result.renderMs} ms · rAF ${result.rafMs} ms(빈 페이지 ${result.blankRafMs}) · 드로우콜 ${result.calls} · ${result.gpu}`);
+  say(`결과: 콜백 JS 바닥 ${result.floorMs} ms · 중앙 ${result.jsMs} (로드별 ${jsList.join('/')}, 최대 ${result.maxMs}${result.withinCap ? ' ≤ 상한 5' : ' — 상한 5ms 초과'}) · p95 ${result.jsP95} · render 제출 ${result.renderMs} ms · rAF ${result.rafMs} ms(빈 페이지 ${result.blankRafMs}) · 드로우콜 ${result.calls} · ${result.gpu}`);
   await page.evaluate(() => localStorage.clear());
   say('ALL DONE');
 } catch (e) {
