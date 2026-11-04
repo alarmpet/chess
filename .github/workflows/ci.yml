@@ -1,5 +1,5 @@
 # Tests + gates + production build on every push and pull request (PLAN §7 · 관리 계획서 §4.3 S1).
-# 순서: 타입 검사 → 빠른 테스트 → 느린 시뮬 테스트 → 에셋 게이트 → 빌드 → 번들 게이트.
+# 순서: 타입 검사 → 빠른 테스트 → 느린 시뮬 테스트 → 에셋 게이트 → 빌드 → 번들 게이트 → 드로우콜 게이트(헤드리스 Chrome, 상한 100).
 name: ci
 on:
   push:
@@ -23,3 +23,4 @@ jobs:
       - run: npm run gate:assets
       - run: npm run build
       - run: npm run gate:bundle
+      - run: npm run gate:drawcalls

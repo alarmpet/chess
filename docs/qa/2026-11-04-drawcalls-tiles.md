@@ -79,3 +79,16 @@
 | 드로우콜 | 98 |
 
 「안정」 기준을 로드별 범위 0.5ms 로 두었더니 1.1ms 범위로 「잡음 큼」이 떴다 — 절대값이 1~2ms 라 기준이 너무 빡빡할 수 있다. 몇 번 더 돌려 본 뒤 기준을 정한다(열린 항목).
+
+## 실제 Chrome 창 측정 + 드로우콜 CI 게이트 (권고 수용 뒤)
+
+**실제 Chrome(보이는 창, Claude in Chrome, 1908×909, Intel UHD)**
+
+| 상태 | rAF 중앙값 | p95 | 콜백 JS | render 제출 | 드로우콜 |
+| :-- | --: | --: | --: | --: | --: |
+| 장면 전체 | 41.6ms(24fps) | 48.6 | 2.3ms | 1.6ms | 98 |
+| 장면 전부 숨김 | 34.7ms | 41.9 | — | — | 0 |
+
+ego-browser 만의 문제가 아니다. **이 PC 가 아무것도 안 그려도 rAF 를 약 29Hz 로 준다.** 장면이 더하는 몫은 약 7ms(41.6 − 34.7). 원인은 재 보지 않았다 — 후보: Intel UHD 에 144Hz 디스플레이, 듀얼 GPU(NVIDIA 4060 는 60Hz 출력), 브라우저 계열 프로세스 다수(Chrome 18·ego 27·msedgewebview2 60). 그래서 「UHD p95 ≤ 33ms」는 이 PC 에서 판정할 수 없고, 다른 PC 에서 한 번 재는 것으로 남긴다.
+
+**드로우콜 게이트** `tools/drawcall_gate.mjs`: 헤드리스 Chrome(`--headless=new`, SwiftShader)을 `--remote-debugging-port` 로 띄우고 Node 22 전역 `WebSocket` 으로 CDP `Runtime.evaluate` 만 쓴다(의존성 0). `dist/` 가 있으면 `vite preview` 를 스스로 띄우고, `DRAWCALL_URL` 이 있으면 그 서버를 쓴다. 기물 32개가 다 뜬 뒤 4프레임 지나 `debugRenderCalls()` 를 읽어 상한 100 초과면 exit 1. 로컬 실행(개발 서버): 98 통과. CI 에 `npm run gate:drawcalls` 로 추가(ubuntu 러너의 google-chrome). CI 초록은 푸시 뒤 확인한다. 사보타주: `DRAWCALL_MAX=50` 으로 돌리면 「실패: 상한 초과」 exit 1 — 게이트가 실제로 막는다. `dist/` 로 preview 를 스스로 띄우는 경로도 98 통과.

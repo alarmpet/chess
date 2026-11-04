@@ -1,0 +1,94 @@
+// 드로우콜 게이트 (엔진 선택 계획서 §4.1 조건 3 · §5). 헤드리스 Chrome 을 CDP 로 열어 초기 국면의 renderer.info.render.calls 를 읽고
+// 상한(기본 100)을 넘으면 exit 1. 의존성 없음: Node 22 의 전역 WebSocket 으로 DevTools 프로토콜을 직접 말한다.
+//   node tools/drawcall_gate.mjs            # 서버는 vite preview 를 스스로 띄운다(dist/ 필요 → npm run build 뒤)
+//   DRAWCALL_URL=http://localhost:3000/ node tools/drawcall_gate.mjs   # 이미 떠 있는 서버를 쓴다
+//   DRAWCALL_MAX=100 CHROME=<경로> 로 상한·브라우저를 바꾼다. 헤드리스는 SwiftShader 라 느리지만 드로우콜 수는 GPU 와 무관하다.
+import { spawn, execSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+
+const MAX = Number(process.env.DRAWCALL_MAX || 100);
+const PORT = 4173;
+const SETTLE_MS = Number(process.env.DRAWCALL_SETTLE_MS || 15000);
+const log = (m) => console.log(`[drawcall-gate] ${m}`);
+
+function findChrome() {
+  if (process.env.CHROME) return process.env.CHROME;
+  const candidates = process.platform === 'win32'
+    ? ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe']
+    : ['google-chrome', 'google-chrome-stable', 'chromium-browser', 'chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
+  for (const c of candidates) {
+    if (c.includes('/') && existsSync(c)) return c;
+    if (!c.includes('/')) { try { execSync(`command -v ${c}`, { stdio: 'ignore' }); return c; } catch { /* next */ } }
+  }
+  throw new Error('Chrome 을 못 찾았다. CHROME=<경로> 로 지정한다.');
+}
+
+const children = [];
+const kill = () => { for (const c of children) { try { c.kill(); } catch { /* ignore */ } } };
+process.on('exit', kill);
+
+async function startServer() {
+  if (process.env.DRAWCALL_URL) return process.env.DRAWCALL_URL;
+  if (!existsSync('dist/index.html')) throw new Error('dist/ 가 없다. npm run build 뒤에 돌린다.');
+  const srv = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', shell: process.platform === 'win32' });
+  children.push(srv);
+  const url = `http://localhost:${PORT}/`;
+  for (let i = 0; i < 60; i++) {
+    try { const r = await fetch(url); if (r.ok) return url; } catch { /* not yet */ }
+    await new Promise((ok) => setTimeout(ok, 500));
+  }
+  throw new Error('vite preview 가 30초 안에 뜨지 않았다');
+}
+
+async function launchChrome(url) {
+  const port = 9333;
+  const args = [`--remote-debugging-port=${port}`, '--headless=new', '--no-sandbox', '--disable-gpu-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+    '--window-size=1280,800', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${process.env.RUNNER_TEMP || process.env.TEMP || '/tmp'}/drawcall-gate-profile`, url];
+  const ch = spawn(findChrome(), args, { stdio: 'ignore' });
+  children.push(ch);
+  for (let i = 0; i < 60; i++) {
+    try {
+      const list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+      const page = list.find((t) => t.type === 'page' && t.url.startsWith(url));
+      if (page) return page.webSocketDebuggerUrl;
+    } catch { /* not yet */ }
+    await new Promise((ok) => setTimeout(ok, 500));
+  }
+  throw new Error('Chrome DevTools 에 30초 안에 연결하지 못했다');
+}
+
+function cdp(wsUrl) {
+  const ws = new WebSocket(wsUrl);
+  let id = 0; const pending = new Map();
+  ws.onmessage = (ev) => { const m = JSON.parse(ev.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
+  const ready = new Promise((ok, no) => { ws.onopen = ok; ws.onerror = (e) => no(new Error(`ws ${e.message || e}`)); });
+  const send = (method, params = {}) => new Promise((ok) => { const i = ++id; pending.set(i, ok); ws.send(JSON.stringify({ id: i, method, params })); });
+  const evaluate = async (expression) => {
+    const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
+    if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.text || 'evaluate 실패');
+    return r.result?.result?.value;
+  };
+  return { ready, evaluate, close: () => ws.close() };
+}
+
+try {
+  const url = await startServer();
+  log(`서버 ${url}`);
+  const wsUrl = await launchChrome(url);
+  const c = cdp(wsUrl);
+  await c.ready;
+  await c.evaluate('new Promise((ok) => { const t = setInterval(() => { if (window.wizardChess?.debugRenderCalls) { clearInterval(t); ok(true); } }, 250); })');
+  log(`엔진 준비. ${SETTLE_MS}ms 안정화`);
+  await new Promise((ok) => setTimeout(ok, SETTLE_MS));
+  const r = await c.evaluate(`new Promise((ok) => { let n = 0; const f = () => (++n >= 4 ? ok({ calls: window.wizardChess.debugRenderCalls(), tris: window.wizardChess.debugRenderer().info.render.triangles, pieces: window.wizardChess.debugScene().children.filter((o) => o.name === 'piece').length }) : requestAnimationFrame(f)); requestAnimationFrame(f); })`);
+  c.close();
+  log(`드로우콜 ${r.calls} (삼각형 ${r.tris}, 기물 ${r.pieces}) · 상한 ${MAX}`);
+  if (r.pieces < 32) { log('기물이 32개 아님 — 장면이 다 뜨지 않았다. DRAWCALL_SETTLE_MS 를 늘린다'); process.exitCode = 1; }
+  else if (r.calls > MAX) { log('실패: 상한 초과'); process.exitCode = 1; }
+  else log('통과');
+} catch (e) {
+  log(`오류: ${e.message}`);
+  process.exitCode = 1;
+} finally {
+  kill();
+}

@@ -12,7 +12,8 @@
     "test:slow": "node --test \"test/slow/*.test.mjs\"",
     "test:all": "node --test \"test/*.test.mjs\" \"test/slow/*.test.mjs\"",
     "gate:assets": "node tools/asset_gate.mjs",
-    "gate:bundle": "node tools/bundle_gate.mjs"
+    "gate:bundle": "node tools/bundle_gate.mjs",
+    "gate:drawcalls": "node tools/drawcall_gate.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
