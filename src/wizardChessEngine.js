@@ -974,9 +974,9 @@ export function initWizardChess() {
     const impactFx = createImpactFx(scene);
     const clock = new THREE.Clock();
 
-    const boardGroup = new THREE.Group();
+    const boardGroup = new THREE.Group(); boardGroup.name = 'board';
     scene.add(boardGroup);
-    const squareHighlightsGroup = new THREE.Group();
+    const squareHighlightsGroup = new THREE.Group(); squareHighlightsGroup.name = 'highlights';
     scene.add(squareHighlightsGroup);
     const boardSquareMeshes = [];
 
@@ -994,17 +994,28 @@ export function initWizardChess() {
         metalness: 0.18
       });
 
+      // 타일 64개를 밝은 칸·어두운 칸 InstancedMesh 둘로(엔진 선택 계획서 §5 2~3일차: 드로우콜 68 → 6).
+      // 재질은 그대로 둘이라 화면이 같다. 피킹은 instanceId → userData.squares[instanceId] 로 칸을 찾는다.
+      const lightSq = new THREE.InstancedMesh(sqGeo, lightSqMat, 32);
+      const darkSq = new THREE.InstancedMesh(sqGeo, darkSqMat, 32);
+      lightSq.userData = { isSquare: true, squares: [] };
+      darkSq.userData = { isSquare: true, squares: [] };
+      const tileMatrix = new THREE.Matrix4();
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-          const isLight = (r + c) % 2 === 0;
-          const sqMesh = new THREE.Mesh(sqGeo, isLight ? lightSqMat : darkSqMat);
+          const im = (r + c) % 2 === 0 ? lightSq : darkSq;
           const pos = boardToWorld(r, c);
-          sqMesh.position.set(pos.x, BOARD_SURFACE_Y - tileH * 0.5, pos.z);
-          sqMesh.receiveShadow = true;
-          sqMesh.userData = { r, c, isSquare: true };
-          boardGroup.add(sqMesh);
-          boardSquareMeshes.push(sqMesh);
+          tileMatrix.makeTranslation(pos.x, BOARD_SURFACE_Y - tileH * 0.5, pos.z);
+          im.setMatrixAt(im.userData.squares.length, tileMatrix);
+          im.userData.squares.push({ r, c });
         }
+      }
+      for (const im of [lightSq, darkSq]) {
+        im.instanceMatrix.needsUpdate = true;
+        im.receiveShadow = true;
+        im.computeBoundingSphere();
+        boardGroup.add(im);
+        boardSquareMeshes.push(im);
       }
 
       // Sculpted Golden Border Frame around the 8x8 tiles on top of the Obsidian Altar
@@ -1032,7 +1043,8 @@ export function initWizardChess() {
     function applyBoardPalette(board) {
       if (!board) return;
       for (const sq of boardSquareMeshes) {
-        const hex = sq.userData.isSquare && ((sq.userData.r + sq.userData.c) % 2 === 0) ? board.light : board.dark;
+        const first = sq.userData.squares?.[0];
+        const hex = first && ((first.r + first.c) % 2 === 0) ? board.light : board.dark;
         if (hex) sq.material.color.set(hex);
       }
       if (board.rim) goldTrimMat.color.set(board.rim);
@@ -1046,7 +1058,7 @@ export function initWizardChess() {
 
     // Procedural biome (PLAN §4.3 `environment.type = "procedural"`): sky, fog, ground, low-poly trees and rocks.
     // Used by animal packs until a modelled biome exists; the cathedral GLB is skipped entirely.
-    const biomeGroup = new THREE.Group();
+    const biomeGroup = new THREE.Group(); biomeGroup.name = 'biome';
     scene.add(biomeGroup);
     let seaBiome = null;
     function buildProceduralEnvironment(env) {
@@ -1503,7 +1515,7 @@ export function initWizardChess() {
         }
         loadGltfModel(envModelName, packAssetBase).then(
           (gltf) => {
-            const cathedralRoot = gltf.scene;
+            const cathedralRoot = gltf.scene; cathedralRoot.name = 'cathedral';
             cathedralRoot.position.set(0, 0, -0.65);
 
             cathedralRoot.traverse((child) => {
@@ -1947,7 +1959,7 @@ export function initWizardChess() {
       root.scale.set(scale, scale, scale);
       // White (at +Z, r=6,7) faces -Z (Math.PI); Black (at -Z, r=0,1) faces +Z (0)
       root.rotation.y = color === 'w' ? Math.PI : 0;
-      scene.add(root);
+      root.name = 'piece'; scene.add(root);
 
       const pieceObj = {
         type,
@@ -4962,8 +4974,10 @@ export function initWizardChess() {
           break;
         }
         if (obj.userData && obj.userData.isSquare) {
-          clickedR = obj.userData.r;
-          clickedC = obj.userData.c;
+          const sq = obj.userData.squares?.[hits[0].instanceId];
+          if (!sq) return;
+          clickedR = sq.r;
+          clickedC = sq.c;
           break;
         }
         obj = obj.parent;
@@ -5724,6 +5738,17 @@ export function initWizardChess() {
         rebuildAllPieces();
       },
       debugRenderCalls: () => renderer.info.render.calls,
+      // 드로우콜 분해 실험(엔진 선택 계획서 §5 1일차): 장면·렌더러·카메라를 읽기 전용으로 노출
+      debugScene: () => scene, debugRenderer: () => renderer, debugCamera: () => camera,
+      // 피킹 디버그: NDC 좌표에서 클릭 처리와 같은 레이캐스트를 돌려 어느 칸이 잡히는지 돌려준다
+      debugPick: (nx, ny) => {
+        raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+        const hits = raycaster.intersectObjects([...boardSquareMeshes], true);
+        const h = hits[0];
+        if (!h) return null;
+        const sq = h.object.userData.squares?.[h.instanceId];
+        return { instanceId: h.instanceId, r: sq?.r, c: sq?.c, dist: +h.distance.toFixed(3), isInstanced: !!h.object.isInstancedMesh };
+      },
       // Debug: open the promotion chooser; resolves with the picked role
       debugPromotionPicker: (color = 'w') => new Promise((res) => showPromotionPicker(color, res)),
       // Debug: bone sockets of a piece template (model space, bind pose)

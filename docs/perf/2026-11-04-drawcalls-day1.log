@@ -1,0 +1,67 @@
+day1 start
+FAILED TypeError: page.setViewportSize is not a function
+    at file:///C:/Users/petbl/ego/chess-drawcalls-20261104/day1.mjs:12:14
+day1 start
+gpu ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11) · total 222 calls · pixelRatio 1 · size 1920x921
+  piece        objs  32 meshes  128 skinned  32 tris   695808 calls 128
+  board        objs   1 meshes   68 skinned   0 tris    19248 calls 68
+  biome        objs   1 meshes  134 skinned   0 tris   135971 calls 25
+  Mesh         objs   2 meshes    2 skinned   0 tris       38 calls 1
+  light        objs  13 meshes    0 skinned   0 tris        0 calls 0
+  sprite       objs   4 meshes    4 skinned   0 tris        8 calls 0
+  highlights   objs   1 meshes    0 skinned   0 tris        0 calls 0
+frame ms  full {"median":34.8,"p95":48.5,"n":112}  half {"median":34.7,"p95":48.6,"n":114}  full2 {"median":34.8,"p95":48.6,"n":111}
+ALL DONE
+day1b start
+FAILED PageEvaluationTimeoutError: page.evaluate timed out after 15000ms while waiting for page JavaScript. The Page is responsive, but the evaluation is still pending and may produce late side effects. Reload or close the Page when that would be unsafe.
+    at recoverPageEvaluationTimeout (file:///C:/Program%20Files/Citro%20Labs/ego%20lite/Application/0.6.2.7/[eval1]:20955:16)
+    at async file:///C:/Program%20Files/Citro%20Labs/ego%20lite/Application/0.6.2.7/[eval1]:20189:27
+    at async file:///C:/Program%20Files/Citro%20Labs/ego%20lite/Application/0.6.2.7/[eval1]:17604:28
+day1b start
+  base           {"median":34.7,"p95":48.6,"calls":222,"tris":1693990}
+  hide piece     {"median":34.8,"p95":48.6,"calls":94,"tris":998182}
+  hide board     {"median":34.7,"p95":48.7,"calls":154,"tris":1674742}
+  hide biome     {"median":34.8,"p95":48.6,"calls":197,"tris":715120}
+  hide piece+board {"median":34.7,"p95":48.7,"calls":26,"tris":978934}
+  hide all       {"median":34.7,"p95":48.6,"calls":0,"tris":0}
+  base again     {"median":34.8,"p95":48.6,"calls":226,"tris":1693998}
+piece0 parts [{"name":"pedestal","type":"Mesh","tris":880,"mat":"MeshStandardMaterial","skinned":false,"castShadow":true},{"name":"","type":"Mesh","tris":768,"mat":"MeshStandardMaterial","skinned":false,"castShadow":false},{"name":"side-ring","type":"Mesh","tris":96,"mat":"MeshBasicMaterial","skinned":false,"castShadow":false},{"name":"low","type":"SkinnedMesh","tris":20000,"mat":"MeshStandardMaterial","skinned":true,"castShadow":true}]
+per-piece tris (desc) 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744 21744
+shadow {"autoUpdate":false,"enabled":true} dpr 1 canvas 1920x921
+ALL DONE
+blank page rAF {"median":34.8,"p95":69.3,"n":54}
+day1c start (JS ms per frame)
+  base             js {"median":1.3,"p95":3.9,"n":69}  render {"median":1,"p95":3.1,"n":69}  calls 222
+  hide piece       js {"median":0.9,"p95":1.9,"n":70}  render {"median":0.6,"p95":1.4,"n":70}  calls 94
+  hide board       js {"median":1.1,"p95":2.8,"n":71}  render {"median":0.9,"p95":2.1,"n":71}  calls 154
+  hide biome       js {"median":1,"p95":2.6,"n":69}  render {"median":0.8,"p95":2.1,"n":69}  calls 197
+  hide all         js {"median":0.5,"p95":1,"n":71}  render {"median":0.2,"p95":0.5,"n":71}  calls 0
+  base again       js {"median":1.9,"p95":3.8,"n":71}  render {"median":1.6,"p95":3.3,"n":71}  calls 226
+ALL DONE
+day2 start (tiles instanced)
+total 160 calls · board 6 calls · instanced [{"count":32,"squares":32},{"count":32,"squares":32}]
+e2 at {"x":1028.9017812981347,"y":661.6427439844354} e4 at {"x":1018.5321774937945,"y":495.13845934319136}
+after click e2: highlights 1
+after click e4: fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+ALL DONE
+pick start
+e2 {"world":{"x":0.17000000178813934,"y":0.78,"z":0.8500000238418579},"ndc":{"x":0.072,"y":-0.437},"screen":{"x":1028.9017812981347,"y":661.6427439844354},"pick":{"instanceId":26,"r":6,"c":4,"dist":3.173,"isInstanced":true}}
+e3 {"world":{"x":0.17000000178813934,"y":0.78,"z":0.5099999904632568},"ndc":{"x":0.066,"y":-0.241},"screen":{"x":1023.2950794158685,"y":571.6161717336505},"pick":{"instanceId":22,"r":5,"c":4,"dist":3.423,"isInstanced":true}}
+e4 {"world":{"x":0.17000000178813934,"y":0.78,"z":0.17000000178813934},"ndc":{"x":0.061,"y":-0.075},"screen":{"x":1018.5321774937945,"y":495.13845934319136},"pick":{"instanceId":18,"r":4,"c":4,"dist":3.688,"isInstanced":true}}
+a1 {"world":{"x":-1.190000057220459,"y":0.78,"z":1.190000057220459},"ndc":{"x":-0.551,"y":-0.67},"screen":{"x":430.81182577628715,"y":769.168582939278},"pick":{"instanceId":28,"r":7,"c":0,"dist":3.168,"isInstanced":true}}
+h8 {"world":{"x":1.190000057220459,"y":0.78,"z":-1.190000057220459},"ndc":{"x":0.328,"y":0.397},"screen":{"x":1274.9318228334998,"y":277.69644887390893},"pick":{"instanceId":3,"r":0,"c":7,"dist":4.986,"isInstanced":true}}
+state {"turn":"w","mode":"single","player":"w","over":false,"anim":false}
+after click e2: highlights [{"x":0.17,"z":1.19}]
+after click e4: fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+ALL DONE
+pick start (top camera)
+e2 {"world":{"x":0.17000000178813934,"y":0.78,"z":0.8500000238418579},"ndc":{"x":0.072,"y":-0.437},"screen":{"x":1028.9017812981347,"y":661.6427439844354},"pick":{"instanceId":26,"r":6,"c":4,"dist":3.173,"isInstanced":true}}
+e3 {"world":{"x":0.17000000178813934,"y":0.78,"z":0.5099999904632568},"ndc":{"x":0.066,"y":-0.241},"screen":{"x":1023.2950794158685,"y":571.6161717336505},"pick":{"instanceId":22,"r":5,"c":4,"dist":3.423,"isInstanced":true}}
+e4 {"world":{"x":0.17000000178813934,"y":0.78,"z":0.17000000178813934},"ndc":{"x":0.061,"y":-0.075},"screen":{"x":1018.5321774937945,"y":495.13845934319136},"pick":{"instanceId":18,"r":4,"c":4,"dist":3.688,"isInstanced":true}}
+a1 {"world":{"x":-1.190000057220459,"y":0.78,"z":1.190000057220459},"ndc":{"x":-0.551,"y":-0.67},"screen":{"x":430.81182577628715,"y":769.168582939278},"pick":{"instanceId":28,"r":7,"c":0,"dist":3.168,"isInstanced":true}}
+h8 {"world":{"x":1.190000057220459,"y":0.78,"z":-1.190000057220459},"ndc":{"x":0.328,"y":0.397},"screen":{"x":1274.9318228334998,"y":277.69644887390893},"pick":{"instanceId":3,"r":0,"c":7,"dist":4.986,"isInstanced":true}}
+state {"turn":"w","mode":"single","player":"w","over":false,"anim":false}
+camera: top
+after click e2: highlights [{"x":0.17,"z":0.85},{"x":0.17,"z":0.51},{"x":0.17,"z":0.17}]
+after click e4: fen rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
+ALL DONE

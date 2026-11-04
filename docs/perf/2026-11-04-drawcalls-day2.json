@@ -1,0 +1,19 @@
+{
+ "total": 160,
+ "boardCalls": 6,
+ "instanced": [
+  {
+   "count": 32,
+   "squares": 32
+  },
+  {
+   "count": 32,
+   "squares": 32
+  }
+ ],
+ "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+ "click": {
+  "highlights": 1,
+  "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+ }
+}
