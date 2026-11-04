@@ -1,0 +1,82 @@
+== farming game
+wkoziel/2D-Farming-Game	122		ASP.NET	2021-09-12	Implementation of a survival game inspired by Stardew Valley, in which
+jmdejong/Asciifarm	84	gpl-3.0	Python	2024-03-22	Multiplayer ascii-graphics based RPG/farming game
+t42ji2ji/keyfarm	72		TypeScript	2026-10-06	Keyboard farming game - gamify your typing with crops, animals, and go
+johnhckuo/Block-Farm	71	mit	JavaScript	2021-09-28	A farming game built upon Ethereum platform.
+Widiskel/clayton-bot	35	mit	JavaScript	2024-11-28	Clayton telegram farming game auto play game and auto farming bot
+hackagotchi/hackagotchi	33	bsd-3-clause	Rust	2022-04-19	A multiplayer farming game with a strong economy built using emerging 
+CodingQuests/FarmVille-Game	32	mit	GDScript	2022-09-23	Farming Game for youtube Tutorials
+CS4240-Group6/ProjectNurture	28		C#	2021-04-14	Our VR Farming game developed using Unity for the Oculus Quest :) 
+indium114/termfarm	28	mit	Rust	2026-10-28	A simple CLI idle farming game written in Rust
+fariazz/html5-farming-demo	23		JavaScript	2012-11-17	a simple HTML5 farming game demo
+xentripetal/ProjectVerse	23		C#	2023-07-13	A fully moddable Unity farming game
+tutusagi/aifarm-oss	23	other	TypeScript	2026-07-17	AI farm — a text-only, gacha-style farming game built for AIs (source-
+dacousb/feiok	20	mit	Go	2022-06-17	🌾 A vibrant, isometric, multiplayer-centric farming game written in Go
+Farmulty/Farmulty	18			2021-05-30	ISSUE TRACKER - RT Farming Game Farmulty
+songkeys/little-flock	14	mit	TypeScript	2026-09-08	A cozy multiplayer sheep-farming game, made one-shot with GPT 6 Astra 
+== farm simulator
+GP2P/FarmSimulator	84			2023-03-01	Management building game template developed with Unreal Engine 5
+Marciel032/FarmingSimulatorTelemetry	36	mit	C#	2024-11-15	
+Rockstar94FS/Farming-Simulator-L64-Decoder	18		Python	2025-03-25	Script to decode .l64 files from Farming Simulator 25.
+ImperialCollegeLondon/WInc3D	17		Fortran	2020-11-18	Wind Farm Simulator
+Ta0uf19/Farm-Simulator	15		Java	2018-02-11	JavaFX Application helps agronomists and farmers collaborate on farmin
+DJWoodZ/Farming-Simulator-Discord-Bot	14	mit	JavaScript	2025-09-16	A Discord bot that posts Farming Simulator Dedicated Server status inf
+Rockstar94FS/Farming-Simulator-I3D.Shapes-Unlocker	12		Python	2024-11-11	Script to unlock encoded .shapes files in Farming Simulator 15/17/19/2
+seanpm2001/Hyper-realistic-farm-simulator	11	gpl-3.0	Python	2025-10-09	The most realistic, but least fun farming game (everything is set to r
+jywarren/antfarm	10	gpl-3.0	JavaScript	2025-03-13	JS experimental "ant farm" simulator
+StonemasonExcite/farming-simulator-25-crash-fix	10	other		2026-08-03	Farming Simulator 25 Crash Fix — Farming Simulator 25 Crash Fix Window
+unnaturalfr/FS25-Trainer---Farming-Simulator-25-Trainer-2026	9	mit		2026-08-26	FS25-Trainer - Farming Simulator 25 cheat with infinite money, instant
+UxxHans/Rainbow-Cats-Farming-Simulator	8		C#	2022-05-31	A cute farming simulator that can plant crops and construct buildings
+FarmBot-Labs/farmbot_simulator	8	mit	C	2017-05-22	Simulate a Farmbot
+Harrisandwich/AntFarm	8		C#	2020-01-10	Ant Farm Simulator for the Windows OS GUI
+vaimee/WoTSimFarm	8		TypeScript	2021-10-02	A simple farm simulator based on Web Of Thing technology
+== farming sim
+Marciel032/FarmingSimulatorTelemetry	36	mit	C#	2024-11-15	
+shadorki/farming-sim-no-mouse-hackathon	36		JavaScript	2024-07-25	Winner of the Mintbean No Mouse Hackathon
+ArshVermaGit/AgriSim	21	other	C#	2026-04-08	AgriSim is a cozy 2D farming sim 🌱 where you grow crops, brave dynamic
+Rockstar94FS/Farming-Simulator-L64-Decoder	18		Python	2025-03-25	Script to decode .l64 files from Farming Simulator 25.
+DJWoodZ/Farming-Simulator-Discord-Bot	14	mit	JavaScript	2025-09-16	A Discord bot that posts Farming Simulator Dedicated Server status inf
+Rockstar94FS/Farming-Simulator-I3D.Shapes-Unlocker	12		Python	2024-11-11	Script to unlock encoded .shapes files in Farming Simulator 15/17/19/2
+StonemasonExcite/farming-simulator-25-crash-fix	10	other		2026-08-03	Farming Simulator 25 Crash Fix — Farming Simulator 25 Crash Fix Window
+unnaturalfr/FS25-Trainer---Farming-Simulator-25-Trainer-2026	9	mit		2026-08-26	FS25-Trainer - Farming Simulator 25 cheat with infinite money, instant
+UxxHans/Rainbow-Cats-Farming-Simulator	8		C#	2022-05-31	A cute farming simulator that can plant crops and construct buildings
+marsfan/Farming-Simulator-Mod-Doc	7	mpl-2.0	Python	2021-11-14	Documentation for modding Farming Simulator 2019
+Dueesberch/FarmingSimulatorLauncher	7		Python	2023-10-23	
+joshmitcho/Serfdom	7	gpl-3.0	GDScript	2023-12-04	Join a revolutionary peasant revolt in this pixel art farming sim
+ClaudeF4491/defi_leveraged_yield_farming_sim	7	mit	Python	2022-06-29	Time-Series simulator to assess performance of Leveraged Yield Farming
+Ditchilstill/Farming-Simulator-25-Mod-Loader	7	other		2026-07-18	Farming Simulator 25 Mod Loader — mod profile manager & launcher for W
+spectral-byte/FarmingSimVr	6	gpl-3.0	C++	2026-11-02	VR Injector for Farming Simulator 25
+== cozy farming
+strangelyng/TerraFirmaInfinity	2	lgpl-3.0	JavaScript	2026-11-03	Cozy farming meets advanced industry and industry augmented by the arc
+mmhilbert/cozy-acres-farmstead	1		JavaScript	2024-06-18	A cozy farming sim
+saravivianarobitu/fortified-church-garden	1		JavaScript	2026-10-18	A cozy farming puzzle game inspired by UNESCO heritage in Transylvania
+Daniel466/CozyFarmGame	1		C#	2026-03-26	3D cozy farming game built in Unity 6, inspired by Farm Together
+Shiz0id/webfarmville	1	mit	TypeScript	2026-10-13	Web based cozy farming simulator and community builder based on the cl
+nova-denton-parry/farmsim-godot	1	gpl-3.0	GDScript	2026-04-19	🌱 A cozy farming sim built in Godot 4: crop farming, resource gatherin
+aquumgifts/cozy-farm-starter	1	other	HTML	2026-10-07	A tiny cozy farming game in plain JavaScript, and a free template to b
+iziamar/IGAxUnity-Game-Jam	1	apache-2.0	C#	2025-06-26	IGA x Unity Game Jam - Unity Choice Winner || Solanum Meadows your new
+vito-mish/the-merry-fields	1		GDScript	2026-04-22	A cozy farming RPG inspired by Story of Seasons — grow crops, raise an
+Combitrix/CozyFarmingSMP	0		JavaScript	2026-07-12	Michaels Cosy Farming SMP
+papiliokate/CozyFarmingEldritchHorror	0		JavaScript	2026-05-12	
+anadaishasamuels-arch/Wheat-and-Whimsy	0			2025-10-03	Cozy farming sim
+BenjaminSRussell/cozy-game	0		TypeScript	2026-10-15	cozy farming game
+leel68704-debug/LittleFarm	0			2026-07-14	a cozy farming game
+smaclell/gene-drive	0		TypeScript	2026-10-31	A cozy farming game
+== harvest moon like
+Divinux/FarmingPrototype	3		JavaScript	2014-11-30	Harvest Moon-like tilebased game in Unity3D
+FlygonC/Shine-On-Harvest-Moon-like-game	2		C#	2016-03-04	
+ekatheresia/Harvest-Valley	2		Java	2017-01-24	Harvest Valley is Harvest Moon-like game and has been built using Java
+Ellesent/FantasyHarvest	1		Kotlin	2017-05-20	Harvest Moon like game for Android
+tezzerethouston/eureka	0		C	2021-12-09	Sci-fi Dungeon Harvest Moon like
+webmatze/harvest-moon-dragonruby	0		Ruby	2024-07-22	a Harvest Moon like game using DragonRuby
+== crop growing game
+== island decorating game
+== room decoration game
+AnnaLange32/adaptive_learning_rt	1		Python	2024-02-22	Code to control pepper robot that acts as teacher for human learner an
+khachatur91/RoomDecoration	0		PLSQL	2018-05-01	Room Decoration Game
+CozyClawStudios/cozy-claw-home	0		JavaScript	2026-02-09	Cozy Claw Home - A relaxing room decoration game
+teru776/kawaii-room-maker	0		JavaScript	2026-04-04	A cute drag-and-drop room decoration game for kids
+amiteshb-personal/evas-dream-space	0		HTML	2026-05-31	Eva's Dream Space Designer - a 3D room decoration game
+Tayyabnazirgondal/privacy-crazyroombloom	0		HTML	2026-10-09	Privacy policy for Crazy Room Bloom — a cozy offline isometric room de
+== grid placement isometric builder
+== cozy game godot farming
