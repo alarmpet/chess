@@ -16,7 +16,7 @@ const FLY_MS = 1450;
 const SHOW_MS = 2050;
 const MERGE_MS = 1100;
 
-type Won = { id: string; animal: string; rarity: number; fresh: boolean };
+type Won = { id: string; animal: string; rarity: number; fresh: boolean; check?: boolean };
 type Fly = Won & { key: number; x: number; y: number };
 type Game = {
   id: number; lastPly: number; won: Won[]; started: number; captures: number;
@@ -319,6 +319,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
 
       {reveal && !open && (() => {
         const shown = reveal.slice().sort((a, b) => a.rarity - b.rarity).slice(-REVEAL_MAX);
+        const checks = reveal.filter((c) => c.check).length;
         const step = Math.min(350, REVEAL_MS / Math.max(1, shown.length));
         const doneAt = step * shown.length + 400;
         const goal = nextGoal(col);
@@ -337,11 +338,16 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
         }[goal.kind as 'merge' | 'spares' | 'rare' | 'capture' | 'full'];
         return (
           <div className="card-reveal" id="card-reveal" role="dialog" aria-label={en ? 'Cards from this game' : '이번 판 카드'}>
-            <div className="card-reveal-title">🎒 {en ? `This game's pouch · ${reveal.length}` : `이번 판 주머니 · ${reveal.length}장`}</div>
+            {/* TA-1 (2026-11-04 시험 A): 사자 카드는 잡은 것이 아니라 체크로 얻은 것이라 제목과 카드에 그 이유를 적는다. */}
+            <div className="card-reveal-title">
+              🎒 {en ? `This game's pouch · ${reveal.length}` : `이번 판 주머니 · ${reveal.length}장`}
+              {checks > 0 && <small> ({en ? `${reveal.length - checks} caught + ${checks} for check` : `잡은 ${reveal.length - checks} + 체크 ${checks}`})</small>}
+            </div>
             <div className="card-reveal-row">
               {shown.map((c, i) => (
                 <div key={i} className={`card-reveal-card${c.rarity === HERO ? ' hero' : c.rarity >= RARE ? ' rare' : ''}`} style={{ animationDelay: `${i * step}ms` }}>
                   <CardFace animal={c.animal} rarity={c.rarity} isNew={c.fresh} lang={lang} size="sm" />
+                  {c.check && <div className="card-reveal-tag">👑 {en ? 'for check' : '체크로 얻음'}</div>}
                 </div>
               ))}
               {reveal.length > shown.length && <span className="card-reveal-more">+{reveal.length - shown.length}</span>}

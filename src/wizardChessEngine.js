@@ -4891,10 +4891,15 @@ export function initWizardChess() {
       if (capturedTray) {
         if (capturedByWhite > 0 || capturedByBlack > 0) {
           const lang = getCurrentLang();
-          if (lang === 'ko') {
-            capturedTray.textContent = `잡은 말 — 백: ${capturedByWhite} | 흑: ${capturedByBlack}`;
+          // TA-2 (2026-11-04 시험 A): 「백: n | 흑: m」은 잡은 수인지 잃은 수인지 읽히지 않았다. 내가 둘 때는 나/상대로 적는다.
+          if (playerColor === 'w' || playerColor === 'b') {
+            const mine = playerColor === 'w' ? capturedByWhite : capturedByBlack;
+            const theirs = playerColor === 'w' ? capturedByBlack : capturedByWhite;
+            capturedTray.textContent = lang === 'ko' ? `내가 잡음 ${mine} · 상대가 잡음 ${theirs}` : `You took ${mine} · They took ${theirs}`;
+          } else if (lang === 'ko') {
+            capturedTray.textContent = `백이 잡음 ${capturedByWhite} · 흑이 잡음 ${capturedByBlack}`;
           } else {
-            capturedTray.textContent = `Captured — White: ${capturedByWhite} | Black: ${capturedByBlack}`;
+            capturedTray.textContent = `White took ${capturedByWhite} · Black took ${capturedByBlack}`;
           }
         } else {
           capturedTray.textContent = '';

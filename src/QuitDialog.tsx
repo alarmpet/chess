@@ -41,10 +41,14 @@ export default function QuitDialog({ lang }: { lang: 'ko' | 'en' }) {
       : `내 수 ${ask.keepMoves}수부터 기권하면 진 판으로 끝나고 카드를 받아요. 지금은 ${ask.myMoves}수예요. 지금 그만두면 들어가지 않아요(${held}).`;
     buttons.push({ label: en ? 'Stop the game' : '그만두기', kind: 'resign' });
   } else {
-    title = en ? 'Start a new game?' : '새 판을 시작할까요?';
+    // TA-3 (2026-11-04 시험 A): 세 역할 모두 「들어가지 않아요」의 주어를 못 찾았고, 기권이 되는 창인지 제목에서 몰랐다.
+    const leaving = ask.kind === 'side' ? (en ? 'Switching sides now' : '지금 진영을 바꾸면') : (en ? 'A new game now' : '지금 새 판을 시작하면');
+    title = ask.kind === 'new' && ask.keeps
+      ? (en ? 'Resign, or start a new game?' : '기권할까요, 새 판을 시작할까요?')
+      : (ask.kind === 'side' ? (en ? 'Switch sides?' : '진영을 바꿀까요?') : (en ? 'Start a new game?' : '새 판을 시작할까요?'));
     body = en
-      ? `Finish this game${ask.keeps ? ' or resign' : ''} to keep its cards (${held}). A new game now leaves them out.`
-      : `${ask.keeps ? '끝까지 두거나 기권하면' : '끝까지 두면'} 이번 판 카드를 받아요(${held}). 지금 새 판을 시작하면 들어가지 않아요.`;
+      ? `Finish this game${ask.keeps ? ' or resign' : ''} to keep its cards (${held}). ${cards ? `${leaving} leaves ${cards > 1 ? 'these cards' : 'this card'} out of the album.` : `${leaving} loses no cards.`}`
+      : `${ask.keeps ? '끝까지 두거나 기권하면' : '끝까지 두면'} 이번 판 카드를 받아요(${held}). ${cards ? `${leaving} 이 카드 ${cards}장은 도감에 들어가지 않아요.` : `${leaving} 잃는 카드는 없어요.`}`;
     if (ask.kind === 'new' && ask.keeps) buttons.push({ label: en ? 'Resign and keep cards' : '기권하고 카드 받기', kind: 'resign', main: true });
     buttons.push({ label: ask.kind === 'side' ? (en ? 'Switch sides' : '진영 바꾸기') : (en ? 'New game' : '새 판 시작'), kind: ask.kind });
   }
