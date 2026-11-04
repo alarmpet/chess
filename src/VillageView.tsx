@@ -1,7 +1,7 @@
 // The village screen: the player's chess games as an island on water, and the captured animals who live on it.
 // The scene is in village/islandScene.ts; this file holds the save and the panels over it.
 import { useEffect, useRef, useState } from 'react';
-import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage } from './village/economy.js';
+import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage, PROPS, TIER_KO, PROP_PRICE, SHELF_ODDS, SHELF_XP, SHELF_LEVEL_MAX, stockShelf, buyProp, placeProp, storeProp } from './village/economy.js';
 import { createIsland, slotRole } from './village/islandScene';
 import { sfx } from './audio/sfx.js';
 import CardFace, { ANIMAL_KO, RARITY_KO } from './cards/CardFace';
@@ -47,6 +47,8 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
   const [marks, setMarks] = useState<any[] | null>(null);
   const [dew, setDew] = useState(false);
   const [newWeek, setNewWeek] = useState<any>(null);
+  const [shelfOpen, setShelfOpen] = useState(false);
+  const [propAt, setPropAt] = useState<string | null>(null);
   const island = useRef<ReturnType<typeof createIsland> | null>(null);
   const live = useRef({ picking, selected });
   live.current = { picking, selected };
@@ -68,7 +70,10 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     const t = Date.now();
     const events = tickVillage(v, villageRivals(), t);
     const week = rollWeek(v, villageWeekly(), t);
+    stockShelf(v);
     v.lastSeen = t;
+    setShelfOpen(false);
+    setPropAt(null);
     saveVillage(v);
     setCol(collection);
     setVillage({ ...v });
@@ -89,9 +94,23 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
         if (!kind) {
           setSelected(null);
           setTrying(null);
+          const here = loadVillage().decor.find((d: any) => d.sq === sq && PROPS[d.kind as keyof typeof PROPS]);
+          setPropAt(here ? sq : null);
           return;
         }
         const v = loadVillage();
+        if (kind.startsWith('prop:')) {
+          const prop = kind.slice(5);
+          const why = placeProp(v, prop, sq);
+          if (why) {
+            setNote('여기에는 놓을 수 없습니다.');
+            return;
+          }
+          commit(v);
+          setPicking(v.stash[prop] > 0 ? kind : null);
+          setNote(`${PROPS[prop as keyof typeof PROPS].ko}${josa(PROPS[prop as keyof typeof PROPS].ko, '을', '를')} 놓았어요.`);
+          return;
+        }
         if (startBuild(v, kind, sq)) {
           commit(v);
           setPicking(null);
@@ -230,6 +249,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
               {night ? '☀️ 낮' : '🌙 밤'}
             </button>
           )}
+          <button type="button" className="hud-btn" id="village-shelf" aria-label="매대" onClick={() => setShelfOpen(!shelfOpen)}>🛒</button>
           <button type="button" className="hud-btn" id="village-album" onClick={() => setPhotos(photos ? null : loadIslandPhotos())}>📷</button>
           <button type="button" className="hud-btn" id="village-marks" aria-label="표식" onClick={() => setMarks(marks ? null : currentMarks())}>🏅</button>
           <button type="button" className="hud-btn" id="village-cert" aria-label="영주 증명서" onClick={makeCert}>📜</button>
@@ -239,7 +259,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
 
       <LoopStrip village={village} summary={summary} hasCards={owned.length > 0} dew={dew} onPlay={onClose} />
 
-      {(summary || away.length > 0 || note || questHome || dew || newWeek) && (
+      {(summary || away.length > 0 || note || questHome || dew || newWeek || propAt) && (
         <div className="village-card" id="village-card">
           {summary && (
             <div>
@@ -248,6 +268,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
               {summary.added.houses.length > 0 && ' · 승급한 폰의 집'}
             </div>
           )}
+          {summary?.shelfUp && <div>🛒 섬 매대 레벨이 올랐어요(Lv.{village?.shelf.lv}). 더 귀한 소품이 들어와요.</div>}
           {summary?.dew && <div>💧 밤사이 이슬이 내려 밭마다 곡물 +{DEW_GRAIN}</div>}
           {dew && !summary && <div>💧 밤사이 밭에 이슬이 맺혔어요. 오늘 첫 판을 끝내면 밭마다 곡물 +{DEW_GRAIN}.</div>}
           {newWeek && <div className="village-week" id="village-week">📅 새 주가 왔어요.{newWeek.guest && ` 이번 주 손님은 ${rivalName(newWeek.guest)}.`} {newWeek.line?.[lang] || newWeek.line?.ko}</div>}
@@ -259,7 +280,88 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
           {hero && !note && !summary && <div>{slotLabel(hero, village?.names || {})}, 오늘 지나간 길을 다시 걷는 중이에요.</div>}
           {away.length === 1 && <div>💌 {rivalName(away[0].rival)} 다녀감, 🌰 +{away[0].coins}{away[0].memory ? ` — "지난번 ${slotLabel(away[0].memory.mvp, village?.names || {})} 멋졌어!"` : ''}</div>}
           {away.length > 1 && <div>💌 손님 {away.length}팀 다녀감, 🌰 +{away.reduce((n, e) => n + e.coins, 0)}</div>}
-          {note && <div>{note}</div>}
+          {note && <div>{note}{picking?.startsWith('prop:') && <button type="button" className="village-link" onClick={() => { setPicking(null); setNote(''); }}>그만두기</button>}</div>}
+          {propAt && (() => {
+            const d = village?.decor.find((x: any) => x.sq === propAt);
+            const p = d && PROPS[d.kind as keyof typeof PROPS];
+            return p ? (
+              <div id="village-prop">
+                {p.icon} {p.ko}
+                <button type="button" className="village-link" onClick={() => { const v = loadVillage(); storeProp(v, propAt); commit(v); setPropAt(null); setNote(`${p.ko}${josa(p.ko, '을', '를')} 보관함에 넣었어요.`); }}>보관함으로</button>
+              </div>
+            ) : null;
+          })()}
+        </div>
+      )}
+
+      {shelfOpen && village && (
+        <div className="panel-overlay" role="dialog" aria-modal="true" onClick={() => setShelfOpen(false)}>
+          <div className="panel-card shelf-panel" id="shelf-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="panel-header">
+              <div className="panel-title"><span>🛒</span><span>섬 매대 Lv.{village.shelf.lv}</span></div>
+              <button type="button" className="panel-close" onClick={() => setShelfOpen(false)}>✕</button>
+            </div>
+            <div className="panel-body">
+              <p className="look-note">판이 끝나면 세 칸이 새로 들어와요. 도토리로는 다시 굴리거나 레벨을 살 수 없어요.</p>
+              <div className="shelf-slots">
+                {village.shelf.slots.map((s: any, i: number) => {
+                  const p = PROPS[s.kind as keyof typeof PROPS];
+                  const price = PROP_PRICE[p.tier];
+                  return (
+                    <div className={`shelf-slot tier-${p.tier}`} key={i} data-slot={i} data-kind={s.kind}>
+                      <span className="shelf-icon">{p.icon}</span>
+                      <b>{p.ko}</b>
+                      <span className={`shelf-tier tier-${p.tier}`}>{TIER_KO[p.tier]}</span>
+                      {s.stock > 0 ? (
+                        <button
+                          type="button"
+                          className="hud-btn shelf-buy"
+                          disabled={village.coins < price}
+                          onClick={() => {
+                            const v = loadVillage();
+                            if (buyProp(v, i)) return;
+                            commit(v);
+                            setNote(`${p.ko}${josa(p.ko, '을', '를')} 샀어요. 보관함에서 놓을 칸을 고르세요.`);
+                          }}
+                        >
+                          🌰 {price}
+                        </button>
+                      ) : null}
+                      {s.stock > 0 ? (
+                        <small className="shelf-stock">남은 {s.stock}개</small>
+                      ) : (
+                        <span className="shelf-out">다음 판 뒤 입고</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="shelf-odds" id="shelf-odds">
+                이 레벨의 확률: {SHELF_ODDS[village.shelf.lv - 1].map((w: number, t: number) => `${TIER_KO[t + 1]} ${w}%`).join(' · ')}
+                {village.shelf.lv < SHELF_LEVEL_MAX ? ` — 두 판마다 1점이 쌓여요. 다음 레벨까지 ${village.shelf.xp}/${SHELF_XP[village.shelf.lv - 1]}점.` : ' — 가장 높은 레벨이에요.'}
+              </p>
+              <div className="shelf-stash" id="shelf-stash">
+                <b>보관함</b>
+                {Object.keys(village.stash || {}).length === 0 && <span> 비어 있어요.</span>}
+                {Object.entries(village.stash || {}).map(([kind, n]: [string, any]) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    className="hud-btn"
+                    data-stash={kind}
+                    onClick={() => {
+                      setShelfOpen(false);
+                      setSelected(null);
+                      setPicking(`prop:${kind}`);
+                      setNote(`${PROPS[kind as keyof typeof PROPS].ko}${josa(PROPS[kind as keyof typeof PROPS].ko, '을', '를')} 놓을 칸을 누르세요.`);
+                    }}
+                  >
+                    {PROPS[kind as keyof typeof PROPS].icon} {PROPS[kind as keyof typeof PROPS].ko} ×{n} 놓기
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

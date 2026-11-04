@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Chess } from 'chess.js';
-import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, dewReady, dayIndex, weekIndex, weekDue, rollWeek, weekPick, DEW_GRAIN, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX } from '../src/village/economy.js';
+import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, dewReady, dayIndex, weekIndex, weekDue, rollWeek, weekPick, PROPS, PROP_PRICE, PROP_STOCK, SHELF_ODDS, SHELF_XP, growShelf, stockShelf, buyProp, placeProp, storeProp, DEW_GRAIN, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX } from '../src/village/economy.js';
 import { replayGame } from '../src/village/roster.js';
 
 const line = (sans) => { const c = new Chess(); return sans.map((s) => c.move(s)); };
@@ -393,4 +393,91 @@ test('the weekly pick follows a counter, not the date, so the same island always
   const old = sanitizeVillage({ v: 2, coins: 5 });
   assert.deepEqual(old.week, { w: -1, n: 0, pick: null }, 'an older save starts with no week yet');
   assert.equal(weekPick(other, []), null, 'a pack that lost the entry shows nothing');
+});
+
+test('the shelf draws three props once per game, the same on every reopening, and again when a game ends (garden-short G4)', () => {
+  const v = newVillage();
+  v.seed = 4242;
+  assert.equal(stockShelf(v), true);
+  assert.equal(v.shelf.slots.length, 3);
+  const first = JSON.stringify(v.shelf.slots);
+  assert.equal(stockShelf(v), false, 'reopening between games draws nothing new');
+  assert.equal(JSON.stringify(v.shelf.slots), first);
+  for (const s of v.shelf.slots) assert.equal(s.stock, PROP_STOCK[PROPS[s.kind].tier]);
+  const twin = newVillage();
+  twin.seed = 4242;
+  stockShelf(twin);
+  assert.equal(JSON.stringify(twin.shelf.slots), first, 'the same island seed draws the same shelf');
+  settleGame(v, { moves: line(FOOLS), color: 'b', result: 'win' });
+  assert.equal(v.shelf.g, v.games, 'a finished game restocks the shelf');
+  assert.equal(v.shelf.n, 2);
+});
+
+test('shelf tiers follow the level odds: a level-1 shelf never shows a legend (garden-short G4)', () => {
+  const count = (lv) => {
+    const seen = [0, 0, 0, 0, 0];
+    for (let seed = 1; seed <= 400; seed++) {
+      const v = newVillage();
+      v.seed = seed;
+      v.shelf.lv = lv;
+      stockShelf(v);
+      for (const s of v.shelf.slots) seen[PROPS[s.kind].tier] += 1;
+    }
+    return seen;
+  };
+  const one = count(1);
+  assert.equal(one[4], 0, 'the level-1 weight for legends is 0');
+  assert.ok(one[1] > one[2] && one[2] > one[3], `common > fine > rare at level 1: ${one}`);
+  const five = count(5);
+  assert.ok(five[4] > five[1], `legends lead at level 5: ${five}`);
+  assert.deepEqual(SHELF_ODDS[0], [70, 20, 10, 0]);
+});
+
+test('the shelf level grows only with games: a point every second game, 3·4·5·6 points, up to 5 (garden-short G4)', () => {
+  const v = newVillage();
+  const levelAt = [];
+  for (let g = 1; g <= 60; g++) {
+    v.games = g;
+    growShelf(v);
+    levelAt[g] = v.shelf.lv;
+  }
+  assert.equal(levelAt[5], 1);
+  assert.equal(levelAt[6], 2, 'three points by game 6');
+  assert.equal(levelAt[14], 3, 'four more by game 14');
+  assert.equal(levelAt[24], 4);
+  assert.equal(levelAt[36], 5);
+  assert.equal(levelAt[60], 5, 'it stops at 5');
+  assert.equal(SHELF_XP.length, 4);
+});
+
+test('buying spends acorns and stock, an empty slot refuses, and props go on free squares and back (garden-short G4)', () => {
+  const v = newVillage();
+  v.shelf.slots = [{ kind: 'bench', stock: 1 }, { kind: 'statue', stock: 1 }];
+  v.coins = PROP_PRICE[1];
+  assert.equal(buyProp(v, 1), 'coins');
+  assert.equal(buyProp(v, 0), null);
+  assert.equal(v.coins, 0);
+  assert.equal(v.stash.bench, 1);
+  v.coins = 500;
+  assert.equal(buyProp(v, 0), 'empty', 'sold out until the next game');
+  assert.equal(buyProp(v, 7), 'gone');
+  assert.equal(placeProp(v, 'bench', 'g7'), 'blocked', 'the starting house stands there');
+  assert.equal(placeProp(v, 'bench', 'z9'), 'bounds');
+  assert.equal(placeProp(v, 'bench', 'c4'), null);
+  assert.equal(v.stash.bench, undefined);
+  assert.equal(placeProp(v, 'bench', 'c5'), 'none');
+  assert.equal(startBuild(v, 'field', 'c4'), false, 'a prop takes its square');
+  assert.equal(storeProp(v, 'g7'), false, 'old buildings kept as decoration are not props');
+  assert.equal(storeProp(v, 'c4'), true);
+  assert.equal(v.stash.bench, 1);
+});
+
+test('bought props move to the next island in the stash (garden-short G4)', () => {
+  const v = newVillage();
+  v.stash = { lantern: 1 };
+  placeProp(v, 'lantern', 'b2');
+  for (const [i, kind] of KIND_ORDER.entries()) v.built.push({ id: i + 1, kind, sq: `${'abcdefgh'[i]}5`, ready: true });
+  assert.equal(startNewIsland(v), true);
+  assert.deepEqual(v.decor, []);
+  assert.equal(v.stash.lantern, 1);
 });

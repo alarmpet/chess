@@ -736,6 +736,45 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       for (const x of [-0.24, 0.24]) g.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 8), 0x8a5a33, x, 0.1, 0));
     } else if (kind === 'fountain') {
       g.add(mesh(new THREE.CylinderGeometry(0.42, 0.46, 0.16, 20), 0xd8dee8, 0, 0.08, 0), mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.04, 20), 0x8fd3f4, 0, 0.17, 0), mesh(new THREE.SphereGeometry(0.13, 16, 12), 0xbfe8fb, 0, 0.32, 0));
+    } else if (kind === 'flowerbed') {
+      // Shelf props (garden-short G4): small shapes in the island's own style, no new models.
+      g.add(mesh(new RoundedBoxGeometry(0.66, 0.1, 0.66, 2, 0.04), 0x8a5a3a, 0, 0.05, 0));
+      const rnd = seeded('flowerbed');
+      const petals = [0xff8fb1, 0xffd35c, 0xffffff, 0xc49bff];
+      for (let i = 0; i < 9; i++) {
+        const x = ((i % 3) - 1) * 0.19 + (rnd() - 0.5) * 0.06;
+        const z = (Math.floor(i / 3) - 1) * 0.19 + (rnd() - 0.5) * 0.06;
+        g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 5), 0x5f9e3c, x, 0.16, z), mesh(new THREE.SphereGeometry(0.06, 8, 6), petals[i % petals.length], x, 0.24, z));
+      }
+    } else if (kind === 'signpost') {
+      g.add(mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.6, 8), 0x8a5a33, 0, 0.3, 0), mesh(new RoundedBoxGeometry(0.4, 0.16, 0.04, 2, 0.02), 0xd9a066, 0.08, 0.5, 0), mesh(new RoundedBoxGeometry(0.32, 0.13, 0.04, 2, 0.02), 0xc98f58, -0.06, 0.32, 0.01));
+    } else if (kind === 'lantern') {
+      const lamp = mesh(new RoundedBoxGeometry(0.16, 0.2, 0.16, 2, 0.03), 0xffc56b, 0, 0.66, 0);
+      g.add(mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.56, 8), 0x3f4652, 0, 0.28, 0), lamp, mesh(new THREE.ConeGeometry(0.14, 0.1, 4), 0x3f4652, 0, 0.81, 0));
+      addGlow(g, 0.66, 0xffb35c, 1.2);
+    } else if (kind === 'birdhouse') {
+      g.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8), 0x8a5a33, 0, 0.25, 0), mesh(new RoundedBoxGeometry(0.22, 0.2, 0.2, 2, 0.03), 0x6fb3d9, 0, 0.6, 0), mesh(new THREE.ConeGeometry(0.19, 0.14, 4), 0xe0645a, 0, 0.77, 0), mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.02, 10), 0x2b2b33, 0, 0.62, 0.105));
+      g.children[g.children.length - 1].rotation.x = Math.PI / 2;
+      g.children[g.children.length - 2].rotation.y = Math.PI / 4;
+    } else if (kind === 'arch') {
+      const arc = mesh(new THREE.TorusGeometry(0.3, 0.04, 8, 24, Math.PI), 0x6aa84f, 0, 0.42, 0);
+      g.add(arc);
+      for (const x of [-0.3, 0.3]) g.add(mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 8), 0x6aa84f, x, 0.21, 0));
+      for (let i = 0; i <= 6; i++) {
+        const a = (Math.PI * i) / 6;
+        g.add(mesh(new THREE.SphereGeometry(0.05, 8, 6), i % 2 ? 0xff8fb1 : 0xffffff, Math.cos(a) * 0.3, 0.42 + Math.sin(a) * 0.3, 0.02));
+      }
+    } else if (kind === 'statue') {
+      g.add(mesh(new RoundedBoxGeometry(0.42, 0.18, 0.42, 2, 0.04), 0xd8dee8, 0, 0.09, 0), mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.36, 12), 0xe8c25a, 0, 0.36, 0));
+      const crown = new THREE.Group();
+      crown.position.y = 0.58;
+      crown.add(mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.08, 16, 1, true), 0xf2d064, 0, 0, 0));
+      for (let i = 0; i < 5; i++) {
+        const a = (Math.PI * 2 * i) / 5;
+        crown.add(mesh(new THREE.ConeGeometry(0.04, 0.1, 6), 0xf2d064, Math.cos(a) * 0.14, 0.08, Math.sin(a) * 0.14));
+      }
+      g.add(crown);
+      twirlers.push(crown);
     }
     return g;
   }

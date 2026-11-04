@@ -974,6 +974,25 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .mark-bar i { display: block; height: 100%; background: linear-gradient(90deg, #eab308, #fde68a); }
 .mark-how { font-size: 12px; color: #cbd5e1; }
 
+/* Island shelf (garden-short G4): three slots, the tier shown as a coloured name tag, the odds always in view */
+.shelf-panel { max-width: 480px; }
+.shelf-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.shelf-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border-radius: 12px; background: rgba(148, 163, 184, 0.12); border: 2px solid rgba(148, 163, 184, 0.35); text-align: center; }
+.shelf-slot.tier-2 { border-color: #60a5fa; }
+.shelf-slot.tier-3 { border-color: #c084fc; }
+.shelf-slot.tier-4 { border-color: #facc15; }
+.shelf-icon { font-size: 30px; }
+.shelf-tier { font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 999px; background: #94a3b8; color: #0f172a; }
+.shelf-tier.tier-2 { background: #60a5fa; }
+.shelf-tier.tier-3 { background: #c084fc; }
+.shelf-tier.tier-4 { background: #facc15; }
+.shelf-buy { font-size: 12px; padding: 4px 8px; }
+.shelf-out { font-size: 12px; font-weight: 800; color: #fca5a5; }
+.shelf-stock { font-size: 11px; color: #cbd5e1; }
+.shelf-odds { margin: 12px 0 8px; font-size: 12px; color: #cbd5e1; }
+.shelf-stash { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 8px; border-top: 1px solid rgba(148, 163, 184, 0.2); }
+.shelf-stash .hud-btn { font-size: 12px; padding: 4px 8px; }
+
 /* Rival entrance (desire plan D4): what the rival wears that you have not got */
 .rival-entrance { position: fixed; bottom: 64px; left: 50%; transform: translateX(-50%); z-index: 27; width: min(460px, calc(100vw - 32px)); padding: 12px 14px 10px; border-radius: 14px; background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(234, 179, 8, 0.6); color: #e2e8f0; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); animation: rival-enter 0.35s ease-out; }
 @keyframes rival-enter { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }

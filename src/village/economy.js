@@ -104,7 +104,9 @@ const blank = () => ({
   dewDay: '',
   dewAt: 0,
   seed: 0,
-  week: { w: -1, n: 0, pick: null }
+  week: { w: -1, n: 0, pick: null },
+  shelf: { g: -1, n: 0, lv: 1, xp: 0, slots: [] },
+  stash: {}
 });
 
 export const newVillage = blank;
@@ -286,7 +288,9 @@ export function settleGame(v, { moves, color, result, rivalId = null, gameId = n
   const opened = v.built.filter((b) => !b.ready).map((b) => b.kind);
   for (const b of v.built) b.ready = true;
   v.quest = nextQuest(v);
-  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest, dew };
+  const shelfUp = growShelf(v);
+  stockShelf(v);
+  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest, dew, shelfUp };
 }
 
 const taken = (v, sq) => v.built.some((b) => b.sq === sq) || v.decor.some((d) => d.sq === sq);
@@ -351,6 +355,8 @@ export function startNewIsland(v) {
   v.island += 1;
   v.map = next.map;
   v.built = [];
+  // Bought props travel to the new island in the stash; the old buildings left standing as decoration do not.
+  for (const d of v.decor) if (PROPS[d.kind]) v.stash[d.kind] = (v.stash[d.kind] || 0) + 1;
   v.decor = [];
   v.flags = [];
   v.night = false;
@@ -411,6 +417,108 @@ export function rollWeek(v, pool, now, newSeed = () => Math.floor(Math.random() 
 
 /** This week's entry from the pack's weekly list, or null when there is none or the pack changed. */
 export const weekPick = (v, pool) => (pool || []).find((x) => x && x.id === v.week?.pick) || null;
+
+// The island shelf (garden-short G4, reverse-engineering report 2nd ed. G4 table). Three slots of island props.
+// Each slot draws a tier by the shelf level's weights, then a prop of that tier evenly, and slots may repeat
+// (SNKRX buy_screen.lua:351-355). The level grows by itself, one point every second game, needing 3, 4, 5, 6 points,
+// up to 5 (arena.lua:979-991); acorns never buy points, rerolls or a lower level. Each slot keeps a stock count and an
+// empty one refuses the sale (SS14 vending, Eject.cs:153-168). All three slots are drawn again when a game ends
+// (set_cards clears them all), keyed by the island seed and a counter, so reopening between games shows the same shelf.
+export const PROPS = {
+  flowerbed: { ko: '꽃밭', icon: '🌷', tier: 1 },
+  bench: { ko: '벤치', icon: '🪑', tier: 1 },
+  signpost: { ko: '표지판', icon: '🪧', tier: 1 },
+  lantern: { ko: '등불', icon: '🏮', tier: 2 },
+  birdhouse: { ko: '새집', icon: '🐦', tier: 2 },
+  fountain: { ko: '분수', icon: '⛲', tier: 3 },
+  arch: { ko: '꽃 아치', icon: '🌸', tier: 3 },
+  statue: { ko: '왕관 동상', icon: '👑', tier: 4 }
+};
+export const TIER_KO = ['', '흔함', '고급', '희귀', '전설'];
+export const PROP_PRICE = [0, 15, 30, 60, 120];   // starting guesses
+export const PROP_STOCK = [0, 3, 2, 1, 1];
+export const SHELF_ODDS = [[70, 20, 10, 0], [50, 30, 15, 5], [25, 45, 20, 10], [10, 25, 45, 20], [5, 15, 30, 50]];
+export const SHELF_XP = [3, 4, 5, 6];
+export const SHELF_SLOTS = 3;
+export const SHELF_LEVEL_MAX = SHELF_ODDS.length;
+
+const ensureSeed = (v, newSeed) => {
+  if (!v.seed) v.seed = newSeed();
+  return v.seed;
+};
+const anySeed = () => Math.floor(Math.random() * 0x7ffffffe) + 1;
+
+/** Index of the weight a roll in [0, 1) lands on; a zero weight is never picked. */
+function weightedIndex(weights, roll) {
+  let at = roll * weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < weights.length; i++) {
+    if (at < weights[i]) return i;
+    at -= weights[i];
+  }
+  return weights.findLastIndex((w) => w > 0);
+}
+
+/** One point every second game, as SNKRX gives its shop one point every second round. */
+export function growShelf(v) {
+  const s = v.shelf;
+  if (v.games % 2 !== 0 || s.lv >= SHELF_LEVEL_MAX) return false;
+  s.xp += 1;
+  if (s.xp < SHELF_XP[s.lv - 1]) return false;
+  s.xp = 0;
+  s.lv += 1;
+  return true;
+}
+
+/** Draw all three slots for this game count, once. Returns true when it drew. */
+export function stockShelf(v, newSeed = anySeed) {
+  const s = v.shelf;
+  if (s.g === v.games) return false;
+  const seed = ensureSeed(v, newSeed);
+  const odds = SHELF_ODDS[s.lv - 1];
+  s.slots = [];
+  for (let i = 0; i < SHELF_SLOTS; i++) {
+    const tier = weightedIndex(odds, seededRoll(seed, `shelf:${s.n}:tier`, i)) + 1;
+    const kinds = Object.keys(PROPS).filter((k) => PROPS[k].tier === tier);
+    const kind = kinds[Math.floor(seededRoll(seed, `shelf:${s.n}:kind`, i) * kinds.length)];
+    s.slots.push({ kind, stock: PROP_STOCK[tier] });
+  }
+  s.n += 1;
+  s.g = v.games;
+  return true;
+}
+
+/** Buy from a slot into the stash. Null when bought, else why not: 'gone', 'empty' or 'coins'. */
+export function buyProp(v, i) {
+  const slot = v.shelf.slots[i];
+  if (!slot || !PROPS[slot.kind]) return 'gone';
+  if (slot.stock <= 0) return 'empty';
+  const price = PROP_PRICE[PROPS[slot.kind].tier];
+  if (v.coins < price) return 'coins';
+  v.coins -= price;
+  slot.stock -= 1;
+  v.stash[slot.kind] = (v.stash[slot.kind] || 0) + 1;
+  return null;
+}
+
+/** Put a stashed prop on a free square. Null when placed, else 'none', 'bounds' or 'blocked'. */
+export function placeProp(v, kind, sq) {
+  if (!PROPS[kind] || !(v.stash[kind] > 0)) return 'none';
+  if (!/^[a-h][1-8]$/.test(sq)) return 'bounds';
+  if (taken(v, sq)) return 'blocked';
+  v.decor.push({ kind, sq });
+  v.stash[kind] -= 1;
+  if (!v.stash[kind]) delete v.stash[kind];
+  return null;
+}
+
+/** Take a placed prop back into the stash. Old buildings kept as decoration stay where they are. */
+export function storeProp(v, sq) {
+  const i = v.decor.findIndex((d) => d.sq === sq && PROPS[d.kind]);
+  if (i < 0) return false;
+  const [d] = v.decor.splice(i, 1);
+  v.stash[d.kind] = (v.stash[d.kind] || 0) + 1;
+  return true;
+}
 
 /** Pet a piece. After the daily cap it still reacts, it just stops adding hearts. */
 export function pet(v, slot, now) {
