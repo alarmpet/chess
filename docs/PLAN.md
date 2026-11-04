@@ -463,7 +463,7 @@ v0.7 까지의 진영별 다른 종(늑대/호랑이, 유니콘/드래곤…) �
 - **다른 PC 작업 분리**: main 에 섞여 들어온 21커밋(단어 체스·정원 농사·수도원 복원·상점·XP·주문 카드·화로/기둥·밀치기·성소 영수 스킨·도감·블룸·당구·볼 스톰)은 다른 PC 의 다른 작업이다. 사용자 결정(2026-10-30): **이 PC 에서 만든 것만 이 게임.** §10-18 의 "WILD CROWN 기준 병합" 을 되돌려 모두 제거하고, 병합 전 코드에 이후 작업(외형·장식·승급 선택·체크메이트·받침대)만 다시 얹었다. 그래서 야생 모드 구현도 함께 빠졌다(§12.8 은 Phase 6 계획으로 남음). 원본은 `archive/other-pc-games` 브랜치(main afd603d 시점)에 보관.
 - **라이벌 전리품 시제품**: 라운드 결론(`docs/research/agent-rounds/2026-10-30-cosmetics-trophy/README.md`)의 첫 단계. 시작은 소품 없음. 소품을 입은 AI 3명(`pack.json` `rivals`)을 체크메이트하면 그 상대의 소품을 하나씩 얻고, 메이트를 둔 말 역할에 자동으로 달린다(표식을 가리는 슬롯이면 폰부터). 패자가 잃는 것은 없다. 저장은 로컬뿐이라 랭크 보상이 아니다. 새 소품 3종: 대나무 헤드폰·나뭇잎 선글라스·도토리 목걸이. 얼굴 소품은 단계마다 머리 모양이 달라 `fit.byStage` 로 위치를 나눈다.
 - **대국 밖 세계**: [왕관 마을 계획서](plans/2026-10-30-crown-village-plan.md). 인기 게임 구조를 공개 자료로 해부해 도토리·건설·하트·라이벌 손님을 넣었다. 체스 수는 그대로다. 핵심 고리 시제품이 동작한다.
-- **CI**: `.github/workflows/ci.yml` — 푸시·PR 마다 `npm ci` → `npm test` → `npm run build`. 타입 검사(`npm run lint`)는 기존 오류 2건(farmData.ts · styles.css) 때문에 아직 넣지 않았다.
+- **CI** (2026-11-04 갱신): `.github/workflows/ci.yml` — 푸시·PR 마다 `npm ci` → `npm run lint` → `npm test`(빠른 134개, 약 10초) → `npm run test:slow`(300판 시뮬) → `npm run gate:assets` → `npm run build` → `npm run gate:bundle`. 타입 검사는 `src/vite-env.d.ts`(vite/client 참조) 를 더해 `styles.css` 부작용 import 오류를 없앤 뒤 넣었다(farmData.ts 는 이미 없음). 게이트 상한은 실측 위의 래칫 → `docs/STATUS.md` MG-S1.
 
 ### 참고 자료
 - 라운드 대조표: `docs/research/agent-rounds/2026-10-27-design-wild-crown/README.md` · `2026-10-28-meta-wild-crown/README.md` · `2026-10-28-popular-wild-crown/README.md`(3차, Steam 덤프 15개 포함) · `2026-10-28-break-wild-crown/README.md`(4차, §14 깨뜨리기)
