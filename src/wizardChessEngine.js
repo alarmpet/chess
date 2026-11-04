@@ -5710,6 +5710,7 @@ export function initWizardChess() {
         total: rewards.length,
         complete: rewards.every((x) => rivalProgress.unlocked.includes(x))
       })),
+      getVillageWeekly: () => activePack?.weekly || [],
       setRenderPaused: (on) => { renderPaused = Boolean(on); },
       // Hearts earned in the village grow that one individual on the board; the model set already has every stage.
       setSlotStages: async (map) => {

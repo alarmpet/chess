@@ -1201,6 +1201,35 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   flies.visible = false;
   island.add(flies);
 
+  // Overnight dew (garden-short G2): drops twinkle over the fields that the first game of the day will water.
+  const dewCount = 22;
+  const dewGeo = new THREE.BufferGeometry();
+  const dewPos = new Float32Array(dewCount * 8 * 3);
+  const dewSeed: number[] = [];
+  const dewRnd = seeded('dew');
+  for (let i = 0; i < dewCount * 8; i++) dewSeed.push(dewRnd() - 0.5, dewRnd() - 0.5, dewRnd() * 6.28);
+  dewGeo.setAttribute('position', new THREE.BufferAttribute(dewPos, 3));
+  const dewMat = new THREE.PointsMaterial({ color: 0x9fe8ff, size: 0.15, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
+  dewMat.userData = NO_OUTLINE;
+  const dewDrops = new THREE.Points(dewGeo, dewMat);
+  dewDrops.visible = false;
+  island.add(dewDrops);
+  function setDew(squares: string[]) {
+    const fields = squares.slice(0, 8);
+    dewDrops.visible = fields.length > 0;
+    fields.forEach((sq, f) => {
+      const [x, z] = squareXZ(sq);
+      for (let i = 0; i < dewCount; i++) {
+        const k = (f * dewCount + i) * 3;
+        dewPos[k] = x + dewSeed[k] * 0.9;
+        dewPos[k + 1] = TILE_TOP + 0.08 + (dewSeed[k + 2] / 6.28) * 0.12;
+        dewPos[k + 2] = z + dewSeed[k + 1] * 0.9;
+      }
+    });
+    dewGeo.setDrawRange(0, fields.length * dewCount);
+    dewGeo.attributes.position.needsUpdate = true;
+  }
+
   // A kept request with the festival stage open: paper rains over the island until the next game.
   const confettiCount = 90;
   const confGeo = new THREE.BufferGeometry();
@@ -1407,6 +1436,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     }
     for (const c of easels) c.rotation.y = azimuth;
     overlayMat.opacity = 0.34 + Math.sin(t * 3.2) * 0.1;
+    if (dewDrops.visible) dewMat.opacity = 0.55 + Math.sin(t * 2.4) * 0.35;
     frame += 1;
     if (frame % 3 === 0) renderer.shadowMap.needsUpdate = true;
     outline.render(scene, camera);
@@ -1474,6 +1504,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     },
     drawShelf,
     drawRivalFlags,
+    /** Dew drops over these field squares; an empty list clears them. */
+    setDew,
     /** Tints squares: `cover` for reach, `strong` for reach that lands on a building, `origin` for the source. */
     setOverlay(cover: string[], strong: string[] = [], origin: string | null = null) {
       overlay.count = 0;

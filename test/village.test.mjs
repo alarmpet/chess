@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Chess } from 'chess.js';
-import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX } from '../src/village/economy.js';
+import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, dewReady, dayIndex, weekIndex, weekDue, rollWeek, weekPick, DEW_GRAIN, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX } from '../src/village/economy.js';
 import { replayGame } from '../src/village/roster.js';
 
 const line = (sans) => { const c = new Chess(); return sans.map((s) => c.move(s)); };
@@ -313,4 +313,84 @@ test('the three-step loop names one thing to do: build, then a resident, then th
   const grain = v.grain;
   finish(v);
   assert.ok(v.grain > grain, 'the game is what makes the planted field give');
+});
+
+test('overnight dew: the first game of a new day gives each working field a little more, once, and never piles up (garden-short G2)', () => {
+  const day = (d, h = 9) => new Date(2026, 10, d, h).getTime();
+  const v = newVillage();
+  assert.equal(dewReady(v, day(4)), false, 'no field, no dew to show');
+  staff(v, 'field', 'c3');
+  assert.equal(dewReady(v, day(4)), true);
+  const plain = newVillage();
+  staff(plain, 'field', 'c3');
+  const without = settleGame(plain, { moves: line(FOOLS), color: 'b', result: 'win' });
+  const first = settleGame(v, { moves: line(FOOLS), color: 'b', result: 'win', now: day(4) });
+  assert.equal(first.dew, true);
+  assert.equal(first.harvest.grain, without.harvest.grain + DEW_GRAIN);
+  const second = settleGame(v, { moves: line(FOOLS), color: 'b', result: 'win', now: day(4, 21) });
+  assert.equal(second.dew, false, 'the second game of the same day has none');
+  assert.equal(dewReady(v, day(3)), false, 'setting the clock back brings no dew');
+  assert.equal(dewReady(v, day(9)), true, 'five missed days are still one dew');
+  assert.equal(settleGame(v, { moves: line(FOOLS), color: 'b', result: 'win', now: day(9) }).dew, true);
+  assert.equal(dewReady(v, day(9, 23)), false);
+  v.grain = GRAIN_MAX;
+  assert.equal(dewReady(v, day(10)), false, 'a full barn would waste it, so it waits');
+});
+
+test('a game reported without a time settles as before, with no dew', () => {
+  const v = newVillage();
+  staff(v, 'field', 'c3');
+  assert.equal(finish(v).dew, false);
+  assert.equal(v.dewDay, '');
+});
+
+test('calendar weeks start on Monday and run straight through a year end and a leap day (garden-short G3)', () => {
+  const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
+  const week = (y, m, d, h) => weekIndex(dayIndex(at(y, m, d, h)));
+  assert.equal(dayIndex(at(1970, 1, 1, 0)), 0);
+  assert.equal(dayIndex(at(1970, 1, 1, 23)), 0, 'the whole local day is one day');
+  assert.equal(week(2026, 11, 2), week(2026, 11, 8, 23), 'Monday to Sunday is one week');
+  assert.equal(week(2026, 11, 9, 0), week(2026, 11, 8, 23) + 1, 'Monday midnight starts the next');
+  assert.equal(week(2026, 12, 28), week(2027, 1, 3), 'a week that crosses New Year stays one week');
+  assert.equal(week(2027, 1, 4), week(2027, 1, 3) + 1);
+  assert.equal(dayIndex(at(2028, 3, 1)) - dayIndex(at(2028, 2, 28)), 2, 'a leap day is a day');
+  assert.equal(week(2028, 2, 28), week(2028, 3, 5), 'the leap week is still Monday to Sunday');
+});
+
+test('a new week replaces the pick once, never for a clock set back, and missed weeks are one week (garden-short G3)', () => {
+  const at = (m, d) => new Date(2026, m - 1, d, 12).getTime();
+  const pool = [{ id: 'a', line: { ko: '가' } }, { id: 'b', line: { ko: '나' } }, { id: 'c', line: { ko: '다' } }];
+  const v = newVillage();
+  assert.equal(rollWeek(v, [], at(11, 4)), null, 'a pack with no weekly list never turns the week');
+  assert.deepEqual(v.week, { w: -1, n: 0, pick: null });
+  const first = rollWeek(v, pool, at(11, 4), () => 7);
+  assert.ok(first && pool.includes(first));
+  assert.equal(v.seed, 7, 'the seed is made once, when the island first needs it');
+  assert.equal(weekPick(v, pool), first);
+  assert.equal(rollWeek(v, pool, at(11, 8)), null, 'the rest of the week keeps it');
+  assert.equal(weekDue(v, at(10, 20)), false, 'setting the clock back brings nothing');
+  assert.equal(rollWeek(v, pool, at(10, 20)), null);
+  const later = rollWeek(v, pool, at(12, 30));
+  assert.ok(later);
+  assert.equal(v.week.n, 2, 'eight missed weeks are one new pick');
+  assert.equal(v.week.w, weekIndex(dayIndex(at(12, 30))));
+});
+
+test('the weekly pick follows a counter, not the date, so the same island always draws the same sequence (garden-short G3)', () => {
+  const pool = 'abcdefgh'.split('').map((id) => ({ id, line: { ko: id } }));
+  const draw = (startDay, gap) => {
+    const v = newVillage();
+    v.seed = 12345;
+    const out = [];
+    for (let i = 0; i < 6; i++) out.push(rollWeek(v, pool, new Date(2026, 0, startDay + i * gap, 12).getTime()).id);
+    return out;
+  };
+  assert.deepEqual(draw(5, 7), draw(12, 21), 'skipping weeks or starting later does not change which picks come');
+  const other = newVillage();
+  other.seed = 999;
+  rollWeek(other, pool, new Date(2026, 0, 5).getTime());
+  assert.ok(sanitizeVillage(JSON.parse(JSON.stringify(other))).week.n === 1, 'the week survives a save');
+  const old = sanitizeVillage({ v: 2, coins: 5 });
+  assert.deepEqual(old.week, { w: -1, n: 0, pick: null }, 'an older save starts with no week yet');
+  assert.equal(weekPick(other, []), null, 'a pack that lost the entry shows nothing');
 });

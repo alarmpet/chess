@@ -201,6 +201,22 @@ export function validatePackManifest(manifest) {
       }
     }
   }
+  // garden-short G3: one entry is picked per calendar week. Optional; a pack without it never turns the week.
+  if (manifest.weekly !== undefined) {
+    if (!Array.isArray(manifest.weekly)) errors.push('weekly must be an array');
+    else {
+      const seen = new Set();
+      const rivalIds = new Set((manifest.rivals || []).map((r) => r?.id));
+      for (const w of manifest.weekly) {
+        const id = w?.id;
+        if (typeof id !== 'string' || !id) { errors.push('weekly[].id must be a string'); continue; }
+        if (seen.has(id)) errors.push(`weekly id ${id} is duplicated`);
+        seen.add(id);
+        if (w.guest !== undefined && !rivalIds.has(w.guest)) errors.push(`weekly.${id}.guest: unknown rival ${w.guest}`);
+        if (typeof w.line?.ko !== 'string' || !w.line.ko) errors.push(`weekly.${id}.line.ko must be a sentence`);
+      }
+    }
+  }
   return { ok: errors.length === 0, errors };
 }
 

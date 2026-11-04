@@ -2,17 +2,17 @@
 // The step to do now is lit; the chess game is the only way from planting to harvest.
 import { BUILDINGS, buildBlocked, loopStep } from './economy.js';
 
-type Props = { village: any; summary: any | null; hasCards: boolean; onPlay: () => void };
+type Props = { village: any; summary: any | null; hasCards: boolean; dew: boolean; onPlay: () => void };
 
 /** Everything one finished game brought: its own acorns and hearts plus what the buildings made. */
 export const gainText = (summary: any) => {
   const h = summary.harvest || {};
   const coins = summary.coins + (h.coins || 0);
   const hearts = summary.hearts + (h.hearts || 0);
-  return [`🌰 +${coins}`, h.grain && `🌾 +${h.grain}`, h.bread && `🥖 +${h.bread}`, `💗 +${hearts}`].filter(Boolean).join(' · ');
+  return [`🌰 +${coins}`, h.grain && `🌾 +${h.grain}${summary.dew ? '💧' : ''}`, h.bread && `🥖 +${h.bread}`, `💗 +${hearts}`].filter(Boolean).join(' · ');
 };
 
-export default function LoopStrip({ village, summary, hasCards, onPlay }: Props) {
+export default function LoopStrip({ village, summary, hasCards, dew, onPlay }: Props) {
   if (!village) return null;
   const s = loopStep(village);
   const canBuild = Object.keys(BUILDINGS).some((k) => !buildBlocked(village, k, ''));
@@ -32,9 +32,9 @@ export default function LoopStrip({ village, summary, hasCards, onPlay }: Props)
         <b>♟ 한 판</b>
         {playNow ? <button type="button" className="village-loop-go" onClick={onPlay}>두러 가기</button> : <span>심은 뒤에</span>}
       </li>
-      <li className={summary ? 'done' : ''}>
+      <li className={summary || dew ? 'done' : ''}>
         <b>🧺 거두기</b>
-        <span>{summary ? gainText(summary) : '판이 끝나면'}</span>
+        <span>{summary ? gainText(summary) : dew ? '💧 이슬 맺힘' : '판이 끝나면'}</span>
       </li>
     </ol>
   );

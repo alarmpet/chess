@@ -107,3 +107,17 @@ test('normalizePromotion accepts SAN letters and names, defaults to queen', () =
   assert.equal(normalizePromotion(undefined), 'queen');
   assert.equal(normalizePromotion('king'), 'queen');
 });
+
+test('validator checks the weekly list: unique ids, known guests, a Korean line (garden-short G3)', () => {
+  const base = JSON.parse(fs.readFileSync(path.join(PACKS_DIR, 'legend', 'pack.json'), 'utf-8'));
+  assert.ok(base.weekly.length >= 1, 'the legend pack carries weekly entries');
+  const bad = { ...base, weekly: [{ id: 'x', guest: 'nobody', line: { ko: '가' } }, { id: 'x', line: {} }, { line: { ko: '나' } }] };
+  const { ok, errors } = validatePackManifest(bad);
+  assert.equal(ok, false);
+  assert.ok(errors.some((e) => e.includes('unknown rival nobody')));
+  assert.ok(errors.some((e) => e.includes('weekly id x is duplicated')));
+  assert.ok(errors.some((e) => e.includes('weekly.x.line.ko')));
+  assert.ok(errors.some((e) => e.includes('weekly[].id')));
+  const { weekly, ...without } = base;
+  assert.equal(validatePackManifest(without).ok, true, 'a pack without a weekly list is still a pack');
+});

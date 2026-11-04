@@ -1,6 +1,7 @@
 // Village game rules (docs/plans/2026-10-31-crown-island-plan.md). Pure: time is passed in, nothing touches the DOM.
 // Every number here is a prototype guess, not a measured balance.
 import { replayGame, growVillage, emptyVillage } from './roster.js';
+import { seededRoll } from '../cards/economy.js';
 
 export const VILLAGE_KEY = 'wildcrown.village.v1';
 export const COINS = { win: 30, draw: 20, loss: 15 };
@@ -16,6 +17,7 @@ export const BREAD_PRICE = 8;
 export const BONUS_MAX = 3;
 export const LEVEL_MAX = 3;
 export const QUEST_FROM_GAME = 5;           // the first games show only capturing and building
+export const DEW_GRAIN = 1;                 // garden-short G2: a starting guess, to be compared on and off in play tests
 
 // The chess game is the clock: a building placed now opens when the next game ends, and nothing runs on real time.
 // minRarity is the resident a building needs to work: any animal of that rarity or better, never one named card.
@@ -98,7 +100,11 @@ const blank = () => ({
   visits: {},
   gifts: [],
   lastSeen: 0,
-  games: 0
+  games: 0,
+  dewDay: '',
+  dewAt: 0,
+  seed: 0,
+  week: { w: -1, n: 0, pick: null }
 });
 
 export const newVillage = blank;
@@ -182,13 +188,13 @@ const add = (v, key, n, max) => {
 };
 
 // One pass through the buildings, farm to market, so grain made this game can already become bread and acorns.
-function harvest(v, mvp, trees) {
+function harvest(v, mvp, trees, dew = false) {
   const got = { grain: 0, bread: 0, coins: 0, hearts: 0, sold: 0 };
   const working = (kind) => v.built.filter((b) => b.kind === kind && b.ready && b.tenant);
   const lit = working('power').length;
   const output = (b) => (b.level || 0) + influenceBonus(v, b) + lit;
   const milled = working('mill').length > 0;
-  for (const b of working('field')) got.grain += add(v, 'grain', 2 + output(b), GRAIN_MAX);
+  for (const b of working('field')) got.grain += add(v, 'grain', 2 + output(b) + (dew ? DEW_GRAIN : 0), GRAIN_MAX);
   for (const b of working('bakery')) {
     const want = 1 + output(b) + (milled ? 1 : 0);
     const cost = milled ? 1 : 2;
@@ -252,7 +258,7 @@ function settleQuest(v, moves, color) {
 }
 
 /** Pay out one finished game. `result` is the player's: win, draw or loss. Losing never takes anything away. */
-export function settleGame(v, { moves, color, result, rivalId = null, gameId = null }) {
+export function settleGame(v, { moves, color, result, rivalId = null, gameId = null, now = null }) {
   // A game is paid once, even if its end is reported again (a resumed game, a second listener).
   if (gameId !== null) {
     if ((v.settled || []).includes(gameId)) return null;
@@ -271,11 +277,16 @@ export function settleGame(v, { moves, color, result, rivalId = null, gameId = n
   if (last?.san?.endsWith('#') && last.color === color) v.flags.push({ sq: last.to, game: v.games });
   v.festival = null;
   const quest = settleQuest(v, moves, color);
-  const harvested = harvest(v, mvp, added.trees.length);
+  const dew = dewReady(v, now);
+  if (dew) {
+    v.dewDay = dayKey(now);
+    v.dewAt = now;
+  }
+  const harvested = harvest(v, mvp, added.trees.length, dew);
   const opened = v.built.filter((b) => !b.ready).map((b) => b.kind);
   for (const b of v.built) b.ready = true;
   v.quest = nextQuest(v);
-  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest };
+  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest, dew };
 }
 
 const taken = (v, sq) => v.built.some((b) => b.sq === sq) || v.decor.some((d) => d.sq === sq);
@@ -356,6 +367,50 @@ function dayKey(now) {
   const d = new Date(now);
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
+
+/**
+ * Overnight dew (garden-short G2): on a new day, the first finished game gives each working field a little more.
+ * It never piles up over missed days and missing it takes nothing away. A clock set back earlier than the last dew
+ * brings none, so a day can be had once. It only shows where it can land: a working field with room in the barn.
+ */
+export function dewReady(v, now) {
+  if (!Number.isFinite(now) || now < (v.dewAt || 0) || v.dewDay === dayKey(now)) return false;
+  return v.grain < GRAIN_MAX && v.built.some((b) => b.kind === 'field' && b.ready && b.tenant);
+}
+
+const DAY_MS = 86_400_000;
+
+/** Days since 1970-01-01 of the device's local date (harvest-hollow calendar.js dayIndex, read in the device's zone). */
+export function dayIndex(now) {
+  const d = new Date(now);
+  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY_MS);
+}
+
+/** The Monday-start week of a day index. 1970-01-01 was a Thursday. */
+export const weekIndex = (day) => Math.floor((day + 3) / 7);
+
+/** True when the island's week is behind the calendar. A clock set back never rolls it again. */
+export function weekDue(v, now) {
+  return Number.isFinite(now) && (v.week?.w ?? -1) < weekIndex(dayIndex(now));
+}
+
+/**
+ * The calendar week (garden-short G3, reverse-engineering report 2nd ed.). A new week replaces last week's pick whole,
+ * and only the current week is filled, however many were missed. The pick is keyed by a counter, never by the date,
+ * so moving the clock can only bring the next pick sooner, not choose one. Returns the new pick, or null.
+ */
+export function rollWeek(v, pool, now, newSeed = () => Math.floor(Math.random() * 0x7ffffffe) + 1) {
+  const list = (pool || []).filter((x) => x && typeof x.id === 'string');
+  if (!list.length || !weekDue(v, now)) return null;
+  if (!v.seed) v.seed = newSeed();
+  const n = v.week?.n || 0;
+  const pick = list[Math.floor(seededRoll(v.seed, 'week', n) * list.length)];
+  v.week = { w: weekIndex(dayIndex(now)), n: n + 1, pick: pick.id };
+  return pick;
+}
+
+/** This week's entry from the pack's weekly list, or null when there is none or the pack changed. */
+export const weekPick = (v, pool) => (pool || []).find((x) => x && x.id === v.week?.pick) || null;
 
 /** Pet a piece. After the daily cap it still reacts, it just stops adding hearts. */
 export function pet(v, slot, now) {

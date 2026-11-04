@@ -1,12 +1,12 @@
 // The village screen: the player's chess games as an island on water, and the captured animals who live on it.
 // The scene is in village/islandScene.ts; this file holds the save and the panels over it.
 import { useEffect, useRef, useState } from 'react';
-import { BUILDINGS, BREAD_MAX, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage } from './village/economy.js';
+import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage } from './village/economy.js';
 import { createIsland, slotRole } from './village/islandScene';
 import { sfx } from './audio/sfx.js';
 import CardFace, { ANIMAL_KO, RARITY_KO } from './cards/CardFace';
 import { loadCollection } from './cards/store';
-import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRivals } from './village/store';
+import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRivals, villageWeekly } from './village/store';
 import { certificateLines, drawCertificate } from './village/certificate.js';
 import { earnedMarks } from './village/marks.js';
 import LoopStrip from './village/LoopStrip';
@@ -45,6 +45,8 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
   const [photos, setPhotos] = useState<any[] | null>(null);
   const [cert, setCert] = useState<{ url: string; file: File } | null>(null);
   const [marks, setMarks] = useState<any[] | null>(null);
+  const [dew, setDew] = useState(false);
+  const [newWeek, setNewWeek] = useState<any>(null);
   const island = useRef<ReturnType<typeof createIsland> | null>(null);
   const live = useRef({ picking, selected });
   live.current = { picking, selected };
@@ -65,12 +67,15 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     const v = reconcileTenants(loadVillage(), collection);
     const t = Date.now();
     const events = tickVillage(v, villageRivals(), t);
+    const week = rollWeek(v, villageWeekly(), t);
     v.lastSeen = t;
     saveVillage(v);
     setCol(collection);
     setVillage({ ...v });
     setNight(Boolean(v.night) && nightOpen(v));
     setAway(events);
+    setDew(dewReady(v, t));
+    setNewWeek(week || summary?.week || null);
     (window as any).wizardChess?.setRenderPaused?.(true);
     return () => { (window as any).wizardChess?.setRenderPaused?.(false); };
   }, [open]);
@@ -118,6 +123,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
     api.drawShelf(loadCollection().shelf as string[]);
     api.drawRivalFlags(villageRivals());
     api.setNight(Boolean(village.night) && nightOpen(village));
+    api.setDew(dewReady(village, Date.now()) ? village.built.filter((b: any) => b.kind === 'field' && b.ready && b.tenant).map((b: any) => b.sq) : []);
     return () => {
       api.dispose();
       island.current = null;
@@ -231,9 +237,9 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
         </span>
       </div>
 
-      <LoopStrip village={village} summary={summary} hasCards={owned.length > 0} onPlay={onClose} />
+      <LoopStrip village={village} summary={summary} hasCards={owned.length > 0} dew={dew} onPlay={onClose} />
 
-      {(summary || away.length > 0 || note || questHome) && (
+      {(summary || away.length > 0 || note || questHome || dew || newWeek) && (
         <div className="village-card" id="village-card">
           {summary && (
             <div>
@@ -242,6 +248,9 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
               {summary.added.houses.length > 0 && ' · 승급한 폰의 집'}
             </div>
           )}
+          {summary?.dew && <div>💧 밤사이 이슬이 내려 밭마다 곡물 +{DEW_GRAIN}</div>}
+          {dew && !summary && <div>💧 밤사이 밭에 이슬이 맺혔어요. 오늘 첫 판을 끝내면 밭마다 곡물 +{DEW_GRAIN}.</div>}
+          {newWeek && <div className="village-week" id="village-week">📅 새 주가 왔어요.{newWeek.guest && ` 이번 주 손님은 ${rivalName(newWeek.guest)}.`} {newWeek.line?.[lang] || newWeek.line?.ko}</div>}
           {summary?.opened?.length > 0 && <div>🎉 {summary.opened.map((k: string) => BUILDINGS[k as keyof typeof BUILDINGS].ko).join(', ')} 문을 열었어요!</div>}
           {summary?.quest?.done && <div>🔔 의뢰 성공! 건물이 한 단계 자랐어요.{summary.quest.festival && ` ${ANIMAL_KO[summary.quest.festival]} 축제가 열렸어요!`}</div>}
           {questHome && (

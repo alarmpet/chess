@@ -1,5 +1,5 @@
 // Village save (browser only for now) and the link from a finished chess game to the village.
-import { VILLAGE_KEY, sanitizeVillage, settleGame } from './economy.js';
+import { VILLAGE_KEY, rollWeek, sanitizeVillage, settleGame } from './economy.js';
 
 export function loadVillage(): any {
   try {
@@ -32,9 +32,18 @@ export function villageRivals(): any[] {
   return (window as any).wizardChess?.getVillageRivals?.() || [];
 }
 
+/** The pack's weekly list (garden-short G3). Empty when the pack has none: the week then simply never turns. */
+export function villageWeekly(): any[] {
+  return (window as any).wizardChess?.getVillageWeekly?.() || [];
+}
+
 export function settleFinishedGame(detail: { moves: any[]; color: 'w' | 'b'; result: string; rivalId: string | null; gameId?: number }) {
   const v = loadVillage();
-  const summary = settleGame(v, detail as any);
-  if (summary) saveVillage(v);
-  return summary;
+  const now = Date.now();
+  const summary = settleGame(v, { ...detail, now } as any);
+  if (!summary) return summary;
+  // A game's end is one of the two moments the island looks at the calendar; opening the island is the other.
+  const week = rollWeek(v, villageWeekly(), now);
+  saveVillage(v);
+  return { ...summary, week };
 }

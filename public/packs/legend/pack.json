@@ -692,5 +692,71 @@
       "flag": "#b0662c",
       "visitsFor": "spring"
     }
+  ],
+  "weekly": [
+    {
+      "id": "picnic_basket",
+      "guest": "picnic",
+      "line": {
+        "ko": "미어캣단이 소풍 바구니를 들고 섬 둘레를 돌아요.",
+        "en": "The meerkats carry a picnic basket round the island."
+      }
+    },
+    {
+      "id": "picnic_hats",
+      "guest": "picnic",
+      "line": {
+        "ko": "밀짚모자가 바람에 날려 밭에 떨어졌대요.",
+        "en": "A straw hat blew off and landed in the field."
+      }
+    },
+    {
+      "id": "picnic_nap",
+      "guest": "picnic",
+      "line": {
+        "ko": "미어캣단이 쉼터 그늘에서 낮잠을 자요.",
+        "en": "The meerkats nap in the shade by the shelter."
+      }
+    },
+    {
+      "id": "band_practice",
+      "guest": "bamboo_band",
+      "line": {
+        "ko": "대숲 밴드가 장터 옆에서 연습해요.",
+        "en": "The Bamboo Band rehearses by the market."
+      }
+    },
+    {
+      "id": "band_new_song",
+      "guest": "bamboo_band",
+      "line": {
+        "ko": "판다들이 새 노래를 만들었대요. 제목은 아직 없어요.",
+        "en": "The pandas wrote a new song. It has no name yet."
+      }
+    },
+    {
+      "id": "band_tour",
+      "guest": "bamboo_band",
+      "line": {
+        "ko": "대숲 밴드가 섬 순회 공연을 해요.",
+        "en": "The Bamboo Band is touring the island."
+      }
+    },
+    {
+      "id": "court_tea",
+      "guest": "acorn_court",
+      "line": {
+        "ko": "도토리 궁정이 온천에서 차를 마셔요.",
+        "en": "The Acorn Court takes tea at the hot spring."
+      }
+    },
+    {
+      "id": "court_parade",
+      "guest": "acorn_court",
+      "line": {
+        "ko": "도토리 궁정이 깃발을 들고 행진해요.",
+        "en": "The Acorn Court marches past with its banners."
+      }
+    }
   ]
 }
