@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Chess } from 'chess.js';
-import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, dewReady, dayIndex, weekIndex, weekDue, rollWeek, weekPick, PROPS, PROP_PRICE, PROP_STOCK, SHELF_ODDS, SHELF_XP, growShelf, stockShelf, buyProp, placeProp, storeProp, DEW_GRAIN, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX } from '../src/village/economy.js';
+import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, dewReady, dayIndex, weekIndex, weekDue, rollWeek, weekPick, PROPS, PROP_PRICE, PROP_STOCK, SHELF_ODDS, SHELF_XP, growShelf, stockShelf, buyProp, placeProp, storeProp, DEW_GRAIN, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX, shelfReserve } from '../src/village/economy.js';
 import { replayGame } from '../src/village/roster.js';
 
 const line = (sans) => { const c = new Chess(); return sans.map((s) => c.move(s)); };
@@ -450,13 +450,31 @@ test('the shelf level grows only with games: a point every second game, 3·4·5�
   assert.equal(SHELF_XP.length, 4);
 });
 
+test('the shelf leaves the cheapest unstarted building its acorns (garden-short G4 pace)', () => {
+  const v = newVillage();
+  v.shelf.slots = [{ kind: 'bench', stock: 3 }];
+  assert.deepEqual(shelfReserve(v), { kind: 'field', cost: BUILDINGS.field.cost });
+  v.coins = PROP_PRICE[1] + BUILDINGS.field.cost - 1;
+  assert.equal(buyProp(v, 0), 'reserve', 'one acorn short of keeping the field');
+  assert.equal(v.coins, PROP_PRICE[1] + BUILDINGS.field.cost - 1, 'a refusal spends nothing');
+  v.coins += 1;
+  assert.equal(buyProp(v, 0), null);
+  v.coins = 500;
+  assert.equal(startBuild(v, 'field', 'c3'), true);
+  assert.equal(shelfReserve(v).kind, 'shelter', 'a started building no longer counts');
+  for (const k of KIND_ORDER) if (!v.built.some((b) => b.kind === k)) v.built.push({ id: v.nextId++, kind: k, sq: 'a1', tenant: null, level: 0, ready: true });
+  assert.equal(shelfReserve(v), null);
+  v.coins = PROP_PRICE[1];
+  assert.equal(buyProp(v, 0), null, 'with every building started, every acorn is free');
+});
+
 test('buying spends acorns and stock, an empty slot refuses, and props go on free squares and back (garden-short G4)', () => {
   const v = newVillage();
   v.shelf.slots = [{ kind: 'bench', stock: 1 }, { kind: 'statue', stock: 1 }];
-  v.coins = PROP_PRICE[1];
+  v.coins = PROP_PRICE[1] + BUILDINGS.field.cost;
   assert.equal(buyProp(v, 1), 'coins');
   assert.equal(buyProp(v, 0), null);
-  assert.equal(v.coins, 0);
+  assert.equal(v.coins, BUILDINGS.field.cost);
   assert.equal(v.stash.bench, 1);
   v.coins = 500;
   assert.equal(buyProp(v, 0), 'empty', 'sold out until the next game');

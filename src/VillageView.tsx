@@ -1,7 +1,7 @@
 // The village screen: the player's chess games as an island on water, and the captured animals who live on it.
 // The scene is in village/islandScene.ts; this file holds the save and the panels over it.
 import { useEffect, useRef, useState } from 'react';
-import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage, PROPS, TIER_KO, PROP_PRICE, SHELF_ODDS, SHELF_XP, SHELF_LEVEL_MAX, stockShelf, buyProp, placeProp, storeProp } from './village/economy.js';
+import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage, PROPS, TIER_KO, PROP_PRICE, SHELF_ODDS, SHELF_XP, SHELF_LEVEL_MAX, stockShelf, buyProp, placeProp, storeProp, shelfReserve } from './village/economy.js';
 import { createIsland, slotRole } from './village/islandScene';
 import { sfx } from './audio/sfx.js';
 import CardFace, { ANIMAL_KO, RARITY_KO } from './cards/CardFace';
@@ -303,6 +303,11 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
             </div>
             <div className="panel-body">
               <p className="look-note">판이 끝나면 세 칸이 새로 들어와요. 도토리로는 다시 굴리거나 레벨을 살 수 없어요.</p>
+              {shelfReserve(village) && (
+                <p className="shelf-reserve" id="shelf-reserve">
+                  🏗️ 다음 건물({BUILDINGS[shelfReserve(village)!.kind as keyof typeof BUILDINGS].ko}) 몫 🌰 {shelfReserve(village)!.cost}은 남겨 둬요. 매대에 쓸 수 있는 도토리 {Math.max(0, village.coins - shelfReserve(village)!.cost)}개.
+                </p>
+              )}
               <div className="shelf-slots">
                 {village.shelf.slots.map((s: any, i: number) => {
                   const p = PROPS[s.kind as keyof typeof PROPS];
@@ -316,7 +321,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
                         <button
                           type="button"
                           className="hud-btn shelf-buy"
-                          disabled={village.coins < price}
+                          disabled={village.coins - price < (shelfReserve(village)?.cost ?? 0)}
                           onClick={() => {
                             const v = loadVillage();
                             if (buyProp(v, i)) return;

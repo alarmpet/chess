@@ -990,6 +990,7 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .shelf-out { font-size: 12px; font-weight: 800; color: #fca5a5; }
 .shelf-stock { font-size: 11px; color: #cbd5e1; }
 .shelf-odds { margin: 12px 0 8px; font-size: 12px; color: #cbd5e1; }
+.shelf-reserve { margin: 0 0 10px; font-size: 13px; color: #fde68a; }
 .shelf-stash { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 8px; border-top: 1px solid rgba(148, 163, 184, 0.2); }
 .shelf-stash .hud-btn { font-size: 12px; padding: 4px 8px; }
 

@@ -487,13 +487,25 @@ export function stockShelf(v, newSeed = anySeed) {
   return true;
 }
 
-/** Buy from a slot into the stash. Null when bought, else why not: 'gone', 'empty' or 'coins'. */
+/**
+ * The cheapest building not yet started, whose cost the shelf leaves untouched; null once all are started.
+ * island_sim.mjs: a bot that bought every prop it could never finished an island in 45 games, one that kept this back kept the 20–26 game pace.
+ */
+export function shelfReserve(v) {
+  const left = KIND_ORDER.filter((k) => !v.built.some((b) => b.kind === k));
+  if (!left.length) return null;
+  const kind = left.reduce((a, k) => (BUILDINGS[k].cost < BUILDINGS[a].cost ? k : a));
+  return { kind, cost: BUILDINGS[kind].cost };
+}
+
+/** Buy from a slot into the stash. Null when bought, else why not: 'gone', 'empty', 'coins' or 'reserve' (it would eat the next building's acorns). */
 export function buyProp(v, i) {
   const slot = v.shelf.slots[i];
   if (!slot || !PROPS[slot.kind]) return 'gone';
   if (slot.stock <= 0) return 'empty';
   const price = PROP_PRICE[PROPS[slot.kind].tier];
   if (v.coins < price) return 'coins';
+  if (v.coins - price < (shelfReserve(v)?.cost ?? 0)) return 'reserve';
   v.coins -= price;
   slot.stock -= 1;
   v.stash[slot.kind] = (v.stash[slot.kind] || 0) + 1;
