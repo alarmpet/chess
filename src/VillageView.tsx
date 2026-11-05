@@ -30,9 +30,9 @@ export const slotLabel = (slot: string, names: Record<string, string>) => {
   return `${FILES.indexOf(slot[2]) < 4 ? '왼쪽' : '오른쪽'} ${species}`;
 };
 
-type Props = { open: boolean; onClose: () => void; lang: 'ko' | 'en'; summary: any | null };
+type Props = { open: boolean; onClose: () => void; lang: 'ko' | 'en'; summary: any | null; dive?: boolean };
 
-export default function VillageView({ open, onClose, lang, summary }: Props) {
+export default function VillageView({ open, onClose, lang, summary, dive = false }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [village, setVillage] = useState<any>(null);
   const [col, setCol] = useState<any>(null);
@@ -138,6 +138,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
       }
     });
     island.current = api;
+    if (dive) api.enter();
     api.draw(village);
     api.drawShelf(loadCollection().shelf as string[]);
     api.drawRivalFlags(villageRivals());
@@ -224,7 +225,7 @@ export default function VillageView({ open, onClose, lang, summary }: Props) {
   };
 
   return (
-    <div className="village-view" id="village-view">
+    <div className={`village-view${dive ? ' diving' : ''}`} id="village-view">
       <div className="village-canvas" ref={hostRef} />
       <div className="village-top">
         {/* TA-5 (2026-11-04 시험 A): 그림만으로는 어린이가 못 읽어 이름을 함께 쓴다. */}

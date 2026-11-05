@@ -13,7 +13,8 @@
     "test:all": "node --test \"test/*.test.mjs\" \"test/slow/*.test.mjs\"",
     "gate:assets": "node tools/asset_gate.mjs",
     "gate:bundle": "node tools/bundle_gate.mjs",
-    "gate:drawcalls": "node tools/drawcall_gate.mjs"
+    "gate:drawcalls": "node tools/drawcall_gate.mjs",
+    "gate:drawcalls:village": "node tools/drawcall_gate.mjs --village"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

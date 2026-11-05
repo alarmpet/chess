@@ -8,6 +8,7 @@ import QuitDialog from './QuitDialog';
 import { loadVillage, settleFinishedGame } from './village/store';
 import { stageForHearts } from './village/economy.js';
 import { gainText } from './village/LoopStrip';
+import { fxSettings } from './fx/settings.js';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
@@ -20,6 +21,27 @@ export default function App() {
   const [rivalOpen, setRivalOpen] = useState(false);
   const [villageOpen, setVillageOpen] = useState(false);
   const [lastGame, setLastGame] = useState<any>(null);
+  // 잠수 전환 (아틀란티스 계획서 AT-2): 체스 카메라가 판 아래로 내려가는 0.42초 뒤에 마을이 열리고, 남색 물막이 덮였다 걷힌다.
+  const [veil, setVeil] = useState<'in' | 'out' | null>(null);
+  const [diving, setDiving] = useState(false);
+  const diveOn = () => fxSettings().dive && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const openVillage = () => {
+    if (villageOpen) return;
+    if (!diveOn()) { setDiving(false); setVillageOpen(true); return; }
+    (window as any).wizardChess?.diveCamera?.(0.45);
+    setVeil('in');
+    setDiving(true);
+    window.setTimeout(() => setVillageOpen(true), 420);
+    window.setTimeout(() => setVeil(null), 1150);
+  };
+  const closeVillage = () => {
+    setVillageOpen(false);
+    setLastGame(null);
+    if (!diveOn()) return;
+    (window as any).wizardChess?.surfaceCamera?.(0.6);
+    setVeil('out');
+    window.setTimeout(() => setVeil(null), 750);
+  };
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cardsOpen, setCardsOpen] = useState(false);
   const t = getTranslations(lang);
@@ -137,7 +159,7 @@ export default function App() {
           <button type="button" className="hud-btn quick-btn" id="btn-cards" onClick={() => setCardsOpen(true)} title={en ? 'Card album' : '카드 도감'}>
             <span aria-hidden="true">🃏</span><span className="quick-label">{en ? 'Cards' : '카드'}</span>
           </button>
-          <button type="button" className="hud-btn quick-btn" id="btn-village" onClick={() => setVillageOpen(true)} title={en ? 'Your island village' : '내 말들이 사는 섬 마을'}>
+          <button type="button" className="hud-btn quick-btn" id="btn-village" onClick={openVillage} title={en ? 'Your island village' : '내 말들이 사는 섬 마을'}>
             <span aria-hidden="true">🏡</span><span className="quick-label">{en ? 'Village' : '마을'}</span>
           </button>
           <button type="button" className="hud-btn quick-btn" id="btn-rivals" onClick={() => setRivalOpen(true)} title={en ? 'Beat a rival to win its item' : '라이벌을 이기고 소품 얻기'}>
@@ -251,11 +273,16 @@ export default function App() {
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (
-        <button type="button" className="village-toast" id="village-toast" onClick={() => setVillageOpen(true)}>
+        <button type="button" className="village-toast" id="village-toast" onClick={openVillage}>
           🌱 심기 → ♟ 한 판 ✓ → 🧺 거두기 {gainText(lastGame)} — 섬으로
         </button>
       )}
-      <VillageView open={villageOpen} onClose={() => { setVillageOpen(false); setLastGame(null); }} lang={lang === 'en' ? 'en' : 'ko'} summary={lastGame} />
+      <VillageView open={villageOpen} onClose={closeVillage} lang={lang === 'en' ? 'en' : 'ko'} summary={lastGame} dive={diving} />
+      {veil && (
+        <div className={`dive-veil ${veil}`} id="dive-veil" aria-hidden="true">
+          {[8, 22, 37, 51, 64, 78, 90, 44].map((left, i) => <i key={i} style={{ left: `${left}%`, animationDelay: `${i * 0.07}s`, width: `${10 + (i % 3) * 5}px`, height: `${10 + (i % 3) * 5}px` }} />)}
+        </div>
+      )}
     </>
   );
 }

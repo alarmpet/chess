@@ -4,9 +4,13 @@
 //   DRAWCALL_URL=http://localhost:3000/ node tools/drawcall_gate.mjs   # 이미 떠 있는 서버를 쓴다
 //   DRAWCALL_MAX=100 CHROME=<경로> 로 상한·브라우저를 바꾼다. 헤드리스는 SwiftShader 라 느리지만 드로우콜 수는 GPU 와 무관하다.
 import { spawn, execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
-const MAX = Number(process.env.DRAWCALL_MAX || 100);
+// DRAWCALL_SCENE=village 는 섬(마을) 장면을 잰다(아틀란티스 계획서 §4.3): 완성 섬 고정 저장(tools/fixtures/village-full.json)을
+// localStorage 에 넣고 #btn-village 를 눌러 window.wildcrownIsland.renderCalls() 를 읽는다. 상한 기본 150.
+const SCENE = process.env.DRAWCALL_SCENE === 'village' || process.argv.includes('--village') ? 'village' : 'chess';
+// 섬 상한 180 은 AT-1 뒤 실측(완성 섬 고정 저장: 보통 프레임 106 · 그림자 갱신 프레임 145)의 래칫. 돔(PR B)에서 그림자를 끄면 150 으로 내린다.
+const MAX = Number(process.env.DRAWCALL_MAX || (SCENE === 'village' ? 180 : 100));
 const PORT = 4173;
 const SETTLE_MS = Number(process.env.DRAWCALL_SETTLE_MS || 15000);
 const log = (m) => console.log(`[drawcall-gate] ${m}`);
@@ -78,14 +82,29 @@ try {
   const c = cdp(wsUrl);
   await c.ready;
   await c.evaluate('new Promise((ok) => { const t = setInterval(() => { if (window.wizardChess?.debugRenderCalls) { clearInterval(t); ok(true); } }, 250); })');
-  log(`엔진 준비. ${SETTLE_MS}ms 안정화`);
-  await new Promise((ok) => setTimeout(ok, SETTLE_MS));
-  const r = await c.evaluate(`new Promise((ok) => { let n = 0; const f = () => (++n >= 4 ? ok({ calls: window.wizardChess.debugRenderCalls(), tris: window.wizardChess.debugRenderer().info.render.triangles, pieces: window.wizardChess.debugScene().children.filter((o) => o.name === 'piece').length }) : requestAnimationFrame(f)); requestAnimationFrame(f); })`);
-  c.close();
-  log(`드로우콜 ${r.calls} (삼각형 ${r.tris}, 기물 ${r.pieces}) · 상한 ${MAX}`);
-  if (r.pieces < 32) { log('기물이 32개 아님 — 장면이 다 뜨지 않았다. DRAWCALL_SETTLE_MS 를 늘린다'); process.exitCode = 1; }
-  else if (r.calls > MAX) { log('실패: 상한 초과'); process.exitCode = 1; }
-  else log('통과');
+  if (SCENE === 'village') {
+    const fixture = JSON.parse(readFileSync(new URL('./fixtures/village-full.json', import.meta.url), 'utf8'));
+    await c.evaluate(`(() => { const f = ${JSON.stringify(fixture)}; for (const [k, v] of Object.entries(f)) localStorage.setItem(k, JSON.stringify(v)); document.getElementById('btn-village').click(); return true; })()`);
+    await c.evaluate('new Promise((ok) => { const t = setInterval(() => { if (window.wildcrownIsland && window.wildcrownIsland.pending() === 0) { clearInterval(t); ok(true); } }, 250); })');
+    log(`섬 장면 준비(모델 로드 끝). ${SETTLE_MS}ms 안정화`);
+    await new Promise((ok) => setTimeout(ok, SETTLE_MS));
+    // 그림자 맵은 3프레임마다 갱신돼 그 프레임만 콜이 많다. 4프레임을 읽어 최대값을 판정에 쓴다.
+    const r = await c.evaluate('new Promise((ok) => { const seen = []; const f = () => { seen.push(window.wildcrownIsland.renderCalls()); if (seen.length >= 4) ok({ calls: Math.max(...seen), low: Math.min(...seen), tris: window.wildcrownIsland.triangles(), built: JSON.parse(localStorage.getItem("wildcrown.village.v1")).built.length }); else requestAnimationFrame(f); }; requestAnimationFrame(f); })');
+    c.close();
+    log(`섬 장면 드로우콜 최대 ${r.calls} · 보통 ${r.low} (삼각형 ${r.tris}, 건물 ${r.built}) · 상한 ${MAX}`);
+    if (r.built < 8) { log('고정 저장이 읽히지 않았다(건물 8채 아님)'); process.exitCode = 1; }
+    else if (r.calls > MAX) { log('실패: 상한 초과'); process.exitCode = 1; }
+    else log('통과');
+  } else {
+    log(`엔진 준비. ${SETTLE_MS}ms 안정화`);
+    await new Promise((ok) => setTimeout(ok, SETTLE_MS));
+    const r = await c.evaluate(`new Promise((ok) => { let n = 0; const f = () => (++n >= 4 ? ok({ calls: window.wizardChess.debugRenderCalls(), tris: window.wizardChess.debugRenderer().info.render.triangles, pieces: window.wizardChess.debugScene().children.filter((o) => o.name === 'piece').length }) : requestAnimationFrame(f)); requestAnimationFrame(f); })`);
+    c.close();
+    log(`드로우콜 ${r.calls} (삼각형 ${r.tris}, 기물 ${r.pieces}) · 상한 ${MAX}`);
+    if (r.pieces < 32) { log('기물이 32개 아님 — 장면이 다 뜨지 않았다. DRAWCALL_SETTLE_MS 를 늘린다'); process.exitCode = 1; }
+    else if (r.calls > MAX) { log('실패: 상한 초과'); process.exitCode = 1; }
+    else log('통과');
+  }
 } catch (e) {
   log(`오류: ${e.message}`);
   process.exitCode = 1;

@@ -417,6 +417,9 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   const ZOOM_MIN = 0.3;
   let zoom = 1;
   let zoomGoal = 1;
+  // The dive (atlantis plan AT-2) starts the camera high and steep over the island and lets it settle to the usual view.
+  let pitch = PITCH;
+  let ease = 10;
   const pan = new THREE.Vector2();
   const panGoal = new THREE.Vector2();
   const fitDistance = () => {
@@ -430,7 +433,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   };
   const placeCamera = () => {
     const dist = fitDistance() * zoom;
-    camera.position.set(pan.x + Math.sin(azimuth) * Math.cos(PITCH) * dist, Math.sin(PITCH) * dist, pan.y + Math.cos(azimuth) * Math.cos(PITCH) * dist);
+    camera.position.set(pan.x + Math.sin(azimuth) * Math.cos(pitch) * dist, Math.sin(pitch) * dist, pan.y + Math.cos(azimuth) * Math.cos(pitch) * dist);
     camera.lookAt(pan.x, -0.85, pan.y);
   };
   placeCamera();
@@ -544,21 +547,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   }
   rocks.castShadow = true;
   island.add(rocks);
-  const rootMat = toon(0x5a3a22, 1);
-  rootMat.userData = NO_OUTLINE;
-  for (let i = 0; i < 16; i++) {
-    const side = i % 4;
-    const along = -3.6 + rimRnd() * 7.2;
-    const pts: THREE.Vector3[] = [];
-    let drift = 0;
-    for (let k = 0; k < 4; k++) {
-      drift += (rimRnd() - 0.5) * 0.2;
-      const a = along + drift;
-      const o = 4.0;
-      pts.push(new THREE.Vector3(side < 2 ? a : side === 2 ? o : -o, -0.1 - k * 0.2, side < 2 ? (side === 0 ? o : -o) : a));
-    }
-    island.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, 0.022, 5), rootMat));
-  }
+  // The roots that hung over the cut face were 16 draws (+16 outline) for a detail the island camera barely showed;
+  // dropped in the draw-call cut (atlantis plan AT-1).
 
   // Everything the save decides lands in these groups and is redrawn together.
   const ground = new THREE.Group();
@@ -583,8 +573,14 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
 
   const loader = new GLTFLoader();
   const gltfs = new Map<string, Promise<any>>();
+  let pendingModels = 0;
   const loadGltf = (url: string) => {
-    if (!gltfs.has(url)) gltfs.set(url, new Promise((ok, no) => loader.load(url, ok, undefined, no)));
+    if (!gltfs.has(url)) {
+      pendingModels += 1;
+      const p = new Promise((ok, no) => loader.load(url, ok, undefined, no));
+      p.finally(() => { pendingModels -= 1; }).catch(() => { /* reported by the caller */ });
+      gltfs.set(url, p);
+    }
     return gltfs.get(url)!;
   };
   biome.populate((name: string) => loadGltf(`./packs/legend/sea/${name}.glb`)).then(() => {
@@ -646,23 +642,48 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     return g;
   }
 
+  // The field as three instanced draws (beds, stems, tips) instead of 21 meshes drawn twice (atlantis plan AT-1).
+  // The plants carry no ink outline: at that size the line swallowed the cone anyway.
+  const fieldBedGeo = new RoundedBoxGeometry(0.26, 0.09, 0.8, 2, 0.035);
+  const fieldStemGeo = new THREE.ConeGeometry(0.035, 0.2, 5);
+  const fieldTipGeo = new THREE.SphereGeometry(0.05, 6, 5);
+  const fieldBedMat = toon(0x7a4a29);
+  const fieldPlantMat = toon(0xffffff);
+  fieldPlantMat.userData = NO_OUTLINE;
   function makeField(level: number, grain: number) {
     const g = new THREE.Group();
-    const bed = new RoundedBoxGeometry(0.26, 0.09, 0.8, 2, 0.035);
-    const stem = new THREE.ConeGeometry(0.035, 0.2, 5);
-    const leaf = new THREE.SphereGeometry(0.05, 6, 5);
+    const beds = new THREE.InstancedMesh(fieldBedGeo, fieldBedMat, 3);
+    const stems = new THREE.InstancedMesh(fieldStemGeo, fieldPlantMat, 9);
+    const tips = new THREE.InstancedMesh(fieldTipGeo, fieldPlantMat, 9);
     const rnd = seeded(`field${level}`);
-    for (const x of [-0.29, 0, 0.29]) {
-      g.add(mesh(bed, 0x7a4a29, x, 0.045, 0));
+    const ripe = grain > 0;
+    let n = 0;
+    [-0.29, 0, 0.29].forEach((x, i) => {
+      dummy.position.set(x, 0.045, 0);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      beds.setMatrixAt(i, dummy.matrix);
       for (const z of [-0.27, 0, 0.27]) {
-        const ripe = grain > 0;
         const h = 0.75 + rnd() * 0.4 + level * 0.15;
-        const plant = mesh(stem, ripe ? 0xe6bb45 : 0x79b84a, x, 0.15 * h + 0.06, z);
-        plant.scale.y = h;
-        const tip = mesh(leaf, ripe ? 0xf2d060 : 0x8fce5a, x, 0.26 * h + 0.08, z);
-        g.add(plant, tip);
+        dummy.position.set(x, 0.15 * h + 0.06, z);
+        dummy.scale.set(1, h, 1);
+        dummy.updateMatrix();
+        stems.setMatrixAt(n, dummy.matrix);
+        stems.setColorAt(n, tint.setHex(ripe ? 0xe6bb45 : 0x79b84a));
+        dummy.position.set(x, 0.26 * h + 0.08, z);
+        dummy.scale.setScalar(1);
+        dummy.updateMatrix();
+        tips.setMatrixAt(n, dummy.matrix);
+        tips.setColorAt(n, tint.setHex(ripe ? 0xf2d060 : 0x8fce5a));
+        n += 1;
       }
+    });
+    for (const m of [beds, stems, tips]) {
+      m.castShadow = true;
+      m.receiveShadow = true;
     }
+    g.add(beds, stems, tips);
     return g;
   }
 
@@ -680,51 +701,90 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     return g;
   }
 
+  // Every tree on the island is drawn in five instanced batches: trunks (with ink), crown cores and the three crown shapes
+  // (atlantis plan AT-1: 24 trees were 64 draws plus outline). Leaf colour rides on the instance, so both kingdoms share them.
   const crowns = [0, 1, 2].map((i) => crownGeometry(seeded(`crown${i}`)));
   const crownCore = new THREE.IcosahedronGeometry(0.78, 2);
   const leafMap = leafTexture();
-  const leafMats = new Map<number, [THREE.Material, THREE.Material]>();
-  const leavesFor = (leaf: number) => {
-    if (!leafMats.has(leaf)) {
-      const cards = new THREE.MeshLambertMaterial({ color: leaf, map: leafMap, alphaTest: 0.5, side: THREE.DoubleSide });
-      cards.userData = NO_OUTLINE;
-      cards.onBeforeCompile = leafSway;
-      const core = new THREE.MeshLambertMaterial({ color: new THREE.Color(leaf).multiplyScalar(0.85) });
-      core.userData = NO_OUTLINE;
-      leafMats.set(leaf, [cards, core]);
-    }
-    return leafMats.get(leaf)!;
-  };
-
-  function makeTree(rnd: () => number, leaf: number) {
+  const cardMat = new THREE.MeshLambertMaterial({ color: 0xffffff, map: leafMap, alphaTest: 0.5, side: THREE.DoubleSide });
+  cardMat.userData = NO_OUTLINE;
+  cardMat.onBeforeCompile = leafSway;
+  const coreMat = new THREE.MeshLambertMaterial({ color: 0xd9d9d9 });
+  coreMat.userData = NO_OUTLINE;
+  const trunkGeo = new THREE.CylinderGeometry(0.035, 0.06, 1, 7).translate(0, 0.5, 0);
+  const trunkMat = toon(0x8a5a33);
+  const TREE_MAX = 24;
+  const treeM = new THREE.Matrix4();
+  const partM = new THREE.Matrix4();
+  type TreeSpec = { rnd: () => number; leaf: number; x: number; z: number; scale: number };
+  function makeTrees(specs: TreeSpec[]) {
     const g = new THREE.Group();
-    const h = 0.2 + rnd() * 0.08;
-    const trunk = mesh(new THREE.CylinderGeometry(0.035, 0.06, h, 7), 0x8a5a33, 0, h / 2, 0);
-    g.add(trunk);
-    const [cardMat, coreMat] = leavesFor(leaf);
-    const crown = new THREE.Group();
-    crown.position.set(0, h + 0.17, 0);
-    crown.scale.set(0.28, 0.25, 0.28).multiplyScalar(0.92 + rnd() * 0.2);
-    crown.rotation.y = rnd() * Math.PI * 2;
-    const cards = new THREE.Mesh(crowns[Math.floor(rnd() * crowns.length)], cardMat);
-    const core = new THREE.Mesh(crownCore, coreMat);
-    cards.castShadow = core.castShadow = true;
-    cards.receiveShadow = core.receiveShadow = true;
-    crown.add(core, cards);
-    g.add(crown);
+    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, TREE_MAX);
+    const cores = new THREE.InstancedMesh(crownCore, coreMat, TREE_MAX);
+    const cards = crowns.map((geo) => new THREE.InstancedMesh(geo, cardMat, TREE_MAX));
+    const cardCount = [0, 0, 0];
+    specs.slice(0, TREE_MAX).forEach((t, i) => {
+      const h = 0.2 + t.rnd() * 0.08;
+      treeM.makeScale(t.scale, t.scale, t.scale).setPosition(t.x, TILE_TOP, t.z);
+      dummy.position.set(0, 0, 0);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.set(1, h, 1);
+      dummy.updateMatrix();
+      trunks.setMatrixAt(i, partM.multiplyMatrices(treeM, dummy.matrix));
+      dummy.position.set(0, h + 0.17, 0);
+      dummy.scale.set(0.28, 0.25, 0.28).multiplyScalar(0.92 + t.rnd() * 0.2);
+      dummy.rotation.set(0, t.rnd() * Math.PI * 2, 0);
+      dummy.updateMatrix();
+      partM.multiplyMatrices(treeM, dummy.matrix);
+      cores.setMatrixAt(i, partM);
+      cores.setColorAt(i, tint.setHex(t.leaf));
+      const shape = Math.floor(t.rnd() * crowns.length);
+      cards[shape].setMatrixAt(cardCount[shape], partM);
+      cards[shape].setColorAt(cardCount[shape], tint.setHex(t.leaf));
+      cardCount[shape] += 1;
+    });
+    trunks.count = cores.count = Math.min(specs.length, TREE_MAX);
+    cards.forEach((c, k) => { c.count = cardCount[k]; });
+    for (const m of [trunks, cores, ...cards]) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+      if (m.instanceColor) m.instanceColor.needsUpdate = true;
+      g.add(m);
+    }
     return g;
   }
 
-  function makeFlag(game: number) {
+  // Mate flags, batched the same way: poles with ink, cloths coloured per game.
+  const FLAG_MAX = 12;
+  const poleGeo = new THREE.CylinderGeometry(0.014, 0.018, 0.58, 6).translate(0, 0.29, 0);
+  const poleMat = toon(0x8a5a33);
+  const clothShape = new THREE.Shape();
+  clothShape.moveTo(0, 0);
+  clothShape.lineTo(0.24, -0.07);
+  clothShape.lineTo(0, -0.15);
+  const clothGeo = new THREE.ShapeGeometry(clothShape).translate(0.012, 0.56, 0);
+  const clothMat = toon(0xffffff);
+  clothMat.side = THREE.DoubleSide;
+  function makeFlags(flags: { x: number; z: number; game: number }[]) {
     const g = new THREE.Group();
-    g.add(mesh(new THREE.CylinderGeometry(0.014, 0.018, 0.58, 6), 0x8a5a33, 0, 0.29, 0));
-    const cloth = new THREE.Shape();
-    cloth.moveTo(0, 0);
-    cloth.lineTo(0.24, -0.07);
-    cloth.lineTo(0, -0.15);
-    const flag = mesh(new THREE.ShapeGeometry(cloth), game % 2 ? 0xffc23d : 0xf0606a, 0.012, 0.56, 0);
-    (flag.material as THREE.Material).side = THREE.DoubleSide;
-    g.add(flag);
+    const poles = new THREE.InstancedMesh(poleGeo, poleMat, FLAG_MAX);
+    const cloths = new THREE.InstancedMesh(clothGeo, clothMat, FLAG_MAX);
+    flags.slice(0, FLAG_MAX).forEach((f, i) => {
+      dummy.position.set(f.x, TILE_TOP, f.z);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      poles.setMatrixAt(i, dummy.matrix);
+      cloths.setMatrixAt(i, dummy.matrix);
+      cloths.setColorAt(i, tint.setHex(f.game % 2 ? 0xffc23d : 0xf0606a));
+    });
+    poles.count = cloths.count = Math.min(flags.length, FLAG_MAX);
+    for (const m of [poles, cloths]) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+      if (m.instanceColor) m.instanceColor.needsUpdate = true;
+      g.add(m);
+    }
     return g;
   }
 
@@ -1010,15 +1070,22 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     drawGround(v);
     const occupied = new Set([...v.built.map((b: any) => b.sq), ...v.decor.map((d: any) => d.sq)]);
     const LEAVES: Record<string, number> = { w: 0x7fb648, b: 0x6aa84f };
-    for (const tree of v.map.trees.slice(-24)) {
+    const treeSpecs: TreeSpec[] = v.map.trees.slice(-TREE_MAX).map((tree: any) => {
       const rnd = seeded(`${tree.sq}${tree.slot}${tree.game}`);
-      const m = makeTree(rnd, LEAVES[tree.slot[0]] ?? 0x7fb648);
+      // The same draws from the seed as before the batching, so every tree keeps its height, crown and side of the square.
+      const h = rnd();
+      const k = rnd();
+      const turn = rnd();
+      const shape = rnd();
       const [x, z] = squareXZ(tree.sq);
       const inset = occupied.has(tree.sq) ? 0.44 : 0.26;
-      m.position.set(x + (rnd() < 0.5 ? inset : -inset), TILE_TOP, z + (rnd() < 0.5 ? inset : -inset));
-      m.scale.setScalar(occupied.has(tree.sq) ? 0.6 : 1);
-      marks.add(m);
-    }
+      const px = x + (rnd() < 0.5 ? inset : -inset);
+      const pz = z + (rnd() < 0.5 ? inset : -inset);
+      const replay = [h, k, turn, shape];
+      let at = 0;
+      return { rnd: () => replay[at++ % replay.length], leaf: LEAVES[tree.slot[0]] ?? 0x7fb648, x: px, z: pz, scale: occupied.has(tree.sq) ? 0.6 : 1 };
+    });
+    if (treeSpecs.length) marks.add(makeTrees(treeSpecs));
     drawNature(v, occupied);
     for (const b of v.built) placeBuilding(b, v);
     for (const d of v.decor) {
@@ -1029,12 +1096,11 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       else at.add(makeOldDecor(d.kind));
       marks.add(at);
     }
-    for (const f of v.flags.slice(-12)) {
-      const m = makeFlag(f.game);
+    const flagSpecs = v.flags.slice(-FLAG_MAX).map((f: any) => {
       const [x, z] = squareXZ(f.sq);
-      m.position.set(x - 0.3, TILE_TOP, z + 0.3);
-      marks.add(m);
-    }
+      return { x: x - 0.3, z: z + 0.3, game: f.game };
+    });
+    if (flagSpecs.length) marks.add(makeFlags(flagSpecs));
     // Promotions earn a house on the far rank of their file, castling a gate at the back of the island.
     for (const h of v.map.houses.slice(-8)) {
       const sq = `${h.slot[2]}8`;
@@ -1428,21 +1494,34 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   canvas.addEventListener('pointercancel', onUp);
   canvas.addEventListener('pointerleave', onUp);
 
+  // 드로우콜 갈고리 (아틀란티스 계획서 §4.3 AT-0): OutlineEffect 는 renderer.render 를 두 번 부르므로 자동 리셋을 끄고
+  // 프레임마다 손으로 지운다. 그래야 외곽선 패스까지 합친 수가 나온다. tools/drawcall_gate.mjs 가 DRAWCALL_SCENE=village 로 읽는다.
+  renderer.info.autoReset = false;
+  (window as any).wildcrownIsland = {
+    renderCalls: () => renderer.info.render.calls,
+    triangles: () => renderer.info.render.triangles,
+    /** How many building models are still loading; the gate waits for zero. */
+    pending: () => pendingModels
+  };
+
   const clock = new THREE.Clock();
   let raf = 0;
   let frame = 0;
   const loop = () => {
     raf = requestAnimationFrame(loop);
+    renderer.info.reset();
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.elapsedTime;
     biome.tick(t);
     grassWind.value = t;
     island.position.y = Math.sin(t * 0.7) * 0.012;
-    if (Math.abs(azimuthGoal - azimuth) > 0.001 || Math.abs(zoomGoal - zoom) > 0.0005 || pan.distanceToSquared(panGoal) > 1e-6) {
+    if (Math.abs(azimuthGoal - azimuth) > 0.001 || Math.abs(zoomGoal - zoom) > 0.0005 || Math.abs(PITCH - pitch) > 0.0005 || pan.distanceToSquared(panGoal) > 1e-6) {
       const k = Math.min(1, dt * 6);
       azimuth += (azimuthGoal - azimuth) * k;
-      zoom += (zoomGoal - zoom) * Math.min(1, dt * 10);
+      zoom += (zoomGoal - zoom) * Math.min(1, dt * ease);
+      pitch += (PITCH - pitch) * Math.min(1, dt * ease);
       pan.lerp(panGoal, Math.min(1, dt * 10));
+      if (Math.abs(zoomGoal - zoom) < 0.001 && Math.abs(PITCH - pitch) < 0.001) ease = 10;
       placeCamera();
     }
     mixers.forEach((m) => m.update(dt));
@@ -1572,6 +1651,13 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     rotate(dir: number) {
       azimuthGoal += (dir * Math.PI) / 2;
     },
+    /** Start the camera high over the island, as if arriving from the board above, and settle down over about half a second. */
+    enter() {
+      pitch = 1.25;
+      zoom = 1.6;
+      ease = 4.5;
+      placeCamera();
+    },
     setNight(on: boolean) {
       night = on;
       applyPalette(on ? 'night' : 'day');
@@ -1595,6 +1681,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     },
     dispose() {
       cancelAnimationFrame(raf);
+      delete (window as any).wildcrownIsland;
       window.removeEventListener('resize', onResize);
       renderer.domElement.removeEventListener('click', onClick);
       canvas.removeEventListener('wheel', onWheel);

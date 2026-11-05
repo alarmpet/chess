@@ -13,6 +13,7 @@ import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
 import { createContactShadows } from './fx/contactShadows.js';
+import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
 import { fxSettings } from './fx/settings.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
@@ -122,6 +123,14 @@ export function initWizardChess() {
     orbitControls.maxDistance = 36.0;
     orbitControls.target.set(0, 0.85, -0.15);
     orbitControls.update();
+
+    // 계층 렌더 실험(①)과 GPU 시간 탐침 — src/fx/layeredRender.js. 기본은 꺼짐, `?layers=1&hz=12` 또는 wizardChess.setLayered 로 켠다.
+    const layered = createLayeredRender(renderer, scene, camera, { staticRoots: () => [biomeGroup, boardGroup, scene.getObjectByName('cathedral')] });
+    const gpuTimer = createGpuTimer(renderer);
+    {
+      const q = new URLSearchParams(window.location.search);
+      if (q.get('layers') === '1') layered.setEnabled(true, Number(q.get('hz') ?? 12));
+    }
 
     // =========================================================================
     // Feature 5: Hold Shift + Mouse Drag (Left=Rotate, Right=Pan) Axis Lock (X or Y)
@@ -915,6 +924,7 @@ export function initWizardChess() {
     let gameReported = false;       // the village is paid once per finished game
     let gameId = Date.now() >>> 0;  // changes with every new game; cards use it to seed their rolls
     let renderPaused = false;       // the village screen draws its own scene on top
+    let divePose = null;            // where the camera was before the dive to the village
     let slotStages = {};            // start square → look stage earned in the village, e.g. { w_e2: 'grown' }
     function slotRole(id) {
       if (id[3] === '2' || id[3] === '7') return 'pawn';
@@ -1043,6 +1053,7 @@ export function initWizardChess() {
     // Pack-driven board palette (PLAN §4.3 `board`): recolours the shared square/rim materials.
     function applyBoardPalette(board) {
       if (!board) return;
+      layered.markDirty();
       for (const sq of boardSquareMeshes) {
         const first = sq.userData.squares?.[0];
         const hex = first && ((first.r + first.c) % 2 === 0) ? board.light : board.dark;
@@ -1090,6 +1101,7 @@ export function initWizardChess() {
         renderer.toneMapping = THREE.NeutralToneMapping;
         renderer.toneMappingExposure = env.sea.exposure ?? 1;
         seaBiome = buildSeaBiome(biomeGroup, env, { halfBoard: 4 * BOARD_SQ_SIZE, surfaceY: BOARD_SURFACE_Y, rand });
+        layered.markDirty();
         return;
       }
       const groundR = env.ground?.radius || 40;
@@ -1658,6 +1670,7 @@ export function initWizardChess() {
             setWallStoneLook(0);
             setFloorStoneLook(0);
             scene.add(cathedralRoot);
+            layered.markDirty();
 
             bumpProgress('Cathedral Architecture Loaded...');
             resolve();
@@ -1723,7 +1736,7 @@ export function initWizardChess() {
       }
       assetApi = { buildTemplate, loadGltfModel, base: packAssetBase };
       // Scenery only, so the game does not wait for it.
-      seaBiome?.populate((name) => loadGltfModel(name, `${packAssetBase}sea/`)).then(() => { renderer.shadowMap.needsUpdate = true; });
+      seaBiome?.populate((name) => loadGltfModel(name, `${packAssetBase}sea/`)).then(() => { renderer.shadowMap.needsUpdate = true; layered.markDirty(); });
       rivalProgress = sanitizeRivalProgress(activePack, loadRivalProgress());
       cosmetics = sanitizeCosmetics(activePack, loadSavedCosmetics(), unlockedItems());
       await ensureCosmeticAssets();
@@ -4958,6 +4971,7 @@ export function initWizardChess() {
     // Raycasting & Board Interaction
     // =========================================================================
     const raycaster = new THREE.Raycaster();
+    raycaster.layers.enableAll();   // 계층 렌더가 보드를 정적 층(1)에 두어도 칸을 집을 수 있게
     const pointer = new THREE.Vector2();
     let pointerDownPos = { x: 0, y: 0 };
 
@@ -5765,6 +5779,22 @@ export function initWizardChess() {
       })),
       getVillageWeekly: () => activePack?.weekly || [],
       setRenderPaused: (on) => { renderPaused = Boolean(on); },
+      // 잠수 전환 (아틀란티스 계획서 AT-2): 마을로 갈 때 카메라가 판 가장자리 아래 수면 바로 위로 내려가고, 돌아오면 떠났던 자리로 올라온다.
+      diveCamera: (seconds = 0.45) => {
+        divePose = { pos: camera.position.clone(), target: orbitControls.target.clone() };
+        const dir = new THREE.Vector3(camera.position.x, 0, camera.position.z);
+        if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+        dir.normalize();
+        // Over the beach just past the board's rim, tipping down into the water, so the pieces slide out of the frame instead of filling it.
+        const from = dir.clone().multiplyScalar(2.6);
+        const into = dir.clone().multiplyScalar(1.9);
+        smoothCameraTo(new THREE.Vector3(from.x, BOARD_SURFACE_Y + 0.1, from.z), new THREE.Vector3(into.x, BOARD_SURFACE_Y - 1.2, into.z), seconds);
+      },
+      surfaceCamera: (seconds = 0.6) => {
+        const back = divePose || defaultCameraFor(playerCamSide);
+        divePose = null;
+        smoothCameraTo(back.pos, back.target, seconds);
+      },
       // Hearts earned in the village grow that one individual on the board; the model set already has every stage.
       setSlotStages: async (map) => {
         slotStages = map || {};
@@ -5772,6 +5802,11 @@ export function initWizardChess() {
         rebuildAllPieces();
       },
       debugRenderCalls: () => renderer.info.render.calls,
+      // 계층 렌더 실험(①): 켜기/끄기, 프레임 통계, 모아 둔 GPU ms 표본(EXT_disjoint_timer_query_webgl2 가 있을 때만).
+      setLayered: (on, hz) => layered.setEnabled(on, hz),
+      debugLayered: () => layered.stats(),
+      debugGpuMs: () => gpuTimer.take(),
+      gpuTimerAvailable: gpuTimer.available,
       // 드로우콜 분해 실험(엔진 선택 계획서 §5 1일차): 장면·렌더러·카메라를 읽기 전용으로 노출
       debugScene: () => scene, debugRenderer: () => renderer, debugCamera: () => camera,
       // 피킹 디버그: NDC 좌표에서 클릭 처리와 같은 레이캐스트를 돌려 어느 칸이 잡히는지 돌려준다
@@ -6320,7 +6355,9 @@ export function initWizardChess() {
 
       if (doRender) {
         camera.position.add(impactFx.shakeOffset);
-        renderer.render(scene, camera);
+        gpuTimer.begin();
+        layered.render();
+        gpuTimer.end();
         camera.position.sub(impactFx.shakeOffset);
       }
     }
