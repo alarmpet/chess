@@ -5012,26 +5012,32 @@ export function initWizardChess() {
         return;
       }
 
-      let clickedR = -1;
-      let clickedC = -1;
-      let obj = hits[0].object;
-      while (obj) {
-        if (obj.userData && obj.userData.piece) {
-          clickedR = obj.userData.piece.r;
-          clickedC = obj.userData.piece.c;
-          break;
+      // What a hit stands for: a piece (its square) or a board square.
+      const squareOf = (hit) => {
+        for (let obj = hit.object; obj; obj = obj.parent) {
+          if (obj.userData?.piece) return { r: obj.userData.piece.r, c: obj.userData.piece.c, isPiece: true };
+          if (obj.userData?.isSquare) {
+            const sq = obj.userData.squares?.[hit.instanceId];
+            return sq ? { r: sq.r, c: sq.c, isPiece: false } : null;
+          }
         }
-        if (obj.userData && obj.userData.isSquare) {
-          const sq = obj.userData.squares?.[hits[0].instanceId];
-          if (!sq) return;
-          clickedR = sq.r;
-          clickedC = sq.c;
-          break;
-        }
-        obj = obj.parent;
-      }
-
-      if (clickedR === -1) return;
+        return null;
+      };
+      // The square under the finger wins over a taller piece standing in front of it. From the player camera on a
+      // phone the back rank hides most of the second: tapping e2 picked the e1 king, and a pawn took only a 10px band
+      // of its 30px square (Galaxy Z Flip5, 2026-11-05). A piece's body still counts where the square under it is empty
+      // and not a move: the head of a piece reaching over an empty square, or an enemy to take.
+      const first = squareOf(hits[0]);
+      const floorHit = hits.find((h) => squareOf(h)?.isPiece === false);
+      const floor = floorHit && squareOf(floorHit);
+      const floorMatters = floor && (
+        boardState[floor.r][floor.c]?.color === currentTurn ||
+        (selectedSquare && validMoves.some((m) => (m.r === floor.r && m.c === floor.c) || (m.castle && m.r === floor.r && m.rookFromC === floor.c)))
+      );
+      const target = floorMatters ? floor : first;
+      if (!target) return;
+      const clickedR = target.r;
+      const clickedC = target.c;
       if (promotionPickerOpen) return;          // the promotion chooser owns the next click
 
       // Cancel any pending scripted pre-move highlight timer when the user manually interacts with the board
