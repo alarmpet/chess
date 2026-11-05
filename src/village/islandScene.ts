@@ -9,6 +9,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { createUndersea, SEABED_Y, RIPPLE_GLSL } from './undersea';
 import { stageForHearts, tenantAnimal, tenantRarity } from './economy.js';
 import { villageTiles } from './roster.js';
+import { ZONES, zoneOf } from './zones.js';
 
 const FILES = 'abcdefgh';
 const SPECIES: Record<string, string> = { king: 'lion', queen: 'tiger', rook: 'rhino', bishop: 'panda', knight: 'kangaroo', pawn: 'meerkat' };
@@ -18,7 +19,7 @@ const squareXZ = (sq: string): [number, number] => [FILES.indexOf(sq[0]) - 3.5, 
 
 const INK = [0.17, 0.1, 0.06];              // the outline colour joins the board to the comic ink cards
 const NO_OUTLINE = { outlineParameters: { visible: false } };
-const DOME_CUT = 0.3;                       // how far up the firefly station's height its brass base reaches
+const DOME_CUT = 0.36;                      // how far up the firefly station's height its brass base reaches
 const TILE_TOP = 0.095;                     // the height things stand on
 
 // Yaw turns each model's door towards the opening camera; size is the width it fills on its tile.
@@ -447,6 +448,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   // Land: grass caps over soil blocks. One draw each, and instance colours carry the worn paths.
   const dummy = new THREE.Object3D();
   const tint = new THREE.Color();
+  const zoneTint = new THREE.Color();
   const capGeo = new RoundedBoxGeometry(0.985, 0.2, 0.985, 3, 0.07);
   const capWear = new THREE.InstancedBufferAttribute(new Float32Array(64), 1);
   capGeo.setAttribute('aWear', capWear);
@@ -897,14 +899,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       for (const [px, pz] of [[-0.42, -0.42], [0.42, -0.42], [-0.42, 0.42], [0.42, 0.42]]) at.add(mesh(post, 0xc99a5c, px, 0.4, pz));
       at.add(mesh(new THREE.BoxGeometry(0.92, 0.03, 0.03), 0xc99a5c, 0, 0.72, 0.42), mesh(new THREE.BoxGeometry(0.92, 0.03, 0.03), 0xc99a5c, 0, 0.72, -0.42));
     } else {
-      if (b.kind === 'mill' && b.tenant) {
-        const sails = makeSails();
-        const hub = LOOKS.mill.hub!;
-        sails.position.set(Math.sin(hub.angle) * hub.out, hub.y, Math.cos(hub.angle) * hub.out);
-        sails.rotation.y = hub.angle;
-        at.add(sails);
-        spinners.push(sails);
-      }
+      // The Atlantis water mill (AT-7) has its wheel in the model; a worked mill lets a thin stream of bubbles rise beside it.
+      if (b.kind === 'mill' && b.tenant) addPuffs(at, 0.32, 0.3, 0.1, 0xd8f6ff, 5);
       if (b.kind === 'bakery') {
         addPuffs(at, 0.13, 0.86, -0.05, 0xfff4e4, 4);
         addGlow(at, 0.4, 0xffb45a, 2.4);
@@ -960,6 +956,9 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       const dark = (f + r) % 2 === 0;       // the board stays readable under the grass
       const base = level === 0 ? (dark ? 0x7f9c47 : 0x94ad54) : level === 1 ? (dark ? 0xa3a35a : 0xb3b166) : level === 2 ? (dark ? 0xb3a97a : 0xc2b888) : (dark ? 0x8fa850 : 0xa2b95c);
       caps.setColorAt(i, tint.setHex(base).offsetHSL((rnd() - 0.5) * 0.01, 0, (rnd() - 0.5) * 0.02));
+      // The four quarters of the dome read by a faint tint, and the plaza under the light shafts by pale stone (atlantis AT-6).
+      const zone = ZONES[zoneOf(sq) as keyof typeof ZONES];
+      if (zone) caps.setColorAt(i, tint.lerp(zoneTint.setHex(zone.tint), zone.mix));
       capWear.setX(i, WEAR[level] ?? 0);
       if (occupied.has(sq)) return;
       const count = level === 0 ? 0 : level === 1 ? 7 : 20;
@@ -1396,6 +1395,41 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     for (const g of glows) g.visible = name === 'night';
   }
 
+  // A tapped animal lets out a little burst of bubbles (atlantis AT-8): twelve spheres from one instanced mesh, gone in 1.4 s.
+  const BURST = 12;
+  const burstMat = new THREE.MeshStandardMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.55, roughness: 0.05, emissive: 0x6fd8ff, emissiveIntensity: 0.4, depthWrite: false });
+  burstMat.userData = { outlineParameters: { thickness: 0.0014, color: [0.2, 0.45, 0.6] } };
+  const burstMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.09, 10, 8), burstMat, BURST);
+  burstMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  burstMesh.frustumCulled = false;
+  burstMesh.visible = false;
+  island.add(burstMesh);
+  const burstSeeds = Array.from({ length: BURST }, (_, i) => [Math.cos(i * 2.4) * (0.08 + (i % 3) * 0.06), Math.sin(i * 2.4) * (0.08 + (i % 3) * 0.06), 0.7 + (i % 4) * 0.25, 0.6 + (i % 5) * 0.2]);
+  const burstAt = new THREE.Vector3();
+  let burstStart = -10;
+  function burstBubbles(at: THREE.Vector3) {
+    burstAt.copy(at);
+    burstStart = clock.elapsedTime;
+    burstMesh.visible = true;
+  }
+  function stepBurst(t: number) {
+    if (!burstMesh.visible) return;
+    const k = (t - burstStart) / 1.4;
+    if (k >= 1) {
+      burstMesh.visible = false;
+      return;
+    }
+    burstSeeds.forEach(([dx, dz, rise, size], i) => {
+      const lag = Math.max(0, k - i * 0.03);
+      dummy.position.set(burstAt.x + dx * (1 + lag * 2) + Math.sin(t * 6 + i) * 0.02, burstAt.y + 0.45 + lag * rise * 1.4, burstAt.z + dz * (1 + lag * 2));
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(size * (0.4 + lag) * (lag > 0.85 ? (1 - lag) / 0.15 : 1));
+      dummy.updateMatrix();
+      burstMesh.setMatrixAt(i, dummy.matrix);
+    });
+    burstMesh.instanceMatrix.needsUpdate = true;
+  }
+
   const ray = new THREE.Raycaster();
   const ptr = new THREE.Vector2();
   const aim = (e: MouseEvent) => {
@@ -1417,6 +1451,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       if (a) {
         a.path = [];
         a.play('Cheer');
+        burstBubbles(a.root.position);
         a.cheerUntil = clock.elapsedTime + 1.6;
         a.wait = 1.8;
         setTimeout(() => { if (a.cheerUntil && clock.elapsedTime >= a.cheerUntil - 0.05) a.play('Idle'); }, 1600);
@@ -1517,7 +1552,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     pending: () => pendingModels,
     /** Read-only, for debugging in the browser console. */
     debugScene: () => scene,
-    debugRenderer: () => renderer
+    debugRenderer: () => renderer,
+    debugCamera: () => camera
   };
 
   const clock = new THREE.Clock();
@@ -1571,6 +1607,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     overlayMat.opacity = 0.34 + Math.sin(t * 3.2) * 0.1;
     if (dewDrops.visible) dewMat.opacity = 0.55 + Math.sin(t * 2.4) * 0.35;
     frame += 1;
+    stepBurst(t);
     layContactSpots();
     outline.render(scene, camera);
   };

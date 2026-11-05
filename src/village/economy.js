@@ -21,13 +21,14 @@ export const DEW_GRAIN = 1;                 // garden-short G2: a starting guess
 
 // The chess game is the clock: a building placed now opens when the next game ends, and nothing runs on real time.
 // minRarity is the resident a building needs to work: any animal of that rarity or better, never one named card.
+// Names follow the undersea village (atlantis plan §3.4, decision 6); rules and costs are unchanged.
 export const BUILDINGS = {
   field: { ko: '밭', en: 'Field', cost: 20, minRarity: 0, icon: '🌾', effect: '판이 끝나면 곡물이 자랍니다' },
-  shelter: { ko: '숲 쉼터', en: 'Grove hut', cost: 30, minRarity: 0, icon: '🌳', effect: '이번 판 나무만큼 하트가 모입니다' },
-  mill: { ko: '풍차', en: 'Windmill', cost: 40, minRarity: 0, icon: '🌬️', effect: '빵집이 곡물을 절반만 씁니다' },
+  shelter: { ko: '산호 쉼터', en: 'Coral hut', cost: 30, minRarity: 0, icon: '🌳', effect: '이번 판 나무만큼 하트가 모입니다' },
+  mill: { ko: '물레방아', en: 'Water wheel', cost: 40, minRarity: 0, icon: '💧', effect: '빵집이 곡물을 절반만 씁니다' },
   market: { ko: '장터', en: 'Market', cost: 60, minRarity: 0, icon: '🧺', effect: '남은 곡물과 빵을 도토리로 팝니다' },
   bakery: { ko: '빵집', en: 'Bakery', cost: 80, minRarity: 1, icon: '🥖', effect: '곡물로 빵을 굽습니다' },
-  power: { ko: '반딧불 발전소', en: 'Firefly station', cost: 120, minRarity: 1, icon: '✨', effect: '섬에 밤이 오고 모든 건물이 +1' },
+  power: { ko: '플랑크톤 발전소', en: 'Plankton station', cost: 120, minRarity: 1, icon: '✨', effect: '섬에 밤이 오고 모든 건물이 +1' },
   spring: { ko: '온천', en: 'Hot spring', cost: 160, minRarity: 1, icon: '♨️', effect: '빵 하나가 하트 셋이 됩니다' },
   stage: { ko: '축제 무대', en: 'Festival stage', cost: 240, minRarity: 2, icon: '🎪', effect: '의뢰를 해내면 그 동물의 축제가 열립니다' }
 };

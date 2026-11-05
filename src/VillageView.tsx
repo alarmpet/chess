@@ -10,6 +10,7 @@ import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRiva
 import { certificateLines, drawCertificate } from './village/certificate.js';
 import { earnedMarks } from './village/marks.js';
 import LoopStrip from './village/LoopStrip';
+import { ZONES, zoneOf } from './village/zones.js';
 
 const FILES = 'abcdefgh';
 const ROLE_OF: Record<string, string> = { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' };
@@ -96,6 +97,9 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
           setTrying(null);
           const here = loadVillage().decor.find((d: any) => d.sq === sq && PROPS[d.kind as keyof typeof PROPS]);
           setPropAt(here ? sq : null);
+          // The dome's quarters have names, shown like a place sign when a square is tapped (atlantis AT-6).
+          const zone = ZONES[zoneOf(sq) as keyof typeof ZONES];
+          if (zone && !here) setNote(`${zone.icon} ${lang === 'en' ? zone.en : zone.ko}`);
           return;
         }
         const v = loadVillage();

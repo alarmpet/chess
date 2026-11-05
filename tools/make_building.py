@@ -13,8 +13,9 @@ def opt(name, default):
     return default
 seeds = [int(s) for s in opt('--seeds', '11').split(',')]
 pick = opt('--pick', ''); tri = opt('--tri', '12000'); tex = opt('--tex', '768'); folder = opt('--dir', 'town')
+tag = opt('--tag', '')   # a fresh work folder for a redraw (.reports/<dir>-<tag>/<name>), so old raw GLBs are not reused
 name, concept = args[0], os.path.abspath(args[1])
-d = os.path.join(CHESS, '.reports', folder, name); os.makedirs(d, exist_ok=True)
+d = os.path.join(CHESS, '.reports', f'{folder}-{tag}' if tag else folder, name); os.makedirs(d, exist_ok=True)
 if os.path.getsize(concept) > 700 * 1024:          # TRELLIS server part limit (see make_biped.py)
     from PIL import Image
     small = os.path.join(d, 'concept.jpg'); Image.open(concept).convert('RGB').save(small, quality=90); concept = small
