@@ -7,7 +7,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createUndersea, SEABED_Y, RIPPLE_GLSL } from './undersea';
-import { stageForHearts, tenantAnimal, tenantRarity } from './economy.js';
+import { BUILDINGS, stageForHearts, tenantAnimal, tenantRarity } from './economy.js';
 import { villageTiles } from './roster.js';
 import { ZONES, zoneOf } from './zones.js';
 
@@ -934,6 +934,67 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     marks.add(at);
   }
 
+  // Building badges (AT follow-up, 11-05): the three models told the teal-roofed bakery, coral hut, stage and hot spring
+  // apart in 11 of 24 tries. Each building gets the round icon the build menu already shows, all in one Points draw.
+  // The badges keep one size on screen, so they stay readable zoomed out and small zoomed in.
+  // A phone shows the island small, so a desktop-sized badge hid the building under it: 4% of the short side, 18-30px.
+  const badgeSize = () => Math.min(30, Math.max(18, Math.min(host.clientWidth, host.clientHeight) * 0.04)) * renderer.getPixelRatio();
+  const badgeMat = new THREE.ShaderMaterial({
+    uniforms: { uAtlas: { value: null }, uCells: { value: 1 }, uSize: { value: badgeSize() }, uShow: { value: 1 } },
+    vertexShader: `attribute float aCell; varying float vCell; uniform float uSize;
+      void main() { vCell = aCell; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_PointSize = uSize; }`,
+    fragmentShader: `uniform sampler2D uAtlas; uniform float uCells; uniform float uShow; varying float vCell;
+      void main() { vec2 uv = vec2((vCell + gl_PointCoord.x) / uCells, 1.0 - gl_PointCoord.y);
+        vec4 c = texture2D(uAtlas, uv); if (c.a < 0.05) discard; gl_FragColor = vec4(c.rgb, c.a * uShow); }`,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false
+  });
+  badgeMat.userData = NO_OUTLINE;
+  function makeBadges(built: any[]) {
+    const kinds = [...new Set(built.map((b) => b.kind))].filter((k) => (BUILDINGS as any)[k]);
+    if (!kinds.length) return null;
+    const C = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = C * kinds.length;
+    canvas.height = C;
+    const ctx = canvas.getContext('2d')!;
+    kinds.forEach((k, i) => {
+      ctx.fillStyle = 'rgba(255,255,255,0.94)';
+      ctx.strokeStyle = '#2b5f7a';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(i * C + C / 2, C / 2, C / 2 - 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '36px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText((BUILDINGS as any)[k].icon, i * C + C / 2, C / 2 + 2);
+    });
+    const atlas = new THREE.CanvasTexture(canvas);
+    atlas.colorSpace = THREE.SRGBColorSpace;
+    (badgeMat.uniforms.uAtlas.value as THREE.Texture | null)?.dispose();
+    badgeMat.uniforms.uAtlas.value = atlas;
+    badgeMat.uniforms.uCells.value = kinds.length;
+    const pos: number[] = [];
+    const cell: number[] = [];
+    for (const b of built) {
+      const i = kinds.indexOf(b.kind);
+      if (i < 0) continue;
+      const [x, z] = squareXZ(b.sq);
+      pos.push(x, TILE_TOP + (b.kind === 'field' ? 0.5 : 1.2), z);
+      cell.push(i);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('aCell', new THREE.Float32BufferAttribute(cell, 1));
+    const pts = new THREE.Points(geo, badgeMat);
+    pts.renderOrder = 10;
+    pts.frustumCulled = false;
+    return pts;
+  }
+
   function drawGround(v: any) {
     ground.clear();
     const tiles = villageTiles(v.map) as Record<string, number>;
@@ -1129,6 +1190,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       const [bx, bz] = squareXZ(b.sq);
       staticSpots.push([bx, bz, 1.15]);
     }
+    const badges = makeBadges(v.built);
+    if (badges) marks.add(badges);
     for (const d of v.decor) {
       const at = new THREE.Group();
       const [x, z] = squareXZ(d.sq);
@@ -1643,6 +1706,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     // Turning a phone sideways: the usual view follows the new shape unless the player had zoomed themself.
     camera.aspect = host.clientWidth / host.clientHeight;
     if (Math.abs(zoomGoal - usualZoom) < 1e-3) zoomGoal = villageZoom();
+    badgeMat.uniforms.uSize.value = badgeSize();
     usualZoom = villageZoom();
     camera.updateProjectionMatrix();
     renderer.setSize(host.clientWidth, host.clientHeight);

@@ -33,6 +33,8 @@ export const slotLabel = (slot: string, names: Record<string, string>) => {
 
 type Props = { open: boolean; onClose: () => void; lang: 'ko' | 'en'; summary: any | null; dive?: boolean };
 
+const CARD_QUIET_MS = 7000;
+
 export default function VillageView({ open, onClose, lang, summary, dive = false }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
@@ -52,6 +54,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
   const [newWeek, setNewWeek] = useState<any>(null);
   const [shelfOpen, setShelfOpen] = useState(false);
   const [propAt, setPropAt] = useState<string | null>(null);
+  const [cardQuiet, setCardQuiet] = useState(false);
   const island = useRef<ReturnType<typeof createIsland> | null>(null);
   const live = useRef({ picking, selected });
   live.current = { picking, selected };
@@ -245,6 +248,16 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
     }
   }
 
+  // The card sat over the island's near-left squares on a desktop (the market there was named by none of three models,
+  // 11-05). It folds to a small button after a while, and opens again with new news or a tap.
+  const cardKey = [note, away.length, dew, Boolean(newWeek), propAt, picking, Boolean(summary), village?.quest?.buildingId].join('|');
+  useEffect(() => setCardQuiet(false), [cardKey, open]);
+  useEffect(() => {
+    if (!open || cardQuiet || picking || propAt) return;
+    const t = setTimeout(() => setCardQuiet(true), CARD_QUIET_MS);
+    return () => clearTimeout(t);
+  }, [cardKey, open, cardQuiet]);
+
   if (!open) return null;
   const rivals = villageRivals();
   const rivalName = (id: string) => rivals.find((r: any) => r.id === id)?.name?.ko || id;
@@ -298,7 +311,10 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
       <LoopStrip village={village} summary={summary} hasCards={owned.length > 0} dew={dew} onPlay={onClose} />
 
       {(summary || away.length > 0 || note || questHome || dew || newWeek || propAt) && (
-        <div className="village-card" id="village-card">
+        <div className={`village-card${cardQuiet ? ' quiet' : ''}`} id="village-card">
+          {cardQuiet ? (
+            <button type="button" className="village-card-open" id="village-card-open" onClick={() => setCardQuiet(false)}>💬 소식</button>
+          ) : (<>
           {summary && (
             <div>
               <b>이번 판 활약</b> {slotLabel(summary.mvp, village?.names || {})}
@@ -329,6 +345,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
               </div>
             ) : null;
           })()}
+          </>)}
         </div>
       )}
 
