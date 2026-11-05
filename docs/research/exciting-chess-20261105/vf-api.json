@@ -1,0 +1,204 @@
+[
+ {
+  "id": "api prodigy bounty",
+  "url": "https://prodigy.fandom.com/api.php?action=parse&page=Bounty_Board&prop=wikitext&format=json",
+  "keys": [
+   "bounty",
+   "removed",
+   "teacher"
+  ],
+  "status": 404,
+  "final": "https://prodigy.fandom.com/api.php?action=parse&page=Bounty_Board&prop=wikitext&format=json",
+  "title": "",
+  "found": [
+   [
+    "bounty",
+    false
+   ],
+   [
+    "removed",
+    false
+   ],
+   [
+    "teacher",
+    false
+   ]
+  ],
+  "len": 0,
+  "snips": [
+   null,
+   null,
+   null
+  ]
+ },
+ {
+  "id": "api cr quests",
+  "url": "https://clashroyale.fandom.com/api.php?action=parse&page=Quests&prop=wikitext&format=json",
+  "keys": [
+   "quest",
+   "removed",
+   "clan wars"
+  ],
+  "status": 200,
+  "final": "https://clashroyale.fandom.com/api.php?action=parse&page=Quests&prop=wikitext&format=json",
+  "title": "",
+  "found": [
+   [
+    "quest",
+    true
+   ],
+   [
+    "removed",
+    true
+   ],
+   [
+    "clan wars",
+    true
+   ]
+  ],
+  "len": 15876,
+  "snips": [
+   "{\"parse\":{\"title\":\"Quests\",\"pageid\":135400,\"wikitext\":{\"*\":\"{{Protection}}{{MagicWords}}{{RemovedContent|Page=true}}\\n\\n{{Head Image|Quests Menu.png|300px}}\\nQuests are a removed feature in Clash Royale in which players complete in-game tasks to receive rewards.\\n\\n==About Quest",
+   "{\"parse\":{\"title\":\"Quests\",\"pageid\":135400,\"wikitext\":{\"*\":\"{{Protection}}{{MagicWords}}{{RemovedContent|Page=true}}\\n\\n{{Head Image|Quests Menu.png|300px}}\\nQuests are a removed feature in Clash Royale in which players complete in-game tasks to receive rewards.\\n\\n==About Quests==\\n*Each player can get a maximum of three Quests at a time. Once the",
+   "of tasks. These tasks can be completed in 1v1 (ladder), [[2v2]], [[Tournament|Challenges]], [[Tournament/Special Event Challenges|Special Event Challenges]], [[Clan Wars/Clan Wars I|Clan Wars]] and Global Tournaments, but not in [[Friendly Battle]]s, [[Training Camp]] or Private Tournaments (unless directly asked by the Quest). Their tasks include, but are not limited to, the following:\\n**'''Playing [[Cards]]''': Th"
+  ]
+ },
+ {
+  "id": "api lol objective bounties",
+  "url": "https://wiki.leagueoflegends.com/en-us/api.php?action=parse&page=Objective_bounties&prop=wikitext&format=json",
+  "keys": [
+   "behind",
+   "1000"
+  ],
+  "status": 403,
+  "final": "https://wiki.leagueoflegends.com/en-us/api.php?action=parse&page=Objective_bounties&prop=wikitext&format=json",
+  "title": "Please wait",
+  "found": [
+   [
+    "behind",
+    false
+   ],
+   [
+    "1000",
+    false
+   ]
+  ],
+  "len": 336,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "api lol champion bounties",
+  "url": "https://wiki.leagueoflegends.com/en-us/api.php?action=parse&page=Champion_gold_bounties&prop=wikitext&format=json",
+  "keys": [
+   "shut down"
+  ],
+  "status": 403,
+  "final": "https://wiki.leagueoflegends.com/en-us/api.php?action=parse&page=Champion_gold_bounties&prop=wikitext&format=json",
+  "title": "Please wait",
+  "found": [
+   [
+    "shut down",
+    false
+   ]
+  ],
+  "len": 336,
+  "snips": [
+   null
+  ]
+ },
+ {
+  "id": "api mc advancement",
+  "url": "https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=wikitext&format=json",
+  "keys": [
+   "sniper duel",
+   "return to sender"
+  ],
+  "status": 403,
+  "final": "https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=wikitext&format=json",
+  "title": "Please wait",
+  "found": [
+   [
+    "sniper duel",
+    false
+   ],
+   [
+    "return to sender",
+    false
+   ]
+  ],
+  "len": 336,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "api pogo field research",
+  "url": "https://pokemongo.fandom.com/api.php?action=parse&page=Field_Research&prop=wikitext&format=json",
+  "keys": [
+   "breakthrough",
+   "ar"
+  ],
+  "status": 200,
+  "final": "https://pokemongo.fandom.com/api.php?action=parse&page=Field_Research&prop=wikitext&format=json",
+  "title": "",
+  "found": [
+   [
+    "breakthrough",
+    false
+   ],
+   [
+    "ar",
+    true
+   ]
+  ],
+  "len": 125,
+  "snips": [
+   null,
+   "{\"parse\":{\"title\":\"Field Research\",\"pageid\":16297,\"wikitext\":{\"*\":\"#REDIRECT [[List of Field Research tasks and rewards]]\"}}}"
+  ]
+ },
+ {
+  "id": "api pogo community day",
+  "url": "https://pokemongo.fandom.com/api.php?action=parse&page=Community_Day&prop=wikitext&format=json",
+  "keys": [
+   "exclusive"
+  ],
+  "status": 200,
+  "final": "https://pokemongo.fandom.com/api.php?action=parse&page=Community_Day&prop=wikitext&format=json",
+  "title": "",
+  "found": [
+   [
+    "exclusive",
+    true
+   ]
+  ],
+  "len": 28873,
+  "snips": [
+   "ic [[Pok\\u00e9mon]], which appears frequently around the world for a few hours. When caught or evolved during the event, this special Pok\\u00e9mon will know an exclusive move. Other bonuses can be in effect during the event, such as increased [[XP]], [[Stardust]], reduced distance to hatch [[Eggs]], increased [[Shiny Pok\\u00e9mon|shiny rate]], 3-hour [[Lure Module]]s, or 3-hour [[Incense]]. \\n\\nEach December event is"
+  ]
+ },
+ {
+  "id": "api rl challenges",
+  "url": "https://rocketleague.fandom.com/api.php?action=parse&page=Challenges&prop=wikitext&format=json",
+  "keys": [
+   "weekly"
+  ],
+  "status": 200,
+  "final": "https://rocketleague.fandom.com/api.php?action=parse&page=Challenges&prop=wikitext&format=json",
+  "title": "",
+  "found": [
+   [
+    "weekly",
+    true
+   ]
+  ],
+  "len": 5224,
+  "snips": [
+   "{\"parse\":{\"title\":\"Challenges\",\"pageid\":16793,\"wikitext\":{\"*\":\"[[File:Challenge Screen Promo.jpg|thumb|300px]]\\n\\nThe '''Challenges''' system features Weekly, Season, and Event Challenges. Each week, players get three free Weekly Challenges. When the week refreshes each Wednesday, three new Challenges replace the Challenges from the previous week. Plus, Rocket Pass Premium users get an additional three each "
+  ]
+ }
+]
