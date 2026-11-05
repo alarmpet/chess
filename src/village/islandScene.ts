@@ -408,8 +408,17 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   // over the island, and the further out the camera is the less room it has, so at zoom 1 it is always centred.
   const PITCH = 0.74;
   const ZOOM_MIN = 0.3;
-  let zoom = 1;
-  let zoomGoal = 1;
+  // The usual view is the village up close; zoom 1 is the whole dome. Arriving shows the dome first, then closes in
+  // (user, 2026-11-05: 「처음 연출만 돔, 그다음 확대해서 마을만 크게」 — grok named 1 building of 8 at zoom 1).
+  // A tall phone screen is narrow: closing in as far as on a desktop cut off the island's sides.
+  const villageZoom = () => (host.clientWidth / host.clientHeight < 0.8 ? 0.84 : 0.74);
+  let zoom = villageZoom();
+  let zoomGoal = zoom;
+  let usualZoom = zoom;   // the usual view's zoom for the screen shape seen last
+  // Pixels of panels over the top of the view (loop strip, note card). On a tall screen the picture is moved down by
+  // half of it so the island's far side does not sit under them (AT-9 follow-up, phone).
+  let topInset = 0;
+  let closeInAt = 0;
   // The dive (atlantis plan AT-2) starts the camera high and steep over the island and lets it settle to the usual view.
   let pitch = PITCH;
   let ease = 10;
@@ -431,6 +440,10 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     const dist = fitDistance() * zoom;
     camera.position.set(pan.x + Math.sin(azimuth) * Math.cos(pitch) * dist, Math.sin(pitch) * dist, pan.y + Math.cos(azimuth) * Math.cos(pitch) * dist);
     camera.lookAt(pan.x, -0.85 + lift, pan.y);
+    const w = host.clientWidth;
+    const h = host.clientHeight;
+    if (topInset > 0 && w / h < 1) camera.setViewOffset(w, h, 0, -topInset / 2, w, h);
+    else camera.clearViewOffset();
     fitFog(dist);
   };
   placeCamera();
@@ -1569,6 +1582,11 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     const t = clock.elapsedTime;
     undersea.tick(t);
     grassWind.value = t;
+    if (closeInAt && t >= closeInAt) {
+      closeInAt = 0;
+      zoomGoal = villageZoom();
+      ease = 3.2;
+    }
     if (Math.abs(azimuthGoal - azimuth) > 0.001 || Math.abs(zoomGoal - zoom) > 0.0005 || Math.abs(PITCH - pitch) > 0.0005 || lift > 0.001 || pan.distanceToSquared(panGoal) > 1e-6) {
       const k = Math.min(1, dt * 6);
       azimuth += (azimuthGoal - azimuth) * k;
@@ -1582,6 +1600,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       }
       placeCamera();
     }
+    undersea.setCloseness((0.95 - zoom) / (0.95 - villageZoom()));
     mixers.forEach((m) => m.update(dt));
     for (const a of actors) stepActor(a, dt, t);
     for (const s of spinners) s.rotation.z -= dt * 0.8;
@@ -1621,7 +1640,10 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   loop();
 
   const onResize = () => {
+    // Turning a phone sideways: the usual view follows the new shape unless the player had zoomed themself.
     camera.aspect = host.clientWidth / host.clientHeight;
+    if (Math.abs(zoomGoal - usualZoom) < 1e-3) zoomGoal = villageZoom();
+    usualZoom = villageZoom();
     camera.updateProjectionMatrix();
     renderer.setSize(host.clientWidth, host.clientHeight);
     placeCamera();
@@ -1714,9 +1736,21 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     enter() {
       pitch = 0.32;
       zoom = 1.15;
+      zoomGoal = 1;
       lift = 9;
       ease = 2.6;
+      closeInAt = clock.elapsedTime + 1.15;
       placeCamera();
+    },
+    /** How far down the panels over the scene reach, in pixels; the scene keeps its middle below them on a tall screen. */
+    setTopInset(px: number) {
+      topInset = Math.max(0, px);
+      placeCamera();
+    },
+    /** ➕ / ➖ buttons: the same steps as a few wheel notches, centred on the middle of the screen. */
+    zoomStep(dir: number) {
+      closeInAt = 0;
+      zoomTo(zoomGoal * (dir > 0 ? 0.8 : 1.25));
     },
     setNight(on: boolean) {
       night = on;
@@ -1729,10 +1763,12 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       zoom = 1;
       pan.set(0, 0);
       placeCamera();
+      undersea.setCloseness(0);
       outline.render(scene, camera);
       zoom = z;
       pan.set(px, pz);
       placeCamera();
+      undersea.setCloseness((0.95 - zoom) / (0.95 - villageZoom()));
       const small = document.createElement('canvas');
       small.width = w;
       small.height = Math.round((w * host.clientHeight) / host.clientWidth);

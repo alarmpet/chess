@@ -100,22 +100,24 @@ totalEmissiveRadiance += vec3(0.45, 0.85, 1.0) * uRipple(vSeabed * 0.45, uTime) 
 
   // ── 유리 돔: 거의 투명하고, 가장자리로 갈수록(프레넬) 청록 빛이 차오르며, 표면 위로 물결 그물이 천천히 흐른다. 굴절 패스는 없다(1콜).
   const glassColor = { value: new THREE.Color(PALETTES.day.glass) };
+  const glassFade = { value: 1 };   // 1 = 다 보임. 섬을 확대하면 돔이 흐려진다(setCloseness)
   const glass = new THREE.MeshStandardMaterial({ color: 0xdff6ff, transparent: true, opacity: 0.06, roughness: 0.1, metalness: 0, depthWrite: false, side: THREE.FrontSide });
   glass.userData = NO_OUTLINE;
   glass.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = time;
     shader.uniforms.uGlass = glassColor;
+    shader.uniforms.uGlassFade = glassFade;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\nvarying vec3 vGlassWorld;`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>\nvGlassWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\nuniform float uTime;\nuniform vec3 uGlass;\nvarying vec3 vGlassWorld;\n${NOISE}`)
+      .replace('#include <common>', `#include <common>\nuniform float uTime;\nuniform vec3 uGlass;\nuniform float uGlassFade;\nvarying vec3 vGlassWorld;\n${NOISE}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 float rim = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 2.6);
 float web = uRipple(vGlassWorld.xz * 0.5 + vGlassWorld.y * 0.3, uTime * 0.6);
 float crown = smoothstep(${(DOME_TOP - 2.2).toFixed(2)}, ${DOME_TOP.toFixed(2)}, vGlassWorld.y);
-totalEmissiveRadiance += uGlass * (rim * 0.9 + web * 0.35 + crown * 0.25);
-diffuseColor.a = clamp(diffuseColor.a + rim * 0.55 + web * 0.18 + crown * 0.1, 0.0, 0.85);`);
+totalEmissiveRadiance += uGlass * (rim * 0.9 + web * 0.35 + crown * 0.25) * uGlassFade;
+diffuseColor.a = clamp(diffuseColor.a + rim * 0.55 + web * 0.18 + crown * 0.1, 0.0, 0.85) * uGlassFade;`);
   };
   const dome = new THREE.Mesh(new THREE.SphereGeometry(DOME_R, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2), glass);
   dome.position.y = SEABED_Y;
@@ -135,7 +137,8 @@ diffuseColor.a = clamp(diffuseColor.a + rim * 0.55 + web * 0.18 + crown * 0.1, 0
     ribs.push(new THREE.TorusGeometry(r, 0.04, 6, 72).rotateX(Math.PI / 2).translate(0, y, 0));
   }
   ribs.push(new THREE.CylinderGeometry(0.42, 0.5, 0.18, 20).translate(0, DOME_R, 0));
-  const ribMesh = new THREE.Mesh(mergeGeometries(ribs), new THREE.MeshStandardMaterial({ color: 0xc9944a, roughness: 0.4, metalness: 0.5 }));
+  const ribMat = new THREE.MeshStandardMaterial({ color: 0xc9944a, roughness: 0.4, metalness: 0.5, transparent: true });
+  const ribMesh = new THREE.Mesh(mergeGeometries(ribs), ribMat);
   ribMesh.position.y = SEABED_Y;
   root.add(ribMesh);
   const baseRing = new THREE.Mesh(
@@ -384,6 +387,17 @@ transformed.y += sin(uTime * 0.45 + jid * 2.1) * 0.6;`);
       reef.traverse((o: any) => {
         for (const m of [o.material].flat()) if (m) m.userData = NO_OUTLINE;
       });
+    },
+    /**
+     * 0 = 돔 전체를 보는 거리, 1 = 마을을 크게 보는 거리. 가까울수록 리브·유리를 흐리게 해 건물을 가리지 않는다
+     * (AT-9 LLM 라운드: 「돔 뼈대가 새장처럼 섬을 가린다」, codex·grok).
+     */
+    setCloseness(k: number) {
+      const c = Math.min(1, Math.max(0, k));
+      ribMat.opacity = 1 - 0.82 * c;
+      ribMat.depthWrite = c < 0.05;
+      ribMat.userData = { outlineParameters: { alpha: 1 - 0.9 * c, visible: c < 0.95 } };
+      glassFade.value = 1 - 0.75 * c;
     },
     tick(t: number) {
       time.value = t;

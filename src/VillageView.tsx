@@ -177,7 +177,13 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
     const top = topRef.current;
     const view = viewRef.current;
     if (!open || !top || !view) return;
-    const fit = () => view.style.setProperty('--village-top-bottom', `${Math.round(top.getBoundingClientRect().bottom - view.getBoundingClientRect().top)}px`);
+    const fit = () => {
+      const bottom = Math.round(top.getBoundingClientRect().bottom - view.getBoundingClientRect().top);
+      view.style.setProperty('--village-top-bottom', `${bottom}px`);
+      // The loop strip sits under the top row; together they are what covers the top of the scene.
+      const loop = view.querySelector('.village-loop');
+      island.current?.setTopInset(loop ? Math.round(loop.getBoundingClientRect().bottom - view.getBoundingClientRect().top) : bottom);
+    };
     fit();
     const watch = new ResizeObserver(fit);
     watch.observe(top);
@@ -264,6 +270,8 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
         <span className="village-tools">
           <button type="button" className="hud-btn" aria-label="왼쪽으로 돌리기" onClick={() => island.current?.rotate(-1)}>⟲</button>
           <button type="button" className="hud-btn" aria-label="오른쪽으로 돌리기" onClick={() => island.current?.rotate(1)}>⟳</button>
+          <button type="button" className="hud-btn" id="village-zoom-in" aria-label="크게 보기" onClick={() => island.current?.zoomStep(1)}>➕</button>
+          <button type="button" className="hud-btn" id="village-zoom-out" aria-label="돔 전체 보기" onClick={() => island.current?.zoomStep(-1)}>➖</button>
           {village && nightOpen(village) && (
             <button
               type="button"
