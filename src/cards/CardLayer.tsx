@@ -9,6 +9,7 @@ import {
 } from './economy.js';
 import { MISSION_ACORNS, raceStep, sharedMission } from './missions.js';
 import { bountyMarks, bountyStep, newBounty } from './bounty.js';
+import { STAMPS, STAMP_ACORNS, stampById, stampsOf } from './stamps.js';
 import { loadVillage, payMissionAcorns } from '../village/store';
 import { clearPouch, loadCollection, loadPouch, logGame, readPlaylog, saveCollection, savePouch } from './store';
 
@@ -22,11 +23,11 @@ type Fly = Won & { key: number; x: number; y: number };
 type Game = {
   id: number; lastPly: number; won: Won[]; started: number; captures: number;
   mission: any; missionState: string | null; quest: string | null; boost: boolean; ply: number;
-  bounty: { on: Record<string, number> } | null; bountyAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
+  bounty: { on: Record<string, number> } | null; bountyAcorns: number; stampsOn: boolean; stampAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
 };
 const freshGame = (id: number): Game => ({
   id, lastPly: 0, won: [], started: Date.now(), captures: 0,
-  mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
+  mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, stampsOn: false, stampAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
 });
 const engine = () => (window as any).wizardChess;
 // chess.js piece letters to the engine's piece names (the bounty notes name the animal).
@@ -162,6 +163,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       }
       // Bounty pieces come with the missions (after the first games), and start fresh with every new game.
       if (!d.resumed && loadCollection().games >= UNLOCK_GAMES) game.current.bounty = newBounty();
+      game.current.stampsOn = loadCollection().games >= UNLOCK_GAMES;
       setPlaying(true);
     };
     const onMoved = (e: Event) => {
@@ -172,6 +174,22 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
         setPly(d.ply);
         const took = g.mission && !g.missionState && raceStep(g.mission, d.move);
         if (took) settleMission(d.byPlayer ? 'done' : 'lost');
+        // Technique stamps (OL-2): the player's named moves go into the album at once; a first one pays acorns at the end.
+        if (g.stampsOn && d.byPlayer && d.move) {
+          const got = stampsOf(d.move);
+          if (got.length) {
+            const c = loadCollection();
+            const fresh = got.filter((id) => !c.stamps[id]);
+            for (const id of got) c.stamps[id] = (c.stamps[id] || 0) + 1;
+            saveCollection(c);
+            setCol(c);
+            if (fresh.length) {
+              g.stampAcorns += STAMP_ACORNS * fresh.length;
+              const s = stampById(fresh[0])!;
+              say(en ? `🏅 New technique: ${s.en}! +${STAMP_ACORNS} acorns when the game ends` : `🏅 새 기술 도장: ${s.ko}! 판이 끝나면 도토리 +${STAMP_ACORNS}`, 3400);
+            }
+          }
+        }
         if (g.bounty && d.move) {
           const { claimed, marked } = bountyStep(g.bounty, d.move);
           engine()?.setBountyMarks?.(bountyMarks(g.bounty));
@@ -209,7 +227,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       saveCollection(saved);
       setCol(saved);
       if (dust) say(en ? `Stardust +${dust}` : `별가루 +${dust}`);
-      const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns;
+      const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns + g.stampAcorns;
       if (extra) payMissionAcorns(extra);
       engine()?.setBountyMarks?.([]);
       setPlaying(false);
@@ -487,6 +505,18 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
                   </button>
                 )))}
               </div>
+
+              <section className="card-stamps" id="card-stamps">
+                <h4>🏅 {en ? 'Technique stamps' : '기술 도장'} {STAMPS.filter((s) => col.stamps?.[s.id]).length}/{STAMPS.length}</h4>
+                <div className="card-stamp-grid">
+                  {STAMPS.map((s) => (
+                    <div key={s.id} className={`card-stamp${col.stamps?.[s.id] ? ' got' : ''}`} title={en ? s.howEn : s.how}>
+                      <b>{col.stamps?.[s.id] ? '🏅' : '○'} {en ? s.en : s.ko}</b>
+                      <small>{col.stamps?.[s.id] ? (en ? `× ${col.stamps[s.id]}` : `${col.stamps[s.id]}번`) : (en ? s.howEn : s.how)}</small>
+                    </div>
+                  ))}
+                </div>
+              </section>
 
               <button type="button" className="card-odds-toggle" onClick={() => setOdds(!odds)}>{en ? 'Odds' : '자세히: 확률'}</button>
               {odds && (

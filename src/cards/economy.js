@@ -34,7 +34,7 @@ export const DROP_TABLE = {
 export const cardId = (animal, rarity) => `${animal}_${rarity}`;
 
 export function newCollection() {
-  return { v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: false, games: 0, dust: 0, shelf: [], shelfSlots: SHELF_BASE, settled: [] };
+  return { v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: false, games: 0, dust: 0, shelf: [], shelfSlots: SHELF_BASE, settled: [], stamps: {} };
 }
 
 export function sanitizeCollection(raw) {
@@ -54,6 +54,10 @@ export function sanitizeCollection(raw) {
   base.shelfSlots = Math.min(SHELF_MAX, Math.max(SHELF_BASE, Math.floor(Number(raw.shelfSlots)) || SHELF_BASE));
   base.shelf = (Array.isArray(raw.shelf) ? raw.shelf : []).filter((id) => base.cards[id]).slice(0, base.shelfSlots);
   base.settled = (Array.isArray(raw.settled) ? raw.settled : []).filter(Number.isInteger).slice(-SETTLED_MAX);
+  // Technique stamps (stamps.js): id → times made. Unknown shapes are dropped, not trusted.
+  for (const [id, n] of Object.entries(raw.stamps && typeof raw.stamps === 'object' ? raw.stamps : {})) {
+    if (/^[a-z_]{2,30}$/.test(id) && Number.isInteger(n) && n > 0) base.stamps[id] = n;
+  }
   return base;
 }
 

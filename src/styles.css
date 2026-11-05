@@ -1196,6 +1196,12 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .game-strip-ply { flex: none; padding: 2px 8px; border-radius: 999px; background: #5a2d0c; color: #fff8e4; font-size: 0.72rem; }
 .game-strip.done { background: rgba(189, 240, 180, 0.95); }
 .game-strip-bounty { flex: none; padding: 2px 8px; border-radius: 999px; background: #ffd65c; color: #5a2d0c; font-size: 0.72rem; }
+.card-stamps h4 { margin: 14px 0 6px; }
+.card-stamp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.card-stamp { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: 10px; background: rgba(90, 45, 12, 0.06); color: #8a6a50; }
+.card-stamp.got { background: #fff1c2; color: #5a2d0c; box-shadow: inset 0 0 0 2px #f5c542; }
+.card-stamp b { font-size: 0.82rem; }
+.card-stamp small { font-size: 0.7rem; line-height: 1.3; }
 @media (orientation: portrait) {
   .game-strip { top: auto; bottom: 64px; left: 0; right: 0; width: fit-content; margin: 0 auto; }
 }
