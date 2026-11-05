@@ -5,7 +5,9 @@
 // 을 「같은 장면을 3번 새로 열어 각 3회 표본」으로 잰다. 판정: 로드 최대 중앙값 ≤ 5ms(상한). 빌드 비교는 로드 최소(floorMs)로, 1ms 넘게 벌어질 때만.
 //   bash ~/.claude/skills/chess-character-pipeline/scripts/flow_run.sh tools/perf_probe.mjs 400
 // 결과: docs/perf/<날짜>-<라벨>.json 과 한 줄 요약. 라벨은 .reports/look/label 이 있으면 그 값, 없으면 'probe'.
-// GPU 시간은 이 환경에서 못 잰다(해상도 절반·장면 숨김에도 간격이 안 변함). 진짜 fps 는 실제 Chrome 창에서 따로 잰다.
+// ⑤ GPU ms: 엔진의 EXT_disjoint_timer_query_webgl2 탐침(window.wizardChess.debugGpuMs)이 있으면 같은 표본 구간의 프레임 GPU 시간을
+// 모은다(2026-11-05 추가, 체스 장면 21.6ms 가 GPU 병목). 확장이 없는 창이면 null — fps 처럼 환경값으로 잘못 읽지 않는다.
+// 진짜 fps 는 실제 Chrome 창에서 따로 잰다.
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const LABEL = existsSync('D:/chess/.reports/look/label') ? readFileSync('D:/chess/.reports/look/label', 'utf8').trim() : 'probe';
@@ -40,8 +42,10 @@ const installHooks = (page) => page.evaluate(() => {
 });
 const sampleJs = (page, ms) => page.evaluate((ms) => new Promise((ok) => {
   const p = window.__perf; p.js.length = 0; p.render.length = 0;
+  const gpu = window.wizardChess.gpuTimerAvailable ? window.wizardChess.debugGpuMs : null;
+  gpu?.(); // 이전 구간 표본은 버린다
   const stat = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? { median: +s[Math.floor(s.length / 2)].toFixed(2), p95: +s[Math.floor(s.length * 0.95)].toFixed(2), n: s.length } : null; };
-  setTimeout(() => ok({ js: stat(p.js), render: stat(p.render) }), ms);
+  setTimeout(() => ok({ js: stat(p.js), render: stat(p.render), gpu: gpu ? stat(gpu()) : null }), ms);
 }), ms);
 
 const task = await taskSpace(`chess perf ${LABEL}`);
@@ -66,8 +70,11 @@ try {
     const jsMs = median(samples.map((s) => s.js.median));
     const jsP95 = median(samples.map((s) => s.js.p95));
     const renderMs = median(samples.map((s) => s.render.median));
-    loads.push({ jsMs, jsP95, renderMs, rafMs: raf.median, calls, samples });
-    say(`load ${load + 1}: JS ${samples.map((s) => s.js.median).join(' ')} -> ${jsMs} ms (p95 ${jsP95}) · render ${renderMs} ms · rAF ${raf.median} ms · calls ${calls}`);
+    const gpuSamples = samples.filter((s) => s.gpu);
+    const gpuMs = gpuSamples.length ? median(gpuSamples.map((s) => s.gpu.median)) : null;
+    const gpuP95 = gpuSamples.length ? median(gpuSamples.map((s) => s.gpu.p95)) : null;
+    loads.push({ jsMs, jsP95, renderMs, gpuMs, gpuP95, rafMs: raf.median, calls, samples });
+    say(`load ${load + 1}: JS ${samples.map((s) => s.js.median).join(' ')} -> ${jsMs} ms (p95 ${jsP95}) · render ${renderMs} ms · GPU ${gpuMs ?? '못 잼'}${gpuMs != null ? ` ms (p95 ${gpuP95}, n ${gpuSamples.map((s) => s.gpu.n).join('/')})` : ''} · rAF ${raf.median} ms · calls ${calls}`);
   }
   const jsList = loads.map((l) => l.jsMs);
   const spread = +(Math.max(...jsList) - Math.min(...jsList)).toFixed(2);
@@ -80,10 +87,12 @@ try {
     jsMs: median(jsList), jsP95: median(loads.map((l) => l.jsP95)), renderMs: median(loads.map((l) => l.renderMs)), rafMs: median(loads.map((l) => l.rafMs)),
     // 2026-11-05 4회 실측: 로드 안 표본 범위는 0.5ms 이하지만 로드끼리는 1.1~2.9ms 로 갈린다(환경). 그래서 비교값은 로드 최소(floorMs),
     // 상한은 로드 최대 5ms. 빌드끼리 차이는 floorMs 가 1ms 넘게 벌어질 때만 셈한다(4회 floor 범위 0.7ms).
+    gpuMs: loads.every((l) => l.gpuMs != null) ? median(loads.map((l) => l.gpuMs)) : null,
+    gpuP95: loads.every((l) => l.gpuP95 != null) ? median(loads.map((l) => l.gpuP95)) : null,
     calls: loads[0].calls, spread, floorMs: Math.min(...jsList), maxMs: Math.max(...jsList), withinCap: Math.max(...jsList) <= JS_CAP_MS, loads
   };
   writeFileSync(`${OUT_DIR}/${DAY}-${LABEL}.json`, JSON.stringify(result, null, 2));
-  say(`결과: 콜백 JS 바닥 ${result.floorMs} ms · 중앙 ${result.jsMs} (로드별 ${jsList.join('/')}, 최대 ${result.maxMs}${result.withinCap ? ' ≤ 상한 5' : ' — 상한 5ms 초과'}) · p95 ${result.jsP95} · render 제출 ${result.renderMs} ms · rAF ${result.rafMs} ms(빈 페이지 ${result.blankRafMs}) · 드로우콜 ${result.calls} · ${result.gpu}`);
+  say(`결과: 콜백 JS 바닥 ${result.floorMs} ms · 중앙 ${result.jsMs} (로드별 ${jsList.join('/')}, 최대 ${result.maxMs}${result.withinCap ? ' ≤ 상한 5' : ' — 상한 5ms 초과'}) · p95 ${result.jsP95} · render 제출 ${result.renderMs} ms · GPU ${result.gpuMs ?? '못 잼'}${result.gpuMs != null ? ` ms(p95 ${result.gpuP95})` : ''} · rAF ${result.rafMs} ms(빈 페이지 ${result.blankRafMs}) · 드로우콜 ${result.calls} · ${result.gpu}`);
   await page.evaluate(() => localStorage.clear());
   say('ALL DONE');
 } catch (e) {

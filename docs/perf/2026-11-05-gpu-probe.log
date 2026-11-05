@@ -1,0 +1,6 @@
+환경 대조(빈 페이지 rAF): {"median":20.9,"p95":34.7,"n":105} — 창이 rAF 를 제한함, fps 는 환경값
+load 1: JS 2.3 2.3 2.3 -> 2.3 ms (p95 3.4) · render 1.6 ms · GPU 19 ms (p95 19.75, n 171/181/180) · rAF 20.9 ms · calls 96
+load 2: JS 2.6 2.6 2.5 -> 2.6 ms (p95 3.8) · render 1.7 ms · GPU 18.99 ms (p95 20.22, n 178/179/180) · rAF 20.9 ms · calls 96
+load 3: JS 2.8 2.6 2.6 -> 2.6 ms (p95 3.7) · render 1.7 ms · GPU 19.73 ms (p95 20.72, n 174/174/174) · rAF 20.9 ms · calls 96
+결과: 콜백 JS 바닥 2.3 ms · 중앙 2.6 (로드별 2.3/2.6/2.6, 최대 2.6 ≤ 상한 5) · p95 3.7 · render 제출 1.7 ms · GPU 19 ms(p95 20.22) · rAF 20.9 ms(빈 페이지 20.9) · 드로우콜 96 · ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11)
+ALL DONE
