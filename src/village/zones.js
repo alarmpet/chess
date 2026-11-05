@@ -10,6 +10,13 @@ export const ZONES = {
   workshop: { ko: '거품 공방', en: 'Bubble Works', icon: '⚙', tint: 0xe0a050, mix: 0.28 }
 };
 
+/** 그 구역에 속한 칸 이름 전부(빈 칸을 눌렀을 때 구역 전체를 칠한다 — AT-9 LLM 라운드: 「어느 칸이 그 구역인지 섬 위에 표시가 없다」). */
+export function zoneSquares(key) {
+  const out = [];
+  for (const f of FILES) for (let r = 1; r <= 8; r++) if (zoneOf(`${f}${r}`) === key) out.push(`${f}${r}`);
+  return out;
+}
+
 /** 칸 이름(a1~h8)이 속한 구역의 열쇠. 가운데 네 칸은 광장, 나머지는 판을 넷으로 나눈다. */
 export function zoneOf(sq) {
   const f = FILES.indexOf(sq?.[0]);

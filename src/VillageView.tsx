@@ -10,7 +10,7 @@ import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRiva
 import { certificateLines, drawCertificate } from './village/certificate.js';
 import { earnedMarks } from './village/marks.js';
 import LoopStrip from './village/LoopStrip';
-import { ZONES, zoneOf } from './village/zones.js';
+import { ZONES, zoneOf, zoneSquares } from './village/zones.js';
 
 const FILES = 'abcdefgh';
 const ROLE_OF: Record<string, string> = { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' };
@@ -35,6 +35,8 @@ type Props = { open: boolean; onClose: () => void; lang: 'ko' | 'en'; summary: a
 
 export default function VillageView({ open, onClose, lang, summary, dive = false }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<HTMLDivElement>(null);
   const [village, setVillage] = useState<any>(null);
   const [col, setCol] = useState<any>(null);
   const [picking, setPicking] = useState<string | null>(null);
@@ -83,7 +85,12 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
     setDew(dewReady(v, t));
     setNewWeek(week || summary?.week || null);
     (window as any).wizardChess?.setRenderPaused?.(true);
-    return () => { (window as any).wizardChess?.setRenderPaused?.(false); };
+    // Closing forgets this opening's save. Kept, it reached the next opening's scene before the fresh load did, so the
+    // island was first drawn from the old save and a saved night opened as day (found in the AT-9 LLM round, 2026-11-05).
+    return () => {
+      (window as any).wizardChess?.setRenderPaused?.(false);
+      setVillage(null);
+    };
   }, [open]);
 
   // Build the island once per opening; later state changes redraw only what sits on it.
@@ -98,8 +105,12 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
           const here = loadVillage().decor.find((d: any) => d.sq === sq && PROPS[d.kind as keyof typeof PROPS]);
           setPropAt(here ? sq : null);
           // The dome's quarters have names, shown like a place sign when a square is tapped (atlantis AT-6).
-          const zone = ZONES[zoneOf(sq) as keyof typeof ZONES];
-          if (zone && !here) setNote(`${zone.icon} ${lang === 'en' ? zone.en : zone.ko}`);
+          const zoneKey = zoneOf(sq);
+          const zone = ZONES[zoneKey as keyof typeof ZONES];
+          if (zone && !here) {
+            setNote(`${zone.icon} ${lang === 'en' ? zone.en : zone.ko}`);
+            island.current?.setOverlay(zoneSquares(zoneKey), [], sq);
+          }
           return;
         }
         const v = loadVillage();
@@ -159,6 +170,19 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
   useEffect(() => {
     if (village) island.current?.draw(village);
   }, [village]);
+
+  // The loop strip and the note card sit under the top row whatever height it wraps to. On a phone the pills and the tool
+  // buttons wrap to four rows and the strip covered 「체스로」 (AT-9 LLM round, 11-phone-dome).
+  useEffect(() => {
+    const top = topRef.current;
+    const view = viewRef.current;
+    if (!open || !top || !view) return;
+    const fit = () => view.style.setProperty('--village-top-bottom', `${Math.round(top.getBoundingClientRect().bottom - view.getBoundingClientRect().top)}px`);
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(top);
+    return () => watch.disconnect();
+  }, [open, !!village]);
 
   const building = village?.built.find((b: any) => b.id === selected) || null;
 
@@ -229,9 +253,9 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
   };
 
   return (
-    <div className={`village-view${dive ? ' diving' : ''}`} id="village-view">
+    <div className={`village-view${dive ? ' diving' : ''}`} id="village-view" ref={viewRef}>
       <div className="village-canvas" ref={hostRef} />
-      <div className="village-top">
+      <div className="village-top" ref={topRef}>
         {/* TA-5 (2026-11-04 시험 A): 그림만으로는 어린이가 못 읽어 이름을 함께 쓴다. */}
         <span className="village-pill" title="도토리 — 판이 끝나면 받아요">🌰 도토리 {village?.coins ?? 0}</span>
         <span className="village-pill" title="곡물 — 밭에서 자라요">🌾 곡물 {village?.grain ?? 0}/{GRAIN_MAX}</span>

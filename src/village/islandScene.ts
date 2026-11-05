@@ -413,6 +413,9 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   // The dive (atlantis plan AT-2) starts the camera high and steep over the island and lets it settle to the usual view.
   let pitch = PITCH;
   let ease = 10;
+  // On arrival the camera first looks up at the chess board's underside above the dome, then tips down onto the island
+  // (AT-9 LLM round: all three read "under the board" as 2/5 because the board never showed after the dive).
+  let lift = 0;
   const pan = new THREE.Vector2();
   const panGoal = new THREE.Vector2();
   const fitDistance = () => {
@@ -427,7 +430,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   const placeCamera = () => {
     const dist = fitDistance() * zoom;
     camera.position.set(pan.x + Math.sin(azimuth) * Math.cos(pitch) * dist, Math.sin(pitch) * dist, pan.y + Math.cos(azimuth) * Math.cos(pitch) * dist);
-    camera.lookAt(pan.x, -0.85, pan.y);
+    camera.lookAt(pan.x, -0.85 + lift, pan.y);
     fitFog(dist);
   };
   placeCamera();
@@ -1566,13 +1569,17 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     const t = clock.elapsedTime;
     undersea.tick(t);
     grassWind.value = t;
-    if (Math.abs(azimuthGoal - azimuth) > 0.001 || Math.abs(zoomGoal - zoom) > 0.0005 || Math.abs(PITCH - pitch) > 0.0005 || pan.distanceToSquared(panGoal) > 1e-6) {
+    if (Math.abs(azimuthGoal - azimuth) > 0.001 || Math.abs(zoomGoal - zoom) > 0.0005 || Math.abs(PITCH - pitch) > 0.0005 || lift > 0.001 || pan.distanceToSquared(panGoal) > 1e-6) {
       const k = Math.min(1, dt * 6);
       azimuth += (azimuthGoal - azimuth) * k;
       zoom += (zoomGoal - zoom) * Math.min(1, dt * ease);
       pitch += (PITCH - pitch) * Math.min(1, dt * ease);
+      lift -= lift * Math.min(1, dt * ease);
       pan.lerp(panGoal, Math.min(1, dt * 10));
-      if (Math.abs(zoomGoal - zoom) < 0.001 && Math.abs(PITCH - pitch) < 0.001) ease = 10;
+      if (Math.abs(zoomGoal - zoom) < 0.001 && Math.abs(PITCH - pitch) < 0.001 && lift < 0.001) {
+        ease = 10;
+        lift = 0;
+      }
       placeCamera();
     }
     mixers.forEach((m) => m.update(dt));
@@ -1703,11 +1710,12 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     rotate(dir: number) {
       azimuthGoal += (dir * Math.PI) / 2;
     },
-    /** Start the camera high over the island, as if arriving from the board above, and settle down over about half a second. */
+    /** Arrive low, looking up at the board's underside above the dome, and tip down onto the island over about a second. */
     enter() {
-      pitch = 1.25;
-      zoom = 1.6;
-      ease = 4.5;
+      pitch = 0.32;
+      zoom = 1.15;
+      lift = 9;
+      ease = 2.6;
       placeCamera();
     },
     setNight(on: boolean) {
