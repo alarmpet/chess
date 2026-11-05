@@ -1195,6 +1195,7 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .game-strip-mission b { font-weight: 800; }
 .game-strip-ply { flex: none; padding: 2px 8px; border-radius: 999px; background: #5a2d0c; color: #fff8e4; font-size: 0.72rem; }
 .game-strip.done { background: rgba(189, 240, 180, 0.95); }
+.game-strip-bounty { flex: none; padding: 2px 8px; border-radius: 999px; background: #ffd65c; color: #5a2d0c; font-size: 0.72rem; }
 @media (orientation: portrait) {
   .game-strip { top: auto; bottom: 64px; left: 0; right: 0; width: fit-content; margin: 0 auto; }
 }

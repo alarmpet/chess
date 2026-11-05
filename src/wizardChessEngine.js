@@ -5849,6 +5849,7 @@ export function initWizardChess() {
         return s && { bbox: bb && [bb.min.toArray(), bb.max.toArray()], head: { at: s.head.at.toArray(), width: s.head.width }, neck: { at: s.neck.at.toArray(), width: s.neck.width }, dbg: s.dbg };
       },
       setCameraPreset,
+      setBountyMarks,
       setCameraPose,
       setCameraLook: setCameraPose,
       setCameraKeySpeedPercent,
@@ -6138,6 +6139,81 @@ export function initWizardChess() {
     // Main Animation Loop
     // =========================================================================
     let elapsedTotal = 0;
+    // Bounty marks (objective-layer plan OL-1, 2026-11-06): a 💰 with the capture count over every piece wearing a
+    // bounty, all drawn as one Points object that follows its pieces. The cards layer says which squares (setBountyMarks).
+    let bountyMarks = [];
+    const bountyAtlas = (() => {
+      const C = 64;
+      const canvas = document.createElement('canvas');
+      canvas.width = C * 4;
+      canvas.height = C;
+      const ctx = canvas.getContext('2d');
+      for (let i = 0; i < 4; i++) {
+        const x = i * C + C / 2;
+        ctx.fillStyle = 'rgba(255, 214, 92, 0.96)';
+        ctx.strokeStyle = '#8a5a00';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(x, C / 2, C / 2 - 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = '30px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('💰', x - 7, C / 2 + 2);
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillStyle = '#5a2d0c';
+        ctx.fillText(String(i + 2), x + 15, C / 2 + 12);   // cells: 2, 3, 4, 5+ captures
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    })();
+    const bountyGeo = new THREE.BufferGeometry();
+    bountyGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(16 * 3), 3));
+    bountyGeo.setAttribute('aCell', new THREE.Float32BufferAttribute(new Float32Array(16), 1));
+    bountyGeo.setDrawRange(0, 0);
+    const bountyPoints = new THREE.Points(bountyGeo, new THREE.ShaderMaterial({
+      uniforms: { uAtlas: { value: bountyAtlas }, uSize: { value: 44 * renderer.getPixelRatio() } },
+      vertexShader: `attribute float aCell; varying float vCell; uniform float uSize;
+        void main() { vCell = aCell; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_PointSize = uSize; }`,
+      fragmentShader: `uniform sampler2D uAtlas; varying float vCell;
+        void main() { vec4 c = texture2D(uAtlas, vec2((vCell + gl_PointCoord.x) / 4.0, 1.0 - gl_PointCoord.y));
+          if (c.a < 0.05) discard; gl_FragColor = c; }`,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false
+    }));
+    bountyPoints.frustumCulled = false;
+    bountyPoints.visible = false;
+    bountyPoints.renderOrder = 20;
+    bountyPoints.material.userData = { outlineParameters: { visible: false } };   // OutlineEffect reads the material
+    scene.add(bountyPoints);
+    const bountyBox = new THREE.Box3();
+    function updateBountyMarks() {
+      const pos = bountyGeo.attributes.position;
+      const cell = bountyGeo.attributes.aCell;
+      let n = 0;
+      for (const mark of bountyMarks) {
+        const piece = boardState[mark.r]?.[mark.c];
+        if (!piece?.mesh || n >= 16) continue;
+        // The piece's own height, measured once: a lion's mane stands taller than a meerkat.
+        if (piece.bountyTop === undefined) piece.bountyTop = bountyBox.setFromObject(piece.mesh).max.y - piece.mesh.position.y;
+        const p = piece.mesh.position;
+        pos.setXYZ(n, p.x, p.y + piece.bountyTop + 0.08, p.z);
+        cell.setX(n, Math.min(3, mark.captures - 2));
+        n++;
+      }
+      bountyGeo.setDrawRange(0, n);
+      bountyPoints.visible = n > 0;   // an empty draw still counts against the 100-call gate
+      if (n) { pos.needsUpdate = true; cell.needsUpdate = true; }
+    }
+    /** [{ sq: 'e5', captures: 2 }, ...] from the cards layer; [] clears the board. */
+    function setBountyMarks(marks) {
+      bountyMarks = (marks || []).map((m) => ({ r: 8 - Number(m.sq[1]), c: 'abcdefgh'.indexOf(m.sq[0]), captures: m.captures }));
+      updateBountyMarks();
+    }
+
     function stepScene(dt, doRender = true) {
       elapsedTotal += dt;
       const prevCamPos = camera.position.clone();
@@ -6158,6 +6234,7 @@ export function initWizardChess() {
       for (const mixer of activeMixers) {
         mixer.update(dt);
       }
+      if (bountyMarks.length) updateBountyMarks();
 
       // Feature 3c: Advance pre-move piece selection & valid-squares highlight beat before executing scripted move
       if (preMoveHighlightTask && !isAnimatingMove) {

@@ -8,6 +8,7 @@ import {
   seededRoll, shelfPrice, sparesOf, toggleShelf
 } from './economy.js';
 import { MISSION_ACORNS, raceStep, sharedMission } from './missions.js';
+import { bountyMarks, bountyStep, newBounty } from './bounty.js';
 import { loadVillage, payMissionAcorns } from '../village/store';
 import { clearPouch, loadCollection, loadPouch, logGame, readPlaylog, saveCollection, savePouch } from './store';
 
@@ -20,13 +21,16 @@ type Won = { id: string; animal: string; rarity: number; fresh: boolean; check?:
 type Fly = Won & { key: number; x: number; y: number };
 type Game = {
   id: number; lastPly: number; won: Won[]; started: number; captures: number;
-  mission: any; missionState: string | null; quest: string | null; boost: boolean; ply: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
+  mission: any; missionState: string | null; quest: string | null; boost: boolean; ply: number;
+  bounty: { on: Record<string, number> } | null; bountyAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
 };
 const freshGame = (id: number): Game => ({
   id, lastPly: 0, won: [], started: Date.now(), captures: 0,
-  mission: null, missionState: null, quest: null, boost: false, ply: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
+  mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
 });
 const engine = () => (window as any).wizardChess;
+// chess.js piece letters to the engine's piece names (the bounty notes name the animal).
+const PIECE_OF: Record<string, string> = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' };
 
 // 을/를 by the last syllable's final consonant.
 function objectParticle(word: string) {
@@ -52,6 +56,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [howTo, setHowTo] = useState<{ animal: string; rarity: number } | null>(null);
   const [mission, setMission] = useState<{ m: any; state: string | null } | null>(null);
   const [ply, setPly] = useState(0);
+  const [bountyWon, setBountyWon] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [skills, setSkills] = useState({ scout: 0, rewind: 0 });
   const [note, setNote] = useState('');
@@ -70,6 +75,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     setReveal(null);
     setMission(null);
     setPly(0);
+    setBountyWon(0);
+    engine()?.setBountyMarks?.([]);
     setSkills({ scout: 0, rewind: 0 });
   };
 
@@ -153,6 +160,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
         game.current.mission = sharedMission(seededRoll(d.gameId, 'shared', 0));
         setMission({ m: game.current.mission, state: null });
       }
+      // Bounty pieces come with the missions (after the first games), and start fresh with every new game.
+      if (!d.resumed && loadCollection().games >= UNLOCK_GAMES) game.current.bounty = newBounty();
       setPlaying(true);
     };
     const onMoved = (e: Event) => {
@@ -163,6 +172,19 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
         setPly(d.ply);
         const took = g.mission && !g.missionState && raceStep(g.mission, d.move);
         if (took) settleMission(d.byPlayer ? 'done' : 'lost');
+        if (g.bounty && d.move) {
+          const { claimed, marked } = bountyStep(g.bounty, d.move);
+          engine()?.setBountyMarks?.(bountyMarks(g.bounty));
+          const name = (letter: string) => names[ANIMAL_OF[PIECE_OF[letter] as keyof typeof ANIMAL_OF] as keyof typeof names] || '';
+          if (claimed && d.byPlayer) {
+            g.bountyAcorns += claimed.acorns;
+            setBountyWon(g.bountyAcorns);
+            say(en ? `💰 Bounty! +${claimed.acorns} acorns when the game ends` : `💰 현상금! 판이 끝나면 도토리 +${claimed.acorns}`, 2800);
+          } else if (claimed) say(en ? 'They took your 💰 piece.' : `내 💰 ${name(d.move.captured)}${objectParticle(name(d.move.captured))} 상대가 잡았어요.`, 2400);
+          else if (marked) say(d.byPlayer
+            ? (en ? 'Your piece now wears a 💰 — guard it!' : `내 ${name(d.move.piece)}에 💰 현상금이 붙었어요. 지켜요!`)
+            : (en ? 'A 💰 on their piece: take it for acorns!' : `상대 ${name(d.move.piece)}에 💰 현상금! 잡으면 도토리`), 2600);
+        }
       }
       // The first check the player gives pays the lion common, once per game (a resumed pouch remembers it).
       if (d.byPlayer && d.check && fxSettings().cards) {
@@ -187,7 +209,9 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       saveCollection(saved);
       setCol(saved);
       if (dust) say(en ? `Stardust +${dust}` : `별가루 +${dust}`);
-      if (g.missionState === 'done') payMissionAcorns(MISSION_ACORNS);
+      const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns;
+      if (extra) payMissionAcorns(extra);
+      engine()?.setBountyMarks?.([]);
       setPlaying(false);
       setResult([...g.won]);
       setReveal([...g.won]);
@@ -301,6 +325,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
               {mission.state === 'lost' && <b> · {en ? 'they were first' : '상대가 먼저'}</b>}
             </span>
           )}
+          {bountyWon > 0 && <span className="game-strip-bounty" id="game-strip-bounty">💰 +{bountyWon}</span>}
           <span className="game-strip-ply" id="game-strip-ply">{en ? `Move ${Math.floor(ply / 2) + 1}` : `${Math.floor(ply / 2) + 1}수째`}</span>
         </div>
       )}
