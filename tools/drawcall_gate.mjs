@@ -9,8 +9,8 @@ import { existsSync, readFileSync } from 'node:fs';
 // DRAWCALL_SCENE=village 는 섬(마을) 장면을 잰다(아틀란티스 계획서 §4.3): 완성 섬 고정 저장(tools/fixtures/village-full.json)을
 // localStorage 에 넣고 #btn-village 를 눌러 window.wildcrownIsland.renderCalls() 를 읽는다. 상한 기본 150.
 const SCENE = process.env.DRAWCALL_SCENE === 'village' || process.argv.includes('--village') ? 'village' : 'chess';
-// 섬 상한 180 은 AT-1 뒤 실측(완성 섬 고정 저장: 보통 프레임 106 · 그림자 갱신 프레임 145)의 래칫. 돔(PR B)에서 그림자를 끄면 150 으로 내린다.
-const MAX = Number(process.env.DRAWCALL_MAX || (SCENE === 'village' ? 180 : 100));
+// 섬 상한 150: 아틀란티스 계획서 §4.3. PR B(돔·바다 속, 그림자 맵 끔) 뒤 완성 섬 고정 저장 실측 120~124(프레임마다 같음).
+const MAX = Number(process.env.DRAWCALL_MAX || (SCENE === 'village' ? 150 : 100));
 const PORT = 4173;
 const SETTLE_MS = Number(process.env.DRAWCALL_SETTLE_MS || 15000);
 const log = (m) => console.log(`[drawcall-gate] ${m}`);

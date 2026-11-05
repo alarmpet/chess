@@ -1027,7 +1027,7 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .quit-btn.main:hover { background: var(--gold-bright); }
 
 /* Village screen */
-.village-view { position: fixed; inset: 0; z-index: 70; background: #13808f; }
+.village-view { position: fixed; inset: 0; z-index: 70; background: #0d4f7c; }
 .village-canvas { position: absolute; inset: 0; }
 .village-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .village-pill { padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.92); color: #4a3b2a; font-weight: 800; font-size: 15px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); }
