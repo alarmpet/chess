@@ -7,7 +7,8 @@ import {
   rarityFromRoll, sanitizeCollection, seededRoll, sparesOf,
   DUST_HERO, DUST_RARE, RARE_KEEP, SHELF_BASE, SHELF_MAX, buyShelfSlot, convertOverflow, shelfPrice, toggleShelf
 } from '../src/cards/economy.js';
-import { advanceMission, missionChoices, MISSIONS } from '../src/cards/missions.js';
+import { Chess } from 'chess.js';
+import { RACES, SHARED_POOL, raceById, raceStep, raceWinner, sharedMission } from '../src/cards/missions.js';
 
 const done = () => ({ ...newCollection(), firstDone: true });
 
@@ -182,34 +183,39 @@ test('older saves keep their cards and gain the new fields', () => {
   assert.deepEqual(sanitizeCollection({ v: 1, cards: {}, shelf: ['lion_1'] }).shelf, []);
 });
 
-test('three different missions are offered, and the same roll offers the same ones', () => {
-  const a = missionChoices(0.37);
-  assert.equal(a.length, 3);
-  assert.equal(new Set(a.map((m) => m.id)).size, 3);
-  assert.deepEqual(a, missionChoices(0.37));
-  for (let i = 0; i < 40; i++) assert.equal(new Set(missionChoices(i / 40).map((m) => m.id)).size, 3);
+test('every game gets one shared mission from the pool, the same roll the same one', () => {
+  for (let i = 0; i < 40; i++) {
+    const m = sharedMission(i / 40);
+    assert.ok(SHARED_POOL.includes(m.id));
+    assert.equal(sharedMission(i / 40), m);
+  }
+  assert.ok(SHARED_POOL.every((id) => raceById(id)), 'every pool id is a defined race');
+  assert.equal(sharedMission(0.9999).id, SHARED_POOL.at(-1));
 });
 
-test('a race goes to whoever captures that animal first', () => {
-  const race = MISSIONS.find((m) => m.kind === 'race' && m.target === 'bishop');
-  assert.equal(advanceMission(race, { capture: { type: 'pawn', byPlayer: true } }), null);
-  assert.equal(advanceMission(race, { capture: { type: 'bishop', byPlayer: true } }), 'done');
-  assert.equal(advanceMission(race, { capture: { type: 'bishop', byPlayer: false } }), 'lost');
+const play = (...sans) => {
+  const chess = new Chess();
+  for (const san of sans) chess.move(san);
+  return chess.history({ verbose: true });
+};
+
+test('a shared race goes to the colour that does it first, either colour', () => {
+  const knight = raceById('race_knight');
+  // 1.e4 d5 2.Nc3 dxe4 3.Nxe4 Nf6 4.Nxf6+ exf6: black captures first (dxe4), white takes a kangaroo first (Nxf6+).
+  const moves = play('e4', 'd5', 'Nc3', 'dxe4', 'Nxe4', 'Nf6', 'Nxf6+', 'exf6');
+  assert.equal(raceWinner(knight, moves), 'w', 'white took the knight on f6 first');
+  assert.equal(raceWinner(raceById('first_capture'), moves), 'b');
+  assert.equal(raceWinner(raceById('first_check'), moves), 'w');
+  assert.equal(raceWinner(raceById('knight_capture'), moves), 'w');
+  assert.equal(raceWinner(raceById('race_rook'), moves), null);
+  assert.equal(raceStep(knight, moves[3]), null, 'a pawn taking a pawn is no kangaroo');
 });
 
-test('a piece mission needs that piece to make the capture', () => {
-  const m = MISSIONS.find((x) => x.kind === 'with' && x.attacker === 'knight');
-  assert.equal(advanceMission(m, { capture: { type: 'pawn', byPlayer: true, attackerType: 'rook' } }), null);
-  assert.equal(advanceMission(m, { capture: { type: 'pawn', byPlayer: false, attackerType: 'knight' } }), null);
-  assert.equal(advanceMission(m, { capture: { type: 'pawn', byPlayer: true, attackerType: 'knight' } }), 'done');
-});
-
-test('a safety mission fails on losing the piece and passes by surviving', () => {
-  const m = MISSIONS.find((x) => x.kind === 'safe');
-  assert.equal(advanceMission(m, { capture: { type: m.piece, byPlayer: false } }), 'lost');
-  assert.equal(advanceMission(m, { capture: { type: m.piece, byPlayer: true } }), null);
-  assert.equal(advanceMission(m, { ply: m.plies - 1 }), null);
-  assert.equal(advanceMission(m, { ply: m.plies }), 'done');
+test('castling counts on either side, and a village request in the chip never matches a move', () => {
+  const moves = play('e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'O-O');
+  assert.equal(raceWinner(raceById('castle'), moves), 'w');
+  assert.equal(raceStep({ ko: '마을의 부탁' }, moves[0]), null);
+  assert.ok(RACES.every((r) => typeof r.hit === 'function' && r.ko && r.en));
 });
 
 test('threatened squares are read from the position', async () => {

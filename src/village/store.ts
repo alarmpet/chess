@@ -13,6 +13,13 @@ export function saveVillage(v: any) {
   try { window.localStorage.setItem(VILLAGE_KEY, JSON.stringify(v)); } catch (e) { /* a full or blocked store only loses this save */ }
 }
 
+/** The shared mission's acorns (cards/missions.js). The card layer calls it once per game, inside its settled-game guard. */
+export function payMissionAcorns(coins: number) {
+  const v = loadVillage();
+  v.coins += coins;
+  saveVillage(v);
+}
+
 const PHOTOS_KEY = 'wildcrown.islands.v1';
 const PHOTOS_MAX = 6;
 

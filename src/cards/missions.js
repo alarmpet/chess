@@ -1,41 +1,45 @@
-// Start-of-game missions. The AI does not chase them: a race is decided by what happens on the board anyway.
-export const MISSIONS = [
-  { id: 'race_bishop', kind: 'race', target: 'bishop', ko: '판다를 먼저 잡기', en: 'Capture a panda first' },
-  { id: 'race_knight', kind: 'race', target: 'knight', ko: '캥거루를 먼저 잡기', en: 'Capture a kangaroo first' },
-  { id: 'race_rook', kind: 'race', target: 'rook', ko: '코뿔소를 먼저 잡기', en: 'Capture a rhino first' },
-  { id: 'with_knight', kind: 'with', attacker: 'knight', ko: '캥거루로 말 잡기', en: 'Capture with a kangaroo' },
-  { id: 'with_bishop', kind: 'with', attacker: 'bishop', ko: '판다로 말 잡기', en: 'Capture with a panda' },
-  { id: 'with_pawn', kind: 'with', attacker: 'pawn', ko: '미어캣으로 말 잡기', en: 'Capture with a meerkat' },
-  { id: 'safe_queen', kind: 'safe', piece: 'queen', plies: 30, ko: '호랑이를 지키며 15수 버티기', en: 'Keep your tiger for 15 moves' }
+// Shared race missions (mission round 2026-11-05, docs/research/agent-rounds/2026-11-05-shared-mission). One mission a
+// game, the same for both colours, nothing to pick: whoever does it first takes it. The AI does not chase it — its
+// search has no mission term, so a race is decided by what happens on the board anyway (no hidden rubber band).
+// Each `hit` reads one chess.js verbose move; tools/mission_sim.mjs plays bot games over the same tests.
+export const RACES = [
+  { id: 'first_capture', hit: (m) => Boolean(m.captured), ko: '먼저 한 마리 잡기', en: 'First to capture' },
+  { id: 'race_knight', hit: (m) => m.captured === 'n', ko: '캥거루를 먼저 잡기', en: 'First to capture a kangaroo' },
+  { id: 'race_bishop', hit: (m) => m.captured === 'b', ko: '판다를 먼저 잡기', en: 'First to capture a panda' },
+  { id: 'race_rook', hit: (m) => m.captured === 'r', ko: '코뿔소를 먼저 잡기', en: 'First to capture a rhino' },
+  { id: 'race_queen', hit: (m) => m.captured === 'q', ko: '호랑이를 먼저 잡기', en: 'First to capture a tiger' },
+  { id: 'first_check', hit: (m) => /[+#]$/.test(m.san || ''), ko: '사자에게 먼저 체크', en: 'First to check the lion' },
+  { id: 'castle', hit: (m) => /[kq]/.test(m.flags || ''), ko: '사자 성 먼저 쌓기(캐슬링)', en: 'First to castle' },
+  { id: 'knight_capture', hit: (m) => m.piece === 'n' && Boolean(m.captured), ko: '캥거루로 먼저 잡기', en: 'First capture with a kangaroo' },
+  { id: 'bishop_capture', hit: (m) => m.piece === 'b' && Boolean(m.captured), ko: '판다로 먼저 잡기', en: 'First capture with a panda' }
 ];
 
-/** Three different missions, picked by one seeded roll. */
-export function missionChoices(roll) {
-  const pool = [...MISSIONS];
-  const out = [];
-  let r = roll;
-  for (let i = 0; i < 3; i++) {
-    r = (r * pool.length) % 1;
-    const at = Math.floor(((roll * 997 + i * 0.37 + r) % 1) * pool.length);
-    out.push(pool.splice(at, 1)[0]);
-  }
-  return out;
+// The pool games draw from (tools/mission_sim.mjs, 60 bot games for each of easy/normal pairings, 2026-11-05): kept
+// when someone took it in at least 40% of games and white was first at most 70% between equal bots. Out: the first
+// capture (always settled by ply 11), castling (white 71% between easy bots), promotion (taken in 33~42%).
+export const SHARED_POOL = ['race_knight', 'race_bishop', 'race_rook', 'race_queen', 'first_check', 'knight_capture', 'bishop_capture'];
+
+/** Acorns for the side that takes the mission first, paid with the game (a start value under the 15 between a win and a loss). */
+export const MISSION_ACORNS = 8;
+
+export const raceById = (id) => RACES.find((r) => r.id === id) || null;
+
+/** This game's mission from one seeded roll (0..1). */
+export function sharedMission(roll, pool = SHARED_POOL) {
+  return raceById(pool[Math.min(pool.length - 1, Math.floor(roll * pool.length))]);
 }
 
-/**
- * Feeds one board event to a mission. Returns 'done', 'lost', or null while it is still open.
- * @param {any} mission
- * @param {{ capture?: any, ply?: number }} event
- */
-export function advanceMission(mission, { capture = null, ply = 0 }) {
-  if (mission.kind === 'safe') {
-    if (capture && !capture.byPlayer && capture.type === mission.piece) return 'lost';
-    return ply >= mission.plies ? 'done' : null;
+/** The colour ('w' | 'b') that takes the mission with this move, or null. */
+export function raceStep(mission, move) {
+  // A village request rides in the same chip and has no `hit`: it is settled by the capture listener instead.
+  return mission?.hit && move && mission.hit(move) ? move.color : null;
+}
+
+/** The colour that took the mission first over a whole game's moves, or null if nobody did. */
+export function raceWinner(mission, moves) {
+  for (const m of moves || []) {
+    const won = raceStep(mission, m);
+    if (won) return won;
   }
-  if (!capture) return null;
-  if (mission.kind === 'race') {
-    if (capture.type !== mission.target) return null;
-    return capture.byPlayer ? 'done' : 'lost';
-  }
-  return capture.byPlayer && capture.attackerType === mission.attacker ? 'done' : null;
+  return null;
 }

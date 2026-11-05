@@ -106,15 +106,25 @@ uniform float uTime, uFadeFrom, uFadeTo;
 uniform vec3 uDeep, uShallow, uFoam, uHorizon, uSky, uSun;
 varying vec3 vWorld;
 ${SHAPE_GLSL}
+// The sea looked like still glass from the player camera (user, 2026-11-05: 「파도도 안 치고 너무 잔잔해」). Longer
+// swells weigh more than the ripples, rolling crests run in toward the island, and the open sea gets whitecaps.
+// All in this fragment: the water stays one quad (mission round: none of three models wanted vertex displacement).
 float swell(vec2 p, float t) {
-  return noise(p * 2.3 + t * vec2(0.22, 0.13)) + 0.6 * noise(p * 5.1 - t * vec2(0.3, 0.2)) + 0.25 * noise(p * 11.0 + t * vec2(0.1, -0.45));
+  return noise(p * 1.15 + t * vec2(0.16, 0.09)) + 0.45 * noise(p * 5.1 - t * vec2(0.3, 0.2)) + 0.12 * noise(p * 11.0 + t * vec2(0.1, -0.45));
 }
+const vec2 ROLL_DIR = vec2(0.42, 0.91);   // crests travel toward the island from the far side of the player camera
+float roll(vec2 p, float t, float h) { return sin(dot(p, ROLL_DIR) * 1.7 + t * 1.35 + h * 1.4); }
 void main() {
   vec2 p = vWorld.xz / uScale;
   float t = uTime;
   float e = islandEdge(p);
   float h = swell(p, t);
-  vec3 N = normalize(vec3((h - swell(p + vec2(0.05, 0.0), t)) * 1.1, 1.0, (h - swell(p + vec2(0.0, 0.05), t)) * 1.1));
+  float r = roll(p, t, h);
+  // Open water only: by the beach the shore foam and the shallows do the moving.
+  float far = smoothstep(0.7, 2.6, e);
+  vec2 slope = vec2(h - swell(p + vec2(0.18, 0.0), t), h - swell(p + vec2(0.0, 0.18), t)) * 1.4;
+  slope -= ROLL_DIR * cos(dot(p, ROLL_DIR) * 1.7 + t * 1.35 + h * 1.4) * 0.4 * far;
+  vec3 N = normalize(vec3(slope.x, 1.0, slope.y));
   vec3 V = normalize(cameraPosition - vWorld);
   float depth = max(seaDepth(e + wander(p, e)), 0.0);
   float clear = exp(-depth * 0.72);
@@ -127,7 +137,11 @@ void main() {
   float alpha = clamp(1.0 - clear * 0.9 + fresnel * 0.5, 0.08, 0.97);
   float wave = sin(e * 15.0 - t * 1.15 + h * 3.0) * 0.5 + 0.5;
   float foam = smoothstep(0.84, 0.98, wave) * smoothstep(0.42, 0.14, e) * smoothstep(0.3, 0.62, noise(p * 7.0 + t * 0.2));
-  foam = max(foam, smoothstep(0.17, 0.12, e + (h - 0.9) * 0.05));
+  foam = max(foam, smoothstep(0.17, 0.12, e + (h - 0.9) * 0.18));
+  // Crests catch the light a shade paler; the highest of them break into whitecaps here and there.
+  col = mix(col, mix(uShallow, uFoam, 0.4), smoothstep(0.55, 1.0, r) * 0.28 * far);
+  float caps = smoothstep(0.8, 0.97, r) * smoothstep(0.58, 0.82, noise(p * 3.1 - t * vec2(0.35, 0.2))) * far;
+  foam = max(foam, caps * 0.7);
   col = mix(col, uFoam, foam);
   col += vec3(1.0, 0.96, 0.85) * glint;
   gl_FragColor = vec4(col, max(max(alpha, foam * 0.92), min(glint, 1.0)));

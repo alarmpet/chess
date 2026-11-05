@@ -1814,9 +1814,22 @@ export function initWizardChess() {
 
     // White sits at +Z looking toward -Z, black at -Z looking toward +Z.
     // High enough that the near ranks do not hide the board; a narrow screen backs away until the board fits across it.
+    const PORTRAIT_FIT_MAX = 2.15;
+    // On a tall screen the picture rides up by this share of the height: the board leaves the sky and the room
+    // under it holds the game strip (mission, move number). Picking still works, the offset is in the projection.
+    const PORTRAIT_SHIFT = 0.07;
+    function shiftPortraitView() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (w / h < 1) camera.setViewOffset(w, h, 0, h * PORTRAIT_SHIFT, w, h);
+      else camera.clearViewOffset();
+    }
+    shiftPortraitView();
     function defaultCameraFor(color, aspect = camera.aspect) {
       const zSign = color === 'b' ? -1 : 1;
-      const fit = THREE.MathUtils.clamp(1.25 / aspect, 1, 2.35);
+      // A tall phone used to sit at the 2.35 cap, the board small under half a screen of sea. Closer there, and the
+      // room under the board holds the game strip (mission round 2026-11-05, grok's cap, measured on a Z Flip5).
+      const fit = THREE.MathUtils.clamp(1.25 / aspect, 1, aspect < 1 ? PORTRAIT_FIT_MAX : 2.35);
       const target = new THREE.Vector3(0, 0.72, zSign * 0.06);
       return { target, pos: new THREE.Vector3(0, 2.28 * fit, zSign * 3.04 * fit).add(target) };
     }
@@ -3130,7 +3143,8 @@ export function initWizardChess() {
       const san = referee.history().at(-1)?.san || '';
       if (gameMode === 'single' && !scriptedGameActive) {
         // `check` lets the cards pay the lion common for a game with a check in it (desire plan D7).
-        const detail = { gameId, ply: referee.history().length, byPlayer: moverColor === playerColor, check: /[+#]$/.test(san) };
+        // `move` is chess.js's verbose move: the shared race missions read it (cards/missions.js `raceStep`).
+        const detail = { gameId, ply: referee.history().length, byPlayer: moverColor === playerColor, check: /[+#]$/.test(san), move: referee.history().at(-1) || null };
         window.dispatchEvent(new CustomEvent('movelanded', { detail }));
       }
       saveResume();
@@ -6390,6 +6404,7 @@ export function initWizardChess() {
       const atDefault = !activeCamTransition && ['w', 'b'].find((side) => camera.position.distanceTo(defaultCameraFor(side, before).pos) < 0.12);
       camera.aspect = window.innerWidth / window.innerHeight;
       if (atDefault) setCameraForSide(atDefault, true);
+      shiftPortraitView();
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });

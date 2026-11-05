@@ -7,8 +7,8 @@ import {
   albumProgress, howToGet, nextGoal, awardCard, buyShelfSlot, cardId, checkCard, commitPouch, consolationCard, convertOverflow, mergeCard, mergeList, newPouch, withPouch,
   seededRoll, shelfPrice, sparesOf, toggleShelf
 } from './economy.js';
-import { advanceMission, missionChoices } from './missions.js';
-import { loadVillage } from '../village/store';
+import { MISSION_ACORNS, raceStep, sharedMission } from './missions.js';
+import { loadVillage, payMissionAcorns } from '../village/store';
 import { clearPouch, loadCollection, loadPouch, logGame, readPlaylog, saveCollection, savePouch } from './store';
 
 // Cards wait out the blow (the 0.55s delay on .card-fly), so they never cover the hit they came from.
@@ -20,11 +20,11 @@ type Won = { id: string; animal: string; rarity: number; fresh: boolean; check?:
 type Fly = Won & { key: number; x: number; y: number };
 type Game = {
   id: number; lastPly: number; won: Won[]; started: number; captures: number;
-  mission: any; missionState: string | null; quest: string | null; boost: boolean; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
+  mission: any; missionState: string | null; quest: string | null; boost: boolean; ply: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
 };
 const freshGame = (id: number): Game => ({
   id, lastPly: 0, won: [], started: Date.now(), captures: 0,
-  mission: null, missionState: null, quest: null, boost: false, scout: 0, rewind: 0, usedScout: false, usedRewind: false
+  mission: null, missionState: null, quest: null, boost: false, ply: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
 });
 const engine = () => (window as any).wizardChess;
 
@@ -50,8 +50,9 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [merged, setMerged] = useState<Won[] | null>(null);
   const [odds, setOdds] = useState(false);
   const [howTo, setHowTo] = useState<{ animal: string; rarity: number } | null>(null);
-  const [offers, setOffers] = useState<any[]>([]);
   const [mission, setMission] = useState<{ m: any; state: string | null } | null>(null);
+  const [ply, setPly] = useState(0);
+  const [playing, setPlaying] = useState(false);
   const [skills, setSkills] = useState({ scout: 0, rewind: 0 });
   const [note, setNote] = useState('');
   const en = lang === 'en';
@@ -67,8 +68,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     setCount(0);
     setResult(null);
     setReveal(null);
-    setOffers([]);
     setMission(null);
+    setPly(0);
     setSkills({ scout: 0, rewind: 0 });
   };
 
@@ -100,19 +101,15 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     return card;
   };
 
+  // The shared race (mission round 2026-11-05): 'done' when the player's side takes it first, 'lost' when the other
+  // side does. Taking it pays acorns with the game; the other side taking it costs nothing and changes no card odds.
   const settleMission = (state: string | null) => {
     const g = game.current;
     if (!state || !g.mission || g.missionState) return;
     g.missionState = state;
     setMission({ m: g.mission, state });
-    const reward = g.mission.target || g.mission.attacker || g.mission.piece;
-    if (state === 'done') {
-      pay(reward, seededRoll(g.id, 'mission', 0), 50, 30, { floor: 1 });
-      say(en ? 'Mission complete!' : '미션 성공!');
-    } else {
-      g.boost = true;
-      say(en ? 'Mission missed. Your next card gets better.' : '미션은 놓쳤어요. 다음 카드가 좋아져요.');
-    }
+    if (state === 'done') say(en ? `Mission taken! +${MISSION_ACORNS} acorns when the game ends.` : `미션을 먼저 해냈어요! 판이 끝나면 도토리 +${MISSION_ACORNS}`, 3200);
+    else say(en ? 'The other side got the mission first.' : '이번 미션은 상대가 먼저 했어요.', 2600);
   };
 
   useEffect(() => {
@@ -121,7 +118,6 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       const d = (e as CustomEvent).detail;
       startGame(d.gameId);
       const g = game.current;
-      if (g.mission) settleMission(advanceMission(g.mission, { capture: d }));
       // A taken-back move and its replay share a move number, so a capture pays only once.
       if (!d.byPlayer || d.ply <= g.lastPly) return;
       g.lastPly = d.ply;
@@ -152,13 +148,22 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       if (quest) {
         game.current.quest = quest.piece;
         setMission({ m: { ko: `마을의 부탁: ${ANIMAL_KO[ANIMAL_OF[quest.piece as keyof typeof ANIMAL_OF]]} 잡기`, en: `Village request: capture a ${ANIMAL_EN[ANIMAL_OF[quest.piece as keyof typeof ANIMAL_OF]].toLowerCase()}` }, state: null });
-      } else if (!d.resumed && loadCollection().games >= UNLOCK_GAMES) setOffers(missionChoices(seededRoll(d.gameId, 'offer', 0)));
+      } else if (!d.resumed && loadCollection().games >= UNLOCK_GAMES) {
+        // One mission, the same for both sides, from the game's own seed: nothing to pick before the first move.
+        game.current.mission = sharedMission(seededRoll(d.gameId, 'shared', 0));
+        setMission({ m: game.current.mission, state: null });
+      }
+      setPlaying(true);
     };
     const onMoved = (e: Event) => {
       const d = (e as CustomEvent).detail;
-      setOffers([]);
       const g = game.current;
-      if (g.id === d.gameId && g.mission) settleMission(advanceMission(g.mission, { ply: d.ply }));
+      if (g.id === d.gameId) {
+        g.ply = d.ply;
+        setPly(d.ply);
+        const took = g.mission && !g.missionState && raceStep(g.mission, d.move);
+        if (took) settleMission(d.byPlayer ? 'done' : 'lost');
+      }
       // The first check the player gives pays the lion common, once per game (a resumed pouch remembers it).
       if (d.byPlayer && d.check && fxSettings().cards) {
         startGame(d.gameId);
@@ -182,6 +187,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       saveCollection(saved);
       setCol(saved);
       if (dust) say(en ? `Stardust +${dust}` : `별가루 +${dust}`);
+      if (g.missionState === 'done') payMissionAcorns(MISSION_ACORNS);
+      setPlaying(false);
       setResult([...g.won]);
       setReveal([...g.won]);
       setSkills({ scout: 0, rewind: 0 });
@@ -208,12 +215,6 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     setCol(loadCollection());
     logGame({ type: 'book', at: new Date().toISOString() });
   }, [open]);
-
-  const pickMission = (m: any) => {
-    game.current.mission = m;
-    setMission({ m, state: null });
-    setOffers([]);
-  };
 
   const useScout = () => {
     const found = engine()?.showThreats?.();
@@ -290,19 +291,17 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
 
       {note && <div className="card-note">{note}</div>}
 
-      {offers.length > 0 && !open && (
-        <div className="mission-offer" id="mission-offer">
-          <b>{en ? 'Pick a mission' : '미션을 골라요'}</b>
-          {offers.map((m) => (
-            <button key={m.id} type="button" onClick={() => pickMission(m)}>{en ? m.en : m.ko}</button>
-          ))}
-          <button type="button" className="skip" onClick={() => setOffers([])}>{en ? 'Skip' : '건너뛰기'}</button>
-        </div>
-      )}
-
-      {mission && !open && !result && (
-        <div className={`mission-chip${mission.state ? ` ${mission.state}` : ''}`} id="mission-chip">
-          🎯 {en ? mission.m.en : mission.m.ko}{mission.state === 'done' ? ' ✓' : ''}
+      {/* The game strip: this game's shared mission and the move number, small, out of the board's way. */}
+      {playing && !open && !result && (ply > 0 || mission) && (
+        <div className={`game-strip${mission?.state ? ` ${mission.state}` : ''}`} id="game-strip">
+          {mission && (
+            <span className="game-strip-mission" id="mission-chip">
+              🎯 {en ? mission.m.en : mission.m.ko}
+              {mission.state === 'done' && <b>{mission.m.hit ? (en ? ' · you first ✓' : ' · 내가 먼저 ✓') : ' ✓'}</b>}
+              {mission.state === 'lost' && <b> · {en ? 'they were first' : '상대가 먼저'}</b>}
+            </span>
+          )}
+          <span className="game-strip-ply" id="game-strip-ply">{en ? `Move ${Math.floor(ply / 2) + 1}` : `${Math.floor(ply / 2) + 1}수째`}</span>
         </div>
       )}
 
