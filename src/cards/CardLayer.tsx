@@ -10,6 +10,7 @@ import {
 import { MISSION_ACORNS, raceStep, sharedMission } from './missions.js';
 import { bountyMarks, bountyStep, newBounty } from './bounty.js';
 import { STAMPS, STAMP_ACORNS, stampById, stampsOf } from './stamps.js';
+import { RALLY_ACORNS, newRally, rallyStep } from './rally.js';
 import { QUEST_ACORNS, TIERS, dayNumber, questById, questStep, refreshQuests, sanitizeQuests, swapQuest } from './quests.js';
 import { loadVillage, payMissionAcorns } from '../village/store';
 import { clearPouch, loadCollection, loadPouch, loadQuestsRaw, logGame, readPlaylog, saveCollection, savePouch, saveQuests } from './store';
@@ -24,11 +25,12 @@ type Fly = Won & { key: number; x: number; y: number };
 type Game = {
   id: number; lastPly: number; won: Won[]; started: number; captures: number;
   mission: any; missionState: string | null; quest: string | null; boost: boolean; ply: number;
-  bounty: { on: Record<string, number> } | null; bountyAcorns: number; stampsOn: boolean; stampAcorns: number; questAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
+  bounty: { on: Record<string, number> } | null; bountyAcorns: number; stampsOn: boolean; stampAcorns: number; questAcorns: number;
+  rally: { active: string | null; offered: number; done: number } | null; rallyAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
 };
 const freshGame = (id: number): Game => ({
   id, lastPly: 0, won: [], started: Date.now(), captures: 0,
-  mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, stampsOn: false, stampAcorns: 0, questAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
+  mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, stampsOn: false, stampAcorns: 0, questAcorns: 0, rally: null, rallyAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
 });
 const engine = () => (window as any).wizardChess;
 // chess.js piece letters to the engine's piece names (the bounty notes name the animal).
@@ -65,6 +67,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [mission, setMission] = useState<{ m: any; state: string | null } | null>(null);
   const [ply, setPly] = useState(0);
   const [bountyWon, setBountyWon] = useState(0);
+  const [rallyGoal, setRallyGoal] = useState<{ ko: string; en: string } | null>(null);
   const [quests, setQuests] = useState<any>(() => todayQuests());
   const [playing, setPlaying] = useState(false);
   const [skills, setSkills] = useState({ scout: 0, rewind: 0 });
@@ -105,6 +108,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     setMission(null);
     setPly(0);
     setBountyWon(0);
+    setRallyGoal(null);
     engine()?.setBountyMarks?.([]);
     setSkills({ scout: 0, rewind: 0 });
   };
@@ -192,6 +196,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       }
       // Bounty pieces come with the missions (after the first games), and start fresh with every new game.
       if (!d.resumed && loadCollection().games >= UNLOCK_GAMES) game.current.bounty = newBounty();
+      // Comeback goals (OL-6 ③) come with them; a resumed game starts them afresh.
+      if (loadCollection().games >= UNLOCK_GAMES) game.current.rally = newRally();
       game.current.stampsOn = loadCollection().games >= UNLOCK_GAMES;
       setPlaying(true);
     };
@@ -236,6 +242,21 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
             : (en ? 'A 💰 on their piece: take it for acorns!' : `상대 ${name(d.move.piece)}에 💰 현상금! 잡으면 도토리`), 2600);
         }
       }
+      // Comeback goals (OL-6 ③): well behind on material, the player alone gets one small goal. While one shows,
+      // the strip drops the 💰 chip (plan N5: one comeback lever at a time). Nothing says how far behind.
+      if (g.id === d.gameId && g.rally && d.move?.after) {
+        const me = d.byPlayer ? d.move.color : (d.move.color === 'w' ? 'b' : 'w');
+        const { state, offered, done } = rallyStep(g.rally, d.move, me);
+        g.rally = state;
+        if (done) {
+          g.rallyAcorns += RALLY_ACORNS;
+          setRallyGoal(null);
+          say(en ? `🔥 Comeback done: ${done.en}! +${RALLY_ACORNS} acorns when the game ends` : `🔥 반격 성공: ${done.ko}! 판이 끝나면 도토리 +${RALLY_ACORNS}`, 3000);
+        } else if (offered) {
+          setRallyGoal({ ko: offered.ko, en: offered.en });
+          say(en ? `🔥 Comeback goal: ${offered.en} → +${RALLY_ACORNS} acorns` : `🔥 반격 목표: ${offered.ko} → 도토리 +${RALLY_ACORNS}`, 3000);
+        }
+      }
       // The first check the player gives pays the lion common, once per game (a resumed pouch remembers it).
       if (d.byPlayer && d.check && fxSettings().cards) {
         startGame(d.gameId);
@@ -260,17 +281,19 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       setCol(saved);
       if (dust) say(en ? `Stardust +${dust}` : `별가루 +${dust}`);
       if (d.result) feedQuest({ kind: 'end', result: d.result });
-      const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns + g.stampAcorns + g.questAcorns;
+      const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns + g.stampAcorns + g.questAcorns + g.rallyAcorns;
       if (extra) payMissionAcorns(extra);
       engine()?.setBountyMarks?.([]);
       setPlaying(false);
+      setRallyGoal(null);
       setResult([...g.won]);
       setReveal([...g.won]);
       setSkills({ scout: 0, rewind: 0 });
       logGame({
         type: 'game', at: new Date().toISOString(), result: d.result, seconds: Math.round((Date.now() - g.started) / 1000),
         plies: d.moves?.length, captures: g.captures, cards: g.won.map((c) => c.id), fresh: g.won.filter((c) => c.fresh).length,
-        mission: g.mission?.id || null, missionState: g.missionState, usedScout: g.usedScout, usedRewind: g.usedRewind
+        mission: g.mission?.id || null, missionState: g.missionState, resigned: Boolean(d.resigned),
+        rally: g.rally ? { offered: g.rally.offered, done: g.rally.done } : null, usedScout: g.usedScout, usedRewind: g.usedRewind
       });
     };
     window.addEventListener('piececaptured', onCapture);
@@ -377,7 +400,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
               {mission.state === 'lost' && <b> · {en ? 'they were first' : '상대가 먼저'}</b>}
             </span>
           )}
-          {bountyWon > 0 && <span className="game-strip-bounty" id="game-strip-bounty">💰 +{bountyWon}</span>}
+          {rallyGoal && <span className="game-strip-rally" id="game-strip-rally">🔥 {en ? rallyGoal.en : rallyGoal.ko}</span>}
+          {bountyWon > 0 && !rallyGoal && <span className="game-strip-bounty" id="game-strip-bounty">💰 +{bountyWon}</span>}
           {quests && game.current.stampsOn && fxSettings().quests && <span className="game-strip-quests" id="game-strip-quests">📋 {quests.slots.filter((q: any) => q.done).length}/3</span>}
           <span className="game-strip-ply" id="game-strip-ply">{en ? `Move ${Math.floor(ply / 2) + 1}` : `${Math.floor(ply / 2) + 1}수째`}</span>
         </div>
