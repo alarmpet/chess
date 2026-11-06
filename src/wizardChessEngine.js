@@ -2720,7 +2720,7 @@ let handBrainKind = null;
       entranceDrops = [];
       gameReported = false;
       gameId = (gameId + 1) >>> 0;
-      if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId } }));
+      if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, rivalId: activeRivalId, color: playerColor } }));
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -3026,7 +3026,7 @@ let handBrainKind = null;
         capturedByBlack: back.capturedByBlack, scriptCursor: 0, scriptedGameActive: false, scriptDeviated: false, cells: back.cells
       }, { keepReferee: true });
       moveHistory = back.before.map(takebackEntry);
-      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: record.moves.length } }));
+      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: record.moves.length, rivalId: activeRivalId, color: playerColor } }));
       notifyRivalChange();
       saveResume();
       maybeScheduleAIMove();

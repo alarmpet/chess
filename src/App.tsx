@@ -5,6 +5,7 @@ import SettingsPanel from './SettingsPanel';
 import CardLayer from './cards/CardLayer';
 import HandBrain from './HandBrain';
 import Blitz from './Blitz';
+import SessionLog from './SessionLog';
 import VillageView from './VillageView';
 import QuitDialog from './QuitDialog';
 import { loadVillage, settleFinishedGame } from './village/store';
@@ -278,6 +279,7 @@ export default function App() {
       <RivalEntrance lang={lang === 'en' ? 'en' : 'ko'} />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <Blitz lang={lang === 'en' ? 'en' : 'ko'} />
+      <SessionLog />
       <HandBrain open={handBrainOpen} onClose={() => setHandBrainOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (

@@ -291,7 +291,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       setReveal([...g.won]);
       setSkills({ scout: 0, rewind: 0 });
       logGame({
-        type: 'game', at: new Date().toISOString(), result: d.result, seconds: Math.round((Date.now() - g.started) / 1000),
+        type: 'game', at: new Date().toISOString(), gameId: d.gameId, rivalId: d.rivalId || null, color: d.color || null, result: d.result, seconds: Math.round((Date.now() - g.started) / 1000),
         plies: d.moves?.length, captures: g.captures, cards: g.won.map((c) => c.id), fresh: g.won.filter((c) => c.fresh).length,
         mission: g.mission?.id || null, missionState: g.missionState, resigned: Boolean(d.resigned),
         rally: g.rally ? { offered: g.rally.offered, done: g.rally.done } : null, usedScout: g.usedScout, usedRewind: g.usedRewind
@@ -316,17 +316,26 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     logGame({ type: 'book', at: new Date().toISOString() });
   }, [open]);
 
+  // FN-0: 정찰·되감기를 판의 몇 번째 수에서 썼는지 판 기록에 남긴다.
+  const logSkill = (kind: 'scout' | 'rewind', ply?: number) => {
+    const st = engine()?.getHandBrainState?.();
+    logGame({ type: 'skill', at: new Date().toISOString(), kind, gameId: st?.gameId ?? game.current.id, ply: ply ?? (st?.history?.length || 0) });
+  };
+
   const useScout = () => {
     const found = engine()?.showThreats?.();
     if (found === undefined || found < 0) return say(en ? 'Use it on your turn.' : '내 차례에 쓸 수 있어요.');
     game.current.usedScout = true;
+    logSkill('scout');
     syncSkills();
     say(found ? (en ? `${found} pieces in danger` : `위험한 말 ${found}개`) : (en ? 'All safe' : '위험한 말이 없어요'));
   };
 
   const useRewind = () => {
+    const before = engine()?.getHandBrainState?.()?.history?.length || 0;   // 되감기 전 반수를 남긴다
     if (!engine()?.takeBackMove?.()) return say(en ? 'Use it on your turn, after a move.' : '내 차례, 수를 둔 뒤에 쓸 수 있어요.');
     game.current.usedRewind = true;
+    logSkill('rewind', before);
     syncSkills();
     sfx.play('button');
   };

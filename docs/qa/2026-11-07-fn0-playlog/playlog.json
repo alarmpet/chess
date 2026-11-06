@@ -1,0 +1,129 @@
+[
+ {
+  "type": "start",
+  "at": "2026-11-06T15:52:21.201Z",
+  "gameId": 2978978376,
+  "resumed": 0,
+  "rivalId": null,
+  "color": "w",
+  "handBrain": "off",
+  "blitz": false
+ },
+ {
+  "type": "leave",
+  "at": "2026-11-06T15:52:42.276Z",
+  "gameId": 2978978376,
+  "ply": 12
+ },
+ {
+  "type": "start",
+  "at": "2026-11-06T15:52:42.872Z",
+  "gameId": 2978978376,
+  "resumed": 12,
+  "rivalId": null,
+  "color": "w",
+  "handBrain": "off",
+  "blitz": false
+ },
+ {
+  "type": "skill",
+  "at": "2026-11-06T15:52:59.144Z",
+  "kind": "scout",
+  "gameId": 2978978376,
+  "ply": 16
+ },
+ {
+  "type": "pace",
+  "at": "2026-11-06T15:53:20.772Z",
+  "gameId": 2978978376,
+  "mode": "normal",
+  "color": "w",
+  "result": "loss",
+  "san": [
+   "c3",
+   "Nc6",
+   "e3",
+   "e5",
+   "h4",
+   "d5",
+   "a3",
+   "Nf6",
+   "g4",
+   "Bc5",
+   "e4",
+   "Bxg4",
+   "Qxg4",
+   "Nxg4",
+   "exd5",
+   "Bxf2+",
+   "Kd1",
+   "Qxd5",
+   "Bd3",
+   "Qxh1",
+   "Bxh7",
+   "Bxg1",
+   "Bd3",
+   "Nf2+"
+  ],
+  "think": {
+   "12": 2619,
+   "16": 2392,
+   "18": 44,
+   "20": 12,
+   "22": 2
+  },
+  "acorns": 0
+ },
+ {
+  "type": "game",
+  "at": "2026-11-06T15:53:20.772Z",
+  "gameId": 2978978376,
+  "rivalId": null,
+  "color": "w",
+  "result": "loss",
+  "seconds": 38,
+  "plies": 24,
+  "captures": 3,
+  "cards": [
+   "panda_0",
+   "meerkat_0",
+   "meerkat_0"
+  ],
+  "fresh": 2,
+  "mission": null,
+  "missionState": null,
+  "resigned": true,
+  "rally": {
+   "offered": 2,
+   "done": 1
+  },
+  "usedScout": true,
+  "usedRewind": false
+ },
+ {
+  "type": "start",
+  "at": "2026-11-06T15:53:25.777Z",
+  "gameId": 2978978377,
+  "resumed": 0,
+  "rivalId": null,
+  "color": "w",
+  "handBrain": "off",
+  "blitz": false
+ },
+ {
+  "type": "quit",
+  "at": "2026-11-06T15:53:30.421Z",
+  "gameId": 2978978377,
+  "ply": 2
+ },
+ {
+  "type": "start",
+  "at": "2026-11-06T15:53:30.421Z",
+  "gameId": 2978978378,
+  "resumed": 0,
+  "rivalId": null,
+  "color": "w",
+  "handBrain": "off",
+  "blitz": false
+ }
+]
