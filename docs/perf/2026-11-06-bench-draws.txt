@@ -1,0 +1,24 @@
+20 { white: 9, black: 11, draw: 0, unfinished: 0 } 133s
+40 { white: 19, black: 21, draw: 0, unfinished: 0 } 283s
+60 { white: 26, black: 30, draw: 3, unfinished: 1 } 512s
+80 { white: 39, black: 36, draw: 4, unfinished: 1 } 719s
+100 { white: 52, black: 42, draw: 5, unfinished: 1 } 940s
+{
+ "what": "draws",
+ "at": "2026-11-06T10:30:11.075Z",
+ "games": 100,
+ "tally": {
+  "white": 52,
+  "black": 42,
+  "draw": 5,
+  "unfinished": 1
+ },
+ "drawWhy": {
+  "cap": 1,
+  "material": 4,
+  "repetition": 1
+ },
+ "drawRate": 0.06,
+ "avgPlies": 125,
+ "seconds": 940
+}
