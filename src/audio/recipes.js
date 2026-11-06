@@ -69,6 +69,18 @@ export const IMPACT_SOUNDS = {
   ]
 };
 
+// Signature captures (DY-1): one short hit per attacker, under the tier's impact and the attacker's voice.
+// 뽁 (meerkat, a pop) · 퍽 (kangaroo, a kick) · 쿵 (panda, a rolling thump) · 쾅 (rhino, a crash) · 샤악 (tiger, a swipe) ·
+// 어흥 (lion, a small growl — cute, not a real roar, like the voices above).
+export const SIGNATURE_SOUNDS = {
+  pawn: [tone(0, 0.05, 'sine', [700, 1500], 0.18)],
+  knight: [puff(0, 0.05, 1400, 0.3), thud(0.01, 260, 120, 0.08, 0.3)],
+  bishop: [thud(0, 140, 70, 0.22, 0.45), puff(0.04, 0.12, 600, 0.18)],
+  rook: [thud(0, 110, 45, 0.3, 0.55), puff(0, 0.18, 900, 0.32)],
+  queen: [tone(0, 0.16, 'noise', [0], 0.26, { filter: { type: 'bandpass', f: [2600, 6200], q: 1.4 } })],
+  king: [tone(0, 0.32, 'sawtooth', [130, 175, 110], 0.12, { filter: { type: 'lowpass', f: [900], q: 1 }, vib: { rate: 22, depth: 6 } })]
+};
+
 export const SOUNDS = {
   place: [tone(0, 0.055, 'triangle', [640, 300], 0.16), puff(0, 0.02, 1800, 0.07)],
   check: notes([988, 1319], 'triangle', 0.14, 0.2, 0.1),

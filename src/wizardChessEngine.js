@@ -11,6 +11,7 @@ import { chooseMove, positionKey } from './rules/ai.js';
 import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry } from './rules/resume.js';
 import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
+import { SIGNATURE_WORD, createSignatureFx } from './fx/signatureFx.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
 import { createContactShadows } from './fx/contactShadows.js';
 import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
@@ -983,6 +984,8 @@ export function initWizardChess() {
     }
     const shatterDebris = [];
     const impactFx = createImpactFx(scene);
+    // Signature captures (DY-1): each animal takes in its own way, alongside the impact and without changing its timing.
+    const signatureFx = createSignatureFx(scene, impactFx, { surfaceY: BOARD_SURFACE_Y, square: BOARD_SQ_SIZE });
     const clock = new THREE.Clock();
 
     const boardGroup = new THREE.Group(); boardGroup.name = 'board';
@@ -3108,7 +3111,7 @@ let handBrainKind = null;
     let impactCount = 0;
     let hitStopLeft = 0;
     let slowLeft = 0;
-    function landImpact(captured, origin, attackerType) {
+    function landImpact(captured, origin, attackerType, attackerFrom = null) {
       const san = referee.history().at(-1)?.san || '';
       const tierId = impactTier(captured.type, san);
       const tier = IMPACT_TIERS[tierId];
@@ -3119,7 +3122,9 @@ let handBrainKind = null;
       slowLeft = tier.slowSec;
       impactFx.burst(ground, captured.type, tierId);
       impactFx.ring(ground, tierId);
-      impactFx.word(ground, tierId);
+      if (signatureFx.play(ground, attackerType, tierId, attackerFrom) && SIGNATURE_WORD[attackerType]) {
+        impactFx.label(ground, SIGNATURE_WORD[attackerType], tier.wordSize);
+      } else impactFx.word(ground, tierId);
       impactFx.shake(tier.shake);
       sfx.impact(tierId, attackerType);
       reportCapture(captured, ground, attackerType);
@@ -3725,7 +3730,7 @@ let handBrainKind = null;
             retireAnimalPiece(enPassantVictim);
             spawnDustPuff(origin);
           }
-          landImpact(enPassantVictim, origin, piece.type);
+          landImpact(enPassantVictim, origin, piece.type, startPos);
           if (piece.color === 'w') capturedByWhite += 1;
           else capturedByBlack += 1;
         }
@@ -3897,7 +3902,7 @@ let handBrainKind = null;
                 } else {
                   retireAnimalPiece(captured);
                 }
-                landImpact(captured, shatterOrigin, piece.type);
+                landImpact(captured, shatterOrigin, piece.type, startPos);
               }
             }
 
@@ -5790,6 +5795,8 @@ let handBrainKind = null;
       getCosmetics,
       setCosmetics,
       debugImpacts: () => impactCount,
+      // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
+      debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask),
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
       showThreats,
       takeBackMove,
@@ -5870,6 +5877,8 @@ let handBrainKind = null;
       },
       setCameraPreset,
       setBountyMarks,
+      // Debug: signature captures on or off, to compare a capture with and without them.
+      setSignatureFx: (on) => signatureFx.setEnabled(on),
       // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.
       setHandBrain: (kind) => {
         handBrainKind = kind === null || kind === undefined ? null : String(kind);
@@ -6258,6 +6267,7 @@ let handBrainKind = null;
 
       // Effects run on real time; the game itself holds during a hit stop and slows through a big capture.
       impactFx.update(dt);
+      signatureFx.update(dt, camera);
       const realDt = dt;
       if (hitStopLeft > 0) {
         hitStopLeft -= realDt;

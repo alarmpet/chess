@@ -1,6 +1,6 @@
 // Plays the recipes through Web Audio. Browsers keep audio locked until the first tap or key, and sounds asked for
 // before that are dropped rather than queued, so nothing bursts out at once when the player first touches the page.
-import { IMPACT_SOUNDS, SOUNDS, STEPS, VOICES, pickTake, readMuted, stepTimes, writeMuted } from './recipes.js';
+import { IMPACT_SOUNDS, SIGNATURE_SOUNDS, SOUNDS, STEPS, VOICES, pickTake, readMuted, stepTimes, writeMuted } from './recipes.js';
 
 const MASTER_GAIN = 0.55;
 const PITCH_SPREAD = 0.06;
@@ -136,6 +136,7 @@ function createSfx() {
   function impact(tierId, attackerType) {
     note(`impact.${tierId}`);
     schedule(IMPACT_SOUNDS[tierId] || IMPACT_SOUNDS.small, 0, wobble());
+    if (SIGNATURE_SOUNDS[attackerType]) schedule(SIGNATURE_SOUNDS[attackerType], 0.01, wobble());
     voice(attackerType, 0.03);
   }
 
