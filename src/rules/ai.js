@@ -124,11 +124,12 @@ export const positionKey = (fen) => fen.split(' ').slice(0, 4).join(' ');
 /**
  * Picks a move for the side to move in `fen`. `history` holds position keys of the game so far, so a side that is
  * ahead does not walk into a repetition. `rand` is any 0..1 source.
+ * `only` (a piece letter) keeps the choice to that piece kind — the hand in hand-and-brain mode.
  * Returns { from, to, promotion } in algebraic squares, or null when there is no legal move.
  */
-export function chooseMove(fen, { level = 'normal', history = [], rand = Math.random, slip } = {}) {
+export function chooseMove(fen, { level = 'normal', history = [], rand = Math.random, slip, only } = {}) {
   const chess = new Chess(fen);
-  const root = ordered(chess);
+  const root = only ? ordered(chess).filter((m) => m.piece === only) : ordered(chess);
   if (!root.length) return null;
   const { depth, slip: baseSlip } = LEVELS[level] || LEVELS.normal;
   const chance = slip ?? baseSlip;

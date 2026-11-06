@@ -1755,6 +1755,8 @@ export function initWizardChess() {
       referee.loadCells(boardState, turn, { fullmove: Math.floor(moveHistory.length / 2) + 1 });
     }
     let selectedSquare = null;
+// Hand and brain: null = off; '' = waiting for the brain; else the piece type ('knight') the hand may pick up.
+let handBrainKind = null;
     let validMoves = [];
     let isAnimatingMove = false;
     let gameOver = false;
@@ -5080,6 +5082,16 @@ export function initWizardChess() {
       }
 
       const clickedPiece = boardState[clickedR][clickedC];
+      // Hand and brain (cards/handBrain.js): on the player's turn the hand picks up only the kind the brain named;
+      // '' means the brain has not named one yet.
+      if (clickedPiece && clickedPiece.color === currentTurn && handBrainKind !== null && currentTurn === playerColor &&
+          clickedPiece.type !== handBrainKind) {
+        window.dispatchEvent(new CustomEvent('handbrainblocked', { detail: { type: clickedPiece.type, want: handBrainKind } }));
+        clearSquareHighlights();
+        selectedSquare = null;
+        validMoves = [];
+        return;
+      }
       if (clickedPiece && clickedPiece.color === currentTurn) {
         selectedSquare = { r: clickedR, c: clickedC };
         validMoves = getLegalMovesForPiece(clickedR, clickedC);
@@ -5838,6 +5850,14 @@ export function initWizardChess() {
         const sq = h.object.userData.squares?.[h.instanceId];
         return { instanceId: h.instanceId, r: sq?.r, c: sq?.c, dist: +h.distance.toFixed(3), isInstanced: !!h.object.isInstancedMesh };
       },
+      // Debug: where square (r, c) sits on the page, so a test can tap it like a finger.
+      debugSquareClient: (r, c) => {
+        const w = boardToWorld(r, c);
+        const v = new THREE.Vector3(w.x, BOARD_SURFACE_Y, w.z).project(camera);
+        const rect = renderer.domElement.getBoundingClientRect();
+        return { x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
+      },
+      debugSelected: () => (selectedSquare ? { ...selectedSquare } : null),
       // Debug: open the promotion chooser; resolves with the picked role
       debugPromotionPicker: (color = 'w') => new Promise((res) => showPromotionPicker(color, res)),
       // Debug: bone sockets of a piece template (model space, bind pose)
@@ -5850,6 +5870,24 @@ export function initWizardChess() {
       },
       setCameraPreset,
       setBountyMarks,
+      // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.
+      setHandBrain: (kind) => {
+        handBrainKind = kind === null || kind === undefined ? null : String(kind);
+        const held = selectedSquare && boardState[selectedSquare.r][selectedSquare.c];
+        if (held && handBrainKind !== null && held.type !== handBrainKind) {
+          clearSquareHighlights();
+          selectedSquare = null;
+          validMoves = [];
+        }
+      },
+      getHandBrainState: () => ({
+        fen: referee.fen(),
+        history: referee.history().map((m) => positionKey(m.after)),
+        playerColor,
+        turn: referee.turn(),
+        gameId,
+        ready: gameMode === 'single' && !scriptedGameActive && !gameOver && !isAnimatingMove && playerColor !== 'spectator'
+      }),
       setCameraPose,
       setCameraLook: setCameraPose,
       setCameraKeySpeedPercent,

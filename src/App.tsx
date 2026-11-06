@@ -3,6 +3,7 @@ import RivalPanel from './RivalPanel';
 import RivalEntrance from './RivalEntrance';
 import SettingsPanel from './SettingsPanel';
 import CardLayer from './cards/CardLayer';
+import HandBrain from './HandBrain';
 import VillageView from './VillageView';
 import QuitDialog from './QuitDialog';
 import { loadVillage, settleFinishedGame } from './village/store';
@@ -19,6 +20,7 @@ export default function App() {
   const [lang, setLang] = useState<Language>(getCurrentLang());
   const [lookOpen, setLookOpen] = useState(false);
   const [rivalOpen, setRivalOpen] = useState(false);
+  const [handBrainOpen, setHandBrainOpen] = useState(false);
   const [villageOpen, setVillageOpen] = useState(false);
   const [lastGame, setLastGame] = useState<any>(null);
   // 잠수 전환 (아틀란티스 계획서 AT-2): 체스 카메라가 판 아래로 내려가는 0.42초 뒤에 마을이 열리고, 남색 물막이 덮였다 걷힌다.
@@ -165,6 +167,9 @@ export default function App() {
           <button type="button" className="hud-btn quick-btn" id="btn-rivals" onClick={() => setRivalOpen(true)} title={en ? 'Beat a rival to win its item' : '라이벌을 이기고 소품 얻기'}>
             <span aria-hidden="true">🏆</span><span className="quick-label">{en ? 'Rivals' : '라이벌'}</span>
           </button>
+          <button type="button" className="hud-btn quick-btn" id="btn-handbrain" onClick={() => setHandBrainOpen(true)} title={en ? 'Hand and brain: two play one side' : '손과 뇌: 둘이 한 편'}>
+            <span aria-hidden="true">🤝</span><span className="quick-label">{en ? 'Together' : '함께'}</span>
+          </button>
           <button
             type="button"
             className={`hud-btn quick-btn menu-trigger ${mobileSheetOpen ? 'active' : ''}`}
@@ -271,6 +276,7 @@ export default function App() {
       <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <RivalEntrance lang={lang === 'en' ? 'en' : 'ko'} />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <HandBrain open={handBrainOpen} onClose={() => setHandBrainOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (
         <button type="button" className="village-toast" id="village-toast" onClick={openVillage}>
