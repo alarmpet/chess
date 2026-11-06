@@ -100,7 +100,8 @@ export default function Blitz({ lang }: { lang: 'ko' | 'en' }) {
         <div className={`blitz-glass${pays ? ' pays' : ''}`} id="blitz-glass" title={en ? 'Move within 10 s for an acorn' : '10초 안에 두면 도토리 1개'}>
           <span aria-hidden="true">⏳</span>
           <span className="blitz-sand"><i style={{ width: `${Math.round(left * 100)}%` }} /></span>
-          <b>{pays ? `🌰 ${Math.ceil((BLITZ_FAST_MS - ms) / 1000)}` : Math.ceil((BLITZ_SAND_MS - ms) / 1000)}</b>
+          {/* TA2-6: 숫자만 있던 「17」에 단위를 붙인다(초록일 때는 도토리까지 남은 초, 지난 뒤에는 모래가 다 떨어질 때까지 남은 초). */}
+          <b>{pays ? `🌰 ${Math.ceil((BLITZ_FAST_MS - ms) / 1000)}${en ? 's' : '초'}` : `${Math.ceil((BLITZ_SAND_MS - ms) / 1000)}${en ? 's' : '초'}`}</b>
         </div>
       )}
       <span className="blitz-count" id="blitz-count">⚡ 🌰 {acorns}/{BLITZ_CAP}</span>

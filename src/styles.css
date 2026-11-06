@@ -1187,7 +1187,8 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .card-shelf { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-weight: 700; font-size: 0.86rem; }
 .card-shelf button { padding: 4px 10px; border: none; border-radius: 999px; background: #ffd27a; color: #5a2d0c; font-weight: 800; cursor: pointer; }
 .card-shelf small { flex-basis: 100%; opacity: 0.7; font-weight: 600; }
-.card-note { position: fixed; z-index: 70; left: 50%; top: 176px; transform: translateX(-50%); padding: 8px 16px; border-radius: 999px; background: rgba(40, 24, 8, 0.86); color: #fff; font-weight: 700; pointer-events: none; }
+/* TA2-1 (2026-11-06 LLM 대행 시험 A2): 알림이 판 가운데 위(상대 뒷줄)를 가렸다 — 왼쪽 위 띠 바로 아래, 판 밖으로 옮긴다. */
+.card-note { position: fixed; z-index: 70; left: 16px; top: 100px; max-width: min(420px, calc(100vw - 32px)); padding: 7px 14px; border-radius: 16px; background: rgba(40, 24, 8, 0.86); color: #fff; font-size: 0.86rem; font-weight: 700; line-height: 1.35; word-break: keep-all; pointer-events: none; }
 /* The game strip (mission round 2026-11-05): this game's shared mission and the move number, one small line.
    Desktop: under the turn pill. Tall screens: in the room the raised board leaves above the bottom tray. */
 .game-strip { position: fixed; z-index: 26; left: 16px; top: 64px; display: flex; align-items: center; gap: 8px; max-width: min(460px, calc(100vw - 32px)); padding: 5px 6px 5px 10px; border-radius: 999px; background: rgba(255, 248, 228, 0.9); color: #5a2d0c; font-size: 0.78rem; font-weight: 800; box-shadow: 0 3px 10px rgba(40, 24, 8, 0.22); pointer-events: none; }
@@ -1209,8 +1210,8 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .card-stamp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 .card-stamp { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: 10px; background: rgba(90, 45, 12, 0.06); color: #8a6a50; }
 .card-stamp.got { background: #fff1c2; color: #5a2d0c; box-shadow: inset 0 0 0 2px #f5c542; }
-.card-stamp b { font-size: 0.82rem; }
-.card-stamp small { font-size: 0.7rem; line-height: 1.3; }
+.card-stamp b { font-size: 0.82rem; word-break: keep-all; } /* TA2-5: 「승급」이 「승/급」으로 끊기던 것 */
+.card-stamp small { font-size: 0.7rem; line-height: 1.3; word-break: keep-all; }
 @media (orientation: portrait) {
   .game-strip { top: auto; bottom: 64px; left: 0; right: 0; width: fit-content; margin: 0 auto; }
 }
