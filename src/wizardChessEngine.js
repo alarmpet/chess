@@ -3271,6 +3271,10 @@ let handBrainKind = null;
         console.warn('Referee rejected move', { fromR, fromC, toR, toC, promotionType, fen: referee.fen() });
         return false;
       }
+      // The moment a move is made (before its walk): the lightning board times the player's thinking from here.
+      if (gameMode === 'single' && !scriptedGameActive) {
+        window.dispatchEvent(new CustomEvent('movestarted', { detail: { gameId, byPlayer: piece.color === playerColor, ply: referee.history().length - 1 } }));   // ply: this move's index in the game
+      }
       const enPassantVictim = refMove.enPassantVictim ? boardState[refMove.enPassantVictim.r]?.[refMove.enPassantVictim.c] : null;
 
       // Save board state snapshot (including pre-move scriptCursor & scriptDeviated) so Left Arrow / [ can step backward & re-record

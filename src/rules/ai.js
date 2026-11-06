@@ -122,6 +122,20 @@ function search(chess, depth, alpha, beta, ply) {
 export const positionKey = (fen) => fen.split(' ').slice(0, 4).join(' ');
 
 /**
+ * Every legal move in `fen` with its search score for the side to move (higher is better), best first. A review
+ * tool (tools/blunder_rate.mjs) reads a played move's loss as the best score minus its own.
+ */
+export function rootScores(fen, { depth = 2 } = {}) {
+  const chess = new Chess(fen);
+  return ordered(chess).map((m) => {
+    chess._makeMove(m);
+    const score = -search(chess, depth - 1, -Infinity, Infinity, 1);
+    chess._undoMove();
+    return { from: square(m.from), to: square(m.to), promotion: m.promotion, score };
+  }).sort((a, b) => b.score - a.score);
+}
+
+/**
  * Picks a move for the side to move in `fen`. `history` holds position keys of the game so far, so a side that is
  * ahead does not walk into a repetition. `rand` is any 0..1 source.
  * `only` (a piece letter) keeps the choice to that piece kind — the hand in hand-and-brain mode.

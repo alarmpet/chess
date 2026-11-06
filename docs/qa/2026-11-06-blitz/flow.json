@@ -1,0 +1,43 @@
+{
+ "settingRow": "⚡\n번개 판\n내 차례에 모래시계. 10초 안에 두면 도토리 1개(판당 10개). 시간이 다 돼도 잃는 건 없어요. 다음 판부터\n꺼짐",
+ "turn1": {
+  "glass": "blitz-glass pays",
+  "text": "⏳\n🌰 9\n⚡ 🌰 0/10"
+ },
+ "afterFast": {
+  "glass": null,
+  "text": "⚡ 🌰 1/10\n+1 🌰"
+ },
+ "turn2Slow": {
+  "glass": "blitz-glass",
+  "text": "⏳\n18\n⚡ 🌰 1/10"
+ },
+ "afterSlow": {
+  "glass": null,
+  "text": "⚡ 🌰 1/10"
+ },
+ "end": {
+  "c0": 0,
+  "c1": 31,
+  "pace": [
+   {
+    "type": "pace",
+    "at": "2026-11-06T09:27:54.516Z",
+    "gameId": 2955887279,
+    "mode": "blitz",
+    "color": "w",
+    "result": "loss",
+    "san": [
+     "e4",
+     "e5",
+     "Nf3"
+    ],
+    "think": {
+     "0": 3462,
+     "2": 14268
+    },
+    "acorns": 1
+   }
+  ]
+ }
+}

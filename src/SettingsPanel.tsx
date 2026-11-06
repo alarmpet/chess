@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { sfx } from './audio/sfx.js';
 import { fxSettings, writeFxSettings } from './fx/settings.js';
+import { loadCollection } from './cards/store';
+import { UNLOCK_GAMES } from './cards/economy.js';
 
 // One place for the show-versus-speed choices, so the top bar does not grow a button for each.
 export default function SettingsPanel({ open, onClose, lang }: { open: boolean; onClose: () => void; lang: 'ko' | 'en' }) {
@@ -9,7 +11,7 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
   if (!open) return null;
 
   const en = lang === 'en';
-  const setOption = (key: 'shake' | 'quick' | 'cards' | 'dive' | 'quests', value: boolean) => {
+  const setOption = (key: 'shake' | 'quick' | 'cards' | 'dive' | 'quests' | 'blitz', value: boolean) => {
     const next = { ...fx, [key]: value };
     setFx(next);
     writeFxSettings(window.localStorage, next);
@@ -22,6 +24,8 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
     { id: 'dive', icon: '🫧', label: en ? 'Dive to the village' : '마을로 잠수', hint: en ? 'The camera plunges under the board on the way to the island' : '마을로 갈 때 카메라가 판 아래 물속으로 내려갑니다', on: fx.dive, toggle: () => setOption('dive', !fx.dive) },
     { id: 'quests', icon: '📋', label: en ? "Today's quests" : '오늘의 퀘스트', hint: en ? 'Three small goals a day, filled over any games. Nothing is lost for a missed day' : '하루 세 가지 작은 목표, 여러 판에 걸쳐 채워요. 못 해도 잃는 건 없어요', on: fx.quests, toggle: () => setOption('quests', !fx.quests) }
   ];
+  // The lightning board is a choice for players past the first games (dynamic-chess DY-3).
+  if (loadCollection().games >= UNLOCK_GAMES) rows.push({ id: 'blitz', icon: '⚡', label: en ? 'Lightning board' : '번개 판', hint: en ? 'An hourglass on your turn: move within 10 s for an acorn (10 a game). Running out costs nothing' : '내 차례에 모래시계. 10초 안에 두면 도토리 1개(판당 10개). 시간이 다 돼도 잃는 건 없어요. 다음 판부터', on: fx.blitz, toggle: () => setOption('blitz', !fx.blitz) });
 
   return (
     <div className="panel-overlay" role="dialog" aria-modal="true" onClick={onClose}>
