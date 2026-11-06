@@ -9,17 +9,17 @@ function memoryStore() {
 }
 
 test('shake is on and quick games off until the player says otherwise', () => {
-  assert.deepEqual(readFxSettings(memoryStore()), { shake: true, quick: false, cards: true, dive: true });
+  assert.deepEqual(readFxSettings(memoryStore()), { shake: true, quick: false, cards: true, dive: true, quests: true });
 });
 
 test('choices survive a reload, and older saves with only shake still load', () => {
   const store = memoryStore();
-  writeFxSettings(store, { shake: false, quick: true, cards: false, dive: false });
-  assert.deepEqual(readFxSettings(store), { shake: false, quick: true, cards: false, dive: false });
+  writeFxSettings(store, { shake: false, quick: true, cards: false, dive: false, quests: false });
+  assert.deepEqual(readFxSettings(store), { shake: false, quick: true, cards: false, dive: false, quests: false });
   store.setItem('wildcrown.fx.v1', '{"shake":false}');
-  assert.deepEqual(readFxSettings(store), { shake: false, quick: false, cards: true, dive: true });
+  assert.deepEqual(readFxSettings(store), { shake: false, quick: false, cards: true, dive: true, quests: true });
   store.setItem('wildcrown.fx.v1', '{broken');
-  assert.deepEqual(readFxSettings(store), { shake: true, quick: false, cards: true, dive: true });
+  assert.deepEqual(readFxSettings(store), { shake: true, quick: false, cards: true, dive: true, quests: true });
 });
 
 test('castling has its own sound', () => {

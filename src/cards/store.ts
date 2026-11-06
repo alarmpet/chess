@@ -49,3 +49,12 @@ export function readPlaylog(): string {
     return '[]';
   }
 }
+
+const QUESTS_KEY = 'wildcrown.quests.v1';
+/** Today's quests (quests.js) as saved; the caller sanitizes and refreshes them to the day. */
+export function loadQuestsRaw(): any {
+  try { return JSON.parse(window.localStorage.getItem(QUESTS_KEY) || 'null'); } catch (e) { return null; }
+}
+export function saveQuests(state: any) {
+  try { window.localStorage.setItem(QUESTS_KEY, JSON.stringify(state)); } catch (e) { /* the quests simply start again tomorrow */ }
+}

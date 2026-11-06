@@ -1196,6 +1196,14 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .game-strip-ply { flex: none; padding: 2px 8px; border-radius: 999px; background: #5a2d0c; color: #fff8e4; font-size: 0.72rem; }
 .game-strip.done { background: rgba(189, 240, 180, 0.95); }
 .game-strip-bounty { flex: none; padding: 2px 8px; border-radius: 999px; background: #ffd65c; color: #5a2d0c; font-size: 0.72rem; }
+.game-strip-quests { flex: none; padding: 2px 8px; border-radius: 999px; background: #d8ecff; color: #1f3d5a; font-size: 0.72rem; }
+.card-quests h4 { margin: 14px 0 6px; }
+.card-quest { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 8px; padding: 6px 8px; margin-bottom: 4px; border-radius: 10px; background: rgba(31, 61, 90, 0.07); color: #3a4a5a; }
+.card-quest.done { background: #dff5d8; color: #2c5a22; }
+.card-quest b { font-size: 0.82rem; }
+.card-quest small { grid-column: 1; font-size: 0.7rem; }
+.card-quest-swap { grid-column: 2; grid-row: 1 / span 2; padding: 4px 10px; border: 0; border-radius: 999px; background: #ffd27a; color: #5a2d0c; font-weight: 700; cursor: pointer; }
+.card-quests > small { display: block; font-size: 0.7rem; color: #8a6a50; }
 .card-stamps h4 { margin: 14px 0 6px; }
 .card-stamp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 .card-stamp { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: 10px; background: rgba(90, 45, 12, 0.06); color: #8a6a50; }

@@ -10,8 +10,9 @@ import {
 import { MISSION_ACORNS, raceStep, sharedMission } from './missions.js';
 import { bountyMarks, bountyStep, newBounty } from './bounty.js';
 import { STAMPS, STAMP_ACORNS, stampById, stampsOf } from './stamps.js';
+import { QUEST_ACORNS, TIERS, dayNumber, questById, questStep, refreshQuests, sanitizeQuests, swapQuest } from './quests.js';
 import { loadVillage, payMissionAcorns } from '../village/store';
-import { clearPouch, loadCollection, loadPouch, logGame, readPlaylog, saveCollection, savePouch } from './store';
+import { clearPouch, loadCollection, loadPouch, loadQuestsRaw, logGame, readPlaylog, saveCollection, savePouch, saveQuests } from './store';
 
 // Cards wait out the blow (the 0.55s delay on .card-fly), so they never cover the hit they came from.
 const FLY_MS = 1450;
@@ -23,11 +24,11 @@ type Fly = Won & { key: number; x: number; y: number };
 type Game = {
   id: number; lastPly: number; won: Won[]; started: number; captures: number;
   mission: any; missionState: string | null; quest: string | null; boost: boolean; ply: number;
-  bounty: { on: Record<string, number> } | null; bountyAcorns: number; stampsOn: boolean; stampAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
+  bounty: { on: Record<string, number> } | null; bountyAcorns: number; stampsOn: boolean; stampAcorns: number; questAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
 };
 const freshGame = (id: number): Game => ({
   id, lastPly: 0, won: [], started: Date.now(), captures: 0,
-  mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, stampsOn: false, stampAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
+  mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, stampsOn: false, stampAcorns: 0, questAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
 });
 const engine = () => (window as any).wizardChess;
 // chess.js piece letters to the engine's piece names (the bounty notes name the animal).
@@ -37,6 +38,12 @@ const PIECE_OF: Record<string, string> = { p: 'pawn', n: 'knight', b: 'bishop', 
 function objectParticle(word: string) {
   const code = word.charCodeAt(word.length - 1) - 0xac00;
   return code >= 0 && code < 11172 && code % 28 ? '을' : '를';
+}
+
+// Today's quests from the save, brought up to the device's day (quests.js). Rolls come from the day, not the game.
+function todayQuests() {
+  const today = dayNumber();
+  return refreshQuests(sanitizeQuests(loadQuestsRaw()), today, (tier: string) => seededRoll(today, `quest-${tier}`, 0));
 }
 
 // The end-of-game pouch flips one card at a time and the whole row is done within this many milliseconds.
@@ -58,6 +65,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [mission, setMission] = useState<{ m: any; state: string | null } | null>(null);
   const [ply, setPly] = useState(0);
   const [bountyWon, setBountyWon] = useState(0);
+  const [quests, setQuests] = useState<any>(() => todayQuests());
   const [playing, setPlaying] = useState(false);
   const [skills, setSkills] = useState({ scout: 0, rewind: 0 });
   const [note, setNote] = useState('');
@@ -66,6 +74,26 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const say = (text: string, ms = 2400) => {
     setNote(text);
     setTimeout(() => setNote((n) => (n === text ? '' : n)), ms);
+  };
+
+  // One game event into today's quests; a finished quest pays its acorns with the game.
+  const feedQuest = (event: any) => {
+    const g = game.current;
+    if (!g.stampsOn || !fxSettings().quests) return;
+    const { state, finished } = questStep(todayQuests(), event);
+    saveQuests(state);
+    setQuests(state);
+    for (const f of finished) {
+      const reward = QUEST_ACORNS[f.tier as keyof typeof QUEST_ACORNS];
+      g.questAcorns += reward;
+      const q = questById(f.id)!;
+      say(en ? `✅ Quest done: ${q.en}! +${reward} acorns when the game ends` : `✅ 퀘스트 완료: ${q.ko}! 판이 끝나면 도토리 +${reward}`, 3200);
+    }
+  };
+  const onSwapQuest = (i: number) => {
+    const today = dayNumber();
+    const next = swapQuest(todayQuests(), i, today, seededRoll(today, `swap-${TIERS[i]}`, Date.now() % 997));
+    if (next) { saveQuests(next); setQuests(next); }
   };
 
   const startGame = (id: number) => {
@@ -117,6 +145,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     g.missionState = state;
     setMission({ m: g.mission, state });
     if (state === 'done') say(en ? `Mission taken! +${MISSION_ACORNS} acorns when the game ends.` : `미션을 먼저 해냈어요! 판이 끝나면 도토리 +${MISSION_ACORNS}`, 3200);
+    if (state === 'done') feedQuest({ kind: 'mission' });
     else say(en ? 'The other side got the mission first.' : '이번 미션은 상대가 먼저 했어요.', 2600);
   };
 
@@ -172,6 +201,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       if (g.id === d.gameId) {
         g.ply = d.ply;
         setPly(d.ply);
+        if (d.byPlayer && d.move) feedQuest({ kind: 'move', move: d.move });
         const took = g.mission && !g.missionState && raceStep(g.mission, d.move);
         if (took) settleMission(d.byPlayer ? 'done' : 'lost');
         // Technique stamps (OL-2): the player's named moves go into the album at once; a first one pays acorns at the end.
@@ -181,6 +211,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
             const c = loadCollection();
             const fresh = got.filter((id) => !c.stamps[id]);
             for (const id of got) c.stamps[id] = (c.stamps[id] || 0) + 1;
+            for (const id of got) feedQuest({ kind: 'stamp', id });
             saveCollection(c);
             setCol(c);
             if (fresh.length) {
@@ -196,6 +227,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
           const name = (letter: string) => names[ANIMAL_OF[PIECE_OF[letter] as keyof typeof ANIMAL_OF] as keyof typeof names] || '';
           if (claimed && d.byPlayer) {
             g.bountyAcorns += claimed.acorns;
+            feedQuest({ kind: 'bounty' });
             setBountyWon(g.bountyAcorns);
             say(en ? `💰 Bounty! +${claimed.acorns} acorns when the game ends` : `💰 현상금! 판이 끝나면 도토리 +${claimed.acorns}`, 2800);
           } else if (claimed) say(en ? 'They took your 💰 piece.' : `내 💰 ${name(d.move.captured)}${objectParticle(name(d.move.captured))} 상대가 잡았어요.`, 2400);
@@ -227,7 +259,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       saveCollection(saved);
       setCol(saved);
       if (dust) say(en ? `Stardust +${dust}` : `별가루 +${dust}`);
-      const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns + g.stampAcorns;
+      if (d.result) feedQuest({ kind: 'end', result: d.result });
+      const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns + g.stampAcorns + g.questAcorns;
       if (extra) payMissionAcorns(extra);
       engine()?.setBountyMarks?.([]);
       setPlaying(false);
@@ -255,6 +288,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   useEffect(() => {
     if (!open) return;
     setCol(loadCollection());
+    setQuests(todayQuests());
     logGame({ type: 'book', at: new Date().toISOString() });
   }, [open]);
 
@@ -344,6 +378,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
             </span>
           )}
           {bountyWon > 0 && <span className="game-strip-bounty" id="game-strip-bounty">💰 +{bountyWon}</span>}
+          {quests && game.current.stampsOn && fxSettings().quests && <span className="game-strip-quests" id="game-strip-quests">📋 {quests.slots.filter((q: any) => q.done).length}/3</span>}
           <span className="game-strip-ply" id="game-strip-ply">{en ? `Move ${Math.floor(ply / 2) + 1}` : `${Math.floor(ply / 2) + 1}수째`}</span>
         </div>
       )}
@@ -505,6 +540,26 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
                   </button>
                 )))}
               </div>
+
+              {fxSettings().quests && quests && loadCollection().games >= UNLOCK_GAMES && (
+                <section className="card-quests" id="card-quests">
+                  <h4>📋 {en ? "Today's quests" : '오늘의 퀘스트'} {quests.slots.filter((q: any) => q.done).length}/3</h4>
+                  {quests.slots.map((s: any, i: number) => {
+                    const q = questById(s.id)!;
+                    const today = dayNumber();
+                    return (
+                      <div key={i} className={`card-quest${s.done ? ' done' : ''}`}>
+                        <b>{s.done ? '✅' : '▫️'} {en ? q.en : q.ko}</b>
+                        <small>{s.have}/{q.need} · 🌰 {QUEST_ACORNS[q.tier as keyof typeof QUEST_ACORNS]}{s.day < today && !s.done ? (en ? ' · from yesterday, until tomorrow' : ' · 어제 것 · 오늘까지') : ''}</small>
+                        {!s.done && quests.swapDay !== today && (
+                          <button type="button" className="card-quest-swap" onClick={() => onSwapQuest(i)}>{en ? 'Swap' : '바꾸기'}</button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <small>{en ? 'One swap a day. Nothing is lost for a missed day.' : '하루 한 번 바꿀 수 있어요. 못 한 날도 잃는 건 없어요.'}</small>
+                </section>
+              )}
 
               <section className="card-stamps" id="card-stamps">
                 <h4>🏅 {en ? 'Technique stamps' : '기술 도장'} {STAMPS.filter((s) => col.stamps?.[s.id]).length}/{STAMPS.length}</h4>

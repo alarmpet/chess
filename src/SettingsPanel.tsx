@@ -9,7 +9,7 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
   if (!open) return null;
 
   const en = lang === 'en';
-  const setOption = (key: 'shake' | 'quick' | 'cards' | 'dive', value: boolean) => {
+  const setOption = (key: 'shake' | 'quick' | 'cards' | 'dive' | 'quests', value: boolean) => {
     const next = { ...fx, [key]: value };
     setFx(next);
     writeFxSettings(window.localStorage, next);
@@ -19,7 +19,8 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
     { id: 'shake', icon: '📳', label: en ? 'Screen shake' : '화면 흔들림', hint: en ? 'Shake on big captures' : '큰 잡기 때 화면이 흔들립니다', on: fx.shake, toggle: () => setOption('shake', !fx.shake) },
     { id: 'cards', icon: '🃏', label: en ? 'Capture cards' : '잡기 카드', hint: en ? 'Captures drop cards' : '말을 잡으면 카드가 나옵니다', on: fx.cards, toggle: () => setOption('cards', !fx.cards) },
     { id: 'quick', icon: '⚡', label: en ? 'Quick games' : '빠른 대국', hint: en ? 'Skips the capture close-up' : '잡을 때 카메라가 다가가지 않습니다', on: fx.quick, toggle: () => setOption('quick', !fx.quick) },
-    { id: 'dive', icon: '🫧', label: en ? 'Dive to the village' : '마을로 잠수', hint: en ? 'The camera plunges under the board on the way to the island' : '마을로 갈 때 카메라가 판 아래 물속으로 내려갑니다', on: fx.dive, toggle: () => setOption('dive', !fx.dive) }
+    { id: 'dive', icon: '🫧', label: en ? 'Dive to the village' : '마을로 잠수', hint: en ? 'The camera plunges under the board on the way to the island' : '마을로 갈 때 카메라가 판 아래 물속으로 내려갑니다', on: fx.dive, toggle: () => setOption('dive', !fx.dive) },
+    { id: 'quests', icon: '📋', label: en ? "Today's quests" : '오늘의 퀘스트', hint: en ? 'Three small goals a day, filled over any games. Nothing is lost for a missed day' : '하루 세 가지 작은 목표, 여러 판에 걸쳐 채워요. 못 해도 잃는 건 없어요', on: fx.quests, toggle: () => setOption('quests', !fx.quests) }
   ];
 
   return (
