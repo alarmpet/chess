@@ -11,6 +11,7 @@ import { MISSION_ACORNS, raceStep, sharedMission } from './missions.js';
 import { bountyMarks, bountyStep, newBounty } from './bounty.js';
 import { STAMPS, STAMP_ACORNS, stampById, stampsOf } from './stamps.js';
 import { RALLY_ACORNS, newRally, rallyStep } from './rally.js';
+import { noteQueue } from './noteQueue.js';
 import { QUEST_ACORNS, TIERS, dayNumber, questById, questStep, refreshQuests, sanitizeQuests, swapQuest } from './quests.js';
 import { loadVillage, payMissionAcorns } from '../village/store';
 import { clearPouch, loadCollection, loadPouch, loadQuestsRaw, logGame, readPlaylog, saveCollection, savePouch, saveQuests } from './store';
@@ -74,10 +75,10 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [note, setNote] = useState('');
   const en = lang === 'en';
 
-  const say = (text: string, ms = 2400) => {
-    setNote(text);
-    setTimeout(() => setNote((n) => (n === text ? '' : n)), ms);
-  };
+  // Notes wait in line (cards/noteQueue.js): one move can bring a mission, a bounty, a quest and a comeback note at once.
+  const notes = useRef<ReturnType<typeof noteQueue> | null>(null);
+  if (!notes.current) notes.current = noteQueue({ show: (text: string) => setNote(text) });
+  const say = (text: string, ms = 2400) => notes.current!.say(text, ms);
 
   // One game event into today's quests; a finished quest pays its acorns with the game.
   const feedQuest = (event: any) => {
