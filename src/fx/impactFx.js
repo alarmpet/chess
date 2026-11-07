@@ -117,6 +117,15 @@ export function createImpactFx(scene) {
     label(pos, tier.word, tier.wordSize);
   }
 
+  // 글자는 작게 나와 1.25배까지 부풀었다가 1배로 가라앉는다.
+  function wordPop(u) {
+    return u < 0.2 ? 0.4 + (u / 0.2) * 0.85 : 1.25 - Math.min(0.25, (u - 0.2) * 1.2);
+  }
+  function sizeWord(w, u) {
+    const pop = wordPop(u);
+    w.sprite.scale.set(w.size * 2 * pop, w.size * pop, 1);
+  }
+
   function label(pos, text, size) {
     wordTex[text] ||= wordTexture(text);
     // Pushed off to one side and tipped, so the word sits beside the blow rather than on top of it.
@@ -127,8 +136,11 @@ export function createImpactFx(scene) {
     sprite.center.set(side > 0 ? 0.1 : 0.9, 0.5);
     sprite.position.set(pos.x, pos.y + 0.3, pos.z);
     sprite.renderOrder = 20;
+    // 첫 크기를 바로 넣는다. 안 넣으면 다음 갱신 전 한 프레임 동안 기본 크기 1(화면 높이 전체)로 그려진다(PT 캡처 2026-11-07).
+    const word = { sprite, age: 0, dur: 0.62, size: size * SCREEN_HEIGHT };
+    sizeWord(word, 0);
     scene.add(sprite);
-    words.push({ sprite, age: 0, dur: 0.62, size: size * SCREEN_HEIGHT });
+    words.push(word);
   }
 
   // Materials are shared between pieces of a role, so the flash works on this piece's own copies.
@@ -210,8 +222,7 @@ export function createImpactFx(scene) {
       const w = words[i];
       w.age += dt;
       const u = Math.min(1, w.age / w.dur);
-      const pop = u < 0.2 ? 0.4 + (u / 0.2) * 0.85 : 1.25 - Math.min(0.25, (u - 0.2) * 1.2);
-      w.sprite.scale.set(w.size * 2 * pop, w.size * pop, 1);
+      sizeWord(w, u);
       w.sprite.position.y += dt * 0.12;
       w.sprite.material.opacity = u > 0.7 ? (1 - u) / 0.3 : 1;
       if (u >= 1) {
