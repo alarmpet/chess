@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { sfx } from '../audio/sfx.js';
+import { freeRewind, opponentStage } from './rivalLadder.js';
 import { fxSettings } from '../fx/settings.js';
 import CardFace, { ANIMAL_EN, ANIMAL_KO, RARITY_EN, RARITY_KO } from './CardFace';
 import {
@@ -191,6 +192,14 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       if (held && held.gameId !== d.gameId) clearPouch();
       if (!fxSettings().cards) return;
       startGame(d.gameId);
+      // FN-3: 첫 5판과 연습 단계(쉬움 상대)에서는 되감기 1번이 공짜로 있다.
+      {
+        const rival = engine()?.getRivalCatalog?.()?.rivals?.find((r: any) => r.id === d.rivalId) || null;
+        if (freeRewind(loadCollection().games, opponentStage(loadCollection().games, rival))) {
+          game.current.rewind = 1;
+          syncSkills();
+        }
+      }
       if (d.resumed && held?.gameId === d.gameId) {
         game.current.won = [...held.cards];
         setCount(held.cards.length);

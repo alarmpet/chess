@@ -999,6 +999,34 @@ export function initWizardChess() {
     scene.add(boardGroup);
     const squareHighlightsGroup = new THREE.Group(); squareHighlightsGroup.name = 'highlights';
     scene.add(squareHighlightsGroup);
+    // FN-3 직전 수 표시: 방금 둔 수의 출발·도착 칸을 옅은 노란 칸으로(인스턴스 2개 = 그리기 1번). 첫 국면에는 숨어 있어
+    // 드로우콜 게이트(초기 국면)는 그대로다. 되감기·이어 하기·새 판에서 심판 기록의 마지막 수로 다시 맞춘다.
+    const lastMoveMark = (() => {
+      const geo = new THREE.PlaneGeometry(BOARD_SQ_SIZE * 0.94, BOARD_SQ_SIZE * 0.94);
+      geo.rotateX(-Math.PI / 2);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.42, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      mat.userData = { outlineParameters: { visible: false } };
+      const mesh = new THREE.InstancedMesh(geo, mat, 2);
+      mesh.name = 'last-move';
+      mesh.visible = false;
+      mesh.renderOrder = 1;
+      scene.add(mesh);
+      return mesh;
+    })();
+    let lastMoveMarksOn = true;
+    function syncLastMoveMark() {
+      const last = gameMode === 'single' && lastMoveMarksOn ? referee.history().at(-1) : null;
+      if (!last) { lastMoveMark.visible = false; return; }
+      const m = new THREE.Matrix4();
+      [last.from, last.to].forEach((sq, i) => {
+        const p = boardToWorld(8 - Number(sq[1]), sq.charCodeAt(0) - 97);
+        m.makeTranslation(p.x, BOARD_SURFACE_Y + 0.006, p.z);
+        lastMoveMark.setMatrixAt(i, m);
+      });
+      lastMoveMark.instanceMatrix.needsUpdate = true;
+      lastMoveMark.visible = true;
+    }
+    function setLastMoveMarks(on) { lastMoveMarksOn = Boolean(on); syncLastMoveMark(); return lastMoveMarksOn; }
     const boardSquareMeshes = [];
 
     function buildChessBoardGrid() {
@@ -2716,6 +2744,7 @@ let handBrainKind = null;
         syncRefereeFromBoard(currentTurn);
       }
 
+      syncLastMoveMark();
       renderer.shadowMap.needsUpdate = true;
       updateTurnUI();
       if (typeof updateScriptBarUI === 'function') updateScriptBarUI();
@@ -2727,6 +2756,7 @@ let handBrainKind = null;
       rivalPaid = false;
       entranceDrops = [];
       gameReported = false;
+      lastMoveMark.visible = false;
       gameId = (gameId + 1) >>> 0;
       if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, rivalId: activeRivalId, color: playerColor } }));
       if (aiTimer) {
@@ -3279,6 +3309,7 @@ let handBrainKind = null;
         console.warn('Referee rejected move', { fromR, fromC, toR, toC, promotionType, fen: referee.fen() });
         return false;
       }
+      syncLastMoveMark();
       // The moment a move is made (before its walk): the lightning board times the player's thinking from here.
       if (gameMode === 'single' && !scriptedGameActive) {
         window.dispatchEvent(new CustomEvent('movestarted', { detail: { gameId, byPlayer: piece.color === playerColor, ply: referee.history().length - 1 } }));   // ply: this move's index in the game
@@ -5816,6 +5847,8 @@ let handBrainKind = null;
       quitInfo,
       quitNow,
       setFreePlay,
+      setLastMoveMarks,
+      debugLastMoveMark: () => ({ visible: lastMoveMark.visible, at: [0, 1].map((i) => { const m = new THREE.Matrix4(); lastMoveMark.getMatrixAt(i, m); const v = new THREE.Vector3().setFromMatrixPosition(m); return [+v.x.toFixed(3), +v.z.toFixed(3)]; }) }),
       debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
       getRivalCatalog,
       startRival,

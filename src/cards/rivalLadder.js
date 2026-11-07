@@ -25,6 +25,17 @@ export function freePlayFor(gamesDone) {
   return (Number(gamesDone) || 0) < FIRST_EASY_GAMES ? FREE_PLAY.easy : FREE_PLAY.normal;
 }
 
+/** 무료 되감기(FN-3): 첫 FREE_REWIND_GAMES 판과 연습 단계(쉬움)에서는 판마다 되감기 1번. */
+export const FREE_REWIND_GAMES = 5;
+export function freeRewind(gamesDone, stage) {
+  return (Number(gamesDone) || 0) < FREE_REWIND_GAMES || stage === 'easy';
+}
+
+/** 이번 판 상대의 단계: 라이벌이면 그 단계, 아니면 자유 대국(판 수로). 연습 단계 = 'easy'. */
+export function opponentStage(gamesDone, rival) {
+  return rival ? rival.stage || 'normal' : freePlayFor(gamesDone).stage;
+}
+
 const rank = (stage) => Math.max(0, STAGES.indexOf(stage));
 
 /** 판 기록에서 끝에 이어진 패배 수(기권 포함). 무승부·승리에서 끊긴다. */

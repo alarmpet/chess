@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { FIRST_EASY_GAMES, FREE_PLAY, STREAK, freePlayFor, lossStreak, suggestAfter } from '../src/cards/rivalLadder.js';
+import { FIRST_EASY_GAMES, FREE_PLAY, FREE_REWIND_GAMES, STREAK, freePlayFor, freeRewind, lossStreak, opponentStage, suggestAfter } from '../src/cards/rivalLadder.js';
 import { LEVELS } from '../src/rules/ai.js';
 
 const pack = JSON.parse(readFileSync(new URL('../public/packs/legend/pack.json', import.meta.url), 'utf8'));
@@ -47,4 +47,13 @@ test('팩의 라이벌 세 단계가 하나씩, 성격 한 줄과 탐색 단계�
     assert.ok(r.style?.ko && r.style?.en, `${r.id} 성격 한 줄`);
     assert.ok(LEVELS[r.search], `${r.id} 탐색 단계`);
   }
+});
+
+test('무료 되감기는 첫 5판과 쉬움 단계, 상대 단계는 라이벌 또는 판 수로', () => {
+  assert.equal(freeRewind(0, 'normal'), true);
+  assert.equal(freeRewind(FREE_REWIND_GAMES, 'normal'), false);
+  assert.equal(freeRewind(40, 'easy'), true);
+  assert.equal(opponentStage(0, null), 'easy');
+  assert.equal(opponentStage(9, null), 'normal');
+  assert.equal(opponentStage(0, { stage: 'hard' }), 'hard');
 });
