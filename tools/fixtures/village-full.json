@@ -1,0 +1,340 @@
+{
+ "wildcrown.village.v1": {
+  "v": 2,
+  "coins": 300,
+  "grain": 5,
+  "bread": 2,
+  "hearts": {
+   "w_e2": 12
+  },
+  "names": {},
+  "nextId": 9,
+  "night": false,
+  "quest": null,
+  "festival": null,
+  "island": 1,
+  "walk": {
+   "slot": "w_e2",
+   "route": [
+    "e4",
+    "e5",
+    "e6"
+   ]
+  },
+  "petDay": "",
+  "petCount": 0,
+  "rivals": {},
+  "visits": {},
+  "gifts": [],
+  "lastSeen": 0,
+  "games": 24,
+  "dewDay": "",
+  "dewAt": 0,
+  "seed": 7,
+  "week": {
+   "w": -1,
+   "n": 0,
+   "pick": null
+  },
+  "shelf": {
+   "g": -1,
+   "n": 0,
+   "lv": 1,
+   "xp": 0,
+   "slots": []
+  },
+  "stash": {},
+  "built": [
+   {
+    "id": 1,
+    "kind": "field",
+    "sq": "b2",
+    "tenant": "meerkat_0",
+    "level": 1,
+    "ready": true
+   },
+   {
+    "id": 2,
+    "kind": "shelter",
+    "sq": "d2",
+    "tenant": "meerkat_0",
+    "level": 1,
+    "ready": true
+   },
+   {
+    "id": 3,
+    "kind": "mill",
+    "sq": "f2",
+    "tenant": null,
+    "level": 1,
+    "ready": true
+   },
+   {
+    "id": 4,
+    "kind": "market",
+    "sq": "b4",
+    "tenant": null,
+    "level": 1,
+    "ready": true
+   },
+   {
+    "id": 5,
+    "kind": "bakery",
+    "sq": "d4",
+    "tenant": "panda_1",
+    "level": 1,
+    "ready": true
+   },
+   {
+    "id": 6,
+    "kind": "power",
+    "sq": "f4",
+    "tenant": null,
+    "level": 1,
+    "ready": true
+   },
+   {
+    "id": 7,
+    "kind": "spring",
+    "sq": "b6",
+    "tenant": null,
+    "level": 1,
+    "ready": true
+   },
+   {
+    "id": 8,
+    "kind": "stage",
+    "sq": "d6",
+    "tenant": "tiger_2",
+    "level": 1,
+    "ready": true
+   }
+  ],
+  "decor": [
+   {
+    "kind": "house",
+    "sq": "g7"
+   },
+   {
+    "kind": "lantern",
+    "sq": "c5"
+   },
+   {
+    "kind": "fountain",
+    "sq": "e5"
+   }
+  ],
+  "flags": [
+   {
+    "sq": "h8",
+    "game": 0
+   },
+   {
+    "sq": "a8",
+    "game": 1
+   },
+   {
+    "sq": "b8",
+    "game": 2
+   },
+   {
+    "sq": "d8",
+    "game": 3
+   },
+   {
+    "sq": "f8",
+    "game": 4
+   },
+   {
+    "sq": "g8",
+    "game": 5
+   },
+   {
+    "sq": "a5",
+    "game": 6
+   },
+   {
+    "sq": "g5",
+    "game": 7
+   },
+   {
+    "sq": "h5",
+    "game": 8
+   },
+   {
+    "sq": "a6",
+    "game": 9
+   },
+   {
+    "sq": "h6",
+    "game": 10
+   },
+   {
+    "sq": "c6",
+    "game": 11
+   }
+  ],
+  "map": {
+   "steps": {
+    "e4": 40,
+    "e5": 40,
+    "d4": 20,
+    "d5": 20,
+    "c3": 10,
+    "f3": 10,
+    "c6": 5,
+    "f6": 5,
+    "g1": 3
+   },
+   "trees": [
+    {
+     "sq": "a1",
+     "slot": "b_e2",
+     "game": 0
+    },
+    {
+     "sq": "b1",
+     "slot": "w_e2",
+     "game": 1
+    },
+    {
+     "sq": "c1",
+     "slot": "b_e2",
+     "game": 2
+    },
+    {
+     "sq": "d1",
+     "slot": "w_e2",
+     "game": 3
+    },
+    {
+     "sq": "e1",
+     "slot": "b_e2",
+     "game": 4
+    },
+    {
+     "sq": "f1",
+     "slot": "w_e2",
+     "game": 5
+    },
+    {
+     "sq": "g1",
+     "slot": "b_e2",
+     "game": 6
+    },
+    {
+     "sq": "h1",
+     "slot": "w_e2",
+     "game": 7
+    },
+    {
+     "sq": "a3",
+     "slot": "b_e2",
+     "game": 8
+    },
+    {
+     "sq": "b3",
+     "slot": "w_e2",
+     "game": 9
+    },
+    {
+     "sq": "c3",
+     "slot": "b_e2",
+     "game": 10
+    },
+    {
+     "sq": "d3",
+     "slot": "w_e2",
+     "game": 11
+    },
+    {
+     "sq": "e3",
+     "slot": "b_e2",
+     "game": 12
+    },
+    {
+     "sq": "f3",
+     "slot": "w_e2",
+     "game": 13
+    },
+    {
+     "sq": "g3",
+     "slot": "b_e2",
+     "game": 14
+    },
+    {
+     "sq": "h3",
+     "slot": "w_e2",
+     "game": 15
+    },
+    {
+     "sq": "a7",
+     "slot": "b_e2",
+     "game": 16
+    },
+    {
+     "sq": "b7",
+     "slot": "w_e2",
+     "game": 17
+    },
+    {
+     "sq": "c7",
+     "slot": "b_e2",
+     "game": 18
+    },
+    {
+     "sq": "d7",
+     "slot": "w_e2",
+     "game": 19
+    },
+    {
+     "sq": "e7",
+     "slot": "b_e2",
+     "game": 20
+    },
+    {
+     "sq": "f7",
+     "slot": "w_e2",
+     "game": 21
+    },
+    {
+     "sq": "h7",
+     "slot": "b_e2",
+     "game": 22
+    },
+    {
+     "sq": "e8",
+     "slot": "w_e2",
+     "game": 23
+    }
+   ],
+   "gates": [
+    {
+     "game": 2
+    }
+   ],
+   "houses": [
+    {
+     "slot": "w_c2",
+     "game": 5
+    }
+   ],
+   "games": 24
+  }
+ },
+ "wildcrown.cards.v1": {
+  "v": 1,
+  "cards": {
+   "meerkat_0": 2,
+   "panda_1": 1,
+   "tiger_2": 1,
+   "lion_3": 1
+  },
+  "sinceRare": 0,
+  "sinceHero": 0,
+  "firstDone": true,
+  "games": 24,
+  "dust": 0,
+  "shelfSlots": 2
+ }
+}

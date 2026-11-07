@@ -1,0 +1,44 @@
+normal(라이벌 없음) { moves: 1013, blunders: 4, rate: 0.004 } 191s
+picnic(실수 0.4) { moves: 860, blunders: 44, rate: 0.051 } 385s
+bamboo_band(0.2) { moves: 1059, blunders: 2, rate: 0.002 } 681s
+acorn_court(0.05) { moves: 998, blunders: 0, rate: 0 } 964s
+easy(참고) { moves: 902, blunders: 26, rate: 0.029 } 1132s
+hard(참고, 게임에서 안 씀) { moves: 900, blunders: 21, rate: 0.023 } 1854s
+{
+ "what": "blunders",
+ "at": "2026-11-06T10:30:11.076Z",
+ "games": 20,
+ "rows": {
+  "normal(라이벌 없음)": {
+   "moves": 1013,
+   "blunders": 4,
+   "rate": 0.004
+  },
+  "picnic(실수 0.4)": {
+   "moves": 860,
+   "blunders": 44,
+   "rate": 0.051
+  },
+  "bamboo_band(0.2)": {
+   "moves": 1059,
+   "blunders": 2,
+   "rate": 0.002
+  },
+  "acorn_court(0.05)": {
+   "moves": 998,
+   "blunders": 0,
+   "rate": 0
+  },
+  "easy(참고)": {
+   "moves": 902,
+   "blunders": 26,
+   "rate": 0.029
+  },
+  "hard(참고, 게임에서 안 씀)": {
+   "moves": 900,
+   "blunders": 21,
+   "rate": 0.023
+  }
+ },
+ "seconds": 1854
+}

@@ -8,11 +8,18 @@
     "build": "vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview --port=3000 --host=0.0.0.0",
-    "test": "node test/applet.test.mjs && node test/arcane.test.mjs && node test/farm.test.mjs && node test/juice.test.mjs && node --experimental-strip-types test/beast.test.mjs && node --experimental-strip-types test/billiards.test.mjs && node --experimental-strip-types test/ballstorm.test.mjs"
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:slow": "node --test \"test/slow/*.test.mjs\"",
+    "test:all": "node --test \"test/*.test.mjs\" \"test/slow/*.test.mjs\"",
+    "gate:assets": "node tools/asset_gate.mjs",
+    "gate:bundle": "node tools/bundle_gate.mjs",
+    "gate:drawcalls": "node tools/drawcall_gate.mjs",
+    "gate:drawcalls:village": "node tools/drawcall_gate.mjs --village"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "chess.js": "^1.4.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "three": "^0.170.0",

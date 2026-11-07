@@ -1,0 +1,16 @@
+{
+ "state0": {
+  "bar": "👫 3LLLYA\n🟠 친구 연결 끊김\n친구 차례\n기권\n나가기",
+  "ply": 3,
+  "panel": false
+ },
+ "nf3": false,
+ "sentNf3": 1794057833461,
+ "gotNc6": 1794057939620,
+ "endHost": "졌어요 · 기권",
+ "game2": {
+  "bar": "👫 3LLLYA\n🟢 친구 연결됨\n친구 차례\n기권\n나가기",
+  "color": "b",
+  "ply": 0
+ }
+}

@@ -1,66 +1,83 @@
+import LookPanel from './LookPanel';
+import RivalPanel from './RivalPanel';
+import RivalEntrance from './RivalEntrance';
+import SettingsPanel from './SettingsPanel';
+import CardLayer from './cards/CardLayer';
+import HandBrain from './HandBrain';
+import Online from './Online';
+import Blitz from './Blitz';
+import SessionLog from './SessionLog';
+import RivalLadder from './RivalLadder';
+import VillageView from './VillageView';
+import QuitDialog from './QuitDialog';
+import { loadVillage, settleFinishedGame } from './village/store';
+import { stageForHearts } from './village/economy.js';
+import { gainText } from './village/LoopStrip';
+import { fxSettings } from './fx/settings.js';
 import { useEffect, useRef, useState } from 'react';
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
-import { arcaneEngine, ArcaneState } from './arcaneEngine';
-import { arcaneAudio } from './arcaneAudio';
-import { farmEngine, FarmState } from './farmEngine';
-import { CROPS, FACILITIES, RESTORATION_ZONES } from './farmData';
-import {
-  juiceEngine,
-  XPState,
-  DailyQuest,
-  attachCardTilt,
-  triggerCardDealAnimation,
-} from './juiceEngine';
-import { BeastInfo, ALL_BEASTS } from './beastModels';
-import { BilliardsView } from './billiards/BilliardsView.tsx';
-import { BallStormView } from './ballstorm/BallStormView.tsx';
 
 export default function App() {
   const initializedRef = useRef(false);
-  const [appMode, setAppMode] = useState<'ballstorm' | 'billiards' | 'chess'>('ballstorm');
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
-  const [questPanelOpen, setQuestPanelOpen] = useState(false);
   const [lang, setLang] = useState<Language>(getCurrentLang());
-  const [arcaneState, setArcaneState] = useState<ArcaneState>(arcaneEngine.getState());
-  const [farmState, setFarmState] = useState<FarmState>(farmEngine.getState());
-  const [xpState, setXpState] = useState<XPState>(juiceEngine.getXPState());
-  const [quests, setQuests] = useState<DailyQuest[]>(juiceEngine.getQuests());
-  const [pieceSkin, setPieceSkin] = useState<'3d_beasts' | 'classic'>('3d_beasts');
-  const [selectedBeast, setSelectedBeast] = useState<BeastInfo | null>(null);
-  const [codexOpen, setCodexOpen] = useState(false);
-  const [codexTab, setCodexTab] = useState<'w' | 'b'>('w');
-  const [codexDetailBeast, setCodexDetailBeast] = useState<BeastInfo | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const [lookOpen, setLookOpen] = useState(false);
+  const [rivalOpen, setRivalOpen] = useState(false);
+  const [handBrainOpen, setHandBrainOpen] = useState(false);
+  const [onlineOpen, setOnlineOpen] = useState(false);
+  const [villageOpen, setVillageOpen] = useState(false);
+  const [lastGame, setLastGame] = useState<any>(null);
+  // 잠수 전환 (아틀란티스 계획서 AT-2): 체스 카메라가 판 아래로 내려가는 0.42초 뒤에 마을이 열리고, 남색 물막이 덮였다 걷힌다.
+  const [veil, setVeil] = useState<'in' | 'out' | null>(null);
+  const [diving, setDiving] = useState(false);
+  const diveOn = () => fxSettings().dive && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const openVillage = () => {
+    if (villageOpen) return;
+    if (!diveOn()) { setDiving(false); setVillageOpen(true); return; }
+    (window as any).wizardChess?.diveCamera?.(0.45);
+    setVeil('in');
+    setDiving(true);
+    window.setTimeout(() => setVillageOpen(true), 420);
+    window.setTimeout(() => setVeil(null), 1150);
+  };
+  const closeVillage = () => {
+    setVillageOpen(false);
+    setLastGame(null);
+    if (!diveOn()) return;
+    (window as any).wizardChess?.surfaceCamera?.(0.6);
+    setVeil('out');
+    window.setTimeout(() => setVeil(null), 750);
+  };
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cardsOpen, setCardsOpen] = useState(false);
   const t = getTranslations(lang);
+  const en = lang === 'en';
 
-  // ── Subscribe to XP & Quest state ──
   useEffect(() => {
-    const unsubXP = juiceEngine.subscribeXP(setXpState);
-    const unsubQ  = juiceEngine.subscribeQuests(setQuests);
-    juiceEngine.initJuiceEngine();
-    return () => { unsubXP(); unsubQ(); };
+    if (!mobileSheetOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMobileSheetOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileSheetOpen]);
+
+  // A finished game pays the village at once; the card below is the way in.
+  useEffect(() => {
+    const onFinished = (e: Event) => {
+      const summary = settleFinishedGame((e as CustomEvent).detail);
+      if (summary) setLastGame(summary);
+    };
+    window.addEventListener('gamefinished', onFinished);
+    return () => window.removeEventListener('gamefinished', onFinished);
   }, []);
 
-  // ── Subscribe to 3D Beast Piece Selection ──
+  // Coming back to the board, each piece shows the look its hearts earned.
   useEffect(() => {
-    (window as any).__onBeastSelect = (beastInfo: BeastInfo | null) => {
-      setSelectedBeast(beastInfo);
-    };
-    return () => {
-      delete (window as any).__onBeastSelect;
-    };
-  }, []);
-
-  // ── Card tilt effect on hand change ──
-  useEffect(() => {
-    const cards = document.querySelectorAll<HTMLElement>('.arcane-card');
-    const cleanups: (() => void)[] = [];
-    cards.forEach(card => { cleanups.push(attachCardTilt(card)); });
-    triggerCardDealAnimation();
-    return () => cleanups.forEach(fn => fn());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [arcaneState.hand.length]);
+    if (villageOpen) return;
+    const hearts = loadVillage().hearts as Record<string, number>;
+    const stages = Object.fromEntries(Object.entries(hearts).map(([slot, n]) => [slot, stageForHearts(n)]).filter(([, st]) => st !== 'baby'));
+    (window as any).wizardChess?.setSlotStages?.(stages);
+  }, [villageOpen]);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -76,30 +93,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const unsubArcane = arcaneEngine.subscribe((st) => {
-      setArcaneState(st);
-    });
-    return () => unsubArcane();
-  }, []);
-
-  useEffect(() => {
-    const unsubFarm = farmEngine.subscribe((st) => {
-      setFarmState(st);
-    });
-    return () => unsubFarm();
-  }, []);
-
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMobileSheetOpen(false);
-        setQuestPanelOpen(false);
-        setSelectedBeast(null);
-        setCodexDetailBeast(null);
-        setCodexOpen(false);
-        arcaneEngine.cancelSpell();
-        if (farmState.isShopOpen) farmEngine.toggleShop(false);
-        if (farmState.isBarnOpen) farmEngine.toggleBarn(false);
       }
     };
     const handleResize = () => {
@@ -113,23 +109,11 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
     };
-  }, [farmState.isShopOpen, farmState.isBarnOpen, questPanelOpen]);
+  }, []);
 
   const handleToggleLang = () => {
     const nextLang: Language = lang === 'ko' ? 'en' : 'ko';
     setAppLanguage(nextLang);
-  };
-
-  const handleToggleMute = () => {
-    const muted = arcaneAudio.toggleMute();
-    setIsMuted(muted);
-  };
-
-  const handleToggleSkin = () => {
-    const nextSkin = pieceSkin === '3d_beasts' ? 'classic' : '3d_beasts';
-    setPieceSkin(nextSkin);
-    const win = window as any;
-    win.wizardChess?.switchChessSkin?.(nextSkin);
   };
 
   const handleRestoreUI = () => {
@@ -145,161 +129,66 @@ export default function App() {
 
   return (
     <>
-      {appMode === 'ballstorm' && (
-        <BallStormView onSwitchMode={setAppMode} />
-      )}
+      <div id="loading-overlay">
+        <div className="loader-title">{t.loadingTitle}</div>
+        <div className="loader-bar-wrap">
+          <div className="loader-bar" id="loader-bar"></div>
+        </div>
+        <div id="loader-text">{t.loadingSub}</div>
+      </div>
 
-      {appMode === 'billiards' && (
-        <BilliardsView onSwitchMode={setAppMode} onBackToChess={() => setAppMode('chess')} />
-      )}
+      <div id="canvas-container"></div>
 
-      <div
-        id="canvas-container"
-        style={{ display: appMode === 'chess' ? 'block' : 'none' }}
-      ></div>
+      <button
+        type="button"
+        className="hud-btn mobile-only-restore-ui"
+        id="btn-mobile-show-ui"
+        onClick={handleRestoreUI}
+        title={t.showUiMobile}
+      >
+        {t.showUiMobile}
+      </button>
 
-      {appMode === 'chess' && (
-        <>
-          <div id="loading-overlay">
-            <div className="loader-title">{t.loadingTitle}</div>
-            <div className="loader-bar-wrap">
-              <div className="loader-bar" id="loader-bar"></div>
-            </div>
-            <div id="loader-text">{t.loadingSub}</div>
-          </div>
-
-          <button
-            type="button"
-            className="hud-btn mobile-only-restore-ui"
-            id="btn-mobile-show-ui"
-            onClick={handleRestoreUI}
-            title={t.showUiMobile}
-          >
-            {t.showUiMobile}
-          </button>
-
-          <div id="hud-top">
+      <div id="hud-top">
         <div className="hud-group" id="hud-left">
-          {/* Universal 3-Mode Switcher: Ball Storm vs 3D Billiards vs Magic Chess */}
-          <div className="app-mode-switch-pill">
-            <button
-              type="button"
-              className="app-mode-pill-btn"
-              onClick={() => setAppMode('ballstorm')}
-            >
-              ⚡ 볼 스톰
-            </button>
-            <button
-              type="button"
-              className="app-mode-pill-btn"
-              onClick={() => setAppMode('billiards')}
-            >
-              🎱 3D 당구장
-            </button>
-            <button
-              type="button"
-              className="app-mode-pill-btn active"
-              onClick={() => setAppMode('chess')}
-            >
-              ♚ 마법 체스
-            </button>
-          </div>
-
           <div className="brand-pill">
-            <span className="brand-title">
-              {lang === 'ko' ? '성소의 정원: 아케인 팜' : 'Sanctuary Garden: Chess & Farm'}
-            </span>
+            <span className="brand-title">{t.brandTitle}</span>
           </div>
-
           <div className="status-pill" id="status-pill">
             <span className="turn-dot" id="turn-dot"></span>
             <span id="turn-text">{t.turnWhite}</span>
             <span className="mode-badge" id="mode-badge">{t.playingAsWhite}</span>
           </div>
-
-          {/* View Toggle Pill (Chessboard vs 3D Garden Courtyard) */}
-          <button
-            type="button"
-            className={`farm-view-btn ${farmState.isGardenView ? 'in-garden' : ''}`}
-            id="btn-farm-view"
-            onClick={() => farmEngine.toggleGardenView()}
-            title={farmState.isGardenView ? '⚔️ 체스 대국장으로 돌아가기' : '🌱 성소 안뜰 정원으로 이동'}
-          >
-            {farmState.isGardenView ? '⚔️ 체스 대국장' : '🌱 성소 정원'}
-          </button>
-
-          {/* Gold, Gems & Sacred Relics Currency Display */}
-          <div className="farm-currency-pill" id="farm-currency-pill">
-            <span className="farm-gold-item" title="골드 코인 (체스 전투 및 농작물 판매로 획득)">
-              <span className="farm-gold-icon">💰</span>
-              <span>{farmState.gold}G</span>
-            </span>
-            <span className="farm-gems-item" title="성소 보석 (체크메이트 승리 시 획득)">
-              <span className="farm-gems-icon">💎</span>
-              <span>{farmState.gems}</span>
-            </span>
-            <span className="farm-ash-item" title="정화된 성회 (화로 소각 처형 및 체크메이트 승리 획득)">
-              <span className="farm-ash-icon">🔥</span>
-              <span>{farmState.sacredAsh}</span>
-            </span>
-            <span className="farm-marble-item" title="축복받은 대리석 (기둥 격돌 및 체크메이트 승리 획득)">
-              <span className="farm-marble-icon">🏛️</span>
-              <span>{farmState.marbleDust}</span>
-            </span>
-          </div>
-
-          {/* Arcane Mana Crystal Pill */}
-          <div className="mana-pill" id="mana-pill" title={lang === 'ko' ? '아케인 마나' : 'Arcane Mana'}>
-            <span className="mana-gem-icon">✦</span>
-            <span className="mana-count">{arcaneState.currentMana}/{arcaneState.maxMana}</span>
-            <div className="mana-dots">
-              {Array.from({ length: arcaneState.maxMana }).map((_, idx) => (
-                <span
-                  key={idx}
-                  className={`mana-dot ${idx < arcaneState.currentMana ? 'filled' : 'spent'}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* XP Progress Bar */}
-          <div className="xp-bar-pill" id="xp-bar-pill" title={`레벨 ${xpState.level} — 다음 레벨까지 ${xpState.xpToNext - xpState.xp} XP`}>
-            <span className="level-badge">Lv.{xpState.level}</span>
-            <div className="xp-bar-track">
-              <div className="xp-bar-fill" style={{ width: `${xpState.fillPercent}%` }} />
-            </div>
-          </div>
-
-          {/* Daily Quest Button */}
-          <button
-            type="button"
-            className="daily-quest-pill"
-            onClick={() => setQuestPanelOpen(true)}
-            title="오늘의 성소 임무"
-          >
-            <span className={`quest-dot ${quests.every(q => q.isCompleted) ? 'all-done' : ''}`} />
-            📜 {quests.filter(q => q.isCompleted).length}/{quests.length} 임무
-          </button>
-
-          {/* Win Streak Counter (only show if streak >= 2) */}
-          {xpState.winStreak >= 2 && (
-            <div className="win-streak-pill" title={`${xpState.winStreak}연승 중!`}>
-              <span className="streak-fire-icon">🔥</span>
-              {xpState.winStreak}연승
-            </div>
-          )}
         </div>
 
-        <button
-          type="button"
-          className={`hud-btn mobile-controls-trigger ${mobileSheetOpen ? 'active' : ''}`}
-          id="btn-mobile-controls"
-          aria-expanded={mobileSheetOpen}
-          aria-controls="hud-right"
-          onClick={() => setMobileSheetOpen((prev) => !prev)}
-        >
-          {mobileSheetOpen ? t.close : t.controls}
-        </button>
+        {/* Always on screen: the four places a player goes between moves. Everything else sits in the menu. */}
+        <div className="hud-group" id="hud-quick">
+          <button type="button" className="hud-btn quick-btn" id="btn-cards" onClick={() => setCardsOpen(true)} title={en ? 'Card album' : '카드 도감'}>
+            <span aria-hidden="true">🃏</span><span className="quick-label">{en ? 'Cards' : '카드'}</span>
+          </button>
+          <button type="button" className="hud-btn quick-btn" id="btn-village" onClick={openVillage} title={en ? 'Your island village' : '내 말들이 사는 섬 마을'}>
+            <span aria-hidden="true">🏡</span><span className="quick-label">{en ? 'Village' : '마을'}</span>
+          </button>
+          <button type="button" className="hud-btn quick-btn" id="btn-rivals" onClick={() => setRivalOpen(true)} title={en ? 'Beat a rival to win its item' : '라이벌을 이기고 소품 얻기'}>
+            <span aria-hidden="true">🏆</span><span className="quick-label">{en ? 'Rivals' : '라이벌'}</span>
+          </button>
+          <button type="button" className="hud-btn quick-btn" id="btn-handbrain" onClick={() => setHandBrainOpen(true)} title={en ? 'Hand and brain: two play one side' : '손과 뇌: 둘이 한 편'}>
+            <span aria-hidden="true">🤝</span><span className="quick-label">{en ? 'Together' : '함께'}</span>
+          </button>
+          <button type="button" className="hud-btn quick-btn" id="btn-online" onClick={() => setOnlineOpen(true)} title={en ? 'Invite a friend for a 1:1 game' : '친구를 초대해 1:1 대전'}>
+            <span aria-hidden="true">👫</span><span className="quick-label">{en ? 'Friend' : '친구'}</span>
+          </button>
+          <button
+            type="button"
+            className={`hud-btn quick-btn menu-trigger ${mobileSheetOpen ? 'active' : ''}`}
+            id="btn-mobile-controls"
+            aria-expanded={mobileSheetOpen}
+            aria-controls="hud-right"
+            onClick={() => setMobileSheetOpen((prev) => !prev)}
+          >
+            <span aria-hidden="true">☰</span><span className="quick-label">{en ? 'Menu' : '메뉴'}</span>
+          </button>
+        </div>
 
         <div
           className={`mobile-sheet-backdrop ${mobileSheetOpen ? 'open' : ''}`}
@@ -310,23 +199,9 @@ export default function App() {
           aria-hidden="true"
         ></div>
 
-        <div
-          className={`hud-group ${mobileSheetOpen ? 'mobile-sheet-open' : ''}`}
-          id="hud-right"
-        >
-          <div
-            className="mobile-sheet-handle-wrap"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMobileSheetOpen(false);
-            }}
-            aria-hidden="true"
-          >
-            <div className="mobile-sheet-handle"></div>
-          </div>
-
+        <div className={`hud-group ${mobileSheetOpen ? 'mobile-sheet-open' : ''}`} id="hud-right" role="menu">
           <div className="mobile-sheet-header">
-            <span className="mobile-sheet-title">{t.controls}</span>
+            <span className="mobile-sheet-title">{en ? 'Menu' : '메뉴'}</span>
             <button
               type="button"
               className="mobile-sheet-close"
@@ -337,549 +212,47 @@ export default function App() {
               }}
               aria-label={t.close}
             >
-              {t.close}
+              ✕
             </button>
           </div>
 
-          {/* Seed Shop Button */}
-          <button
-            type="button"
-            className="hud-btn"
-            id="btn-open-shop"
-            onClick={() => {
-              setMobileSheetOpen(false);
-              farmEngine.toggleShop(true);
-            }}
-            title="씨앗 및 정원 시설 상점"
-          >
-            🛒 상점
+          <div className="mobile-sheet-section-label">{en ? 'This game' : '이번 판'}</div>
+          <button className="hud-btn" id="btn-reset" title={en ? 'Start a fresh game' : '새 판 시작'} onClick={() => setMobileSheetOpen(false)}>
+            {en ? '♻️ New game' : '♻️ 새 판'}
           </button>
-
-          {/* Barn Warehouse Button */}
-          <button
-            type="button"
-            className="hud-btn"
-            id="btn-open-barn"
-            onClick={() => {
-              setMobileSheetOpen(false);
-              farmEngine.toggleBarn(true);
-            }}
-            title="수확물 창고 및 버프 현황"
-          >
-            🎒 창고
+          <button className="hud-btn" id="btn-resign" title={en ? 'Resign this game' : '이번 판 기권하기'} onClick={() => setMobileSheetOpen(false)}>
+            {en ? '🏳️ Resign' : '🏳️ 기권'}
           </button>
-
-          {/* Audio Sound Toggle */}
-          <button
-            type="button"
-            className="hud-btn audio-toggle-btn"
-            id="btn-audio-toggle"
-            onClick={handleToggleMute}
-            title={isMuted ? (lang === 'ko' ? '음소거 해제' : 'Unmute Sound') : (lang === 'ko' ? '음소거' : 'Mute Sound')}
-          >
-            {isMuted ? '🔇' : '🔊'}
-          </button>
-
-          {/* Language Switch Button */}
-          <button
-            type="button"
-            className="hud-btn lang-toggle-btn"
-            id="btn-lang-toggle"
-            onClick={handleToggleLang}
-            title={lang === 'ko' ? 'Switch to English' : '한국어로 전환'}
-          >
-            🌐 {t.langSwitchLabel}
-          </button>
-
-          {/* Piece Skin Toggle (3D Sanctuary Beasts vs Classic Statues) */}
-          <button
-            type="button"
-            className="hud-btn skin-toggle-btn"
-            id="btn-skin-toggle"
-            onClick={handleToggleSkin}
-            title={pieceSkin === '3d_beasts' ? '클래식 체스 석상으로 전환' : '3D 성소 영수단(동물 신수 조각상)으로 전환'}
-            style={{
-              borderColor: pieceSkin === '3d_beasts' ? 'rgba(234, 179, 8, 0.7)' : 'rgba(255, 255, 255, 0.2)',
-              color: pieceSkin === '3d_beasts' ? '#fef08a' : '#94a3b8'
-            }}
-          >
-            {pieceSkin === '3d_beasts' ? '🐾 3D 성소 영수단' : '♟️ 클래식 석상'}
-          </button>
-
-          {/* Beast Codex (성소 영수 도감) Button */}
-          <button
-            type="button"
-            className="hud-btn codex-btn"
-            id="btn-beast-codex"
-            onClick={() => {
-              setCodexOpen(true);
-              setMobileSheetOpen(false);
-            }}
-            title={lang === 'ko' ? '성소 영수 도감 열기' : 'Open Beast Codex'}
-            style={{
-              borderColor: 'rgba(234, 179, 8, 0.6)',
-              background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(0, 0, 0, 0.4))',
-              color: '#fef08a'
-            }}
-          >
-            📖 {lang === 'ko' ? '영수 도감' : 'Beast Codex'}
-          </button>
-
-          <div className="hud-divider" aria-hidden="true"></div>
-
-          <div className="mobile-sheet-section-label">{t.gameActions}</div>
-
-          <button
-            className="hud-btn"
-            id="btn-side-toggle"
-            title={lang === 'ko' ? '백/흑 진영 바꾸기' : 'Switch between White and Black'}
-            onClick={() => setMobileSheetOpen(false)}
-          >
+          <button className="hud-btn" id="btn-side-toggle" title={en ? 'Switch between White and Black' : '백/흑 바꾸기'} onClick={() => setMobileSheetOpen(false)}>
             {t.playAsBlack}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-ai-move"
-            title={lang === 'ko' ? 'AI에게 다음 수 두게 하기' : 'Let AI make the next move'}
-            onClick={() => setMobileSheetOpen(false)}
-          >
-            {t.aiMove}
-          </button>
-          <button
-            className="hud-btn"
-            id="btn-reset"
-            title={lang === 'ko' ? '체스판 초기화 및 새 게임 시작' : 'Start a fresh game'}
-            onClick={() => {
-              arcaneEngine.cancelSpell();
-              arcaneEngine.refillHand();
-              setMobileSheetOpen(false);
-            }}
-          >
-            {t.newGame}
-          </button>
 
-          <div className="hud-divider" aria-hidden="true"></div>
-          <div className="mobile-sheet-section-label">
-            <span>{t.cameraViews}</span>
-            <span className="mobile-sheet-section-sub">{t.cameraSub}</span>
-          </div>
+          <div className="mobile-sheet-section-label">{en ? 'View' : '보기'}</div>
+          <button className="hud-btn active" id="btn-cam-player" title={t.camPlayer}>{t.camPlayer}</button>
+          <button className="hud-btn" id="btn-cam-top" title={t.camTop}>{t.camTop}</button>
+          <button className="hud-btn" id="btn-cam-side" title={t.camSide}>{t.camSide}</button>
+          <button className="hud-btn" id="btn-cam-wide" title={t.camWide}>{t.camWide}</button>
 
-          <button
-            className="hud-btn active"
-            id="btn-cam-player"
-            title={t.camPlayer}
-          >
-            {t.camPlayer}
+          <div className="mobile-sheet-section-label">{en ? 'More' : '더 보기'}</div>
+          <button type="button" className="hud-btn" id="btn-looks" onClick={() => { setLookOpen(true); setMobileSheetOpen(false); }} title={en ? 'Looks only; the moves stay the same' : '외형만 바뀌고 수는 같습니다'}>
+            {en ? '🎨 Looks' : '🎨 외형'}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-cam-top"
-            title={t.camTop}
-          >
-            {t.camTop}
+          <button className="hud-btn" id="btn-settings" onClick={() => { setSettingsOpen(true); setMobileSheetOpen(false); }}>
+            {en ? '⚙️ Settings' : '⚙️ 설정'}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-cam-side"
-            title={t.camSide}
-          >
-            {t.camSide}
+          <button type="button" className="hud-btn" id="btn-lang-toggle" onClick={handleToggleLang} title={lang === 'ko' ? 'Switch to English' : '한국어로 전환'}>
+            🌐 {t.langSwitchLabel}
           </button>
-          <button
-            className="hud-btn"
-            id="btn-cam-wide"
-            title={t.camWide}
-          >
-            {t.camWide}
-          </button>
-
-          <div className="hud-divider" aria-hidden="true"></div>
-          <div className="mobile-sheet-section-label">{t.displayAndGestures}</div>
-
-          <button
-            className="hud-btn"
-            id="btn-hide-ui"
-            title={t.hideUi}
-            onClick={() => setMobileSheetOpen(false)}
-          >
+          <button className="hud-btn" id="btn-hide-ui" title={t.hideUi} onClick={() => setMobileSheetOpen(false)}>
             {t.hideUi}
           </button>
-
-          <div className="mobile-sheet-hint">
-            {t.mobileHint}
-          </div>
         </div>
       </div>
-
-      {/* Floating Loot Notification Toast */}
-      {farmState.lootNotification && (
-        <div className="loot-toast-overlay" role="status">
-          <div className="loot-toast-box">
-            <span>✨</span>
-            <span>{farmState.lootNotification}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Arcane Spell Action Banner */}
-      {!farmState.isGardenView && arcaneState.bannerMessage && (
-        <div className="arcane-banner-overlay" role="alert">
-          <div className="arcane-banner-box">
-            <span className="arcane-banner-text">{arcaneState.bannerMessage}</span>
-            {arcaneState.activeSpell && (
-              <button
-                type="button"
-                className="arcane-cancel-btn"
-                onClick={() => arcaneEngine.cancelSpell()}
-                title="주문 취소 (ESC)"
-              >
-                ✕ {lang === 'ko' ? '취소' : 'Cancel'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* GARDEN VIEW TOOLBAR */}
-      {farmState.isGardenView ? (
-        <div className="garden-dock" id="garden-dock">
-          <div className="garden-hint-pill">
-            🌱 3D 밭을 마우스로 클릭하면 씨앗 심기, 물주기, 수확을 진행합니다. 체스를 두면 작물이 고속 성장합니다!
-          </div>
-          <div className="garden-tools-row">
-            {Object.keys(CROPS).map((cropKey) => {
-              const crop = CROPS[cropKey];
-              const count = farmState.seeds[cropKey] || 0;
-              const isSelected = farmState.selectedSeedId === cropKey;
-              return (
-                <button
-                  key={cropKey}
-                  type="button"
-                  className={`garden-seed-btn ${isSelected ? 'active' : ''} ${count === 0 ? 'empty' : ''}`}
-                  onClick={() => farmEngine.selectSeed(cropKey)}
-                  title={`${crop.name}: ${crop.description} (${crop.buffDescription})`}
-                >
-                  <span className="seed-btn-icon">{crop.icon}</span>
-                  <span className="seed-btn-name">{crop.name.split(' ')[0]}</span>
-                  <span className="seed-btn-count">{count}개 보유</span>
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              className="garden-action-btn"
-              onClick={() => farmEngine.toggleShop(true)}
-            >
-              🛒 씨앗 상점
-            </button>
-            <button
-              type="button"
-              className="garden-action-btn"
-              id="btn-open-restoration"
-              onClick={() => farmEngine.toggleShop(true)}
-              style={{ background: 'linear-gradient(135deg, rgba(15,118,110,0.4), rgba(13,148,136,0.5))', borderColor: '#5eead4', color: '#ccfbf1' }}
-            >
-              🏛️ 수도원 복원 ({Object.values(farmState.restorations || {}).filter(Boolean).length}/6)
-            </button>
-            <button
-              type="button"
-              className="garden-action-btn"
-              onClick={() => farmEngine.toggleBarn(true)}
-            >
-              🎒 수확 창고
-            </button>
-          </div>
-        </div>
-      ) : (
-        /* CHESS VIEW: ARCANE CARDS DOCK */
-        <div className="arcane-dock" id="arcane-dock">
-          <div className="arcane-cards-row">
-            {arcaneState.hand.map((card) => {
-              const canAfford = arcaneState.currentMana >= card.cost;
-              const isSelected = arcaneState.activeSpell?.id === card.id;
-              return (
-                <button
-                  key={card.id}
-                  type="button"
-                  data-card-id={card.id}
-                  className={`arcane-card ${isSelected ? 'active' : ''} ${!canAfford ? 'unaffordable' : ''}`}
-                  onClick={() => {
-                    if (!canAfford) {
-                      const el = document.querySelector(`.arcane-card[data-card-id="${card.id}"]`);
-                      el?.classList.remove('shake-reject');
-                      void (el as HTMLElement)?.offsetWidth;
-                      el?.classList.add('shake-reject');
-                      return;
-                    }
-                    arcaneEngine.selectCard(card);
-                  }}
-                  title={lang === 'ko' ? card.desc : card.descEn}
-                >
-                  <div className="arcane-card-top">
-                    <span className="card-cost">{card.cost} ✦</span>
-                    <span className="card-icon">{card.icon}</span>
-                  </div>
-                  <div className="card-name">{lang === 'ko' ? card.name : card.nameEn}</div>
-                  <div className="card-desc">{lang === 'ko' ? card.desc : card.descEn}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* SEED & FACILITY SHOP MODAL */}
-      {farmState.isShopOpen && (
-        <div
-          className="farm-modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => farmEngine.toggleShop(false)}
-        >
-          <div className="farm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="farm-modal-header">
-              <div className="farm-modal-title">
-                <span>🛒</span>
-                <span>성소의 상점 (Sanctuary Merchant)</span>
-              </div>
-              <button
-                type="button"
-                className="grimoire-close-btn"
-                onClick={() => farmEngine.toggleShop(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="farm-modal-body">
-              <div className="farm-shop-section-title">🌱 마법 씨앗 구매</div>
-              <div className="farm-shop-grid">
-                {Object.keys(CROPS).map((key) => {
-                  const crop = CROPS[key];
-                  const canBuy = farmState.gold >= crop.seedCost;
-                  return (
-                    <div key={key} className="farm-item-card">
-                      <div className="farm-item-header">
-                        <span className="farm-item-name">
-                          <span>{crop.icon}</span>
-                          <span>{crop.name}</span>
-                        </span>
-                        <span style={{ color: '#eab308', fontWeight: 700, fontSize: '0.85rem' }}>
-                          {crop.seedCost} Gold
-                        </span>
-                      </div>
-                      <div className="farm-item-desc">{crop.description}</div>
-                      <div className="farm-item-buff">✦ {crop.buffDescription}</div>
-                      <button
-                        type="button"
-                        className="farm-buy-btn"
-                        disabled={!canBuy}
-                        onClick={() => farmEngine.buySeed(key)}
-                      >
-                        {canBuy ? '씨앗 구매하기' : '골드 부족'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="farm-shop-section-title" style={{ marginTop: '16px' }}>
-                🏛️ 정원 시설 및 자동화 건설
-              </div>
-              <div className="farm-shop-grid">
-                {Object.keys(FACILITIES).map((facKey) => {
-                  const fac = FACILITIES[facKey];
-                  const alreadyBuilt = farmState.facilities[facKey];
-                  const canBuy = farmState.gold >= fac.cost && !alreadyBuilt;
-                  return (
-                    <div key={facKey} className="farm-item-card">
-                      <div className="farm-item-header">
-                        <span className="farm-item-name">
-                          <span>{fac.icon}</span>
-                          <span>{fac.name}</span>
-                        </span>
-                        <span style={{ color: '#eab308', fontWeight: 700, fontSize: '0.85rem' }}>
-                          {alreadyBuilt ? '건설 완료' : `${fac.cost} Gold`}
-                        </span>
-                      </div>
-                      <div className="farm-item-desc">{fac.description}</div>
-                      <div className="farm-item-buff">✦ {fac.perk}</div>
-                      <button
-                        type="button"
-                        className="farm-buy-btn"
-                        disabled={!canBuy}
-                        onClick={() => farmEngine.buyFacility(facKey)}
-                      >
-                        {alreadyBuilt ? '✓ 건설됨' : canBuy ? '건설하기' : '골드 부족'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="farm-shop-section-title" style={{ marginTop: '20px' }}>
-                ✨ 대성당 및 수도원 6대 구역 복원 (Monastery Restoration)
-              </div>
-              <div className="farm-shop-grid">
-                {Object.keys(RESTORATION_ZONES).map((zoneKey) => {
-                  const zone = RESTORATION_ZONES[zoneKey];
-                  const isRestored = Boolean(farmState.restorations && farmState.restorations[zoneKey]);
-                  const canAfford =
-                    (!zone.cost.gold || farmState.gold >= zone.cost.gold) &&
-                    (!zone.cost.gems || farmState.gems >= zone.cost.gems) &&
-                    (!zone.cost.sacredAsh || farmState.sacredAsh >= zone.cost.sacredAsh) &&
-                    (!zone.cost.marbleDust || farmState.marbleDust >= zone.cost.marbleDust) &&
-                    !isRestored;
-
-                  return (
-                    <div key={zoneKey} className={`farm-item-card ${isRestored ? 'restored-card' : ''}`}>
-                      <div className="farm-item-header">
-                        <span className="farm-item-name">
-                          <span>{zone.icon}</span>
-                          <span>{zone.name}</span>
-                        </span>
-                        <span style={{ color: isRestored ? '#86efac' : '#38bdf8', fontWeight: 700, fontSize: '0.82rem' }}>
-                          {isRestored ? '✓ 복원 완료' : '미복원'}
-                        </span>
-                      </div>
-                      <div className="farm-item-desc">{zone.description}</div>
-                      <div className="farm-item-buff">✦ {zone.perkDescription}</div>
-                      <div className="restoration-costs-pills">
-                        {zone.cost.marbleDust && <span className="cost-tag marble">🏛️ {zone.cost.marbleDust} 대리석</span>}
-                        {zone.cost.sacredAsh && <span className="cost-tag ash">🔥 {zone.cost.sacredAsh} 성회</span>}
-                        {zone.cost.gems && <span className="cost-tag gems">💎 {zone.cost.gems} 보석</span>}
-                        {zone.cost.gold && <span className="cost-tag gold">💰 {zone.cost.gold}G</span>}
-                      </div>
-                      <button
-                        type="button"
-                        className={`farm-buy-btn ${isRestored ? 'restored' : ''}`}
-                        disabled={isRestored || !canAfford}
-                        onClick={() => farmEngine.restoreZone(zoneKey)}
-                        style={{ marginTop: '8px' }}
-                      >
-                        {isRestored ? '✅ 복원 완료 (영구 적용 중)' : canAfford ? '🏛️ 구역 복원하기' : '자재 부족'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BARN / HARVEST WAREHOUSE MODAL */}
-      {farmState.isBarnOpen && (
-        <div
-          className="farm-modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => farmEngine.toggleBarn(false)}
-        >
-          <div className="farm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="farm-modal-header">
-              <div className="farm-modal-title">
-                <span>🎒</span>
-                <span>수확물 창고 & 버프 현황 (Sanctuary Barn)</span>
-              </div>
-              <button
-                type="button"
-                className="grimoire-close-btn"
-                onClick={() => farmEngine.toggleBarn(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="farm-modal-body">
-              <div className="farm-shop-section-title">🌾 수확한 마법 작물</div>
-              <div className="farm-shop-grid">
-                {Object.keys(CROPS).map((key) => {
-                  const crop = CROPS[key];
-                  const count = farmState.harvested[key] || 0;
-                  return (
-                    <div key={key} className="farm-item-card">
-                      <div className="farm-item-header">
-                        <span className="farm-item-name">
-                          <span>{crop.icon}</span>
-                          <span>{crop.name}</span>
-                        </span>
-                        <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem' }}>
-                          보유: {count}개
-                        </span>
-                      </div>
-                      <div className="farm-item-desc">{crop.buffDescription}</div>
-                      <button
-                        type="button"
-                        className="farm-buy-btn"
-                        disabled={count <= 0}
-                        onClick={() => farmEngine.sellHarvested(key, 1)}
-                      >
-                        {count > 0 ? `1개 판매 (+${crop.sellPrice}G)` : '보유량 없음'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="farm-shop-section-title" style={{ marginTop: '16px' }}>
-                🏛️ 수도원 복원 성물 자재 (Cathedral Relics)
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-                <div className="farm-item-card">
-                  <div className="farm-item-header">
-                    <span className="farm-item-name">
-                      <span>🔥</span>
-                      <span>정화된 성회 (Sacred Ash)</span>
-                    </span>
-                    <span style={{ color: '#f97316', fontWeight: 700, fontSize: '0.9rem' }}>
-                      {farmState.sacredAsh}개
-                    </span>
-                  </div>
-                  <div className="farm-item-desc">
-                    화로 소각 처형 및 체크메이트 승리로 획득. 수도원 허브 밭 비옥화 재료입니다.
-                  </div>
-                </div>
-                <div className="farm-item-card">
-                  <div className="farm-item-header">
-                    <span className="farm-item-name">
-                      <span>🏛️</span>
-                      <span>축복받은 대리석 (Marble Dust)</span>
-                    </span>
-                    <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem' }}>
-                      {farmState.marbleDust}개
-                    </span>
-                  </div>
-                  <div className="farm-item-desc">
-                    기둥 격돌 분쇄 및 체크메이트 승리로 획득. 수도원 회랑 복원 필수 자재입니다.
-                  </div>
-                </div>
-              </div>
-
-              <div className="farm-shop-section-title" style={{ marginTop: '16px' }}>
-                ✨ 현재 활성화된 체스 버프 현황
-              </div>
-              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px 16px', borderRadius: '10px', fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6' }}>
-                <div>✦ 수도원 복원 진척도: {Object.values(farmState.restorations || {}).filter(Boolean).length}/6 구역 복원 완료</div>
-                <div>✦ 시작 마나 보너스: +{farmState.activeBuffs.manaBonus} (최대 {3 + farmState.activeBuffs.manaBonus} 마나)</div>
-                <div>✦ 코인 획득 배율: x{farmState.activeBuffs.goldMultiplier}</div>
-                <div>✦ 메테오 십자 폭발: {farmState.activeBuffs.meteorCross ? '🔥 활성화됨' : '미적용'}</div>
-                <div>✦ 킹 생명초 부활: {farmState.activeBuffs.kingRevive ? '🌿 활성화됨' : '미적용'}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div id="hud-bottom">
         <div className="hint-pill" id="controls-hint">
           {t.desktopHint}
         </div>
-        {!farmState.isGardenView && (
-          <div className="hazard-legend-pill" id="hazard-legend-pill">
-            <span>🔥 {lang === 'ko' ? '화로: 소각 처형 (성회 획득)' : 'Brazier: Incinerate'}</span>
-            <span style={{ opacity: 0.4 }}>•</span>
-            <span>🗿 {lang === 'ko' ? '기둥: 진입 불가 장애물' : 'Pillar: Impassable'}</span>
-          </div>
-        )}
         <div className="captured-pill" id="captured-tray"></div>
       </div>
 
@@ -892,45 +265,7 @@ export default function App() {
           <div className="checkmate-subtitle" id="checkmate-subtitle">
             {t.whiteTriumphs}
           </div>
-
-          {/* Sequential Reward Reveal Breakdown (Balatro / RPG style) */}
-          <div style={{ margin: '14px 0 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div className="checkmate-reward-row" style={{ animationDelay: '0.35s' }}>
-              <span>⚔️ 승리 영예 보상</span>
-              <span style={{ marginLeft: 'auto', color: '#fde047' }}>+250G · +40 XP</span>
-            </div>
-            <div className="checkmate-reward-row" style={{ animationDelay: '0.65s' }}>
-              <span>💎 체크메이트 성소 보석</span>
-              <span style={{ marginLeft: 'auto', color: '#38bdf8' }}>+3💎</span>
-            </div>
-            <div className="checkmate-reward-row" style={{ animationDelay: '0.95s' }}>
-              <span>🔥 대성당 화형 정화 성회</span>
-              <span style={{ marginLeft: 'auto', color: '#fb923c' }}>+5🔥 성회</span>
-            </div>
-            <div className="checkmate-reward-row" style={{ animationDelay: '1.25s' }}>
-              <span>🏛️ 고딕 성당 축복 대리석</span>
-              <span style={{ marginLeft: 'auto', color: '#7dd3fc' }}>+5🏛️ 대리석</span>
-            </div>
-            <div className="checkmate-reward-divider"></div>
-            <div className="checkmate-reward-row total-row" style={{ animationDelay: '1.55s' }}>
-              <span>✨ 총 획득 전리품</span>
-              <span style={{ marginLeft: 'auto' }}>+250G · 3💎 · 5🔥 · 5🏛️</span>
-            </div>
-          </div>
-
           <div className="checkmate-actions">
-            <button
-              type="button"
-              className="checkmate-btn"
-              id="btn-checkmate-garden"
-              style={{ background: 'linear-gradient(135deg, #15803d, #16a34a)', borderColor: '#86efac', color: '#fff', fontWeight: 700 }}
-              onClick={() => {
-                farmEngine.toggleGardenView(true);
-                document.getElementById('checkmate-overlay')?.classList.remove('visible');
-              }}
-            >
-              🌱 {lang === 'ko' ? '수도원 정원으로 이동' : 'Visit Sanctuary Garden'}
-            </button>
             <button className="checkmate-btn" id="btn-checkmate-replay">
               {t.replayFall}
             </button>
@@ -944,210 +279,27 @@ export default function App() {
         </div>
       </div>
 
-      {/* DAILY QUEST MODAL */}
-      {questPanelOpen && (
-        <div
-          className="quest-panel-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setQuestPanelOpen(false)}
-        >
-          <div className="quest-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="quest-panel-header">
-              <div className="quest-panel-title">
-                <span>📜</span>
-                <span>오늘의 성소 임무 (Daily Quests)</span>
-              </div>
-              <button
-                type="button"
-                className="grimoire-close-btn"
-                onClick={() => setQuestPanelOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="quest-panel-body">
-              {quests.map((q) => {
-                const fillPct = Math.min(100, (q.progress / q.target) * 100);
-                return (
-                  <div key={q.id} className={`quest-item ${q.isCompleted ? 'completed' : ''}`}>
-                    <span className="quest-item-icon">{q.icon}</span>
-                    <div className="quest-item-body">
-                      <div className="quest-item-title">{q.title}</div>
-                      <div className="quest-item-progress-track">
-                        <div
-                          className={`quest-item-progress-fill ${q.isCompleted ? 'full' : ''}`}
-                          style={{ width: `${fillPct}%` }}
-                        />
-                      </div>
-                      <div className="quest-item-counter">
-                        {q.progress} / {q.target}
-                      </div>
-                    </div>
-                    <div className="quest-item-reward">
-                      {q.reward.gold && <span className="quest-reward-tag">+{q.reward.gold}G</span>}
-                      {q.reward.gems && <span className="quest-reward-tag">+{q.reward.gems}💎</span>}
-                      {q.reward.ash && <span className="quest-reward-tag">+{q.reward.ash}🔥</span>}
-                      {q.reward.marble && <span className="quest-reward-tag">+{q.reward.marble}🏛️</span>}
-                      {q.reward.xp && <span className="quest-reward-tag">+{q.reward.xp} XP</span>}
-                    </div>
-                    {q.isCompleted && <span className="quest-check">✓</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      <QuitDialog lang={lang === 'en' ? 'en' : 'ko'} />
+      <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <RivalEntrance lang={lang === 'en' ? 'en' : 'ko'} />
+      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <Blitz lang={lang === 'en' ? 'en' : 'ko'} />
+      <SessionLog />
+      <RivalLadder lang={lang === 'en' ? 'en' : 'ko'} />
+      <Online open={onlineOpen} onOpen={() => setOnlineOpen(true)} onClose={() => setOnlineOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <HandBrain open={handBrainOpen} onClose={() => setHandBrainOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      {lastGame && !villageOpen && (
+        <button type="button" className="village-toast" id="village-toast" onClick={openVillage}>
+          🌱 심기 → ♟ 한 판 ✓ → 🧺 거두기 {gainText(lastGame)} — 섬으로
+        </button>
       )}
-
-      {/* ── Active Beast Inspection Card (Nano Banana 2.1 AAA Asset View) ── */}
-      {selectedBeast && (
-        <div
-          className={`beast-inspection-card ${selectedBeast.color === 'w' ? 'white-beast' : 'black-beast'}`}
-          id="beast-inspection-card"
-        >
-          <div className="beast-card-header">
-            <span className="beast-card-symbol">{selectedBeast.chessSymbol}</span>
-            <div className="beast-card-names">
-              <div className="beast-card-name-ko">{selectedBeast.nameKo}</div>
-              <div className="beast-card-name-en">{selectedBeast.nameEn}</div>
-            </div>
-            <button
-              type="button"
-              className="beast-card-close-btn"
-              onClick={() => setSelectedBeast(null)}
-              title="닫기"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="beast-card-portrait-wrapper">
-            <img
-              src={selectedBeast.imageUrl}
-              alt={selectedBeast.nameKo}
-              className="beast-card-portrait-img"
-              loading="eager"
-            />
-            <div className="beast-card-badge-row">
-              <span className="beast-role-pill">{selectedBeast.chessRoleKo}</span>
-              <span className="beast-value-pill">가치 {selectedBeast.value}</span>
-            </div>
-            <div className="beast-card-foil-shine" />
-          </div>
-
-          <div className="beast-card-body">
-            <div className="beast-card-quote">“{selectedBeast.quoteKo}”</div>
-
-            <div className="beast-card-trait-box">
-              <div className="beast-trait-header">
-                <span className="beast-trait-icon">⚔️</span>
-                <span className="beast-trait-title">{selectedBeast.traitNameKo}</span>
-              </div>
-              <div className="beast-trait-desc">{selectedBeast.traitDescKo}</div>
-            </div>
-
-            <div className="beast-card-move-box">
-              <span className="beast-move-icon">👟</span>
-              <span className="beast-move-desc">{selectedBeast.moveDescKo}</span>
-            </div>
-          </div>
+      <VillageView open={villageOpen} onClose={closeVillage} lang={lang === 'en' ? 'en' : 'ko'} summary={lastGame} dive={diving} />
+      {veil && (
+        <div className={`dive-veil ${veil}`} id="dive-veil" aria-hidden="true">
+          {[8, 22, 37, 51, 64, 78, 90, 44].map((left, i) => <i key={i} style={{ left: `${left}%`, animationDelay: `${i * 0.07}s`, width: `${10 + (i % 3) * 5}px`, height: `${10 + (i % 3) * 5}px` }} />)}
         </div>
-      )}
-
-      {/* ── Sanctuary Beast Codex Modal (성소 영수 도감) ── */}
-      {codexOpen && (
-        <div
-          className="grimoire-overlay beast-codex-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              if (codexDetailBeast) setCodexDetailBeast(null);
-              else setCodexOpen(false);
-            }
-          }}
-        >
-          <div className="beast-codex-modal" role="dialog" aria-modal="true">
-            <div className="beast-codex-header">
-              <div className="beast-codex-title">
-                <span className="codex-icon">📖</span>
-                <span>성소 영수 도감 (Sanctuary Beasts Codex)</span>
-              </div>
-              <div className="beast-codex-tab-group">
-                <button
-                  type="button"
-                  className={`codex-tab-btn ${codexTab === 'w' ? 'active white-tab' : ''}`}
-                  onClick={() => { setCodexTab('w'); setCodexDetailBeast(null); }}
-                >
-                  ✨ 백색 성소 영수단 (6)
-                </button>
-                <button
-                  type="button"
-                  className={`codex-tab-btn ${codexTab === 'b' ? 'active black-tab' : ''}`}
-                  onClick={() => { setCodexTab('b'); setCodexDetailBeast(null); }}
-                >
-                  🌋 흑요석 심연 영수단 (6)
-                </button>
-              </div>
-              <button
-                type="button"
-                className="grimoire-close-btn"
-                onClick={() => { setCodexDetailBeast(null); setCodexOpen(false); }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="beast-codex-content">
-              {/* Card Grid */}
-              <div className="beast-codex-grid">
-                {ALL_BEASTS.filter((b) => b.color === codexTab).map((beast) => (
-                  <div
-                    key={beast.id}
-                    className={`beast-codex-card ${beast.color === 'w' ? 'white-card' : 'black-card'} ${codexDetailBeast?.id === beast.id ? 'selected' : ''}`}
-                    onClick={() => setCodexDetailBeast(beast)}
-                  >
-                    <div className="codex-card-thumb-wrap">
-                      <img src={beast.imageUrl} alt={beast.nameKo} className="codex-card-thumb" />
-                      <span className="codex-card-symbol">{beast.chessSymbol}</span>
-                      <div className="codex-card-foil" />
-                    </div>
-                    <div className="codex-card-info">
-                      <div className="codex-card-role">{beast.chessRoleKo}</div>
-                      <div className="codex-card-name">{beast.nameKo}</div>
-                      <div className="codex-card-trait-preview">{beast.traitNameKo}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Detail Panel */}
-              {codexDetailBeast && (
-                <div className={`beast-codex-detail-pane ${codexDetailBeast.color === 'w' ? 'white-pane' : 'black-pane'}`}>
-                  <div className="detail-pane-img-wrap">
-                    <img src={codexDetailBeast.imageUrl} alt={codexDetailBeast.nameKo} className="detail-pane-img" />
-                    <div className="detail-pane-symbol">{codexDetailBeast.chessSymbol}</div>
-                  </div>
-                  <div className="detail-pane-info">
-                    <div className="detail-pane-role-pill">{codexDetailBeast.chessRoleKo}</div>
-                    <h3 className="detail-pane-title">{codexDetailBeast.nameKo}</h3>
-                    <div className="detail-pane-subtitle">{codexDetailBeast.nameEn} · {codexDetailBeast.titleKo}</div>
-                    <p className="detail-pane-quote">“{codexDetailBeast.quoteKo}”</p>
-                    <div className="detail-pane-section">
-                      <div className="detail-section-label">⚡ 영수 고유 특성: {codexDetailBeast.traitNameKo}</div>
-                      <div className="detail-section-desc">{codexDetailBeast.traitDescKo}</div>
-                    </div>
-                    <div className="detail-pane-section">
-                      <div className="detail-section-label">♟️ 체스 전술 기동:</div>
-                      <div className="detail-section-desc">{codexDetailBeast.moveDescKo}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-        </>
       )}
     </>
   );

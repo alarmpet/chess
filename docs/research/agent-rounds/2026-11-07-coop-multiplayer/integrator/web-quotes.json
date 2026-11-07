@@ -1,0 +1,236 @@
+[
+ {
+  "who": "grok",
+  "url": "https://www.chess.com/terms/hand-and-brain-chess",
+  "final": "https://www.chess.com/terms/hand-and-brain-chess",
+  "q": "But that's part of the fun.",
+  "hit": true,
+  "err": null,
+  "len": 3152
+ },
+ {
+  "who": "grok",
+  "url": "https://www.chess.com/terms/hand-and-brain-chess",
+  "final": "https://www.chess.com/terms/hand-and-brain-chess",
+  "q": "on the same ground",
+  "hit": true,
+  "err": null,
+  "len": 3152
+ },
+ {
+  "who": "grok",
+  "url": "https://www.chess.com/terms/hand-and-brain-chess",
+  "final": "https://www.chess.com/terms/hand-and-brain-chess",
+  "q": "the stronger player takes the brain role",
+  "hit": true,
+  "err": null,
+  "len": 3152
+ },
+ {
+  "who": "grok",
+  "url": "https://en.wikipedia.org/wiki/Hand_and_brain",
+  "final": "https://en.wikipedia.org/wiki/Hand_and_brain",
+  "q": "no other communication is permitted",
+  "hit": true,
+  "err": null,
+  "len": 4842
+ },
+ {
+  "who": "grok",
+  "url": "https://en.wikipedia.org/wiki/Hand_and_brain",
+  "final": "https://en.wikipedia.org/wiki/Hand_and_brain",
+  "q": "2021 Twitch Rivals",
+  "hit": true,
+  "err": null,
+  "len": 4842
+ },
+ {
+  "who": "grok",
+  "url": "https://www.chess.com/blog/paulchuxin/the-rise-of-hand-brain-chess-a-fun-twist-on-traditional-play",
+  "final": "https://www.chess.com/blog/paulchuxin/the-rise-of-hand-brain-chess-a-fun-twist-on-traditional-play",
+  "q": "doesn't have a dedicated Hand & Brain mode",
+  "hit": true,
+  "err": null,
+  "len": 3281
+ },
+ {
+  "who": "grok",
+  "url": "https://handbrainchess.com/play",
+  "final": "https://handbrainchess.com/play",
+  "q": "Two humans, one side, against the AI.",
+  "hit": true,
+  "err": null,
+  "len": 906
+ },
+ {
+  "who": "grok",
+  "url": "https://handbrainchess.com/play",
+  "final": "https://handbrainchess.com/play",
+  "q": "Your friend takes the other role on this side.",
+  "hit": true,
+  "err": null,
+  "len": 906
+ },
+ {
+  "who": "grok",
+  "url": "https://devpost.com/software/twitch-plays-dice-chess",
+  "final": "https://devpost.com/software/twitch-plays-dice-chess",
+  "q": "hides what happens next",
+  "hit": true,
+  "err": null,
+  "len": 6732
+ },
+ {
+  "who": "grok",
+  "url": "https://devpost.com/software/twitch-plays-dice-chess",
+  "final": "https://devpost.com/software/twitch-plays-dice-chess",
+  "q": "has not yet been measured",
+  "hit": true,
+  "err": null,
+  "len": 6732
+ },
+ {
+  "who": "grok",
+  "url": "https://www.chess.com/article/view/chesscom-love-story",
+  "final": "https://www.chess.com/article/view/chesscom-love-story",
+  "q": "blundered his own bishop in return",
+  "hit": true,
+  "err": null,
+  "len": 5076
+ },
+ {
+  "who": "agy",
+  "url": "https://www.chess.com/terms/hand-and-brain",
+  "final": "https://www.chess.com/terms/hand-and-brain",
+  "q": "played in teams of two for each side",
+  "hit": false,
+  "err": null,
+  "len": 3306
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Sky_Team_(board_game)",
+  "final": "https://en.wikipedia.org/wiki/Sky_Team_(board_game)",
+  "q": "roll their dice behind hidden screens",
+  "hit": false,
+  "err": null,
+  "len": 5868
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Sky_Team_(board_game)",
+  "final": "https://en.wikipedia.org/wiki/Sky_Team_(board_game)",
+  "q": "Spiel des Jahres",
+  "hit": true,
+  "err": null,
+  "len": 5868
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/It_Takes_Two_(video_game)",
+  "final": "https://en.wikipedia.org/wiki/It_Takes_Two_(video_game)",
+  "q": "strictly for two players",
+  "hit": false,
+  "err": null,
+  "len": 27799
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/It_Takes_Two_(video_game)",
+  "final": "https://en.wikipedia.org/wiki/It_Takes_Two_(video_game)",
+  "q": "Game of the Year",
+  "hit": true,
+  "err": null,
+  "len": 27799
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Hanabi_(card_game)",
+  "final": "https://en.wikipedia.org/wiki/Hanabi_(card_game)",
+  "q": "no player can see their own hand",
+  "hit": false,
+  "err": null,
+  "len": 10472
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Hanabi_(card_game)",
+  "final": "https://en.wikipedia.org/wiki/Hanabi_(card_game)",
+  "q": "Spiel des Jahres",
+  "hit": true,
+  "err": null,
+  "len": 10472
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/The_Crew:_The_Quest_for_Planet_Nine",
+  "final": "https://en.wikipedia.org/wiki/The_Crew_(card_game)",
+  "q": "verbal communication about hands is strictly restricted",
+  "hit": false,
+  "err": null,
+  "len": 8722
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/The_Crew:_The_Quest_for_Planet_Nine",
+  "final": "https://en.wikipedia.org/wiki/The_Crew_(card_game)",
+  "q": "Kennerspiel",
+  "hit": true,
+  "err": null,
+  "len": 8722
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Spirit_Island_(board_game)",
+  "final": "https://en.wikipedia.org/wiki/Spirit_Island_(board_game)",
+  "q": "players coordinate their moves simultaneously",
+  "hit": false,
+  "err": null,
+  "len": 8107
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Codenames_(board_game)",
+  "final": "https://en.wikipedia.org/wiki/Codenames_(board_game)",
+  "q": "cannot play the game for your partner",
+  "hit": false,
+  "err": null,
+  "len": 14533
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Codenames_(board_game)",
+  "final": "https://en.wikipedia.org/wiki/Codenames_(board_game)",
+  "q": "Duet",
+  "hit": true,
+  "err": null,
+  "len": 14533
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Overcooked",
+  "final": "https://en.wikipedia.org/wiki/Overcooked",
+  "q": "cooperative cooking simulation video game",
+  "hit": false,
+  "err": null,
+  "len": 16425
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Pandemic_(board_game)",
+  "final": "https://en.wikipedia.org/wiki/Pandemic_(board_game)",
+  "q": "work together as a team of disease-fighting specialists",
+  "hit": false,
+  "err": null,
+  "len": 35912
+ },
+ {
+  "who": "agy",
+  "url": "https://en.wikipedia.org/wiki/Hand_and_brain",
+  "final": "https://en.wikipedia.org/wiki/Hand_and_brain",
+  "q": "communication is strictly limited",
+  "hit": false,
+  "err": null,
+  "len": 4842
+ }
+]

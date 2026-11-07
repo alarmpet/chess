@@ -1,0 +1,281 @@
+{
+ "player": "codex",
+ "id": 3,
+ "label": "일반 대국: 5수 뒤 새 판 확인창 → 계속, 6수 뒤 새로고침, 8수까지 모델, 이후 자동",
+ "plies": [
+  {
+   "ply": 0,
+   "san": "e4",
+   "why": "중앙 장악과 빠른 전개",
+   "source": "model",
+   "thinkMs": 11729,
+   "ok": true,
+   "msUntilMyTurn": 2215,
+   "hud": "백 차례",
+   "tray": "",
+   "errors": []
+  },
+  {
+   "ply": 1,
+   "san": "d4",
+   "why": "중앙을 장악한다",
+   "source": "model",
+   "thinkMs": 12317,
+   "ok": true,
+   "msUntilMyTurn": 2243,
+   "hud": "백 차례",
+   "tray": "",
+   "errors": []
+  },
+  {
+   "ply": 2,
+   "san": "exd5",
+   "why": "중앙 폰을 잡고 전개",
+   "source": "model",
+   "thinkMs": 14825,
+   "ok": true,
+   "msUntilMyTurn": 5131,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 1 | 흑: 1",
+   "errors": []
+  },
+  {
+   "ply": 3,
+   "san": "Nc3",
+   "why": "나이트를 전개하며 퀸을 공격",
+   "source": "model",
+   "thinkMs": 41385,
+   "ok": true,
+   "msUntilMyTurn": 3577,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 1 | 흑: 2",
+   "errors": []
+  },
+  {
+   "ply": 4,
+   "san": "Nb5",
+   "why": "퀸을 공격하고 c7을 노림",
+   "source": "model",
+   "thinkMs": 29412,
+   "ok": true,
+   "msUntilMyTurn": 2245,
+   "hud": "백 차례 (체크!)",
+   "tray": "잡은 말 — 백: 1 | 흑: 2",
+   "errors": []
+  },
+  {
+   "ply": 5,
+   "san": "Be3",
+   "why": "체크를 막고 비숍을 전개",
+   "source": "model",
+   "thinkMs": 27052,
+   "ok": true,
+   "msUntilMyTurn": 2229,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 1 | 흑: 2",
+   "errors": []
+  },
+  {
+   "ply": 6,
+   "san": "Nd4",
+   "why": "중앙을 차지하고 나이트를 압박",
+   "source": "model",
+   "thinkMs": 71898,
+   "ok": true,
+   "msUntilMyTurn": 2227,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 1 | 흑: 2",
+   "errors": []
+  },
+  {
+   "ply": 7,
+   "san": "Ngf3",
+   "why": "퀸을 공격하며 전개",
+   "source": "model",
+   "thinkMs": 46019,
+   "ok": true,
+   "msUntilMyTurn": 2233,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 1 | 흑: 2",
+   "errors": []
+  },
+  {
+   "ply": 8,
+   "san": "Nxc6",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 5940,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 2 | 흑: 3",
+   "errors": []
+  },
+  {
+   "ply": 9,
+   "san": "Bxa7",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 5659,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 3 | 흑: 4",
+   "errors": []
+  },
+  {
+   "ply": 10,
+   "san": "Qd7+",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 4874,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 3 | 흑: 5",
+   "errors": []
+  },
+  {
+   "ply": 11,
+   "san": "Bb5",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 4346,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 3 | 흑: 6",
+   "errors": []
+  },
+  {
+   "ply": 12,
+   "san": "Bxd7+",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 5940,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 4 | 흑: 7",
+   "errors": []
+  },
+  {
+   "ply": 13,
+   "san": "Ne5+",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 2240,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 4 | 흑: 7",
+   "errors": []
+  },
+  {
+   "ply": 14,
+   "san": "Nxf7",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 5392,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 5 | 흑: 8",
+   "errors": []
+  },
+  {
+   "ply": 15,
+   "san": "Rc1",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 3808,
+   "hud": "백 차례 (체크!)",
+   "tray": "잡은 말 — 백: 5 | 흑: 9",
+   "errors": []
+  },
+  {
+   "ply": 16,
+   "san": "Ke2",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 4330,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 5 | 흑: 10",
+   "errors": []
+  },
+  {
+   "ply": 17,
+   "san": "f4",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 3829,
+   "hud": "백 차례 (체크!)",
+   "tray": "잡은 말 — 백: 5 | 흑: 11",
+   "errors": []
+  },
+  {
+   "ply": 18,
+   "san": "Ke1",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 3830,
+   "hud": "백 차례",
+   "tray": "잡은 말 — 백: 5 | 흑: 12",
+   "errors": []
+  },
+  {
+   "ply": 19,
+   "san": "Kd1",
+   "why": "",
+   "source": "auto",
+   "thinkMs": 0,
+   "ok": true,
+   "msUntilMyTurn": 1943,
+   "hud": "체크메이트 — 흑 승리",
+   "tray": "잡은 말 — 백: 5 | 흑: 12",
+   "errors": []
+  }
+ ],
+ "events": [
+  {
+   "kind": "기권 확인창",
+   "text": "🃏\n새 판을 시작할까요?\n끝까지 두면 이번 판 카드를 받아요(이번 판에 잡은 카드 1장). 지금 새 판을 시작하면 들어가지 않아요.\n새 판 시작\n계속 두기",
+   "clicked": "계속 두기"
+  },
+  {
+   "kind": "새로고침(이어 하기)",
+   "fenBefore": "r1b1kbnr/ppp1pppp/2n5/1N2q3/8/4B3/PPP2PPP/R2QKBNR w KQkq - 4 7",
+   "fenAfter": "r1b1kbnr/ppp1pppp/2n5/1N2q3/8/4B3/PPP2PPP/R2QKBNR w KQkq - 4 7",
+   "same": true,
+   "text": "WILD CROWN\n백 차례\n백으로 플레이 중\n🃏\n카드\n🏡\n마을\n🏆\n라이벌\n☰\n메뉴\n조작법: 말을 클릭하여 이동 • 좌클릭 드래그: 회전 • 우클릭 드래그: 이동 • 마우스 휠: 줌 • WASD+R/F: 비행 카메라 • H: UI 숨김\n잡은 말 — 백: 1 | 흑: 2\n🃏\n1"
+  }
+ ],
+ "end": {
+  "fen": "5b1r/1pp1pkpp/5n2/8/5P2/8/1P4qP/r2K4 w - - 2 21",
+  "turn": "w",
+  "animating": false,
+  "over": true,
+  "errors": [],
+  "hud": "체크메이트 — 흑 승리",
+  "tray": "잡은 말 — 백: 5 | 흑: 12",
+  "waited": 1031
+ },
+ "pgn": "1. e4 Nc6 2. d4 d5 3. exd5 Qxd5 4. Nc3 Qxd4 5. Nb5 Qe4+ 6. Be3 Qe5 7. Nd4 Nf6 8. Ngf3 Qe4 9. Nxc6 Qxc6 10. Bxa7 Rxa7 11. Qd7+ Bxd7 12. Bb5 Qxc2 13. Bxd7+ Kxd7 14. Ne5+ Ke6 15. Nxf7 Kxf7 16. Rc1 Qxc1+ 17. Ke2 Qxh1 18. f4 Qxg2+ 19. Ke1 Rxa2 20. Kd1 Ra1# *",
+ "final": {
+  "fen": "5b1r/1pp1pkpp/5n2/8/5P2/8/1P4qP/r2K4 w - - 2 21",
+  "turn": "w",
+  "animating": false,
+  "over": true,
+  "errors": [],
+  "hud": "체크메이트 — 흑 승리",
+  "tray": "잡은 말 — 백: 5 | 흑: 12"
+ }
+}

@@ -1,0 +1,454 @@
+[
+ {
+  "id": "a1 chesskid support",
+  "url": "https://support.chesskid.com/en/",
+  "keys": [
+   "activity stars",
+   "quest"
+  ],
+  "status": 200,
+  "final": "https://support.chesskid.com/en/",
+  "title": "Home | ChessKid Help Center",
+  "found": [
+   [
+    "activity stars",
+    false
+   ],
+   [
+    "quest",
+    true
+   ]
+  ],
+  "len": 848,
+  "snips": [
+   null,
+   "guês Español English Welcome to ChessKid Support Search for articles... For Parents 16 articles For Schools and Coaches 14 articles For Kids 11 articles Common Questions 32 articles Gold Membership 16 articles Mobile Apps 18 articles Enterprise 11 articles Frequently Asked Questions (Adults) How do I add an existing Kid Account to my \"My Kids\" list? What&#x27;s the difference between a Free account & a Gold Membershi"
+  ]
+ },
+ {
+  "id": "a3 duo time well",
+  "url": "https://blog.duolingo.com/time-spent-learning-well/",
+  "keys": [
+   "time spent learning"
+  ],
+  "status": 200,
+  "final": "https://blog.duolingo.com/time-spent-learning-well/",
+  "title": "Understanding Duolingo’s Time Spent Learning Well Metric",
+  "found": [
+   [
+    "time spent learning",
+    true
+   ]
+  ],
+  "len": 9028,
+  "snips": [
+   " Understanding Duolingo’s Time Spent Learning Well Metric SUBJECTS SUBJECTS Language Chess Math Music INSIDE DUOLINGO Announcements Design Engineering Product Life at Duolingo SITE LANGUAGE Deutsch English Español Français Português 日本語 한국어 !!el).forEach(el => { el.value = ''; el.dispa"
+  ]
+ },
+ {
+  "id": "a4 duo friends quest",
+  "url": "https://blog.duolingo.com/introducing-friends-quests/",
+  "keys": [
+   "friends quest"
+  ],
+  "status": 404,
+  "final": "https://blog.duolingo.com/introducing-friends-quests/",
+  "title": "Duolingo Blog",
+  "found": [
+   [
+    "friends quest",
+    false
+   ]
+  ],
+  "len": 1197,
+  "snips": [
+   null
+  ]
+ },
+ {
+  "id": "a5 nook miles",
+  "url": "https://nookipedia.com/wiki/Nook_Miles",
+  "keys": [
+   "nook miles+"
+  ],
+  "status": 200,
+  "final": "https://nookipedia.com/wiki/Nook_Miles",
+  "title": "Nook Miles - Animal Crossing Wiki - Nookipedia",
+  "found": [
+   [
+    "nook miles+",
+    true
+   ]
+  ],
+  "len": 84202,
+  "snips": [
+   "t and initial move-in fees (stated to be an alternative to paying &#160;49,800 Bells , though it is not actually possible to pay in Bells). The app upgrades to Nook Miles+ (with additional daily goals providing a renewable resource of miles) after the player completes the initial redemption and takes out a loan for a house. Nook Miles may be subsequently redeemed via the Nook Stop for a variety of items, capabilities"
+  ]
+ },
+ {
+  "id": "a6 field research",
+  "url": "https://pokemongo.fandom.com/wiki/Field_Research",
+  "keys": [
+   "breakthrough",
+   "ar mapping"
+  ],
+  "status": 403,
+  "final": "https://pokemongo.fandom.com/wiki/Field_Research",
+  "title": "Just a moment...",
+  "found": [
+   [
+    "breakthrough",
+    false
+   ],
+   [
+    "ar mapping",
+    false
+   ]
+  ],
+  "len": 60,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "a7 community day",
+  "url": "https://pokemongo.fandom.com/wiki/Community_Day",
+  "keys": [
+   "community day",
+   "exclusive"
+  ],
+  "status": 403,
+  "final": "https://pokemongo.fandom.com/wiki/Community_Day",
+  "title": "Just a moment...",
+  "found": [
+   [
+    "community day",
+    false
+   ],
+   [
+    "exclusive",
+    false
+   ]
+  ],
+  "len": 60,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "a8 bonus star",
+  "url": "https://www.mariowiki.com/Bonus_Star",
+  "keys": [
+   "slowpoke",
+   "superstars"
+  ],
+  "status": 200,
+  "final": "https://www.mariowiki.com/Bonus_Star",
+  "title": "Bonus Star - Super Mario Wiki, the Mario encyclopedia",
+  "found": [
+   [
+    "slowpoke",
+    true
+   ],
+   [
+    "superstars",
+    true
+   ]
+  ],
+  "len": 17369,
+  "snips": [
+   "re always 12 turns with one Bonus Star, and the chosen Bonus Star is announced at the beginning of the game as the Sightseer Bonus, the Happening Bonus, or the Slowpoke Bonus. Additionally, in the latter game's Frenzy Rules setting, there is also only one Bonus Star; however, it is treated like Bonus Stars in other rule settings and is randomly selected. In Mario Party: Star Rush , Bonus Stars are exclusive to the Ba",
+   "e only five types of Bonus Stars rather than six. In Mario Party: Star Rush , the number was changed back to three. However, in Super Mario Party , Mario Party Superstars , and Super Mario Party Jamboree , it was once again changed to two, but three Bonus Stars are given if the game lasts at least 20 turns in Super Mario Party , or 30 turns in Mario Party Superstars , Super Mario Party Jamboree , and Super Mario Part"
+  ]
+ },
+ {
+  "id": "a8b mps options",
+  "url": "https://www.mariowiki.com/Mario_Party_Superstars",
+  "keys": [
+   "bonus star"
+  ],
+  "status": 200,
+  "final": "https://www.mariowiki.com/Mario_Party_Superstars",
+  "title": "Mario Party Superstars - Super Mario Wiki, the Mario encyclopedia",
+  "found": [
+   [
+    "bonus star",
+    false
+   ]
+  ],
+  "len": 68586,
+  "snips": [
+   null
+  ]
+ },
+ {
+  "id": "a9 river survival",
+  "url": "https://www.mariowiki.com/River_Survival",
+  "keys": [
+   "cooperative",
+   "raft"
+  ],
+  "status": 200,
+  "final": "https://www.mariowiki.com/River_Survival",
+  "title": "Super Mario Party - Super Mario Wiki, the Mario encyclopedia",
+  "found": [
+   [
+    "cooperative",
+    false
+   ],
+   [
+    "raft",
+    true
+   ]
+  ],
+  "len": 96205,
+  "snips": [
+   null,
+   "d) 河川生存战 Héchuān shēngcún zhàn River Survival [?] Chinese (Traditional) 河川生存戰 Héchuān shēngcún zhàn [?] Dutch Wilde wateren Wild waters [?] French Excursion en rafting Rafting excursion [?] German Raft-Abenteuer Raft Adventure [?] Italian Acque selvagge Wild waters [?] Russian Рискованный рафтинг Riskovannyy rafting Risky Rafting [?] Spanish Torrente de aventuras Adventure Torrent [?] Sound Stage [ edit ] Language Na"
+  ]
+ },
+ {
+  "id": "a10 odyssey",
+  "url": "https://www.mariowiki.com/Super_Mario_Odyssey",
+  "keys": [
+   "two-player",
+   "cappy"
+  ],
+  "status": 200,
+  "final": "https://www.mariowiki.com/Super_Mario_Odyssey",
+  "title": "Super Mario Odyssey - Super Mario Wiki, the Mario encyclopedia",
+  "found": [
+   [
+    "two-player",
+    true
+   ],
+   [
+    "cappy",
+    true
+   ]
+  ],
+  "len": 226264,
+  "snips": [
+   "ix years and older &#91; 24 &#93; NMC : - Seven years and older [?] ACB : - Parental guidance &#91; 25 &#93; FPB : - Parental guidance [?] Modes Single player, two-player co-op Format Nintendo Switch : Game Card Digital download Input Nintendo Switch : Joy-Con Joy-Con (horizontal) Nintendo Switch Pro Controller Nintendo GameCube Controller Serial codes HAC-AAACA-JPN HAC-P-AAACA-USA LA-H-AAACA-EUR LA-H-AAACB-CHN &#91;",
+   "ndbox-like elements similar to those in Super Mario 64 and Super Mario Sunshine and revolves around Mario exploring Earth -based settings with his new partner, Cappy . Unique to this game, Mario is able to throw Cappy onto certain enemies and objects, allowing Mario to take control of them and use their abilities. Mario can also dress in different costumes, several being based on the previous games. The game supports"
+  ]
+ },
+ {
+  "id": "a11 ssbu challenges",
+  "url": "https://www.ssbwiki.com/Challenges",
+  "keys": [
+   "golden hammer",
+   "challenge"
+  ],
+  "status": 200,
+  "final": "https://www.ssbwiki.com/Challenges",
+  "title": "Challenges - SmashWiki, the Super Smash Bros. wiki",
+  "found": [
+   [
+    "golden hammer",
+    true
+   ],
+   [
+    "challenge",
+    true
+   ]
+  ],
+  "len": 12935,
+  "snips": [
+   "ing a challenge are trophies , music , stages , Stage Builder parts, Masterpieces , and stickers . Specific challenges that are colored gold will also reward a Golden Hammer . These will automatically complete most challenges and instantly claim the reward. However, in the NTSC version, some challenges forbid the use of a Golden hammer, while the PAL version has no restriction (despite the instructions claiming other",
+   " Challenges - SmashWiki, the Super Smash Bros. wiki Challenges From SmashWiki, the Super Smash Bros. wiki Jump to navigation Jump to search Challenges ( クリアゲッター , Clear Getter ) are a gameplay component from Super Smash Bros. Brawl onward. The purpose of the Ch"
+  ]
+ },
+ {
+  "id": "a12 kirby",
+  "url": "https://wikirby.com/wiki/Kirby_and_the_Forgotten_Land",
+  "keys": [
+   "mission"
+  ],
+  "status": 200,
+  "final": "https://wikirby.com/wiki/Kirby_and_the_Forgotten_Land",
+  "title": "Kirby and the Forgotten Land - WiKirby: it's a wiki, about Kirby!",
+  "found": [
+   [
+    "mission",
+    true
+   ]
+  ],
+  "len": 87435,
+  "snips": [
+   "tallments, however, and doors are fewer in number. In each regular stage, Kirby rescues Waddle Dees by finding them trapped in cages, and by fulfilling certain missions specific to each stage. In addition to regular stages, special challenge stages can be found through dimensional rifts, as part of a series called Treasure Road . In these stages, Kirby has a limited time to clear a set of areas similar in look to sta"
+  ]
+ },
+ {
+  "id": "a13 story time chess",
+  "url": "https://storytimechess.com/",
+  "keys": [
+   "toy of the year",
+   "award"
+  ],
+  "status": 200,
+  "final": "https://www.storytimechess.com/",
+  "title": "Story Time Chess | Chess Lessons for Kids",
+  "found": [
+   [
+    "toy of the year",
+    false
+   ],
+   [
+    "award",
+    true
+   ]
+  ],
+  "len": 6669,
+  "snips": [
+   null,
+   "king, confidence, and emotional intelligence. We nurture growth through imaginative play and strategic challenges. Our Learning Method Did we mention it&#x27;s award-winning? Through imaginative storytelling, we meet each child where they are, helping them connect with chess in a way that makes sense to their unique learning style. 1 Meet King Chomper! He loves food so much that his pockets are weighed down with snac"
+  ]
+ },
+ {
+  "id": "a14 prodigy bounty",
+  "url": "https://prodigy.fandom.com/wiki/Bounty_Board",
+  "keys": [
+   "bounty",
+   "removed"
+  ],
+  "status": 403,
+  "final": "https://prodigy.fandom.com/wiki/Bounty_Board",
+  "title": "Just a moment...",
+  "found": [
+   [
+    "bounty",
+    false
+   ],
+   [
+    "removed",
+    false
+   ]
+  ],
+  "len": 60,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "a15 mc advancements",
+  "url": "https://minecraft.wiki/w/Advancement",
+  "keys": [
+   "sniper duel",
+   "return to sender"
+  ],
+  "status": 403,
+  "final": "https://minecraft.wiki/w/Advancement",
+  "title": "Please wait",
+  "found": [
+   [
+    "sniper duel",
+    false
+   ],
+   [
+    "return to sender",
+    false
+   ]
+  ],
+  "len": 336,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "a16 dragonbox",
+  "url": "https://dragonbox.com/",
+  "keys": [
+   "star"
+  ],
+  "status": 200,
+  "final": "https://dragonbox.com/",
+  "title": "Dragonbox Math Apps - Empower Kids!",
+  "found": [
+   [
+    "star",
+    false
+   ]
+  ],
+  "len": 6036,
+  "snips": [
+   null
+  ]
+ },
+ {
+  "id": "a17 lingokids help",
+  "url": "https://help.lingokids.com/",
+  "keys": [
+   "sticker"
+  ],
+  "status": 403,
+  "final": "https://help.lingokids.com/hc/en-us",
+  "title": "Just a moment...",
+  "found": [
+   [
+    "sticker",
+    false
+   ]
+  ],
+  "len": 60,
+  "snips": [
+   null
+  ]
+ },
+ {
+  "id": "a-duo leagues",
+  "url": "https://support.duolingo.com/hc/en-us/articles/360035931732-What-are-Leagues-",
+  "keys": [
+   "league",
+   "private"
+  ],
+  "status": 200,
+  "final": "https://www.duolingo.com/help",
+  "title": "Duolingo",
+  "found": [
+   [
+    "league",
+    false
+   ],
+   [
+    "private",
+    false
+   ]
+  ],
+  "len": 10,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "a-nintendo ir",
+  "url": "https://www.nintendo.co.jp/ir/en/finance/software/index.html",
+  "keys": [
+   "animal crossing",
+   "46"
+  ],
+  "status": 200,
+  "final": "https://www.nintendo.co.jp/ir/en/finance/software/index.html",
+  "title": "IR Information : Sales Data - Top Selling Title Sales Units",
+  "found": [
+   [
+    "animal crossing",
+    false
+   ],
+   [
+    "46",
+    false
+   ]
+  ],
+  "len": 1340,
+  "snips": [
+   null,
+   null
+  ]
+ }
+]
