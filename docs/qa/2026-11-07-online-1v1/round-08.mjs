@@ -1,0 +1,24 @@
+// 둘째 판(방장 흑): 손님 e4 를 받으면 e5. 그 뒤 손님이 나가면 15초 안에 「연결 끊김」이 뜨는지. 끝에 방을 나가고 저장을 되돌린다.
+const fs = await import('node:fs/promises');
+const DIR = 'C:/Users/petbl/ego/online-1v1-20261107/';
+const task = await taskSpace('online 1v1 check');
+const page = task.page('p1');
+const out = {};
+await page.waitForFunction(() => window.wizardChess.getHandBrainState().history.length >= 1, undefined, { timeout: 120000 });
+out.gotE4 = Date.now();
+await page.waitForFunction(() => { try { return window.wizardChess.executeChessMove(1, 4, 3, 4) !== false; } catch (e) { return false; } }, undefined, { timeout: 20000 });
+out.sentE5 = Date.now();
+await page.waitForTimeout(2500);
+await page.screenshot({ path: DIR + 'e1-host-game2.png' });
+out.bar1 = await page.evaluate(() => document.querySelector('#online-bar')?.innerText);
+await page.waitForFunction(() => /끊김/.test(document.querySelector('#online-peer')?.innerText || ''), undefined, { timeout: 90000 });
+out.lostAt = Date.now();
+out.bar2 = await page.evaluate(() => document.querySelector('#online-bar')?.innerText);
+await page.screenshot({ path: DIR + 'e2-host-peer-lost.png' });
+await page.click('#online-leave', { label: 'Leave room' });
+await page.waitForTimeout(1500);
+out.afterLeave = await page.evaluate(() => ({ online: window.wizardChess.isOnline(), url: location.href, bar: Boolean(document.querySelector('#online-bar')), cls: document.body.className }));
+const backup = JSON.parse(await fs.readFile(DIR + 'ls-backup.json', 'utf8'));
+await page.evaluate((b) => { localStorage.clear(); for (const [k, v] of Object.entries(b)) localStorage.setItem(k, v); sessionStorage.clear(); }, backup);
+console.log(JSON.stringify(out));
+await fs.writeFile(DIR + 'result-08.json', JSON.stringify(out, null, 1));

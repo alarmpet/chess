@@ -13,3 +13,6 @@ Thumbs.db
 # Downloaded review text stays local
 docs/research/agent-rounds/2026-10-31-town-survey/steam-dumps/
 docs/research/agent-rounds/2026-10-31-town-survey/steam-dumps-A/
+
+# wrangler 로컬 캐시
+.wrangler/

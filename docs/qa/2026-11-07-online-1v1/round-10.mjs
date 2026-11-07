@@ -1,0 +1,24 @@
+// 배포본 확인: 방장이 https://wildcrown.yonghane.workers.dev 에서 흑으로 방을 만든다(손님은 로컬 개발 서버에서 들어옴).
+const fs = await import('node:fs/promises');
+const DIR = 'C:/Users/petbl/ego/online-1v1-20261107/';
+const task = await taskSpace('online 1v1 check');
+const page = task.page('p1');
+const t0 = Date.now();
+await page.goto('https://wildcrown.yonghane.workers.dev/', { timeout: 90000 }).catch(() => null);
+const backup = await page.evaluate(() => JSON.stringify(Object.fromEntries(Object.keys(localStorage).map((k) => [k, localStorage.getItem(k)]))));
+await fs.writeFile(DIR + 'ls-backup-deployed.json', backup);
+await page.waitForFunction(() => Boolean(window.wizardChess?.startOnline), undefined, { timeout: 120000 });
+const loadMs = Date.now() - t0;
+await page.waitForFunction(() => { const o = document.querySelector('#loading-overlay'); return !o || getComputedStyle(o).display === 'none' || getComputedStyle(o).opacity === '0' || getComputedStyle(o).pointerEvents === 'none'; }, undefined, { timeout: 180000 });
+const readyMs = Date.now() - t0;
+await page.waitForTimeout(1500);
+await page.evaluate(() => document.querySelectorAll('.panel-overlay .panel-close').forEach((b) => b.click()));
+await page.click('#btn-online', { label: 'Open play a friend' });
+await page.click('#online-pick-b', { label: 'Pick black' });
+await page.click('#online-create', { label: 'Make room' });
+await page.waitForSelector('#online-bigcode', { timeout: 15000 });
+await page.waitForTimeout(2500);
+const info = await page.evaluate(() => ({ code: document.querySelector('#online-bigcode')?.textContent, meta: document.querySelector('.online-meta')?.innerText, url: location.href }));
+await page.screenshot({ path: DIR + 'f1-deployed-room.png' });
+await fs.writeFile(DIR + 'code.txt', info.code || '');
+console.log(JSON.stringify({ loadMs, readyMs, ...info }));

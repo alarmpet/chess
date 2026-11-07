@@ -1298,3 +1298,27 @@ body:has(#card-reveal) #rival-offer { display: none; }
 .rival-stage.hard { background: #ffb3a7; color: #5a1408; }
 .rival-style { font-size: 12px; color: #cbd5e1; margin-top: 2px; }
 .rival-free { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
+
+/* 친구와 두기 👫 (기획서 §12.1): 판 위쪽 가운데 방 막대 + 방 만들기·들어가기 창. */
+.online-bar { position: fixed; z-index: 28; top: 64px; left: 0; right: 0; width: fit-content; max-width: calc(100vw - 32px); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; padding: 7px 12px; border-radius: 16px; background: rgba(232, 246, 255, 0.95); color: #173a55; font-weight: 800; font-size: 0.82rem; box-shadow: 0 4px 14px rgba(10, 30, 50, 0.28); }
+.online-code { letter-spacing: 0.08em; }
+.online-turn { padding: 2px 8px; border-radius: 10px; background: #fff; }
+.online-end { color: #a0400c; }
+.online-btn { padding: 5px 10px; border: 2px solid transparent; border-radius: 12px; background: #fff; color: #173a55; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
+.online-btn.primary { background: #2f7fd0; color: #fff; }
+.online-btn.on { border-color: #ffb64a; background: #fff1d6; color: #5a2d0c; }
+.online-btn.wide { width: 100%; margin: 6px 0 12px; padding: 9px; }
+.online-btn:disabled { opacity: 0.6; cursor: default; }
+.online-note { flex-basis: 100%; text-align: center; font-size: 0.76rem; color: #2f6a9a; }
+.online-confirm { flex-basis: 100%; display: flex; gap: 6px; align-items: center; justify-content: center; }
+.online-rule { margin: 0 0 10px; font-size: 0.85rem; }
+.online-sub { display: block; margin: 8px 0 6px; font-size: 0.85rem; }
+.online-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.online-input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.92); color: #173a55; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.06em; }
+.online-bigcode { margin: 4px 0 12px; text-align: center; font-size: 2.2rem; font-weight: 900; letter-spacing: 0.22em; color: #ffe9b8; }
+.online-meta { display: block; margin-top: 10px; opacity: 0.85; font-size: 0.78rem; }
+@media (max-width: 760px) {
+  .online-bar { top: 58px; padding: 5px 8px; font-size: 0.76rem; }
+}
+/* 친구 대전 중에는 혼자 판 장치를 숨긴다(엔진도 되감기·손과 뇌를 혼자 판에서만 받는다). */
+body.online-game #handbrain-bar, body.online-game #card-skills { display: none; }

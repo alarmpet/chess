@@ -3372,15 +3372,10 @@ let teamGame = false;
       selectedSquare = null;
       validMoves = [];
 
-      // Broadcast to multiplayer room (cloud API + static BroadcastChannel/localStorage fallback)
-      if (gameMode === 'multi' && roomCode && !options.fromRemote) {
-        sendMultiplayerMove({
-          playerToken,
-          color: piece.color,
-          from: { r: fromR, c: fromC },
-          to: { r: toR, c: toC },
-          promotion: promotionType || 'queen'
-        });
+      // 친구 초대 대전(src/net): 내 수를 화면 층(Online.tsx)에 알린다 — 그쪽이 검증·전송한다.
+      if (gameMode === 'multi' && !options.fromRemote) {
+        const last = referee.history().at(-1);
+        if (last) window.dispatchEvent(new CustomEvent('onlinemove', { detail: { from: last.from, to: last.to, promotion: last.promotion } }));
       }
 
       const startPos = boardToWorld(fromR, fromC);
@@ -5142,7 +5137,7 @@ let teamGame = false;
       const clickedPiece = boardState[clickedR][clickedC];
       // Hand and brain (cards/handBrain.js): on the player's turn the hand picks up only the kind the brain named;
       // '' means the brain has not named one yet.
-      if (clickedPiece && clickedPiece.color === currentTurn && currentTurn === playerColor && !kindAllows(handBrainKind, clickedPiece.type)) {
+      if (gameMode === 'single' && clickedPiece && clickedPiece.color === currentTurn && currentTurn === playerColor && !kindAllows(handBrainKind, clickedPiece.type)) {
         window.dispatchEvent(new CustomEvent('handbrainblocked', { detail: { type: clickedPiece.type, want: handBrainKind } }));
         clearSquareHighlights();
         selectedSquare = null;
@@ -5650,25 +5645,15 @@ let teamGame = false;
     });
 
     document.getElementById('btn-resign')?.addEventListener('click', () => {
+      if (gameMode === 'multi') { window.dispatchEvent(new CustomEvent('onlinebutton', { detail: { kind: 'resign' } })); return; }
       askToQuit('resign');
     });
 
-    document.getElementById('btn-reset')?.addEventListener('click', async () => {
-      if (gameMode !== 'multi' && askToQuit('new')) return;
-      if (gameMode === 'multi' && roomCode) {
-        const stRoom = getStaticRoom(roomCode);
-        if (stRoom) {
-          stRoom.moves = [];
-          stRoom.turn = 'w';
-          stRoom.resetCount = (stRoom.resetCount || 0) + 1;
-          stRoom.updatedAt = Date.now();
-          saveAndBroadcastStaticRoom(stRoom);
-          applyRemoteRoomState(stRoom);
-        }
-        await mpApiRequest(`/api/rooms/${roomCode}/reset`, { method: 'POST' });
-      } else {
-        resetChessBoard(true, false);
-      }
+    // 친구 대전 중의 새 판·기권은 화면 층(Online.tsx)이 상대와 맞춰 처리한다. 옛 방 전송층(/api/rooms)은 쓰지 않는다.
+    document.getElementById('btn-reset')?.addEventListener('click', () => {
+      if (gameMode === 'multi') { window.dispatchEvent(new CustomEvent('onlinebutton', { detail: { kind: 'new' } })); return; }
+      if (askToQuit('new')) return;
+      resetChessBoard(true, false);
     });
 
     // =========================================================================
@@ -5808,6 +5793,8 @@ let teamGame = false;
       triggerCheckmateSequence(defCol, winCol);
     });
     document.getElementById('btn-checkmate-newgame')?.addEventListener('click', () => {
+      // 친구 대전 중에는 새 판을 혼자 열지 않는다 — 화면 층이 「다시 두기」로 받는다.
+      if (gameMode === 'multi') { window.dispatchEvent(new CustomEvent('onlinebutton', { detail: { kind: 'new' } })); return; }
       resetChessBoard(true, false);
     });
     document.getElementById('btn-checkmate-dismiss')?.addEventListener('click', () => {
@@ -5949,6 +5936,45 @@ let teamGame = false;
         return changed;
       },
       setTeamGame: (on) => { teamGame = Boolean(on); },
+      // 친구 초대 대전(src/net/matchCore.js · Online.tsx). 내 색으로 새 판을 그리고, 이미 둔 수(이어 받기)는 연출 없이 놓는다.
+      startOnline: ({ color, moves = [] } = {}) => {
+        scriptedGameActive = false;
+        gameMode = 'multi';
+        playerColor = color === 'b' ? 'b' : 'w';
+        activeRivalId = null;
+        notifyRivalChange();
+        handBrainKind = null;
+        teamGame = false;
+        const back = moves.length ? replayResume({ moves }) : null;
+        resetChessBoard(true, false, !back);
+        if (back) {
+          referee.adopt(back.chess);
+          restoreBoardSnapshot({
+            fen: back.chess.fen(), currentTurn: back.turn, gameOver: false, capturedByWhite: back.capturedByWhite,
+            capturedByBlack: back.capturedByBlack, scriptCursor: 0, scriptedGameActive: false, scriptDeviated: false, cells: back.cells
+          }, { keepReferee: true });
+          moveHistory = back.before.map(takebackEntry);
+          window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: moves.length, color: playerColor } }));
+        }
+        return { gameId, plies: referee.history().length };
+      },
+      // 상대 수. 연출 중이면 끝날 때까지 기다렸다 둔다. 둔 뒤에 true(엔진·심판이 거부하면 false).
+      applyOnlineMove: (mv) => new Promise((done) => {
+        const go = () => {
+          if (gameMode !== 'multi' || !mv) return done(false);
+          if (isAnimatingMove) { setTimeout(go, 120); return; }
+          const a = squareRC(mv.from);
+          const b = squareRC(mv.to);
+          done(executeChessMove(a.r, a.c, b.r, b.c, { fromRemote: true, promotion: mv.promotion }) !== false);
+        };
+        go();
+      }),
+      endOnline: () => {
+        if (gameMode !== 'multi') return;
+        gameMode = 'single';
+        resetChessBoard(true, false);
+      },
+      isOnline: () => gameMode === 'multi',
       getHandBrainState: () => ({
         fen: referee.fen(),
         history: referee.history().map((m) => positionKey(m.after)),
