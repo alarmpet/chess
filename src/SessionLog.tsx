@@ -10,6 +10,10 @@ const handBrainMode = () => {
   try { const m = JSON.parse(window.localStorage.getItem('wildcrown.handbrain.v1') || 'null')?.mode; return m === 'family' || m === 'adviser' ? m : 'off'; } catch (e) { return 'off'; }
 };
 
+const handBrainRoles = () => {
+  try { return JSON.parse(window.localStorage.getItem('wildcrown.handbrain.v1') || 'null')?.swap === 'game' ? 'game' : 'move'; } catch (e) { return 'move'; }
+};
+
 export default function SessionLog() {
   useEffect(() => {
     const cur = { gameId: null as number | null, finished: true, left: false, ply: 0 };
@@ -24,7 +28,7 @@ export default function SessionLog() {
       cur.gameId = d.gameId;
       cur.finished = false;
       cur.left = false;
-      logGame(startEntry(d, { handBrain: handBrainMode(), blitz: fxSettings().blitz === true }));
+      logGame(startEntry(d, { handBrain: handBrainMode(), blitz: fxSettings().blitz === true, roles: handBrainRoles() }));
     };
     const onMove = (e: Event) => {
       const d = (e as CustomEvent).detail || {};

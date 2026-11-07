@@ -1252,6 +1252,16 @@ body:has(#card-reveal) #village-toast { display: none; }
 .handbrain-kind small { font-size: 0.66rem; font-weight: 700; }
 .handbrain-kind.on { border-color: #e07a1f; background: #ffe2b8; }
 .handbrain-kind:disabled { opacity: 0.3; cursor: default; }
+/* 둘이 한 왕국(CO-1): 자리 표시 🟠🧠 · 🔵✋, 상대 차례의 😅·✋ 버튼, 둘 다 누르면 하이파이브. */
+.handbrain-seats { padding: 2px 8px; margin-right: 4px; border-radius: 10px; background: #fff; }
+.handbrain-react { padding: 5px 10px; border: 2px solid transparent; border-radius: 12px; background: #fff; color: #5a2d0c; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
+.handbrain-react.slap.on { border-color: #e07a1f; background: #ffe2b8; }
+.handbrain-five { flex-basis: 100%; text-align: center; font-size: 1.4rem; animation: handbrain-five 1.5s ease-out both; }
+@keyframes handbrain-five { 0% { transform: scale(0.4); opacity: 0; } 20% { transform: scale(1.25); opacity: 1; } 40% { transform: scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .handbrain-five { animation: none; } }
+.handbrain-swap { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.85rem; }
+.handbrain-swap button { padding: 4px 12px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: transparent; color: inherit; font-weight: 700; cursor: pointer; }
+.handbrain-swap button.on { border-color: #ffb64a; background: rgba(255, 182, 74, 0.25); }
 .handbrain-note { flex-basis: 100%; text-align: center; font-size: 0.78rem; color: #a0400c; }
 .handbrain-rule { margin: 0 0 10px; font-size: 0.85rem; }
 .handbrain-family { margin-top: 10px; background: rgba(255, 240, 200, 0.12); color: #f6e7c4; }

@@ -16,6 +16,7 @@ import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
 import { createContactShadows } from './fx/contactShadows.js';
 import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
 import { fxSettings } from './fx/settings.js';
+import { kindAllows, lockKind } from './cards/teamPlay.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
 
@@ -1795,6 +1796,8 @@ export function initWizardChess() {
     let selectedSquare = null;
 // Hand and brain: null = off; '' = waiting for the brain; else the piece type ('knight') the hand may pick up.
 let handBrainKind = null;
+// 둘이 한 왕국(CO-1): 둘이 한 편인 판이면 잡기 연출을 짧게(fxSettings().quick 와 같은 효과).
+let teamGame = false;
     let validMoves = [];
     let isAnimatingMove = false;
     let gameOver = false;
@@ -3286,6 +3289,12 @@ let handBrainKind = null;
         return false;
       }
 
+      // 손과 뇌: 클릭 말고 다른 길(디버그 API·승급 고르기 뒤 호출)로도 부르지 않은 종류는 둘 수 없다(CO-1).
+      if (!options.fromRemote && gameMode === 'single' && !scriptedGameActive && piece.color === playerColor && !kindAllows(handBrainKind, piece.type)) {
+        window.dispatchEvent(new CustomEvent('handbrainblocked', { detail: { type: piece.type, want: handBrainKind } }));
+        return false;
+      }
+
       if (!options.fromRemote) {
         const legalForPiece = getLegalMovesForPiece(fromR, fromC);
         if (!legalForPiece.some((m) => m.r === toR && m.c === toC)) {
@@ -3680,7 +3689,7 @@ let handBrainKind = null;
       const tStrikeDone = isCapture ? (tImpact + 0.48) : stdMoveDuration;
       // Slower, distance-aware post-attack camera return (~1.30s - 1.60s instead of 0.64s)
       const camReturnDist = savedCamPos.distanceTo(duelCamClose);
-      const quickMove = fxSettings().quick;
+      const quickMove = fxSettings().quick || teamGame;
       const camMoves = !quickMove && cameraLean > 0;
       const fullReturn = 0.4 + Math.min(0.3, camReturnDist * 0.35);
       const returnDuration = isCapture ? Number((camMoves ? fullReturn : 0.22).toFixed(3)) : 0;
@@ -5133,8 +5142,7 @@ let handBrainKind = null;
       const clickedPiece = boardState[clickedR][clickedC];
       // Hand and brain (cards/handBrain.js): on the player's turn the hand picks up only the kind the brain named;
       // '' means the brain has not named one yet.
-      if (clickedPiece && clickedPiece.color === currentTurn && handBrainKind !== null && currentTurn === playerColor &&
-          clickedPiece.type !== handBrainKind) {
+      if (clickedPiece && clickedPiece.color === currentTurn && currentTurn === playerColor && !kindAllows(handBrainKind, clickedPiece.type)) {
         window.dispatchEvent(new CustomEvent('handbrainblocked', { detail: { type: clickedPiece.type, want: handBrainKind } }));
         clearSquareHighlights();
         selectedSquare = null;
@@ -5927,15 +5935,20 @@ let handBrainKind = null;
       // Debug: signature captures on or off, to compare a capture with and without them.
       setSignatureFx: (on) => signatureFx.setEnabled(on),
       // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.
+      // 종류 잠금(CO-1): 부른 종류는 손이 둘 때까지 다른 종류로 못 바꾼다. 바뀌었는지 돌려준다.
       setHandBrain: (kind) => {
-        handBrainKind = kind === null || kind === undefined ? null : String(kind);
+        const want = kind === null || kind === undefined ? null : String(kind);
+        handBrainKind = lockKind(handBrainKind, want);
+        const changed = handBrainKind === want;
         const held = selectedSquare && boardState[selectedSquare.r][selectedSquare.c];
         if (held && handBrainKind !== null && held.type !== handBrainKind) {
           clearSquareHighlights();
           selectedSquare = null;
           validMoves = [];
         }
+        return changed;
       },
+      setTeamGame: (on) => { teamGame = Boolean(on); },
       getHandBrainState: () => ({
         fen: referee.fen(),
         history: referee.history().map((m) => positionKey(m.after)),

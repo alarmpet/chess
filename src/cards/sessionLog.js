@@ -6,9 +6,16 @@
 /** 판이 끝나고 이 시간(초) 안에 다음 판을 시작해 한 수라도 두면 「한 판 더」로 센다. */
 export const NEXT_GAP_S = 600;
 
-/** start 기록 한 줄. `d` 는 엔진의 gamestarted 사건 내용. */
-export function startEntry(d, { at = new Date().toISOString(), handBrain = 'off', blitz = false } = {}) {
-  return { type: 'start', at, gameId: d.gameId, resumed: d.resumed || 0, rivalId: d.rivalId || null, color: d.color || null, handBrain, blitz: Boolean(blitz) };
+/**
+ * start 기록 한 줄. `d` 는 엔진의 gamestarted 사건 내용.
+ * @param {any} d
+ * @param {{ at?: string, handBrain?: string, blitz?: boolean, roles?: string | null }} [opts]
+ */
+export function startEntry(d, { at = new Date().toISOString(), handBrain = 'off', blitz = false, roles = null } = {}) {
+  const e = { type: 'start', at, gameId: d.gameId, resumed: d.resumed || 0, rivalId: d.rivalId || null, color: d.color || null, handBrain, blitz: Boolean(blitz) };
+  // 둘이 한 왕국(CO-1): 사람 둘이 뇌·손을 나눈 판이면 역할 바꾸기 방식('move' | 'game').
+  if (handBrain === 'family' && roles) e.roles = roles;
+  return e;
 }
 
 const sec = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 1000);
@@ -22,6 +29,7 @@ export function storyOf(log) {
   const byId = new Map();
   const open = (e) => {
     const g = { gameId: e.gameId, at: e.at, rivalId: e.rivalId ?? null, color: e.color ?? null, handBrain: e.handBrain ?? null, blitz: e.blitz ?? null,
+      roles: e.roles ?? null, coop: { handover: 0, oops: 0, highfive: 0 },
       resumes: 0, leaves: [], skills: [], quit: null, end: null, pace: null, maxPly: e.resumed || 0 };
     games.push(g);
     byId.set(e.gameId, g);
@@ -39,6 +47,7 @@ export function storyOf(log) {
     if (!g) continue;
     if (e.type === 'leave') { g.leaves.push({ at: e.at, ply: e.ply || 0 }); g.maxPly = Math.max(g.maxPly, e.ply || 0); }
     else if (e.type === 'quit') { g.quit = { at: e.at, ply: e.ply || 0 }; g.maxPly = Math.max(g.maxPly, e.ply || 0); }
+    else if (e.type === 'coop') { if (e.kind in g.coop) g.coop[e.kind] += 1; }
     else if (e.type === 'skill') { g.skills.push({ kind: e.kind, ply: e.ply || 0 }); g.maxPly = Math.max(g.maxPly, e.ply || 0); }
     else if (e.type === 'game') {
       g.end = { at: e.at, result: e.result ?? null, resigned: Boolean(e.resigned), plies: e.plies || 0, seconds: e.seconds ?? null };
