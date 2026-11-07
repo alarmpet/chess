@@ -79,6 +79,16 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const notes = useRef<ReturnType<typeof noteQueue> | null>(null);
   if (!notes.current) notes.current = noteQueue({ show: (text: string) => setNote(text) });
   const say = (text: string, ms = 2400) => notes.current!.say(text, ms);
+  // 다른 화면 조각(RivalLadder 등)이 같은 알림 줄을 쓴다: window 사건 `gamenote` {ko, en, ms}.
+  useEffect(() => {
+    const onNote = (e: Event) => {
+      const d = (e as CustomEvent).detail || {};
+      const text = (en ? d.en : d.ko) || d.ko;
+      if (text) notes.current!.say(text, d.ms || 2400);
+    };
+    window.addEventListener('gamenote', onNote);
+    return () => window.removeEventListener('gamenote', onNote);
+  }, [en]);
 
   // One game event into today's quests; a finished quest pays its acorns with the game.
   const feedQuest = (event: any) => {

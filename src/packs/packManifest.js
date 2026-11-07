@@ -186,6 +186,10 @@ export function validatePackManifest(manifest) {
         seen.add(id);
         if (badLookName(r.name)) errors.push(`rivals.${id}.name uses a strength word (PLAN §14.0)`);
         if (!(typeof r.mistake === 'number' && r.mistake >= 0 && r.mistake <= 1)) errors.push(`rivals.${id}.mistake must be 0..1`);
+        // FN-2: 라이벌 = 난이도. search 는 AI 탐색 단계(rules/ai.js LEVELS 의 easy·normal), stage 는 화면에 보이는 단계.
+        if (r.search !== undefined && !['easy', 'normal'].includes(r.search)) errors.push(`rivals.${id}.search must be easy or normal`);
+        if (r.stage !== undefined && !['easy', 'normal', 'hard'].includes(r.stage)) errors.push(`rivals.${id}.stage must be easy, normal or hard`);
+        if (r.style !== undefined && !(typeof r.style?.ko === 'string' && r.style.ko)) errors.push(`rivals.${id}.style needs ko`);
         if (!Array.isArray(r.rewards) || r.rewards.length === 0) errors.push(`rivals.${id}.rewards must list items`);
         for (const it of r.rewards || []) if (!items[it]) errors.push(`rivals.${id}.rewards: unknown item ${it}`);
         for (const [role, look] of Object.entries(r.wear || {})) {

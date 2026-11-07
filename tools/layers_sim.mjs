@@ -69,7 +69,7 @@ for (const [name, me] of Object.entries(PROFILES)) {
   // 라이벌 승률(같은 프로필 대 라이벌 설정, 엔진과 같은 수준 고르기).
   const rivals = {};
   for (const r of pack.rivals) {
-    const ai = { level: r.mistake >= 0.3 ? 'easy' : 'normal', slip: r.mistake };
+    const ai = { level: r.search || (r.mistake >= 0.3 ? 'easy' : 'normal'), slip: r.mistake };   // 엔진과 같은 규칙(FN-2)
     let w = 0;
     for (let i = 0; i < RIVAL_GAMES; i++) if (game(me, ai).result === 'win') w++;
     const rate = w / RIVAL_GAMES;

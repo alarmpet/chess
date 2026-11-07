@@ -1,15 +1,17 @@
 // Rival panel (prototype, 2026-10-30): pick a dressed-up AI to play. Each win over it gives its next trinket, and the
 // list shows what is still to win. Looks only — the same note as the appearance panel (PLAN §14.0 display rule).
 import { useEffect, useState } from 'react';
+import { FIRST_EASY_GAMES, STAGE_NAME, STAGES } from './cards/rivalLadder.js';
 
 type Named = { ko?: string; en?: string };
-type Rival = { id: string; name?: Named; blurb?: Named; rewards: string[] };
+type Rival = { id: string; name?: Named; blurb?: Named; rewards: string[]; stage?: 'easy' | 'normal' | 'hard' | null; style?: Named | null };
 type Catalog = {
   active: string | null;
   unlocked: string[];
   wins: Record<string, number>;
   items: Record<string, { name?: Named }>;
   rivals: Rival[];
+  freePlay?: { stage?: string };
 };
 
 function api(): any {
@@ -59,10 +61,14 @@ export default function RivalPanel({ open, onClose, lang }: { open: boolean; onC
             <p>{lang === 'en' ? 'This pack has no rivals.' : '이 팩에는 라이벌이 없습니다.'}</p>
           ) : (
             <>
-              {catalog.rivals.map((r) => (
+              {[...catalog.rivals].sort((a, b) => STAGES.indexOf(a.stage || 'normal') - STAGES.indexOf(b.stage || 'normal')).map((r) => (
                 <div className={`rival-row${catalog.active === r.id ? ' active' : ''}`} key={r.id} data-rival={r.id}>
                   <div className="rival-text">
-                    <div className="rival-name">{L(r.name)}</div>
+                    <div className="rival-name">
+                      {L(r.name)}
+                      {r.stage && <span className={`rival-stage ${r.stage}`} data-stage={r.stage}>{L(STAGE_NAME[r.stage])}</span>}
+                    </div>
+                    {r.style && <div className="rival-style">{L(r.style)}</div>}
                     <div className="rival-blurb">{L(r.blurb)}</div>
                     <div className="rival-rewards">
                       {r.rewards.map((id) => {
@@ -90,11 +96,30 @@ export default function RivalPanel({ open, onClose, lang }: { open: boolean; onC
                   </button>
                 </div>
               ))}
-              {catalog.active && (
-                <button type="button" className="hud-btn" disabled={busy} onClick={() => start(null)}>
-                  {lang === 'en' ? 'Back to free play' : '자유 대국으로'}
-                </button>
-              )}
+              {(() => {
+                // 라이벌 없는 자유 대국의 단계(FN-2): 첫 판들은 쉬움, 그 뒤 보통.
+                const fs = (catalog.freePlay?.stage || 'normal') as keyof typeof STAGE_NAME;
+                return (
+                  <div className={`rival-free${catalog.active ? '' : ' active'}`} id="rival-free">
+                    <div className="rival-text">
+                      <div className="rival-name">
+                        {lang === 'en' ? 'Free play' : '자유 대국'}
+                        <span className={`rival-stage ${fs}`} data-stage={fs}>{L(STAGE_NAME[fs])}</span>
+                      </div>
+                      <div className="rival-style">
+                        {fs === 'easy'
+                          ? (lang === 'en' ? `Easy for your first ${FIRST_EASY_GAMES} games, then normal` : `처음 ${FIRST_EASY_GAMES}판은 쉬움, 그 뒤 보통`)
+                          : (lang === 'en' ? 'No outfit, no trinkets — a steady opponent' : '꾸밈 없는 상대 · 소품은 없어요')}
+                      </div>
+                    </div>
+                    {catalog.active && (
+                      <button type="button" className="hud-btn" disabled={busy} onClick={() => start(null)}>
+                        {lang === 'en' ? 'Back to free play' : '자유 대국으로'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>

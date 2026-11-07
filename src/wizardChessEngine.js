@@ -952,6 +952,13 @@ export function initWizardChess() {
       const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId, gameId, ...extra };
       try { window.dispatchEvent(new CustomEvent('gamefinished', { detail })); } catch (e) {}
     }
+    // 자유 대국(라이벌 없음)의 AI 세기. 화면 쪽(RivalLadder.tsx)이 판 수에 따라 정한다 — 판 중에는 바뀌지 않는다.
+    let freePlay = { search: 'normal', mistake: undefined, stage: 'normal' };
+    function setFreePlay(next) {
+      if (!next || !['easy', 'normal'].includes(next.search)) return false;
+      freePlay = { search: next.search, mistake: typeof next.mistake === 'number' ? next.mistake : undefined, stage: next.stage || next.search };
+      return true;
+    }
     function activeRival() {
       return activeRivalId ? (activePack?.rivals || []).find((r) => r.id === activeRivalId) || null : null;
     }
@@ -2293,7 +2300,8 @@ let handBrainKind = null;
         unlocked: rivalProgress.unlocked.slice(),
         wins: { ...rivalProgress.wins },
         items: activePack.items,
-        rivals: rivals.map(({ id, name, blurb, rewards }) => ({ id, name, blurb, rewards }))
+        rivals: rivals.map(({ id, name, blurb, rewards, stage, style }) => ({ id, name, blurb, rewards, stage: stage || null, style: style || null })),
+        freePlay: { ...freePlay }
       };
     }
 
@@ -3994,9 +4002,10 @@ let handBrainKind = null;
     function chooseSmartAIMove(color) {
       if (referee.turn() !== color) return null;
       const rival = color === rivalColor() ? activeRival() : null;
-      const level = rival ? (rival.mistake >= 0.3 ? 'easy' : 'normal') : 'normal';
+      // FN-2: 라이벌의 탐색 단계는 팩의 `search`(없으면 옛 규칙: 실수 0.3 이상이면 쉬움). 라이벌 없는 자유 대국은 freePlay(첫 판들은 쉬움).
+      const level = rival ? rival.search || (rival.mistake >= 0.3 ? 'easy' : 'normal') : freePlay.search;
       const history = referee.history().map((m) => positionKey(m.after));
-      const pick = chooseMove(referee.fen(), { level, history, slip: rival ? rival.mistake : undefined });
+      const pick = chooseMove(referee.fen(), { level, history, slip: rival ? rival.mistake : freePlay.mistake });
       if (!pick) return null;
       const from = squareRC(pick.from);
       const to = squareRC(pick.to);
@@ -5806,6 +5815,7 @@ let handBrainKind = null;
       takeBackMove,
       quitInfo,
       quitNow,
+      setFreePlay,
       debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
       getRivalCatalog,
       startRival,

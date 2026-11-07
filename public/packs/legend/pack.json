@@ -602,7 +602,13 @@
         "ko": "밀짚모자를 쓰고 소풍을 왔습니다. 수를 자주 흘립니다.",
         "en": "Out for a picnic in straw hats. Often careless."
       },
-      "mistake": 0.4,
+      "mistake": 0.3,
+      "search": "easy",
+      "stage": "easy",
+      "style": {
+        "ko": "덤비다 자주 놓쳐요",
+        "en": "Charges in and often slips"
+      },
       "rewards": [
         "strawhat",
         "ribbon"
@@ -628,7 +634,13 @@
         "ko": "헤드폰을 쓴 판다의 밴드. 가끔 박자를 놓칩니다.",
         "en": "A band in bamboo headphones. Sometimes off the beat."
       },
-      "mistake": 0.2,
+      "mistake": 0.1,
+      "search": "easy",
+      "stage": "normal",
+      "style": {
+        "ko": "맞수를 둬요",
+        "en": "Plays you move for move"
+      },
       "rewards": [
         "bamboo_phones",
         "flower"
@@ -659,7 +671,13 @@
         "ko": "선글라스를 낀 멋쟁이들. 실수가 거의 없습니다.",
         "en": "Sharp dressers in sunglasses. Rarely slip up."
       },
-      "mistake": 0.05,
+      "mistake": 0.1,
+      "search": "normal",
+      "stage": "hard",
+      "style": {
+        "ko": "끝까지 몰아요",
+        "en": "Hunts you down to the end"
+      },
       "rewards": [
         "leaf_shades",
         "acorn_beads",

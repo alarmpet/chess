@@ -1273,3 +1273,18 @@ body:has(#card-reveal) #village-toast { display: none; }
 @keyframes blitz-pop { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-36px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .blitz-pop { animation: none; } .blitz-sand i { transition: none; } }
 @media (max-width: 760px) { .blitz { top: 60px; right: 12px; } .blitz-sand { width: 48px; } }
+
+/* FN-2 라이벌 권하기: 판이 끝난 뒤 한 장. 결과 창·주머니가 떠 있는 동안은 숨는다(TA-6 순서). */
+.rival-offer { position: fixed; z-index: 31; left: 50%; bottom: 130px; transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; max-width: min(520px, calc(100vw - 24px)); padding: 10px 14px; border-radius: 18px; background: rgba(255, 248, 228, 0.97); color: #5a2d0c; font-weight: 800; font-size: 0.9rem; word-break: keep-all; box-shadow: 0 6px 18px rgba(40, 24, 8, 0.28); }
+.rival-offer small { font-weight: 700; opacity: 0.75; }
+.rival-offer button { padding: 6px 14px; border: 0; border-radius: 999px; font-weight: 800; cursor: pointer; }
+.rival-offer-go { background: #ffb347; color: #4a1c04; }
+.rival-offer-no { background: rgba(90, 45, 12, 0.12); color: #5a2d0c; }
+body:has(#checkmate-overlay.visible) #rival-offer,
+body:has(#card-reveal) #rival-offer { display: none; }
+.rival-stage { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; vertical-align: middle; }
+.rival-stage.easy { background: #bdf0b4; color: #1f4d17; }
+.rival-stage.normal { background: #ffe08a; color: #5a3b00; }
+.rival-stage.hard { background: #ffb3a7; color: #5a1408; }
+.rival-style { font-size: 12px; color: #cbd5e1; margin-top: 2px; }
+.rival-free { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
