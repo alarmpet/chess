@@ -1,0 +1,169 @@
+[
+ {
+  "key": "knight>pawn",
+  "san": "Nxe5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1352.5278215922517,
+   "y": 574.2521125119562
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3559,
+  "file": "knight-x-pawn-cx5.webm",
+  "kb": 687,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>knight",
+  "san": "Nxd4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1202.0188377466927,
+   "y": 662.013387464298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3884,
+  "file": "knight-x-knight-cx5.webm",
+  "kb": 820,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": true,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": {
+    "type": "knight",
+    "lift": 0,
+    "pitch": 0,
+    "roll": 0,
+    "yaw": 0,
+    "stretch": 1
+   },
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>bishop",
+  "san": "Nxd7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1371.783498303827,
+   "y": 884.1360613263377
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3865,
+  "file": "knight-x-bishop-cx5.webm",
+  "kb": 966,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>rook",
+  "san": "Nxa1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1699.6536972125853,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3014,
+  "file": "knight-x-rook-cx5.webm",
+  "kb": 962,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>queen",
+  "san": "Nxg4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 917.3608920387416,
+   "y": 574.2521125119565
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3318,
+  "file": "knight-x-queen-cx5.webm",
+  "kb": 1073,
+  "impacts": 1,
+  "upset": true,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ }
+]

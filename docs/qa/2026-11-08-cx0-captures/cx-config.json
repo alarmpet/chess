@@ -1,1 +1,1 @@
-{"only":["knight>knight","bishop>bishop","rook>rook","queen>queen","king>pawn","king>knight","king>bishop","king>rook","king>queen","pawn>pawn"],"tag":"cx4"}
+{"only":["knight>pawn","knight>knight","knight>bishop","knight>rook","knight>queen"],"tag":"cx5"}

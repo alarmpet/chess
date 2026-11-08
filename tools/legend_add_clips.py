@@ -147,9 +147,12 @@ ANIMAL_ATTACKS = {
     'meerkat': {  # hop forward into a headbutt
         10: {'Root': LEAN(10), 'Hips': MOVE(-0.03, 0), **ARMS_OUT(10)},
         18: {'Root': LEAN(-24), 'Hips': MOVE(0.05, 0.08), **ARMS_OUT(40)}},
-    'kangaroo': {  # big kick with one foot
-        10: {'Root': LEAN(6), 'UpperLeg.R': (-LEG * 18, 0, 0), 'LowerLeg.R': (LEG * 16, 0, 0), **REST},
-        18: {'Root': LEAN(12), 'Hips': MOVE(0.05, 0.05), 'UpperLeg.R': (LEG * 42, 0, 0), 'UpperLeg.L': (-LEG * 8, 0, 0), **ARMS_OUT(30)}},
+    'kangaroo': {  # crouch, then lean back on the tail and kick out with both feet together (capture-matchup CX-5).
+        # On this rig a positive thigh angle swings the foot backward (render_clip, 11-09), so a forward kick is -LEG.
+        10: {'Root': LEAN(-6), 'Hips': MOVE(-0.05, 0), 'UpperLeg.L': (-LEG * 30, 0, 0), 'UpperLeg.R': (-LEG * 30, 0, 0),
+             'LowerLeg.L': (LEG * 45, 0, 0), 'LowerLeg.R': (LEG * 45, 0, 0), **ARMS_OUT(15)},
+        18: {'Root': LEAN(10), 'Hips': MOVE(0.07, 0.04), 'UpperLeg.L': (-LEG * 60, 0, 0), 'UpperLeg.R': (-LEG * 60, 0, 0),
+             'LowerLeg.L': (-LEG * 4, 0, 0), 'LowerLeg.R': (-LEG * 4, 0, 0), **ARMS_OUT(35)}},
     'panda': {  # belly bump
         10: {'Root': LEAN(14), 'Hips': MOVE(0, -0.04), **ARMS_OUT(25)},
         18: {'Root': LEAN(-12), 'Hips': MOVE(0.01, 0.1), **ARMS_OUT(50)}},
