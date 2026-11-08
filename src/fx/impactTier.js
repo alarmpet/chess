@@ -11,9 +11,31 @@ export const SLOW_FACTOR = 0.35;
 /** Share of the way the camera leans toward a capture. Small ones leave it alone. */
 export const CAMERA_LEAN = { small: 0, medium: 0.16, big: 0.3 };
 
+/** Points per piece for the size of an upset (the king never counts as an underdog: the lion is the strongest animal). */
+export const PIECE_POINTS = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9 };
+/** How many points smaller the attacker has to be for a capture to count as an upset ("역전!"). */
+export const UPSET_GAP = 3;
+export const UPSET_WORD = '역전!';
+const SAN_PIECE = { K: 'king', Q: 'queen', R: 'rook', B: 'bishop', N: 'knight' };
+
+/** Which kind of piece made the move, read from its notation ("bxa1=Q" is a pawn). */
+export function attackerFromSan(san = '') {
+  return SAN_PIECE[san[0]] || (/^[a-h]/.test(san) ? 'pawn' : null);
+}
+
+/**
+ * A small animal taking a much bigger one: pawn takes rook or queen; knight, bishop or rook takes queen
+ * (docs/plans/2026-11-08-capture-matchup-plan.md CX-1). These are rare (about 5% of captures in bot games), so they get the big moment.
+ */
+export function isUpset(capturedType, san = '') {
+  const a = PIECE_POINTS[attackerFromSan(san)];
+  const v = PIECE_POINTS[capturedType];
+  return a != null && v != null && v - a >= UPSET_GAP;
+}
+
 /** `san` is the move in chess notation: it ends in + for check and # for mate. */
 export function impactTier(capturedType, san = '') {
-  if (san.endsWith('#') || capturedType === 'queen') return 'big';
+  if (san.endsWith('#') || capturedType === 'queen' || isUpset(capturedType, san)) return 'big';
   if (san.endsWith('+') || capturedType !== 'pawn') return 'medium';
   return 'small';
 }

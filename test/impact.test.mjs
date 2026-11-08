@@ -31,3 +31,45 @@ test('capture words stay a modest share of the screen', () => {
   assert.deepEqual(sizes, [...sizes].sort((a, b) => a - b));
   assert.ok(sizes[2] <= 0.15);
 });
+
+// CX-1 (docs/plans/2026-11-08-capture-matchup-plan.md): all 30 attacker x captured cells, with and without check.
+import { attackerFromSan, isUpset, impactExtraSeconds as extra } from '../src/fx/impactTier.js';
+const SAN_OF = { pawn: 'exd5', knight: 'Nxd5', bishop: 'Bxd5', rook: 'Rxd5', queen: 'Qxd5', king: 'Kxd5' };
+const UPSETS = new Set(['pawn>rook', 'pawn>queen', 'knight>queen', 'bishop>queen', 'rook>queen']);
+const EXPECT = {
+  pawn: { pawn: 'small', knight: 'medium', bishop: 'medium', rook: 'big', queen: 'big' },
+  knight: { pawn: 'small', knight: 'medium', bishop: 'medium', rook: 'medium', queen: 'big' },
+  bishop: { pawn: 'small', knight: 'medium', bishop: 'medium', rook: 'medium', queen: 'big' },
+  rook: { pawn: 'small', knight: 'medium', bishop: 'medium', rook: 'medium', queen: 'big' },
+  queen: { pawn: 'small', knight: 'medium', bishop: 'medium', rook: 'medium', queen: 'big' },
+  king: { pawn: 'small', knight: 'medium', bishop: 'medium', rook: 'medium', queen: 'big' }
+};
+const before = (v, san) => (san.endsWith('#') || v === 'queen' ? 'big' : san.endsWith('+') || v !== 'pawn' ? 'medium' : 'small');
+
+test('the attacker is read from the move notation, promotions included', () => {
+  assert.equal(attackerFromSan('bxa1=Q'), 'pawn');
+  assert.equal(attackerFromSan('exd5+'), 'pawn');
+  assert.equal(attackerFromSan('Kxh1'), 'king');
+  assert.equal(attackerFromSan('O-O'), null);
+});
+
+test('all 30 matchups: upsets are exactly the five where the taker is 3+ points smaller', () => {
+  for (const a of Object.keys(EXPECT)) for (const v of Object.keys(EXPECT[a])) {
+    const san = SAN_OF[a];
+    assert.equal(isUpset(v, san), UPSETS.has(`${a}>${v}`), `${a}>${v}`);
+    assert.equal(impactTier(v, san), EXPECT[a][v], `${a}>${v}`);
+    assert.equal(impactTier(v, san + '+'), EXPECT[a][v] === 'small' ? 'medium' : EXPECT[a][v], `${a}>${v}+`);
+    assert.equal(impactTier(v, san + '#'), 'big', `${a}>${v}#`);
+  }
+});
+
+test('only pawn-takes-rook gets slower than before, and by under 0.3 s', () => {
+  const slower = [];
+  for (const a of Object.keys(EXPECT)) for (const v of Object.keys(EXPECT[a])) for (const end of ['', '+']) {
+    const san = SAN_OF[a] + end;
+    const d = extra(impactTier(v, san)) - extra(before(v, san));
+    if (d > 1e-9) slower.push(`${a}>${v}${end}`);
+    assert.ok(d <= 0.3, `${a}>${v}${end}`);
+  }
+  assert.deepEqual(slower, ['pawn>rook', 'pawn>rook+']);
+});

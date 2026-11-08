@@ -3,7 +3,7 @@
 세션을 시작하면 이 파일을 먼저 읽는다. 계획서(`docs/plans/`)는 **결정의 기록**, 이 파일은 **진척의 기록**이다. 항목을 끝내면 여기서 줄을 닫고(`[x]`), 계획서에는 결과를 길게 쓰지 않는다.
 근거: [프로젝트 관리 개선 계획서](plans/2026-11-04-game-studios-and-engine-plan.md) §1·§2.5. 추출은 12편 계획서의 단계표·「결과」 절·「아직/남은 것」 문장만 옮겼다(2026-11-04).
 
-번호 규칙: `<계획서 약어>-<단계>`. 약어: PLAN(기획서) · AF(animal-feel) · CV(crown-village) · CC(capture-card) · CI(crown-island) · PT(playtest) · PF(premium-feel) · DS(desire) · FN(fun) · IE(island-economy) · GS(garden-short) · MG(이 관리 계획).
+번호 규칙: `<계획서 약어>-<단계>`. 약어: PLAN(기획서) · AF(animal-feel) · CV(crown-village) · CC(capture-card) · CI(crown-island) · PT(playtest) · PF(premium-feel) · DS(desire) · FN(fun) · IE(island-economy) · GS(garden-short) · CX(capture-matchup) · MG(이 관리 계획).
 
 ## 0. 지금 가장 먼저
 
@@ -168,6 +168,12 @@
     - 폰에서 찾아 고친 결함은 둘이다. 친구 대전에 라이벌 안내가 뜨던 것, 로딩 중에 세운 판을 엔진 시작 단계가 덮어 규칙 층 4수·엔진 0수로 어긋나던 것(`isStarted`).
     - 고친 빌드는 PC 의 느린 회선 흉내로 확인했다(폰은 다른 세션이 쓰기 시작해 멈춤). [확인](qa/2026-11-07-online-1v1.md)
   - 남은 것: 실제 휴대폰 두 대·LTE, 몇 분 이상 백그라운드, 전용 Supabase 프로젝트, 방장 이탈 처리, 옛 방 코드 지우기, 폰에서 방 막대가 두 줄로 접힘.
+
+### CX 잡기 30가지 연출 (11-08) — [계획서](plans/2026-11-08-capture-matchup-plan.md) · [빈도 시뮬](research/2026-11-08-capture-pairs/pair_sim-60.json), CX-0·CX-1 완료
+- 지금 구별되는 장면은 18가지(공격 6 × 세기 3)다. 잡힌 말 반응은 5종이 같다. 봇 60판에서 폰이 잡히는 장면이 44.8%, 점수 차 3점 이상 역전은 4.9%.
+- [x] CX-0 30칸 녹화 도구·지금 모습 영상·갤러리(11-08) — 캔버스 녹화로 30칸 전부, mp4 37개 3.8MB. 폰이 잡히는 칸은 카메라가 안 다가가 장면이 작다. [qa](qa/2026-11-08-cx0-captures.md)
+- [x] CX-1 역전 세기(11-08) — 5칸 「역전!」, 세기가 바뀌는 건 폰→룩만(+0.228초). 테스트 30칸 고정. 사람이 좋아하는지·봇이 잡을 때 놀림 같은지는 판정 보류
+- [ ] CX-2 잡힌 말 반응 5종 · [ ] CX-3 공격 차별화 · [ ] CX-4 특례 · [ ] CX-5 새 클립 · [ ] CX-6 스무 판 조정
 
 ### OD 운영 대시보드 (11-05) — [계획서](plans/2026-11-05-ops-dashboard-plan.md), 미착수
 - [ ] OD-A(사건 사전·수집기·Worker+D1 롤업) → OD-B(대시보드 한 장·카나리아 메일·원격 설정) → OD-C(출시 전 7일 리허설). 외부 분석 SDK 없이 자체 수집기(가족 정책), 리텐션은 코호트 나이로. X·LinkedIn 은 로그인 벽이라 못 봤다.

@@ -18,7 +18,7 @@ import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
 import { fxSettings } from './fx/settings.js';
 import { kindAllows, lockKind } from './cards/teamPlay.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
-import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, impactTier } from './fx/impactTier.js';
+import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset } from './fx/impactTier.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -3152,6 +3152,7 @@ let engineStarted = false;
     const dustMat = new THREE.MeshStandardMaterial({ color: 0xc9b58a, roughness: 1.0, metalness: 0.0 });
     // The moment of the hit: freeze both pieces briefly so the blow registers, while the effects keep flying.
     let impactCount = 0;
+    let lastUpset = false;
     let hitStopLeft = 0;
     let slowLeft = 0;
     function landImpact(captured, origin, attackerType, attackerFrom = null) {
@@ -3165,9 +3166,13 @@ let engineStarted = false;
       slowLeft = tier.slowSec;
       impactFx.burst(ground, captured.type, tierId);
       impactFx.ring(ground, tierId);
+      const upset = isUpset(captured.type, san);
+      lastUpset = upset;
       if (signatureFx.play(ground, attackerType, tierId, attackerFrom) && SIGNATURE_WORD[attackerType]) {
-        impactFx.label(ground, SIGNATURE_WORD[attackerType], tier.wordSize);
-      } else impactFx.word(ground, tierId);
+        // An upset (a small animal taking a much bigger one) says so instead of the attacker's own word.
+        impactFx.label(ground, upset ? UPSET_WORD : SIGNATURE_WORD[attackerType], tier.wordSize);
+      } else if (upset) impactFx.label(ground, UPSET_WORD, tier.wordSize);
+      else impactFx.word(ground, tierId);
       impactFx.shake(tier.shake);
       sfx.impact(tierId, attackerType);
       reportCapture(captured, ground, attackerType);
@@ -5836,6 +5841,8 @@ let engineStarted = false;
       getCosmetics,
       setCosmetics,
       debugImpacts: () => impactCount,
+      // Debug: whether the last capture counted as an upset ("역전!", capture-matchup plan CX-1).
+      debugLastUpset: () => lastUpset,
       // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
       debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask),
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
