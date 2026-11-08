@@ -18,6 +18,7 @@ import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
 import { fxSettings } from './fx/settings.js';
 import { kindAllows, lockKind } from './cards/teamPlay.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
+import { attackStyle } from './fx/attackStyle.js';
 import { REACTION_TOTAL, REACT_SEC, reactionPose } from './fx/captureReaction.js';
 import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset } from './fx/impactTier.js';
 
@@ -3180,6 +3181,7 @@ let engineStarted = false;
     // The moment of the hit: freeze both pieces briefly so the blow registers, while the effects keep flying.
     let impactCount = 0;
     let lastUpset = false;
+    let lastAttackPose = null;
     let hitStopLeft = 0;
     let slowLeft = 0;
     function landImpact(captured, origin, attackerType, attackerFrom = null) {
@@ -3746,6 +3748,7 @@ let engineStarted = false;
       let shatterTriggered = false;
       let impactActualTime = tImpact;
       const postShatterPiecePos = strikePos.clone();
+      const attackPoseOffset = new THREE.Vector3();
       const postStrikePiecePos = strikePos.clone();
       let prevCamPos = camera.position.clone();
       let prevPiecePos = piece.mesh.position.clone();
@@ -3884,10 +3887,8 @@ let engineStarted = false;
             phaseName = 'strike';
             if (!attackAnimStarted) {
               attackAnimStarted = true;
-              if (styled) {
-                applyStylePose(moveStyle(piece.type, 1, squaresMoved));
-                impactFx.squash(piece.mesh, restScale, 0.14, 0.2);
-              }
+              if (styled) applyStylePose(moveStyle(piece.type, 1, squaresMoved));
+              // The old 14% squash here was the wind-up; each animal's own wind-up (attackStyle) now plays instead.
               playPieceClip(piece, 'Attack', false, 0.08);
             }
 
@@ -3974,7 +3975,8 @@ let engineStarted = false;
             if (!shatterTriggered && (atkClipTime >= BLOW_CLIP_TIME || elapsed >= tImpact + 0.06)) {
               shatterTriggered = true;
               impactActualTime = elapsed;
-              postShatterPiecePos.copy(piece.mesh.position);
+              // The follow-through starts from where the body is, without this frame's attack pose on top.
+              postShatterPiecePos.copy(piece.mesh.position).sub(attackPoseOffset);
               if (captured && captured.mesh) {
                 const shatterOrigin = captured.mesh.position.clone();
                 if (captured.rig === 'statue') {
@@ -3993,6 +3995,18 @@ let engineStarted = false;
               const uFollow = Math.min(1, Math.max(0, (elapsed - impactActualTime) / postStrikeSpan));
               piece.mesh.position.lerpVectors(postShatterPiecePos, endPos, uFollow * 0.38);
               postStrikePiecePos.copy(piece.mesh.position);
+            }
+
+            // Each attacker's own strike (capture-matchup CX-3): meerkat headbutt, kangaroo double kick, panda roll,
+            // rhino scrape-and-ram, tiger rear-and-swipe, lion roar. Whole-body pose only; the timing is unchanged.
+            attackPoseOffset.set(0, 0, 0);
+            if (styled) {
+              const strikeSpan = Math.max(0.05, tStrikeDone - tApproach);
+              const atk = attackStyle(piece.type, (elapsed - tApproach) / strikeSpan, (tImpact - tApproach) / strikeSpan);
+              applyStylePose(atk);
+              attackPoseOffset.set(dirX * atk.forward, atk.lift, dirZ * atk.forward);
+              piece.mesh.position.add(attackPoseOffset);
+              lastAttackPose = { type: piece.type, u: (elapsed - tApproach) / strikeSpan, ...atk, mesh: piece.mesh };
             }
 
             // Subtle damped perpendicular impact vibration right when the blow shatters the defender
@@ -5943,6 +5957,14 @@ let engineStarted = false;
         return { x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
       },
       debugSelected: () => (selectedSquare ? { ...selectedSquare } : null),
+      // Debug: the attacker's strike pose this frame and where it is on screen (capture-matchup CX-3).
+      debugAttackPose: () => {
+        if (!lastAttackPose) return null;
+        const { mesh, ...p } = lastAttackPose;
+        const v = mesh.getWorldPosition(new THREE.Vector3()).project(camera);
+        const rect = renderer.domElement.getBoundingClientRect();
+        return { ...p, x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
+      },
       // Debug: the taken animals still on their way out (capture-matchup CX-2): age, height in squares, how far the
       // head leans from upright (degrees) and where they are on screen.
       debugFading: () => fadingPieces.map((f) => {
