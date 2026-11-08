@@ -18,6 +18,7 @@ import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
 import { fxSettings } from './fx/settings.js';
 import { kindAllows, lockKind } from './cards/teamPlay.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
+import { REACTION_TOTAL, REACT_SEC, reactionPose } from './fx/captureReaction.js';
 import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset } from './fx/impactTier.js';
 
 /** @type {any} */
@@ -1906,11 +1907,26 @@ let engineStarted = false;
     // Captured animals play their death clip and sink away instead of shattering into stone.
     const fadingPieces = [];
     // A captured animal is bonked off the board, not killed: it wobbles, then bounces away to the side.
-    function retireAnimalPiece(piece) {
+    // A taken animal reacts in its own way (meerkat spins away, kangaroo hops and sits, panda rolls, rhino topples,
+    // tiger somersaults: src/fx/captureReaction.js, capture-matchup plan CX-2), then bounces off to its own side.
+    // `dir` is the way the blow came (attacker -> taken piece); same 1.25 s as the old exit, so a game is no longer.
+    const reactAxisTilt = new THREE.Vector3();
+    const reactAxisRoll = new THREE.Vector3();
+    const reactQ = new THREE.Quaternion();
+    const reactQ2 = new THREE.Quaternion();
+    const UP_AXIS = new THREE.Vector3(0, 1, 0);
+    function retireAnimalPiece(piece, dir = null) {
       if (!piece || !piece.mesh) return;
       const start = piece.mesh.position.clone();
       const side = start.x <= 0 ? -1 : 1;
-      fadingPieces.push({ piece, life: 1.25, total: 1.25, start, endX: side * BOARD_SQ_SIZE * 5.4, spin: side * 7 });
+      let dx = dir?.x || 0;
+      let dz = dir?.z || 0;
+      const len = Math.hypot(dx, dz);
+      if (len < 1e-6) { dx = side; dz = 0; } else { dx /= len; dz /= len; }
+      fadingPieces.push({
+        piece, age: 0, start, endX: side * BOARD_SQ_SIZE * 5.4, spin: side * 7,
+        dx, dz, baseQ: piece.mesh.quaternion.clone(), type: piece.type
+      });
     }
     const contactShadows = createContactShadows(scene, { surfaceY: BOARD_SURFACE_Y, size: BOARD_SQ_SIZE * 0.92, opacity: 0.3 });
     const shadowedMeshes = [];
@@ -1931,19 +1947,30 @@ let engineStarted = false;
     function stepFadingPieces(dt) {
       for (let i = fadingPieces.length - 1; i >= 0; i--) {
         const f = fadingPieces[i];
-        f.life -= dt;
-        const u = 1 - Math.max(0, f.life / f.total);
-        if (u > 0.26) {
-          const k = (u - 0.26) / 0.74;
-          const mesh = f.piece.mesh;
-          mesh.position.x = f.start.x + (f.endX - f.start.x) * k;
-          mesh.position.y = f.start.y + Math.abs(Math.sin(k * Math.PI * 3)) * 0.2 * (1 - k * 0.6);
-          mesh.rotation.y += f.spin * dt;
-          const sc = BOARD_SQ_SIZE * (1 - Math.max(0, k - 0.7) / 0.3);
-          mesh.scale.set(sc, sc, sc);
-        }
-        if (f.life <= 0) {
-          scene.remove(f.piece.mesh);
+        f.age += dt;
+        const pose = reactionPose(f.type, f.age);
+        const mesh = f.piece.mesh;
+        const px = f.start.x + f.dx * pose.back * BOARD_SQ_SIZE;
+        const pz = f.start.z + f.dz * pose.back * BOARD_SQ_SIZE;
+        mesh.position.set(
+          px + (f.endX - px) * pose.toStorage,
+          f.start.y + pose.up * BOARD_SQ_SIZE,
+          pz
+        );
+        // Tilt falls backward, away from the blow (axis = up x dir); roll topples sideways (axis = dir).
+        reactAxisTilt.set(f.dz, 0, -f.dx);
+        reactAxisRoll.set(f.dx, 0, f.dz);
+        const exitSpin = f.spin * Math.max(0, f.age - REACT_SEC);
+        reactQ.setFromAxisAngle(reactAxisTilt, pose.tilt);
+        reactQ2.setFromAxisAngle(reactAxisRoll, pose.roll);
+        reactQ.multiply(reactQ2);
+        reactQ2.setFromAxisAngle(UP_AXIS, pose.spin + exitSpin);
+        reactQ.multiply(reactQ2);
+        mesh.quaternion.copy(reactQ).multiply(f.baseQ);
+        // The hit squash (impactFx.squash) owns the scale for its first 0.32 s; the shrink only starts near the end.
+        if (pose.scale < 1) mesh.scale.setScalar(BOARD_SQ_SIZE * Math.max(0, pose.scale));
+        if (f.age >= REACTION_TOTAL) {
+          scene.remove(mesh);
           fadingPieces.splice(i, 1);
         }
       }
@@ -3781,7 +3808,7 @@ let engineStarted = false;
             spawnStoneShatter(origin, enPassantVictim.color);
           } else {
             playPieceClip(enPassantVictim, 'Shatter', false, 0.1);
-            retireAnimalPiece(enPassantVictim);
+            retireAnimalPiece(enPassantVictim, { x: dirX, z: dirZ });
             spawnDustPuff(origin);
           }
           landImpact(enPassantVictim, origin, piece.type, startPos);
@@ -3954,7 +3981,7 @@ let engineStarted = false;
                   scene.remove(captured.mesh);
                   spawnStoneShatter(shatterOrigin, captured.color);
                 } else {
-                  retireAnimalPiece(captured);
+                  retireAnimalPiece(captured, { x: dirX, z: dirZ });
                 }
                 landImpact(captured, shatterOrigin, piece.type, startPos);
               }
@@ -5916,6 +5943,21 @@ let engineStarted = false;
         return { x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
       },
       debugSelected: () => (selectedSquare ? { ...selectedSquare } : null),
+      // Debug: the taken animals still on their way out (capture-matchup CX-2): age, height in squares, how far the
+      // head leans from upright (degrees) and where they are on screen.
+      debugFading: () => fadingPieces.map((f) => {
+        const m = f.piece.mesh;
+        const v = m.getWorldPosition(new THREE.Vector3()).project(camera);
+        const rect = renderer.domElement.getBoundingClientRect();
+        const head = new THREE.Vector3(0, 1, 0).applyQuaternion(m.quaternion);
+        return {
+          type: f.type, age: f.age,
+          up: (m.position.y - f.start.y) / BOARD_SQ_SIZE,
+          back: ((m.position.x - f.start.x) * f.dx + (m.position.z - f.start.z) * f.dz) / BOARD_SQ_SIZE,
+          leanDeg: Math.acos(Math.max(-1, Math.min(1, head.y))) * 180 / Math.PI,
+          x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height
+        };
+      }),
       // Debug: open the promotion chooser; resolves with the picked role
       debugPromotionPicker: (color = 'w') => new Promise((res) => showPromotionPicker(color, res)),
       // Debug: bone sockets of a piece template (model space, bind pose)

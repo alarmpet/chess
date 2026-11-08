@@ -33,6 +33,8 @@ for (const L of lines) {
       r.start(100); window.__rec = r; window.__t0 = performance.now();
       return [c.width, c.height];
     });
+    row.sq = await page.evaluate((L) => window.wizardChess.debugSquareClient(L.last.to[0], L.last.to[1]), L);
+    row.dpr = await page.evaluate(() => [devicePixelRatio, innerWidth, innerHeight]);
     await page.waitForTimeout(300);
     row.ok = await page.evaluate((L) => window.wizardChess.executeChessMove(L.last.from[0], L.last.from[1], L.last.to[0], L.last.to[1], L.last.promotion ? { promotion: L.last.promotion } : {}), L);
     // 연출이 시작되고 끝날 때까지(상대 응수 전에 멈춘다)
