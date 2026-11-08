@@ -19,6 +19,7 @@ import { fxSettings } from './fx/settings.js';
 import { kindAllows, lockKind } from './cards/teamPlay.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { attackStyle } from './fx/attackStyle.js';
+import { ROAR_REACH, ROAR_SEC, countPawnTrades, isMirror, mirrorPose, pawnComboPitch, roarSway } from './fx/captureSpecial.js';
 import { REACTION_TOTAL, REACT_SEC, reactionPose } from './fx/captureReaction.js';
 import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset } from './fx/impactTier.js';
 
@@ -1945,6 +1946,44 @@ let engineStarted = false;
       }
       contactShadows.update(shadowedMeshes, BOARD_SQ_SIZE);
     }
+    // Lion roar (capture-matchup CX-4): pieces around the taken square sway outward, then settle back exactly.
+    const roarSways = [];
+    const roarAxis = new THREE.Vector3();
+    const roarQ = new THREE.Quaternion();
+    function settleRoarSways() {
+      for (const w of roarSways) w.mesh.quaternion.copy(w.baseQ);
+      roarSways.length = 0;
+    }
+    function startRoar(origin, skip) {
+      settleRoarSways();
+      for (const row of boardState) {
+        for (const p of row) {
+          if (!p?.mesh || p.rig === 'statue' || skip.includes(p)) continue;
+          const ox = p.mesh.position.x - origin.x;
+          const oz = p.mesh.position.z - origin.z;
+          const dist = Math.round(Math.max(Math.abs(ox), Math.abs(oz)) / BOARD_SQ_SIZE);
+          if (dist < 1 || dist > ROAR_REACH) continue;
+          const len = Math.hypot(ox, oz) || 1;
+          roarSways.push({ mesh: p.mesh, dist, age: 0, dx: ox / len, dz: oz / len, baseQ: p.mesh.quaternion.clone() });
+        }
+      }
+      return roarSways.length;
+    }
+    function stepRoarSways(dt) {
+      for (let i = roarSways.length - 1; i >= 0; i--) {
+        const w = roarSways[i];
+        w.age += dt;
+        if (w.age >= ROAR_SEC) {
+          w.mesh.quaternion.copy(w.baseQ);
+          roarSways.splice(i, 1);
+          continue;
+        }
+        // Same axis as a reaction's backward fall: positive leans away from the lion.
+        roarAxis.set(w.dz, 0, -w.dx);
+        roarQ.setFromAxisAngle(roarAxis, roarSway(w.dist, w.age));
+        w.mesh.quaternion.copy(roarQ).multiply(w.baseQ);
+      }
+    }
     function stepFadingPieces(dt) {
       for (let i = fadingPieces.length - 1; i >= 0; i--) {
         const f = fadingPieces[i];
@@ -3182,10 +3221,13 @@ let engineStarted = false;
     let impactCount = 0;
     let lastUpset = false;
     let lastAttackPose = null;
+    let lastSpecial = null;
+    let lastMirrorPose = null;
     let hitStopLeft = 0;
     let slowLeft = 0;
-    function landImpact(captured, origin, attackerType, attackerFrom = null) {
-      const san = referee.history().at(-1)?.san || '';
+    function landImpact(captured, origin, attackerType, attackerFrom = null, attacker = null) {
+      const last = referee.history().at(-1);
+      const san = last?.san || '';
       const tierId = impactTier(captured.type, san);
       const tier = IMPACT_TIERS[tierId];
       const ground = new THREE.Vector3(origin.x, BOARD_SURFACE_Y, origin.z);
@@ -3203,7 +3245,12 @@ let engineStarted = false;
       } else if (upset) impactFx.label(ground, UPSET_WORD, tier.wordSize);
       else impactFx.word(ground, tierId);
       impactFx.shake(tier.shake);
-      sfx.impact(tierId, attackerType);
+      // Pawn takes pawn (CX-4): the commonest capture stays small, but each one this game lands a semitone higher.
+      const comboN = attackerType === 'pawn' && captured.type === 'pawn' ? countPawnTrades(referee.history()) : 0;
+      const pitch = comboN ? pawnComboPitch(comboN) : 1;
+      sfx.impact(tierId, attackerType, pitch);
+      const swayed = attackerType === 'king' ? startRoar(ground, [captured, attacker]) : 0;
+      lastSpecial = { mirror: isMirror(attackerType, captured.type), comboN, pitch, swayed };
       reportCapture(captured, ground, attackerType);
       if (captured.rig !== 'statue' && captured.mesh) {
         impactFx.flash(captured.mesh);
@@ -3402,6 +3449,8 @@ let engineStarted = false;
 
       const captured = targetOnDest;
       const isCapture = Boolean(captured);
+      settleRoarSways();
+      lastMirrorPose = null;
       isAnimatingMove = true;
       activeCamTransition = null;
       clearSquareHighlights();
@@ -3444,6 +3493,9 @@ let engineStarted = false;
       if (isCapture && captured && captured.mesh) {
         captured.mesh.rotation.y = Math.atan2(-dx, -dz);
       }
+      const mirrorMatch = isCapture && captured?.mesh && captured.rig !== 'statue' && piece.rig !== 'statue' && isMirror(piece.type, captured.type);
+      if (mirrorMatch) captured.mesh.rotation.order = 'YXZ';
+      const mirrorRest = mirrorMatch ? captured.mesh.scale.y : 1;
 
       // Full Concrete Standoff Distance for Melee Strike (0.36m for multi-square captures, scaled to 0.76*dist for 1-square captures so attacker always steps forward)
       const standoffForPiece = ATTACK_SYNC_PROFILES[piece.type]?.standoff ?? MELEE_STANDOFF;
@@ -3814,7 +3866,7 @@ let engineStarted = false;
             retireAnimalPiece(enPassantVictim, { x: dirX, z: dirZ });
             spawnDustPuff(origin);
           }
-          landImpact(enPassantVictim, origin, piece.type, startPos);
+          landImpact(enPassantVictim, origin, piece.type, startPos, piece);
           if (piece.color === 'w') capturedByWhite += 1;
           else capturedByBlack += 1;
         }
@@ -3947,6 +3999,17 @@ let engineStarted = false;
                 );
               }
 
+              // Mirror match (CX-4): the same animal copies half of the attacker's wind-up, then lets go before the blow.
+              if (mirrorMatch) {
+                const strikeSpan = Math.max(0.05, tStrikeDone - tApproach);
+                const m = mirrorPose(captured.type, (elapsed - tApproach) / strikeSpan, (tImpact - tApproach) / strikeSpan);
+                captured.mesh.rotation.set(m.pitch, Math.atan2(-dx, -dz) + m.yaw, m.roll);
+                captured.mesh.position.y += m.lift;
+                const mSide = mirrorRest * (1 - (m.stretch - 1) * 0.5);
+                captured.mesh.scale.set(mSide, mirrorRest * m.stretch, mSide);
+                lastMirrorPose = { type: captured.type, ...m };
+              }
+
               const curSep = piece.mesh.position.distanceTo(captured.mesh.position);
               if (curSep < (cameraTelemetry.minCombatSeparation ?? Infinity)) {
                 cameraTelemetry.minCombatSeparation = Number(curSep.toFixed(3));
@@ -3985,7 +4048,7 @@ let engineStarted = false;
                 } else {
                   retireAnimalPiece(captured, { x: dirX, z: dirZ });
                 }
-                landImpact(captured, shatterOrigin, piece.type, startPos);
+                landImpact(captured, shatterOrigin, piece.type, startPos, piece);
               }
             }
 
@@ -5884,6 +5947,8 @@ let engineStarted = false;
       debugImpacts: () => impactCount,
       // Debug: whether the last capture counted as an upset ("역전!", capture-matchup plan CX-1).
       debugLastUpset: () => lastUpset,
+      // Debug: the last capture's special case (CX-4): mirror match, pawn combo count and pitch, pieces swayed by a roar.
+      debugSpecial: () => ({ ...(lastSpecial || {}), impacts: impactCount, mirrorPose: lastMirrorPose && { ...lastMirrorPose }, swaying: roarSways.length }),
       // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
       debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask),
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
@@ -6582,6 +6647,7 @@ let engineStarted = false;
       }
 
       stepFadingPieces(dt);
+      stepRoarSways(dt);
       syncSideRings();
       stepContactShadows();
 

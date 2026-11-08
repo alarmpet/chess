@@ -133,10 +133,12 @@ function createSfx() {
     if (Math.random() < MOVE_VOICE_CHANCE) voice(type, seconds * 0.5);
   }
 
-  function impact(tierId, attackerType) {
-    note(`impact.${tierId}`);
-    schedule(IMPACT_SOUNDS[tierId] || IMPACT_SOUNDS.small, 0, wobble());
-    if (SIGNATURE_SOUNDS[attackerType]) schedule(SIGNATURE_SOUNDS[attackerType], 0.01, wobble());
+  // `pitch` other than 1 is a deliberate step (the pawn combo, CX-4); it replaces the random wobble so the steps are heard.
+  function impact(tierId, attackerType, pitch = 1) {
+    const stepped = pitch !== 1;
+    note(stepped ? `impact.${tierId}@${pitch.toFixed(3)}` : `impact.${tierId}`);
+    schedule(IMPACT_SOUNDS[tierId] || IMPACT_SOUNDS.small, 0, stepped ? pitch : wobble());
+    if (SIGNATURE_SOUNDS[attackerType]) schedule(SIGNATURE_SOUNDS[attackerType], 0.01, stepped ? pitch : wobble());
     voice(attackerType, 0.03);
   }
 

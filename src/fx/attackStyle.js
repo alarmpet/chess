@@ -63,6 +63,12 @@ const ATTACKS = {
 
 export const ATTACK_TYPES = Object.keys(ATTACKS);
 
+/** 준비 자세만(w = 0~1). 거울 대결에서 잡히는 쪽이 따라 할 때 쓴다(captureSpecial.js). */
+export function attackWindPose(type, w) {
+  const a = ATTACKS[type];
+  return a ? a.wind(clamp01(w)) : pose({});
+}
+
 export function attackStyle(type, u, contact = 0.6) {
   const a = ATTACKS[type];
   if (!a) return pose({});

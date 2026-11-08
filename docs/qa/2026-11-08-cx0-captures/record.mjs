@@ -53,6 +53,7 @@ for (const L of lines) {
     row.file = file; row.kb = Math.round(b64.length * 0.75 / 1024);
     row.impacts = await page.evaluate(() => window.wizardChess.debugImpacts?.());
     row.upset = await page.evaluate(() => window.wizardChess.debugLastUpset?.());
+    row.special = await page.evaluate(() => window.wizardChess.debugSpecial?.() || null);
   } catch (e) { row.error = String(e).slice(0, 200); }
   out.push(row);
   console.log(JSON.stringify(row));
