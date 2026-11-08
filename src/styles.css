@@ -1321,4 +1321,4 @@ body:has(#card-reveal) #rival-offer { display: none; }
   .online-bar { top: 58px; padding: 5px 8px; font-size: 0.76rem; }
 }
 /* 친구 대전 중에는 혼자 판 장치를 숨긴다(엔진도 되감기·손과 뇌를 혼자 판에서만 받는다). */
-body.online-game #handbrain-bar, body.online-game #card-skills { display: none; }
+body.online-game #handbrain-bar, body.online-game #card-skills, body.online-game #game-strip { display: none; }

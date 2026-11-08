@@ -1798,6 +1798,8 @@ export function initWizardChess() {
 let handBrainKind = null;
 // 둘이 한 왕국(CO-1): 둘이 한 편인 판이면 잡기 연출을 짧게(fxSettings().quick 와 같은 효과).
 let teamGame = false;
+// 시작 단계가 끝났는가(isStarted). 그 전에 세운 판은 시작 단계의 resetChessBoard 가 덮어쓴다.
+let engineStarted = false;
     let validMoves = [];
     let isAnimatingMove = false;
     let gameOver = false;
@@ -2761,7 +2763,7 @@ let teamGame = false;
       gameReported = false;
       lastMoveMark.visible = false;
       gameId = (gameId + 1) >>> 0;
-      if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, rivalId: activeRivalId, color: playerColor } }));
+      if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, rivalId: activeRivalId, color: playerColor, online: gameMode === 'multi' } }));
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -5954,7 +5956,7 @@ let teamGame = false;
             capturedByBlack: back.capturedByBlack, scriptCursor: 0, scriptedGameActive: false, scriptDeviated: false, cells: back.cells
           }, { keepReferee: true });
           moveHistory = back.before.map(takebackEntry);
-          window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: moves.length, color: playerColor } }));
+          window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: moves.length, color: playerColor, online: true } }));
         }
         return { gameId, plies: referee.history().length };
       },
@@ -5975,6 +5977,8 @@ let teamGame = false;
         resetChessBoard(true, false);
       },
       isOnline: () => gameMode === 'multi',
+      // 시작 단계(모델 읽기·첫 판)가 끝났는가. 친구 대전 화면은 이것을 기다렸다가 판을 세운다.
+      isStarted: () => engineStarted,
       getHandBrainState: () => ({
         fen: referee.fen(),
         history: referee.history().map((m) => positionKey(m.after)),
@@ -6631,9 +6635,14 @@ let teamGame = false;
         playerColor = 'b';
       }
       if (saved) playerColor = saved.color;
-      resetChessBoard(true, true, !saved);
-      if (saved) await resumeGame(saved);
-      setCameraForSide(playerColor === 'b' ? 'b' : 'w', true);
+      // 친구 대전(?room=)은 화면 층이 엔진 준비 뒤에 판을 세운다 — 여기서 혼자 판을 열어 덮어쓰지 않는다.
+      if (gameMode !== 'multi') {
+        resetChessBoard(true, true, !saved);
+        if (saved) await resumeGame(saved);
+        setCameraForSide(playerColor === 'b' ? 'b' : 'w', true);
+      }
+      engineStarted = true;
+      window.dispatchEvent(new CustomEvent('enginestarted'));
       if (navigator.webdriver) {
         window.wizardChess.stepBy(0.9, 15);
       } else {

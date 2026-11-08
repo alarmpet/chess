@@ -18,9 +18,10 @@ const setUrl = (code: string | null) => {
 };
 const config = realtimeConfig((import.meta as any).env);
 
-// 엔진이 뜰 때까지 기다린다(처음 열 때 모델을 읽는 동안).
+// 엔진의 시작 단계(모델 읽기 + 첫 판)가 끝날 때까지 기다린다. 그 전에 판을 세우면 시작 단계가 빈 판으로 덮어쓴다
+// (폰 첫 방문에서 규칙 층 4수 · 엔진 0수로 어긋난 것을 에뮬레이터에서 봤다, 2026-11-07).
 const engineReady = () => new Promise<void>((ok) => {
-  const go = () => (wc()?.startOnline ? ok() : window.setTimeout(go, 200));
+  const go = () => (wc()?.isStarted?.() ? ok() : window.setTimeout(go, 200));
   go();
 });
 

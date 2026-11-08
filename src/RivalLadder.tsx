@@ -34,9 +34,10 @@ export default function RivalLadder({ lang }: { lang: 'ko' | 'en' }) {
       const rival = wc()?.getRivalCatalog?.()?.rivals?.find((r: any) => r.id === d.rivalId) || null;
       practice.gameId = d.gameId;
       practice.color = d.color === 'b' ? 'b' : 'w';
-      practice.on = d.color !== 'spectator' && opponentStage(games0, rival) === 'easy';
+      // 친구 대전(👫)에는 AI 상대가 없다 — 라이벌 안내·연습 위기 알림을 띄우지 않는다.
+      practice.on = !d.online && d.color !== 'spectator' && opponentStage(games0, rival) === 'easy';
       practice.said = [];
-      if (d.resumed) return;
+      if (d.resumed || d.online) return;
       const { games, free } = apply();
       if (!d.rivalId && free.stage === 'easy') {
         note(`첫 판이라 쉬운 상대예요 (${games + 1}/${FIRST_EASY_GAMES})`, `An easy opponent for your first games (${games + 1}/${FIRST_EASY_GAMES})`);
