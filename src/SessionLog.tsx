@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { fxSettings } from './fx/settings.js';
 import { startEntry } from './cards/sessionLog.js';
+import { HAND_BRAIN_ENABLED } from './cards/teamPlay.js';
 import { logGame } from './cards/store';
 
 // 기록 보강(FN-0): 판 시작(이어 하기 포함)·판 도중 창 닫음·끝나지 않은 판을 두고 새 판(quit)을 판 기록에 남긴다. 화면에는 아무것도 그리지 않는다.
 // 판 끝(`game`)·수(`pace`)·정찰/되감기(`skill`)는 CardLayer·Blitz 가 남긴다. 묶어 읽는 것은 cards/sessionLog.js 의 storyOf.
 const wc = () => (window as any).wizardChess;
 const handBrainMode = () => {
+  if (!HAND_BRAIN_ENABLED) return 'off';
   try { const m = JSON.parse(window.localStorage.getItem('wildcrown.handbrain.v1') || 'null')?.mode; return m === 'family' || m === 'adviser' ? m : 'off'; } catch (e) { return 'off'; }
 };
 

@@ -4,6 +4,7 @@ import RivalEntrance from './RivalEntrance';
 import SettingsPanel from './SettingsPanel';
 import CardLayer from './cards/CardLayer';
 import HandBrain from './HandBrain';
+import { HAND_BRAIN_ENABLED } from './cards/teamPlay.js';
 import Online from './Online';
 import Blitz from './Blitz';
 import SessionLog from './SessionLog';
@@ -172,9 +173,11 @@ export default function App() {
           <button type="button" className="hud-btn quick-btn" id="btn-rivals" onClick={() => setRivalOpen(true)} title={en ? 'Beat a rival to win its item' : '라이벌을 이기고 소품 얻기'}>
             <span aria-hidden="true">🏆</span><span className="quick-label">{en ? 'Rivals' : '라이벌'}</span>
           </button>
-          <button type="button" className="hud-btn quick-btn" id="btn-handbrain" onClick={() => setHandBrainOpen(true)} title={en ? 'Hand and brain: two play one side' : '손과 뇌: 둘이 한 편'}>
-            <span aria-hidden="true">🤝</span><span className="quick-label">{en ? 'Together' : '함께'}</span>
-          </button>
+          {HAND_BRAIN_ENABLED && (
+            <button type="button" className="hud-btn quick-btn" id="btn-handbrain" onClick={() => setHandBrainOpen(true)} title={en ? 'Hand and brain: two play one side' : '손과 뇌: 둘이 한 편'}>
+              <span aria-hidden="true">🤝</span><span className="quick-label">{en ? 'Together' : '함께'}</span>
+            </button>
+          )}
           <button type="button" className="hud-btn quick-btn" id="btn-online" onClick={() => setOnlineOpen(true)} title={en ? 'Invite a friend for a 1:1 game' : '친구를 초대해 1:1 대전'}>
             <span aria-hidden="true">👫</span><span className="quick-label">{en ? 'Friend' : '친구'}</span>
           </button>
@@ -288,7 +291,7 @@ export default function App() {
       <SessionLog />
       <RivalLadder lang={lang === 'en' ? 'en' : 'ko'} />
       <Online open={onlineOpen} onOpen={() => setOnlineOpen(true)} onClose={() => setOnlineOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
-      <HandBrain open={handBrainOpen} onClose={() => setHandBrainOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      {HAND_BRAIN_ENABLED && <HandBrain open={handBrainOpen} onClose={() => setHandBrainOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />}
       <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (
         <button type="button" className="village-toast" id="village-toast" onClick={openVillage}>

@@ -1,6 +1,12 @@
 // 둘이 한 왕국(협동 계획서 CO-1, 2026-11-07): 둘이 한 편이 돼 AI 와 둔다. 뇌가 말 종류를 부르고 손이 그 종류로 둔다.
 // 엔진과 화면이 함께 쓰는 순수 함수 — DOM·three 없음. 근거: docs/plans/2026-11-07-coop-multiplayer-plan.md §4.1.
 
+/**
+ * 손과 뇌 🤝 「함께」 기능을 화면에 내놓는지(2026-11-09 사용자 지시로 끔: 당장 쓰지 않는다).
+ * 끄면 단추·막대가 사라지고, 저장된 모드(wildcrown.handbrain.v1)가 family 여도 보통 판으로 둔다. 코드는 남겨 둔다.
+ */
+export const HAND_BRAIN_ENABLED = false;
+
 /** 뇌가 이 초 동안 말을 부르지 않으면 손이 아무 말이나 둘 수 있게 연다(시간패 없음). grok 안. */
 export const HANDOVER_S = 20;
 
