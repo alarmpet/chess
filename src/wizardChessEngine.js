@@ -5947,6 +5947,8 @@ let engineStarted = false;
       debugImpacts: () => impactCount,
       // Debug: whether the last capture counted as an upset ("역전!", capture-matchup plan CX-1).
       debugLastUpset: () => lastUpset,
+      // Debug: hide the impact words, for the muted who-took-whom quiz recordings (capture-matchup human test A).
+      debugHideWords: (on) => impactFx.setWordsHidden(on),
       // Debug: the last capture's special case (CX-4): mirror match, pawn combo count and pitch, pieces swayed by a roar.
       debugSpecial: () => ({ ...(lastSpecial || {}), impacts: impactCount, mirrorPose: lastMirrorPose && { ...lastMirrorPose }, swaying: roarSways.length }),
       // Debug: a move (or its highlight) is still playing, so a test waits before the next step.

@@ -126,7 +126,12 @@ export function createImpactFx(scene) {
     w.sprite.scale.set(w.size * 2 * pop, w.size * pop, 1);
   }
 
+  // 사람 시험 A(잡기 연출 계획서 7절)는 글자 없이 동작만 보고 맞힌다. 녹화 때만 디버그 API 로 끈다.
+  let wordsHidden = false;
+  function setWordsHidden(on) { wordsHidden = Boolean(on); }
+
   function label(pos, text, size) {
+    if (wordsHidden) return;
     wordTex[text] ||= wordTexture(text);
     // Pushed off to one side and tipped, so the word sits beside the blow rather than on top of it.
     const side = Math.random() < 0.5 ? -1 : 1;
@@ -281,5 +286,5 @@ export function createImpactFx(scene) {
     }
   }
 
-  return { burst, ring, word, label, flash, squash, hop, dizzy, shake, update, updateGame, shakeOffset };
+  return { burst, ring, word, label, flash, squash, hop, dizzy, shake, update, updateGame, shakeOffset, setWordsHidden };
 }

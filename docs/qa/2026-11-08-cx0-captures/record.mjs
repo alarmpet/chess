@@ -25,6 +25,8 @@ for (const L of lines) {
     await page.waitForTimeout(3500);
     await page.evaluate(() => document.querySelectorAll('.panel-overlay .panel-close').forEach((b) => b.click()));
     await page.waitForTimeout(500);
+    // 사람 시험 A 용: 글자(퍽!·쾅!·역전! 등)를 끄고 찍는다.
+    if (cfg.noWords) await page.evaluate(() => window.wizardChess.debugHideWords(true));
     row.canvas = await page.evaluate(() => {
       const c = [...document.querySelectorAll('canvas')].sort((a, b) => b.width * b.height - a.width * a.height)[0];
       const s = c.captureStream(30);
