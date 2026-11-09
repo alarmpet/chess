@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createMatchCore, newRoomCode, parseRoomCode } from './net/matchCore.js';
 import { openRoom, realtimeConfig } from './net/transport.js';
 import { deviceIdentity } from './net/identity.js';
-import { fetchPlayer, rankApiBase, sendRankReport } from './rank/client.js';
+import { fetchCircle, fetchPlayer, rankApiBase, sendRankReport } from './rank/client.js';
+import { friendName, loadFriendNames, recordText, saveFriendName, standingLine } from './rank/circle.js';
 import { preview } from './rank/ladder.js';
 import { ladderLine, outcomeLine, pairLine, placeChip, placeName, stakesLine, toNext } from './rank/ladderText.js';
 import { plyText } from './rank/report.js';
@@ -10,6 +11,7 @@ import { RANK_BUILD } from './rank/abuse.js';
 import { badgeLabel } from './rank/glicko2.js';
 
 type Place = { tier: string; step: number | null; into: number; pct: number | null; points: number };
+type Friend = { id: string; me?: boolean; rank: number; points: number; place: Place; wins?: number; losses?: number; draws?: number; games?: number; last?: number };
 type Pair = { today: number; week: number; dayCap: number; weekCap: number; capped: boolean };
 type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string; ladder?: { points: number; floor: number; streak: number; place: Place }; pair?: Pair };
 
@@ -80,6 +82,25 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
     if (!peerKeyNow) return;
     fetchPlayer(rankBase, peerKeyNow).then((p) => setPeerRank(p as Rank | null));
   }, [peerKeyNow]);   // eslint-disable-line react-hooks/exhaustive-deps
+  // 친구 무대(계획서 §4.4 L-3): 내가 둔 친구들 사이 순위·친구별 전적. 이름은 이 기기에만(서버에 없음).
+  const [circle, setCircle] = useState<Friend[] | null>(null);
+  const storage = () => { try { return window.localStorage; } catch (e) { return null; } };
+  const [names, setNames] = useState<Record<string, string>>(() => loadFriendNames(storage()));
+  const [renaming, setRenaming] = useState<{ id: string; text: string } | null>(null);
+  const loadCircle = async () => {
+    if (rankBase === null) return;
+    const me = await deviceIdentity().catch(() => null);
+    const c = me ? ((await fetchCircle(rankBase, me)) as Friend[] | null) : null;
+    if (c) setCircle(c);
+  };
+  useEffect(() => { if (open && !room) loadCircle(); }, [open, Boolean(room)]);   // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (peerKeyNow) loadCircle(); }, [peerKeyNow]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const nameOf = (id: string) => friendName(names, id, en);
+  const finishRename = () => {
+    if (renaming) setNames(saveFriendName(storage(), renaming.id, renaming.text));
+    setRenaming(null);
+  };
+  const peerH2h = peerKeyNow ? circle?.find((f) => f.id === peerKeyNow) : null;
   // 왕관 사다리(계획서 §4.4 L-2): 보이는 랭크는 사다리 칸, 실력(Glicko)은 친구 창에 작게.
   const rankChip = (r: Rank | null) => (r?.ladder ? placeChip(r.ladder.place) : '…');
   const stakes = myRank?.ladder && peerRank ? preview(myRank.ladder, myRank.rating, peerRank.rating) : null;
@@ -195,6 +216,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
       const side = res?.status === 'counted' ? (res.white?.id === me?.id ? res.white : res.black?.id === me?.id ? res.black : null) : null;
       if (side) {
         loadPair(view.peerKey);
+        loadCircle();
         if (view.peerKey) fetchPlayer(rankBase, view.peerKey).then((p) => p && setPeerRank(p as Rank));
         say(outcomeLine(res.outcome, en) || (side.ladder ? ladderLine(side.ladder, en) : `🏆 ${side.before} → ${side.after}`));
       }
@@ -277,9 +299,12 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
           <span className="online-code" title={en ? 'Room code' : '방 코드'}>👫 {room.code}</span>
           {view?.ranked && view.peer && rankBase !== null && (
             <span className="online-scores" id="online-scores" title={en ? 'Crown ladder: me · friend' : '왕관 사다리: 나 · 친구'}>
-              {en ? 'Me' : '나'} {rankChip(myRank)} · {en ? 'Friend' : '친구'} {rankChip(peerRank)}
+              {en ? 'Me' : '나'} {rankChip(myRank)} · {peerKeyNow ? nameOf(peerKeyNow) : (en ? 'Friend' : '친구')} {rankChip(peerRank)}
             </span>
           )}
+          {view?.ranked && view.peer && peerH2h?.games ? (
+            <span className="online-h2h" id="online-h2h" title={en ? 'Our ranked games so far' : '지금까지 이 친구와 둔 랭크 판'}>{en ? 'Us' : '이 친구와'} {recordText(peerH2h, en)}</span>
+          ) : null}
           {view?.ranked && view.peer && !view.ended && (pair?.capped ? <span className="online-stakes" id="online-stakes">{pairLine(pair, en)}</span> : stakes && <span className="online-stakes" id="online-stakes">{stakesLine(stakes, en)}</span>)}
           {view?.ranked && <span className="online-ranked" id="online-ranked" title={en ? 'Ranked: no AI moves, no take-backs. Score changes after the game.' : '랭크 판: AI 수·되감기 없음. 판이 끝나면 점수가 바뀌어요.'}>🏆 {en ? 'Ranked' : '랭크'}</span>}
           <span className="online-peer" id="online-peer">{dot} {view?.full ? (en ? 'Room is full' : '방이 찼어요') : link === 'connecting' ? (en ? 'Connecting…' : '연결 중…') : peerText}</span>
@@ -349,6 +374,30 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
                           </span>
                         </>
                       ) : <small>{rankOff ? (en ? 'Score server is not reachable' : '점수 서버에 닿지 않아요') : (en ? 'Loading my rank…' : '내 랭크 불러오는 중…')}</small>}
+                    </div>
+                  )}
+                  {rankBase !== null && myRank && (
+                    <div className="online-circle" id="online-circle">
+                      <b className="online-sub">{en ? '👑 Friend stage' : '👑 친구 무대'}{circle && standingLine(circle, en) ? <small id="online-standing"> · {standingLine(circle, en)}</small> : null}</b>
+                      {circle && circle.length > 1 ? (
+                        <ol className="circle-list">
+                          {circle.map((f) => (
+                            <li key={f.id} className={f.me ? 'me' : ''} data-id={f.id}>
+                              <span className="circle-rank">{f.rank}</span>
+                              {f.me ? <span className="circle-name">{en ? 'Me' : '나'}</span> : renaming?.id === f.id ? (
+                                <input className="online-input circle-input" autoFocus value={renaming.text} maxLength={24} aria-label={en ? 'Friend name on this device' : '이 기기에서 부를 친구 이름'}
+                                  onChange={(e) => setRenaming({ id: f.id, text: e.target.value })} onBlur={finishRename}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') finishRename(); if (e.key === 'Escape') setRenaming(null); }} />
+                              ) : (
+                                <button type="button" className="circle-name" title={en ? 'Rename (only on this device)' : '이름 바꾸기(이 기기에서만)'} onClick={() => setRenaming({ id: f.id, text: names[f.id] || '' })}>{nameOf(f.id)} ✏️</button>
+                              )}
+                              <span className="circle-place">{placeChip(f.place)}</span>
+                              <span className="circle-record">{f.me ? '' : recordText(f, en)}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : <small className="online-meta">{circle ? (en ? 'Friends you play ranked games with line up here.' : '랭크 판을 둔 친구들이 여기 줄 서요.') : (en ? 'Loading…' : '불러오는 중…')}</small>}
+                      <small className="online-meta">{en ? 'Only friends you played. Names stay on this device.' : '내가 둔 친구만 보여요. 이름은 이 기기에만 있어요.'}</small>
                     </div>
                   )}
                   <b className="online-sub">{en ? 'Make a room' : '방 만들기'}</b>

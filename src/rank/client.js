@@ -1,6 +1,7 @@
 // 랭크 판 결과를 서버로 보내는 화면 쪽 (LA-R R-2). 서버는 worker/index.js 의 /api/rank/*.
 // 주소: 빌드에 VITE_WC_RANK_URL 이 있으면 그것, 없으면 배포판은 같은 주소(''), 개발 서버는 보내지 않는다(null).
 import { buildMatch, signReport } from './report.js';
+import { circleText } from './circle.js';
 
 export function rankApiBase(env) {
   const url = env?.VITE_WC_RANK_URL;
@@ -58,4 +59,21 @@ export function changeLine(ch, oldBadge, newBadge, label) {
   if (!newBadge || newBadge === oldBadge) return base;
   const b = label(newBadge);
   return `${base} · ${b.icon} ${b.name}!`;
+}
+
+/** 친구 무대(L-3): 내 서명을 붙여 내가 둔 친구들 순위·전적을 읽는다. 서버가 없거나 실패하면 null. */
+export async function fetchCircle(base, identity, fetchFn = fetch, now = Date.now()) {
+  if (base === null || base === undefined || !identity?.id) return null;
+  try {
+    const sig = await identity.sign(circleText(identity.id, now));
+    const r = await fetchFn(`${base}/api/rank/circle`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: identity.id, pub: { x: identity.pub.x, y: identity.pub.y }, at: now, sig })
+    });
+    if (!r.ok) return null;
+    const v = await r.json();
+    return Array.isArray(v?.circle) ? v.circle : null;
+  } catch (e) {
+    return null;
+  }
 }

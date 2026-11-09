@@ -1340,3 +1340,16 @@ body.online-game #handbrain-bar, body.online-game #card-skills, body.online-game
 .ladder-bar { display: block; height: 8px; margin: 5px 0 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
 .ladder-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6d365, #fda085); transition: width 0.6s ease; }
 .online-stakes { padding: 1px 8px; border-radius: 999px; background: #fff3d6; color: #6a4500; white-space: nowrap; }
+/* 친구 무대 (계획서 §4.4 L-3): 내가 둔 친구들 사이 순위 · 친구별 전적. */
+.online-h2h { padding: 1px 8px; border-radius: 999px; background: #e8f4ff; color: #1d4a72; white-space: nowrap; }
+.online-circle { margin: 0 0 10px; }
+.online-circle .online-sub small { font-weight: normal; opacity: 0.85; }
+.circle-list { list-style: none; margin: 4px 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow-y: auto; }
+.circle-list li { display: grid; grid-template-columns: 1.8em minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); }
+.circle-list li.me { background: rgba(246, 211, 101, 0.22); font-weight: 600; }
+.circle-rank { text-align: center; font-weight: 700; }
+.circle-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+span.circle-name { cursor: default; }
+.circle-input { min-width: 0; width: 100%; padding: 2px 6px; }
+.circle-place, .circle-record { white-space: nowrap; font-size: 0.9em; }
+.circle-record { opacity: 0.85; }

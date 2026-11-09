@@ -1,0 +1,97 @@
+{
+  "at": "2026-11-09T14:46:22.474Z",
+  "pass": 15,
+  "total": 15,
+  "rows": [
+    {
+      "item": "판 다섯 넣기",
+      "want": "counted ×5",
+      "got": "counted,counted,counted,counted,counted",
+      "ok": true
+    },
+    {
+      "item": "나의 무대",
+      "want": "나·A·B 셋, C 없음",
+      "got": "[{\"who\":\"A\",\"rank\":1,\"points\":66,\"rec\":\"2-1-0\"},{\"who\":\"ME\",\"rank\":2,\"points\":62,\"rec\":\"\"},{\"who\":\"B\",\"rank\":3,\"points\":6,\"rec\":\"0-0-1\"}]",
+      "ok": true
+    },
+    {
+      "item": "A 와 전적",
+      "want": "2승 1패 0무",
+      "got": "2-1-0",
+      "ok": true
+    },
+    {
+      "item": "B 와 전적",
+      "want": "0승 0패 1무",
+      "got": "0-0-1",
+      "ok": true
+    },
+    {
+      "item": "사다리 점수 순",
+      "want": "내림차순",
+      "got": "66 ≥ 62 ≥ 6",
+      "ok": true
+    },
+    {
+      "item": "아직 둔 친구 없음",
+      "want": "나 혼자",
+      "got": 1,
+      "ok": true
+    },
+    {
+      "item": "남의 id 로 묻기(B 키로 나의 무대)",
+      "want": "403 pub",
+      "got": "403 pub",
+      "ok": true
+    },
+    {
+      "item": "내 공개 키 + 남의 서명",
+      "want": "403 signature",
+      "got": "403 signature",
+      "ok": true
+    },
+    {
+      "item": "11분 지난 요청",
+      "want": "400 time",
+      "got": "400 time",
+      "ok": true
+    },
+    {
+      "item": "시각과 안 맞는 서명",
+      "want": "403 signature",
+      "got": "403 signature",
+      "ok": true
+    },
+    {
+      "item": "친구 창 무대",
+      "want": "3줄 · 「3명 중 n등」",
+      "got": "{\"standing\":\" · 친구들과 3명 중 2등\",\"rows\":[\"1 🦝 너구리 친구 P0 ✏️ 🍼III 66 2승 1패\",\"2 나 🍼III 62\",\"3 🦦 수달 친구 S1 ✏️ 🍼III 6 0승 0패 1무\"]}",
+      "ok": true
+    },
+    {
+      "item": "이름 바꾸기",
+      "want": "「우리 아빠」 화면·기기 저장",
+      "got": "{\"v\":1,\"names\":{\"zpu5ZsdCYf1GRfp0\":\"우리 아빠\"}}",
+      "ok": true
+    },
+    {
+      "item": "내 막대",
+      "want": "「우리 아빠」 · 「이 친구와 2승 1패」",
+      "got": "{\"scores\":\"나 🍼III 62 · 우리 아빠 🍼III 66\",\"h2h\":\"이 친구와 2승 1패\"}",
+      "ok": true
+    },
+    {
+      "item": "A 막대(휴대폰)",
+      "want": "기본 동물 이름 · 「이 친구와 1승 2패」",
+      "got": "{\"scores\":\"나 🍼III 66 · 🦔 고슴도치 친구 HY 🍼III 62\",\"h2h\":\"이 친구와 1승 2패\"}",
+      "ok": true
+    },
+    {
+      "item": "휴대폰 폭 넘침",
+      "want": "right ≤ 390",
+      "got": "{\"right\":250,\"vw\":390}",
+      "ok": true
+    }
+  ]
+}

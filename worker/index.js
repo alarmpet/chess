@@ -8,9 +8,14 @@
 //   · 두 수 미만으로 끝난 판은 무효(outcome 'void').
 //   · 보고서의 시간 기록이 사람이 낼 수 없으면 거부하고 flags 에 남긴다. 빌드 번호가 MIN_BUILD 보다 낮으면 거부.
 //   · 이탈 몰수(reason 'abandon')는 남은 사람 혼자 보고한다. 상대 영수증을 검사하고 ABANDON_WAIT_MS 뒤에 넣는다.
+// L-3(친구 무대, src/rank/circle.js):
+//   POST /api/rank/circle   body = { id, pub, at, sig }  sig = circleText(id, at) 서명 → { circle: [{ id, me?, rank, points, place, wins?, losses?, draws?, games?, last? }] }
+//   자기 서명이 있어야 답한다(남의 친구 목록은 못 읽는다). 이름은 서버에 없다.
 import { checkReport, checkAbandon, agree } from '../src/rank/report.js';
 import { START, rateGame, badgeOf } from '../src/rank/glicko2.js';
 import { START_LADDER, applyGame, placeOf } from '../src/rank/ladder.js';
+import { CIRCLE_MAX, circleOf, circleRequestError, circleText } from '../src/rank/circle.js';
+import { identityIdOf, verifySignature } from '../src/net/identity.js';
 import { ABANDON_WAIT_MS, MIN_PLIES, PAIR_DAILY_CAP, PAIR_WEEKLY_CAP, RANK_BUILD, dayOf, metaError, pairCapped } from '../src/rank/abuse.js';
 
 const MAX_BODY = 32 * 1024;
@@ -184,6 +189,27 @@ async function getPlayer(url, env, now) {
   return json(out);
 }
 
+async function postCircle(request, env, now) {
+  const text = await request.text();
+  if (text.length > 4096) return json({ error: 'body' }, 413);
+  let body = null;
+  try { body = JSON.parse(text); } catch (e) { return json({ error: 'body' }, 400); }
+  const bad = circleRequestError(body, now);
+  if (bad) return json({ error: bad }, 400);
+  if ((await identityIdOf(body.pub)) !== body.id) return json({ error: 'pub' }, 403);
+  if (!(await verifySignature({ kty: 'EC', crv: 'P-256', x: body.pub.x, y: body.pub.y }, circleText(body.id, body.at), body.sig))) return json({ error: 'signature' }, 403);
+  const db = env.RANK;
+  const id = body.id;
+  const rows = (await db.prepare("SELECT white, black, result, status, at FROM matches WHERE (white = ? OR black = ?) AND status != 'void' ORDER BY at DESC LIMIT 500").bind(id, id).all())?.results || [];
+  const ids = [...new Set(rows.flatMap((r) => [r.white, r.black]))].slice(0, CIRCLE_MAX + 1);
+  const pointsOf = {};
+  if (ids.length) {
+    const ps = await db.prepare(`SELECT id, points FROM players WHERE id IN (${ids.map(() => '?').join(', ')})`).bind(...ids).all();
+    for (const p of ps?.results || []) pointsOf[p.id] = { points: p.points || 0 };
+  }
+  return json({ circle: circleOf(id, rows, pointsOf) });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -191,6 +217,7 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     try {
       if (url.pathname === '/api/rank/result' && request.method === 'POST') return await postResult(request, env, Date.now());
+      if (url.pathname === '/api/rank/circle' && request.method === 'POST') return await postCircle(request, env, Date.now());
       if (url.pathname === '/api/rank/player' && request.method === 'GET') return await getPlayer(url, env, Date.now());
       return json({ error: 'route' }, 404);
     } catch (e) {
