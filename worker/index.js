@@ -2,7 +2,8 @@
 // 랭크 판이 끝나면 두 사람이 각자 서명한 보고서를 보낸다. 둘 다 오고, 서명·글·다시 두기가 맞을 때만 Glicko-2 를 갱신한다.
 // 저장은 D1(binding RANK, worker/migrations). Supabase 무료 정지를 피하려고 랭크 기록은 Cloudflare 에 둔다(계획서 §4.2).
 //   POST /api/rank/result   body = src/rank/report.js 의 보고서 → { status: waiting | counted | mismatch | rejected, outcome?, ... }
-//   GET  /api/rank/player?id=<기기 id>[&vs=<상대 id>] → { id, rating, rd, games, wins, losses, draws, badge, ladder, pair? }
+//   GET  /api/rank/player?id=<기기 id>[&vs=<상대 id>] → { id, rating, rd, games, wins, losses, draws, badge, ladder, season, trophies, pair? }
+// L-4(시즌, src/rank/season.js): 4주마다 사다리 300점 내림. 정해진 시각에 도는 작업 없이, 사람을 읽거나 판을 넣을 때 넘긴다(player()).
 // R-4(남용 막기, src/rank/abuse.js):
 //   · 같은 두 사람은 하루 3판·7일 10판까지만 점수에 든다. 넘으면 기록만(outcome 'capped').
 //   · 두 수 미만으로 끝난 판은 무효(outcome 'void').
@@ -14,6 +15,7 @@
 import { checkReport, checkAbandon, agree } from '../src/rank/report.js';
 import { START, rateGame, badgeOf } from '../src/rank/glicko2.js';
 import { START_LADDER, applyGame, placeOf } from '../src/rank/ladder.js';
+import { SEASON_MIN_GAMES, daysLeft, rollSeason, seasonEnd, seasonOf } from '../src/rank/season.js';
 import { CIRCLE_MAX, circleOf, circleRequestError, circleText } from '../src/rank/circle.js';
 import { identityIdOf, verifySignature } from '../src/net/identity.js';
 import { ABANDON_WAIT_MS, MIN_PLIES, PAIR_DAILY_CAP, PAIR_WEEKLY_CAP, RANK_BUILD, dayOf, metaError, pairCapped } from '../src/rank/abuse.js';
@@ -27,12 +29,29 @@ const CORS = {
 };
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...CORS } });
 
-async function player(db, id) {
-  return db.prepare('SELECT * FROM players WHERE id = ?').bind(id).first();
+/** 한 사람을 읽는다. 시즌이 지났으면(L-4) 그 자리에서 넘기고 지난 시즌 테두리를 남긴다. */
+async function player(db, id, now = Date.now()) {
+  const p = await db.prepare('SELECT * FROM players WHERE id = ?').bind(id).first();
+  if (!p) return p;
+  const cur = seasonOf(now);
+  const r = rollSeason(p, cur);
+  if (!r.rolled) return r.row;
+  const n = r.row;
+  const writes = [db.prepare('UPDATE players SET points = ?, floor = ?, streak = ?, season = ?, peak = ?, sgames = 0 WHERE id = ? AND season < ?')
+    .bind(n.points, n.floor, n.streak, cur, n.peak, id, cur)];
+  if (r.trophy) writes.push(db.prepare('INSERT OR IGNORE INTO trophies (id, season, tier, peak, games, at) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(id, r.trophy.season, r.trophy.tier, r.trophy.peak, p.sgames || 0, now));
+  await db.batch(writes);
+  return n;
 }
-const publicView = (p) => p && ({
+const seasonView = (p, now) => {
+  const n = seasonOf(now);
+  return { n, endsAt: seasonEnd(n), daysLeft: daysLeft(now), games: p.sgames || 0, peak: Math.max(p.peak || 0, p.points || 0), minGames: SEASON_MIN_GAMES };
+};
+const publicView = (p, now = Date.now()) => p && ({
   id: p.id, rating: Math.round(p.rating), rd: Math.round(p.rd), games: p.games, wins: p.wins, losses: p.losses, draws: p.draws, badge: badgeOf(p.rating, p.games),
-  ladder: { points: p.points || 0, floor: p.floor || 0, streak: p.streak || 0, place: placeOf(p.points || 0) }
+  ladder: { points: p.points || 0, floor: p.floor || 0, streak: p.streak || 0, place: placeOf(p.points || 0) },
+  season: seasonView(p, now)
 });
 const ladderOf = (p) => ({ points: p.points || 0, floor: p.floor || 0, streak: p.streak || 0 });
 /** 화면에 보낼 사다리 변화 한 사람 몫. */
@@ -65,8 +84,8 @@ async function pairCounts(db, a, b, now) {
 async function commit(db, matchId, m, whiteScore, pubOf, now) {
   const counts = await pairCounts(db, m.white, m.black, now);
   const status = m.moves.length < MIN_PLIES ? 'void' : pairCapped(counts.today, counts.week) ? 'capped' : 'counted';
-  const w = (await player(db, m.white)) || { id: m.white, ...START, ...START_LADDER, games: 0, wins: 0, losses: 0, draws: 0, created: now };
-  const b = (await player(db, m.black)) || { id: m.black, ...START, ...START_LADDER, games: 0, wins: 0, losses: 0, draws: 0, created: now };
+  const w = (await player(db, m.white, now)) || { id: m.white, ...START, ...START_LADDER, games: 0, wins: 0, losses: 0, draws: 0, created: now };
+  const b = (await player(db, m.black, now)) || { id: m.black, ...START, ...START_LADDER, games: 0, wins: 0, losses: 0, draws: 0, created: now };
   const insertMatch = (wAfter, bAfter, ladderJson) => db.prepare(`INSERT INTO matches (match_id, white, black, result, reason, plies, at, white_before, white_after, black_before, black_after, ladder, status, day, pair)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .bind(matchId, m.white, m.black, m.result, m.reason, m.moves.length, now, w.rating, wAfter, b.rating, bAfter, ladderJson, status, dayOf(now), pairOf(m.white, m.black));
@@ -83,11 +102,13 @@ async function commit(db, matchId, m, whiteScore, pubOf, now) {
     const tally = (p, score) => ({ wins: p.wins + (score === 1 ? 1 : 0), losses: p.losses + (score === 0 ? 1 : 0), draws: p.draws + (score === 0.5 ? 1 : 0) });
     const upsert = (p, n, score, l) => {
       const t = tally(p, score);
-      return db.prepare(`INSERT INTO players (id, pub, rating, rd, vol, games, wins, losses, draws, created, updated, points, floor, streak) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      // 시즌(L-4): player() 가 이미 이번 시즌으로 넘겼다. 처음 보는 사람은 이번 시즌에서 시작.
+      return db.prepare(`INSERT INTO players (id, pub, rating, rd, vol, games, wins, losses, draws, created, updated, points, floor, streak, season, peak, sgames) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET rating = excluded.rating, rd = excluded.rd, vol = excluded.vol, games = excluded.games,
         wins = excluded.wins, losses = excluded.losses, draws = excluded.draws, updated = excluded.updated,
-        points = excluded.points, floor = excluded.floor, streak = excluded.streak`)
-        .bind(p.id, JSON.stringify({ x: pubOf[p.id].x, y: pubOf[p.id].y }), n.rating, n.rd, n.vol, p.games + 1, t.wins, t.losses, t.draws, p.created, now, l.state.points, l.state.floor, l.state.streak);
+        points = excluded.points, floor = excluded.floor, streak = excluded.streak, season = excluded.season, peak = excluded.peak, sgames = excluded.sgames`)
+        .bind(p.id, JSON.stringify({ x: pubOf[p.id].x, y: pubOf[p.id].y }), n.rating, n.rd, n.vol, p.games + 1, t.wins, t.losses, t.draws, p.created, now, l.state.points, l.state.floor, l.state.streak,
+          seasonOf(now), Math.max(p.peak || 0, l.state.points), (p.sgames || 0) + 1);
     };
     batch = [
       insertMatch(next.white.rating, next.black.rating, JSON.stringify({ white: ladderView(lw), black: ladderView(lb) })),
@@ -179,8 +200,10 @@ async function getPlayer(url, env, now) {
   const wait = waitOf(env);
   const due = await db.prepare("SELECT match_id FROM reports WHERE signer = ? AND kind = 'abandon' AND at <= ? LIMIT 5").bind(id, now - wait).all();
   for (const r of due?.results || []) await settleAbandon(db, r.match_id, id, now, wait).catch(() => null);
-  const p = await player(db, id);
-  const out = publicView(p) || publicView({ id, ...START, ...START_LADDER, games: 0, wins: 0, losses: 0, draws: 0 });
+  const p = await player(db, id, now);
+  const out = publicView(p, now) || publicView({ id, ...START, ...START_LADDER, games: 0, wins: 0, losses: 0, draws: 0 }, now);
+  // 지난 시즌 테두리(최근 6개).
+  out.trophies = ((await db.prepare('SELECT season, tier, peak FROM trophies WHERE id = ? ORDER BY season DESC LIMIT 6').bind(id).all())?.results || []);
   const vs = url.searchParams.get('vs');
   if (vs && ID_RE.test(vs) && vs !== id) {
     const c = await pairCounts(db, id, vs, now);
@@ -204,11 +227,16 @@ async function postCircle(request, env, now) {
   const ids = [...new Set(rows.flatMap((r) => [r.white, r.black]))].slice(0, CIRCLE_MAX + 1);
   const pointsOf = {};
   if (ids.length) {
-    const ps = await db.prepare(`SELECT id, points FROM players WHERE id IN (${ids.map(() => '?').join(', ')})`).bind(...ids).all();
-    for (const p of ps?.results || []) pointsOf[p.id] = { points: p.points || 0 };
+    const ps = await db.prepare(`SELECT id, points, floor, streak, season, peak, sgames FROM players WHERE id IN (${ids.map(() => '?').join(', ')})`).bind(...ids).all();
+    // 시즌이 지난 친구는 읽기만 넘긴 점수로(쓰기는 그 사람이 열 때).
+    const cur = seasonOf(now);
+    for (const p of ps?.results || []) pointsOf[p.id] = { points: rollSeason(p, cur).row.points || 0 };
   }
   return json({ circle: circleOf(id, rows, pointsOf) });
 }
+
+/** 로컬 시험에서만 시계를 민다(wrangler dev --var NOW_SHIFT_MS:2419200000 = 28일 뒤, 시즌 경계 확인). 배포 설정에는 넣지 않는다. */
+const nowOf = (env) => Date.now() + (Number(env.NOW_SHIFT_MS) || 0);
 
 export default {
   async fetch(request, env) {
@@ -216,9 +244,10 @@ export default {
     if (!url.pathname.startsWith('/api/rank/')) return env.ASSETS ? env.ASSETS.fetch(request) : new Response('not found', { status: 404 });
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     try {
-      if (url.pathname === '/api/rank/result' && request.method === 'POST') return await postResult(request, env, Date.now());
-      if (url.pathname === '/api/rank/circle' && request.method === 'POST') return await postCircle(request, env, Date.now());
-      if (url.pathname === '/api/rank/player' && request.method === 'GET') return await getPlayer(url, env, Date.now());
+      const now = nowOf(env);
+      if (url.pathname === '/api/rank/result' && request.method === 'POST') return await postResult(request, env, now);
+      if (url.pathname === '/api/rank/circle' && request.method === 'POST') return await postCircle(request, env, now);
+      if (url.pathname === '/api/rank/player' && request.method === 'GET') return await getPlayer(url, env, now);
       return json({ error: 'route' }, 404);
     } catch (e) {
       return json({ error: 'server' }, 500);

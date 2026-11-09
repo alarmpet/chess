@@ -87,10 +87,4 @@ export function applyGame(state, { score, me, opp }) {
   };
 }
 
-/** 시즌 초기화(L-4 에서 씀): 큰 등급 하나만 내려가고, 바닥·연승은 비운다. */
-export function seasonReset(state) {
-  const p = placeOf(state.points || 0);
-  const idx = TIERS.indexOf(p.tier);
-  const points = idx <= 0 ? Math.min(state.points || 0, 100) : TIER_START[TIERS[idx - 1]];
-  return { points, floor: 0, streak: 0 };
-}
+// 시즌 초기화는 season.js(L-4).

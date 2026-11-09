@@ -61,3 +61,30 @@ export function outcomeLine(outcome, en = false) {
   if (outcome === 'void') return en ? 'No first moves — this game doesn’t count' : '첫 수 전에 끝난 판이라 점수에 넣지 않아요';
   return null;
 }
+
+// ── 시즌(L-4) ──
+/** 「🗓️ 시즌 2 · 12일 남음 · 테두리까지 2판」. 마지막 날은 「오늘 끝나요」. */
+export function seasonLine(s, en = false) {
+  if (!s) return '';
+  const head = en ? `🗓️ Season ${s.n}` : `🗓️ 시즌 ${s.n}`;
+  const left = s.daysLeft <= 1 ? (en ? 'ends today' : '오늘 끝나요') : (en ? `${s.daysLeft} days left` : `${s.daysLeft}일 남음`);
+  const need = Math.max(0, (s.minGames || 0) - (s.games || 0));
+  const parts = [head, left];
+  if (need > 0) parts.push(en ? `${need} game${need > 1 ? 's' : ''} to a frame` : `테두리까지 ${need}판`);
+  return parts.join(' · ');
+}
+
+/** 「🏅 시즌 1 ⭐ 우두머리 테두리」. */
+export function trophyLine(t, en = false) {
+  if (!t) return '';
+  const b = badgeLabel(t.tier, en);
+  return en ? `🏅 Season ${t.season} ${b.icon} ${b.name} frame` : `🏅 시즌 ${t.season} ${b.icon} ${b.name} 테두리`;
+}
+
+/** 새 시즌 첫 판 전까지만: 「시즌 1 끝! 🐾 성체 테두리를 받았어요 · 새 시즌이 시작됐어요」. 아니면 null. */
+export function newSeasonLine(s, trophies, en = false) {
+  const t = trophies?.[0];
+  if (!s || !t || s.games > 0 || t.season !== s.n - 1) return null;
+  const b = badgeLabel(t.tier, en);
+  return en ? `Season ${t.season} is over! You got the ${b.icon} ${b.name} frame · a new season has begun` : `시즌 ${t.season} 끝! ${b.icon} ${b.name} 테두리를 받았어요 · 새 시즌이 시작됐어요`;
+}

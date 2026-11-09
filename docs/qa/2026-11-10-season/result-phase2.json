@@ -1,0 +1,51 @@
+{
+  "at": "2026-11-09T15:39:16.854Z",
+  "phase": 2,
+  "shiftMs": 2419200000,
+  "pass": 7,
+  "total": 7,
+  "rows": [
+    {
+      "item": "시즌 2 무대(나는 아직 안 넘겨짐)",
+      "want": "781 − 300",
+      "got": 481,
+      "ok": true
+    },
+    {
+      "item": "시즌 2 나",
+      "want": "시즌 2 · 481점 · 바닥·연승 0 · 테두리 1",
+      "got": "{\"season\":{\"n\":2,\"endsAt\":1798383600000,\"daysLeft\":20,\"games\":0,\"peak\":481,\"minGames\":5},\"ladder\":{\"points\":481,\"floor\":0,\"streak\":0,\"place\":{\"tier\":\"adult\",\"step\":2,\"into\":81,\"pct\":0.81,\"points\":481}},\"trophies\":[{\"season\":1,\"tier\":\"alpha\",\"peak\":781}],\"rating\":2096}",
+      "ok": true
+    },
+    {
+      "item": "다시 읽어도 한 번만",
+      "want": "481점 · 테두리 1",
+      "got": "481 · 1",
+      "ok": true
+    },
+    {
+      "item": "3판 둔 상대",
+      "want": "새끼 그대로 · 테두리 없음(5판 미만)",
+      "got": "{\"points\":0,\"trophies\":[]}",
+      "ok": true
+    },
+    {
+      "item": "친구 창(넓은 화면)",
+      "want": "테두리 frame-alpha · 「시즌 2 · 28일 남음 · 테두리까지 5판」 · 새 시즌 알림",
+      "got": "{\"name\":\"wide\",\"cls\":\"online-myrank frame-alpha\",\"season\":\"🗓️ 시즌 2 · 20일 남음 · 테두리까지 5판\",\"fresh\":\"시즌 1 끝! ⭐ 우두머리 테두리를 받았어요 · 새 시즌이 시작됐어요\",\"trophies\":\"🏅 시즌 1 ⭐ 우두머리 테두리\",\"border\":\"rgb(127, 196, 255)\"}",
+      "ok": true
+    },
+    {
+      "item": "친구 창(휴대폰 폭)",
+      "want": "같은 글자",
+      "got": "{\"name\":\"phone\",\"cls\":\"online-myrank frame-alpha\",\"season\":\"🗓️ 시즌 2 · 20일 남음 · 테두리까지 5판\",\"fresh\":\"시즌 1 끝! ⭐ 우두머리 테두리를 받았어요 · 새 시즌이 시작됐어요\",\"trophies\":\"🏅 시즌 1 ⭐ 우두머리 테두리\",\"border\":\"rgb(127, 196, 255)\"}",
+      "ok": true
+    },
+    {
+      "item": "새 시즌 첫 판",
+      "want": "counted · 시즌 판 1 · 테두리 1",
+      "got": "{\"status\":\"counted\",\"games\":1,\"trophies\":1}",
+      "ok": true
+    }
+  ]
+}

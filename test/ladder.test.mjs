@@ -1,7 +1,7 @@
 // 왕관 사다리(L-1): 칸 계산, 승급전 없음, 새끼 등급 무손실, 큰 등급 바닥, 3연승 보너스, 실력 따라가기, 약자 보상, 시즌 초기화.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { START_LADDER, TIER_START, applyGame, placeOf, preview, seasonReset, targetOf } from '../src/rank/ladder.js';
+import { START_LADDER, TIER_START, applyGame, placeOf, preview, targetOf } from '../src/rank/ladder.js';
 
 test('places: 100 points a step, III→II→I, crown has no step', () => {
   assert.deepEqual([placeOf(0).tier, placeOf(0).step], ['cub', 3]);
@@ -53,9 +53,6 @@ test('the underdog risks little and gains a lot (parent vs child)', () => {
   assert.ok(child.win > parent.win && child.rawLoss < parent.rawLoss, JSON.stringify({ child, parent }));
 });
 
-test('season reset drops one big tier and clears floor and streak', () => {
-  assert.deepEqual(seasonReset({ points: 780, floor: 600, streak: 4 }), { points: 300, floor: 0, streak: 0 });
-  assert.deepEqual(seasonReset({ points: 1200, floor: 900, streak: 0 }), { points: 600, floor: 0, streak: 0 });
-  assert.deepEqual(seasonReset({ points: 250, floor: 0, streak: 1 }), { points: 100, floor: 0, streak: 0 });
+test('the ladder starts empty', () => {
   assert.deepEqual(START_LADDER, { points: 0, floor: 0, streak: 0 });
 });

@@ -5,7 +5,8 @@ import { deviceIdentity } from './net/identity.js';
 import { fetchCircle, fetchPlayer, rankApiBase, sendRankReport } from './rank/client.js';
 import { friendName, loadFriendNames, recordText, saveFriendName, standingLine } from './rank/circle.js';
 import { preview } from './rank/ladder.js';
-import { ladderLine, outcomeLine, pairLine, placeChip, placeName, stakesLine, toNext } from './rank/ladderText.js';
+import { ladderLine, newSeasonLine, outcomeLine, pairLine, placeChip, placeName, seasonLine, stakesLine, toNext, trophyLine } from './rank/ladderText.js';
+import { bestTrophy } from './rank/season.js';
 import { plyText } from './rank/report.js';
 import { RANK_BUILD } from './rank/abuse.js';
 import { badgeLabel } from './rank/glicko2.js';
@@ -13,7 +14,8 @@ import { badgeLabel } from './rank/glicko2.js';
 type Place = { tier: string; step: number | null; into: number; pct: number | null; points: number };
 type Friend = { id: string; me?: boolean; rank: number; points: number; place: Place; wins?: number; losses?: number; draws?: number; games?: number; last?: number };
 type Pair = { today: number; week: number; dayCap: number; weekCap: number; capped: boolean };
-type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string; ladder?: { points: number; floor: number; streak: number; place: Place }; pair?: Pair };
+type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string; ladder?: { points: number; floor: number; streak: number; place: Place }; pair?: Pair;
+  season?: { n: number; endsAt: number; daysLeft: number; games: number; peak: number; minGames: number }; trophies?: { season: number; tier: string; peak: number }[] };
 
 // 친구와 두기 👫 (기획서 §12.1 · 협동 계획서 CO-4 를 앞당김, 2026-11-07 사용자 결정): 아는 사람을 방 코드·초대 링크로 불러 1:1.
 // 랜덤 매칭·자유 채팅·카드·도토리 없음. 규칙은 net/matchCore.js, 전송은 net/transport.js(Supabase Realtime 방송, 없으면 같은 브라우저 탭끼리).
@@ -84,6 +86,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
   }, [peerKeyNow]);   // eslint-disable-line react-hooks/exhaustive-deps
   // 친구 무대(계획서 §4.4 L-3): 내가 둔 친구들 사이 순위·친구별 전적. 이름은 이 기기에만(서버에 없음).
   const [circle, setCircle] = useState<Friend[] | null>(null);
+  const [circleOff, setCircleOff] = useState(false);
   const storage = () => { try { return window.localStorage; } catch (e) { return null; } };
   const [names, setNames] = useState<Record<string, string>>(() => loadFriendNames(storage()));
   const [renaming, setRenaming] = useState<{ id: string; text: string } | null>(null);
@@ -92,6 +95,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
     const me = await deviceIdentity().catch(() => null);
     const c = me ? ((await fetchCircle(rankBase, me)) as Friend[] | null) : null;
     if (c) setCircle(c);
+    setCircleOff(!c);
   };
   useEffect(() => { if (open && !room) loadCircle(); }, [open, Boolean(room)]);   // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (peerKeyNow) loadCircle(); }, [peerKeyNow]);   // eslint-disable-line react-hooks/exhaustive-deps
@@ -355,7 +359,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
                 <>
                   <p className="online-rule">{en ? 'Invite someone you know with a link. No strangers, no chat, no cards — just a game.' : '아는 사람을 링크로 불러 1:1 로 둬요. 모르는 사람·채팅·카드 없이 체스만.'}</p>
                   {rankBase !== null && (
-                    <div className="online-myrank" id="online-myrank">
+                    <div className={`online-myrank${bestTrophy(myRank?.trophies) ? ` frame-${bestTrophy(myRank?.trophies)!.tier}` : ''}`} id="online-myrank">
                       {myRank ? (
                         <>
                           <span className="online-myrank-badge">{badgeLabel(myRank.ladder?.place.tier || 'cub', en).icon}</span>
@@ -371,6 +375,11 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
                                 en ? `${myRank.games} ranked · ${myRank.wins}W ${myRank.losses}L ${myRank.draws}D · skill ${myRank.rating}` : `랭크 ${myRank.games}판 · ${myRank.wins}승 ${myRank.losses}패 ${myRank.draws}무 · 실력 ${myRank.rating}`
                               ].filter(Boolean).join(' · ')}
                             </small>
+                            {myRank.season && <small className="online-season" id="online-season">{seasonLine(myRank.season, en)}</small>}
+                            {newSeasonLine(myRank.season, myRank.trophies, en) && <small className="online-season-new" id="online-season-new">{newSeasonLine(myRank.season, myRank.trophies, en)}</small>}
+                            {myRank.trophies && myRank.trophies.length > 0 && (
+                              <span className="online-trophies" id="online-trophies">{myRank.trophies.slice(0, 3).map((t) => <i key={t.season} className={`trophy-${t.tier}`}>{trophyLine(t, en)}</i>)}</span>
+                            )}
                           </span>
                         </>
                       ) : <small>{rankOff ? (en ? 'Score server is not reachable' : '점수 서버에 닿지 않아요') : (en ? 'Loading my rank…' : '내 랭크 불러오는 중…')}</small>}
@@ -396,7 +405,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
                             </li>
                           ))}
                         </ol>
-                      ) : <small className="online-meta">{circle ? (en ? 'Friends you play ranked games with line up here.' : '랭크 판을 둔 친구들이 여기 줄 서요.') : (en ? 'Loading…' : '불러오는 중…')}</small>}
+                      ) : <small className="online-meta">{circle ? (en ? 'Friends you play ranked games with line up here.' : '랭크 판을 둔 친구들이 여기 줄 서요.') : circleOff ? (en ? 'Couldn’t load the friend stage — check this device’s clock and connection' : '친구 무대를 불러오지 못했어요 · 기기 시계와 연결을 확인해 주세요') : (en ? 'Loading…' : '불러오는 중…')}</small>}
                       <small className="online-meta">{en ? 'Only friends you played. Names stay on this device.' : '내가 둔 친구만 보여요. 이름은 이 기기에만 있어요.'}</small>
                     </div>
                   )}

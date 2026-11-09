@@ -1,11 +1,12 @@
 // 왕관 사다리 시뮬(계획서 §4.4 L-1 측정). 실력이 다른 가상 선수들이 친구 무리 안에서 랭크 판을 두고,
 // Glicko-2(실력) · 사다리(보이는 랭크)가 어떻게 움직이는지 잰다.
-//   node tools/ladder_sim.mjs [--json out.json] [--seed 7]
+//   node tools/ladder_sim.mjs [--json out.json] [--seed 7] [--reset minus300|tierStart|none]
 // 판 결과는 「진짜 실력」(Elo 식 기대 승률) + 무승부 6%(FN-측 봇 보통 대 보통 6%)로 뽑는다. 사람 판 분포와 같다는 근거는 없다.
 import { writeFileSync } from 'node:fs';
 import { START, rateGame } from '../src/rank/glicko2.js';
 import { RULES, START_LADDER, TIER_START, applyGame, placeOf, targetOf } from '../src/rank/ladder.js';
 import { PAIR_DAILY_CAP, PAIR_WEEKLY_CAP } from '../src/rank/abuse.js';
+import { seasonReset } from '../src/rank/season.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 let seed = Number(arg('--seed', 7));
@@ -19,6 +20,7 @@ const CAP = Number(arg('--cap', PAIR_DAILY_CAP));
 const WEEK_CAP = Number(arg('--weekcap', PAIR_WEEKLY_CAP));
 const rand = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
 const DRAW = 0.06;
+const TIERS_ORDER = ['cub', 'adult', 'alpha', 'crown'];
 const BANDS = [['약함 <1300', 0, 1300], ['보통 1300~1600', 1300, 1600], ['강함 1600~1900', 1600, 1900], ['아주 강함 ≥1900', 1900, 9999]];
 
 function play(a, b) {
@@ -111,6 +113,38 @@ function pair(days, perDay, cap, mkA, mkB, forced = null) {
 {
   const { a: booster, b: feeder } = pair(28, 10, CAP, () => mk(1500), () => mk(1500), 1);
   out.winTrading = { days: 28, tried: 280, counted: booster.games, boosterPoints: booster.ladder.points, boosterPlace: placeOf(booster.ladder.points), boosterRating: Math.round(booster.glicko.rating), feederRating: Math.round(feeder.glicko.rating) };
+}
+
+// 4) 시즌(L-4): 1)의 무리가 시즌 하나(약 200판)를 마친 뒤 초기화, 다음 시즌은 판을 덜 둔다(무리당 150번 짝 ≈ 50판).
+//    잴 것: 초기화 직후·50판 뒤 사다리-실력 순위 상관, 지난 시즌 등급을 되찾은 비율과 판 수, 새 시즌 50판 동안 진 판에서 잃은 점수.
+{
+  const how = arg('--reset', 'minus300');
+  const before = new Map(all.map((p) => [p, { tier: placeOf(p.ladder.points).tier, points: p.ladder.points, games: p.games }]));
+  for (const p of all) { p.ladder = seasonReset(p.ladder, how); p.regain = null; p.s2loss = 0; p.s2games = 0; }
+  const rhoReset = +spearman(all.map((p) => p.skill), all.map((p) => p.ladder.points)).toFixed(3);
+  for (const circle of circles) {
+    for (let k = 0; k < 150; k++) {
+      const i = Math.floor(rand() * 6);
+      let j = Math.floor(rand() * 5); if (j >= i) j++;
+      const a = circle[i], b = circle[j];
+      const pa = a.ladder.points, pb = b.ladder.points;
+      game(a, b);
+      for (const [p, prev] of [[a, pa], [b, pb]]) {
+        p.s2games++;
+        if (p.ladder.points < prev) p.s2loss += prev - p.ladder.points;
+        const t = before.get(p).tier;
+        if (p.regain == null && TIERS_ORDER.indexOf(placeOf(p.ladder.points).tier) >= TIERS_ORDER.indexOf(t)) p.regain = p.s2games;
+      }
+    }
+  }
+  out.season = {
+    reset: how, rhoBefore: out.spearmanSkillLadder, rhoAfterReset: rhoReset,
+    rhoAfter50: +spearman(all.map((p) => p.skill), all.map((p) => p.ladder.points)).toFixed(3),
+    bands: BANDS.map(([name, lo, hi]) => {
+      const ps = all.filter((p) => p.skill >= lo && p.skill < hi && before.get(p).tier !== 'cub');
+      return { band: name, n: ps.length, regained: ps.filter((p) => p.regain != null).length, medianGamesToRegain: median(ps.map((p) => p.regain)), meanLossPoints: Math.round(ps.reduce((s, p) => s + p.s2loss, 0) / Math.max(1, ps.length)) };
+    })
+  };
 }
 
 console.log(JSON.stringify(out, null, 1));
