@@ -147,6 +147,46 @@ function pair(days, perDay, cap, mkA, mkB, forced = null) {
   };
 }
 
+// 5) 랭커 보상 RW-1: 새 무리 40개 × 6명, 6시즌. 사람마다 두는 양이 다르다(활동 0.1~1.5 배, 시즌당 무리 150번 짝 ≈ 평균 50판).
+//    --per 로 시즌당 판 수를 바꾼다. 잴 것: 실력대·활동대별로 1·3·6시즌 안에 첫 도달 도장(성체·우두머리·왕관)을 받은 비율, 6시즌 리본 수(시즌 5판 이상).
+{
+  const SEASONS = Number(arg('--seasons', 6));
+  const PER = Number(arg('--per', 150));   // 시즌당 무리 안 짝 수(150 ≈ 한 사람 50판, 30 ≈ 10판)
+  const MIN = Number(arg('--ribbon', 5));   // 시즌 리본 문턱(판)
+  const groups = [];
+  for (let c = 0; c < 40; c++) groups.push(Array.from({ length: 6 }, () => ({ ...mk(1000 + rand() * 1100), act: 0.1 + rand() * 1.4, firsts: {}, ribbons: 0 })));
+  const pick = (g, skip) => { const tot = g.reduce((x, p) => x + (p === skip ? 0 : p.act), 0); let r = rand() * tot; for (const p of g) { if (p === skip) continue; r -= p.act; if (r <= 0) return p; } return g.find((p) => p !== skip); };
+  const snap = {};
+  for (let season = 1; season <= SEASONS; season++) {
+    for (const g of groups) {
+      for (const p of g) p.sg = 0;
+      for (let k = 0; k < PER; k++) {
+        const a = pick(g, null), b = pick(g, a);
+        game(a, b);
+        a.sg++; b.sg++;
+        for (const p of [a, b]) for (const t of ['adult', 'alpha', 'crown']) if (p.firsts[t] == null && p.ladder.points >= TIER_START[t]) p.firsts[t] = season;
+      }
+      for (const p of g) { if (p.sg >= MIN) p.ribbons++; p.ladder = seasonReset(p.ladder); }
+    }
+    if ([1, 3, SEASONS].includes(season)) snap[season] = true;
+  }
+  const everyone = groups.flat();
+  const share = (ps, t, by) => +(ps.filter((p) => p.firsts[t] != null && p.firsts[t] <= by).length / Math.max(1, ps.length)).toFixed(2);
+  const row = (name, ps) => ({
+    name, n: ps.length,
+    firstBy1: { adult: share(ps, 'adult', 1), alpha: share(ps, 'alpha', 1), crown: share(ps, 'crown', 1) },
+    firstBy3: { adult: share(ps, 'adult', 3), alpha: share(ps, 'alpha', 3), crown: share(ps, 'crown', 3) },
+    firstBy6: { adult: share(ps, 'adult', SEASONS), alpha: share(ps, 'alpha', SEASONS), crown: share(ps, 'crown', SEASONS) },
+    medianRibbons: median(ps.map((p) => p.ribbons)), ribbons3plus: +(ps.filter((p) => p.ribbons >= 3).length / Math.max(1, ps.length)).toFixed(2),
+    noneAtAll: +(ps.filter((p) => p.ribbons === 0 && !p.firsts.adult).length / Math.max(1, ps.length)).toFixed(2)
+  });
+  out.rankerRewards = {
+    seasons: SEASONS, minGames: MIN, matchesPerCircleSeason: PER, gamesPerPersonSeason: Math.round(PER * 2 / 6),
+    bySkill: BANDS.map(([name, lo, hi]) => row(name, everyone.filter((p) => p.skill >= lo && p.skill < hi))),
+    byActivity: [['적게 0.1~0.5', 0.1, 0.5], ['보통 0.5~1.0', 0.5, 1.0], ['많이 1.0~1.5', 1.0, 1.6]].map(([name, lo, hi]) => row(name, everyone.filter((p) => p.act >= lo && p.act < hi)))
+  };
+}
+
 console.log(JSON.stringify(out, null, 1));
 const file = arg('--json', null);
 if (file) writeFileSync(file, JSON.stringify(out, null, 1));

@@ -37,15 +37,18 @@ test('rolling a player: once per gap however many seasons passed, trophy from th
   assert.equal(r.rolled, true);
   assert.deepEqual({ points: r.row.points, floor: r.row.floor, streak: r.row.streak, season: r.row.season, peak: r.row.peak, sgames: r.row.sgames },
     { points: 220, floor: 0, streak: 0, season: 4, peak: 220, sgames: 0 }, 'one reset only');
-  assert.deepEqual(r.trophy, { season: 1, tier: 'alpha', peak: 640 }, 'the frame follows the best point of the season');
+  assert.deepEqual(r.trophy, { season: 1, tier: 'alpha', peak: 640, games: 12, frame: true }, 'the frame follows the best point of the season');
   const few = rollSeason({ ...row, sgames: SEASON_MIN_GAMES - 1 }, 2);
-  assert.equal(few.trophy, null, `fewer than ${SEASON_MIN_GAMES} games → no frame`);
+  assert.equal(few.trophy.frame, false, `fewer than ${SEASON_MIN_GAMES} games → a ribbon but no frame`);
+  assert.equal(rollSeason({ ...row, sgames: 2 }, 2).trophy, null, 'two games → nothing');
   assert.equal(rollSeason({ points: 40, floor: 0, streak: 0 }, 3).rolled, false, 'a row with no season is taken as this season');
 });
 
 test('trophies and the season lines', () => {
   assert.equal(trophyOf({ season: 2, peak: 950, games: 5 }).tier, 'crown');
-  assert.deepEqual(bestTrophy([{ season: 1, tier: 'alpha' }, { season: 2, tier: 'adult' }, { season: 3, tier: 'alpha' }]), { season: 3, tier: 'alpha' });
+  assert.deepEqual(bestTrophy([{ season: 1, tier: 'alpha' }, { season: 2, tier: 'adult' }, { season: 3, tier: 'alpha' }]), { season: 3, tier: 'alpha', frame: true });
+  assert.equal(bestTrophy([{ season: 4, tier: 'crown', games: 3 }]), null, 'a ribbon-only season is not a frame');
+  assert.equal(newSeasonLine({ n: 2, games: 0 }, [{ season: 1, tier: 'adult', games: 3 }]), '시즌 1 끝! 🎀 리본을 받았어요 · 새 시즌이 시작됐어요');
   assert.equal(bestTrophy([]), null);
   assert.equal(seasonLine({ n: 2, daysLeft: 12, games: 3, minGames: 5 }), '🗓️ 시즌 2 · 12일 남음 · 테두리까지 2판');
   assert.equal(seasonLine({ n: 2, daysLeft: 1, games: 7, minGames: 5 }), '🗓️ 시즌 2 · 오늘 끝나요');

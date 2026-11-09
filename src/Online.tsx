@@ -7,15 +7,17 @@ import { friendName, loadFriendNames, recordText, saveFriendName, standingLine }
 import { preview } from './rank/ladder.js';
 import { ladderLine, newSeasonLine, outcomeLine, pairLine, placeChip, placeName, seasonLine, stakesLine, toNext, trophyLine } from './rank/ladderText.js';
 import { bestTrophy } from './rank/season.js';
+import { firstLine, firstStamp, rankMarks, ribbonLeft, ribbonText } from './rank/rankMarks.js';
 import { plyText } from './rank/report.js';
 import { RANK_BUILD } from './rank/abuse.js';
 import { badgeLabel } from './rank/glicko2.js';
 
 type Place = { tier: string; step: number | null; into: number; pct: number | null; points: number };
-type Friend = { id: string; me?: boolean; rank: number; points: number; place: Place; wins?: number; losses?: number; draws?: number; games?: number; last?: number };
+type Friend = { id: string; me?: boolean; rank: number; points: number; place: Place; wins?: number; losses?: number; draws?: number; games?: number; last?: number; frame?: string | null };
 type Pair = { today: number; week: number; dayCap: number; weekCap: number; capped: boolean };
 type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string; ladder?: { points: number; floor: number; streak: number; place: Place }; pair?: Pair;
-  season?: { n: number; endsAt: number; daysLeft: number; games: number; peak: number; minGames: number }; trophies?: { season: number; tier: string; peak: number }[] };
+  season?: { n: number; endsAt: number; daysLeft: number; games: number; peak: number; minGames: number; ribbonGames?: number }; trophies?: { season: number; tier: string; peak: number; games?: number; frame?: boolean }[];
+  firsts?: { tier: string; season: number; at: number }[] };
 
 // 친구와 두기 👫 (기획서 §12.1 · 협동 계획서 CO-4 를 앞당김, 2026-11-07 사용자 결정): 아는 사람을 방 코드·초대 링크로 불러 1:1.
 // 랜덤 매칭·자유 채팅·카드·도토리 없음. 규칙은 net/matchCore.js, 전송은 net/transport.js(Supabase Realtime 방송, 없으면 같은 브라우저 탭끼리).
@@ -222,7 +224,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
         loadPair(view.peerKey);
         loadCircle();
         if (view.peerKey) fetchPlayer(rankBase, view.peerKey).then((p) => p && setPeerRank(p as Rank));
-        say(outcomeLine(res.outcome, en) || (side.ladder ? ladderLine(side.ladder, en) : `🏆 ${side.before} → ${side.after}`));
+        say(outcomeLine(res.outcome, en) || (side.ladder ? [ladderLine(side.ladder, en), firstLine(side.ladder.first, en)].filter(Boolean).join(' · ') : `🏆 ${side.before} → ${side.after}`));
       }
       else if (res.status === 'waiting') say(claim ? (en ? 'Still waiting — it will count next time you open the game' : '아직 기다리는 중 — 다음에 게임을 열면 들어가요') : (en ? 'Waiting for your friend’s result' : '친구 결과를 기다리는 중'));
       else if (res.status === 'rejected' && (res.error === 'inhuman' || res.error === 'time')) say(en ? 'This game’s timing looked wrong — not counted' : '이 판의 시간 기록이 이상해 점수에 넣지 않았어요');
@@ -303,7 +305,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
           <span className="online-code" title={en ? 'Room code' : '방 코드'}>👫 {room.code}</span>
           {view?.ranked && view.peer && rankBase !== null && (
             <span className="online-scores" id="online-scores" title={en ? 'Crown ladder: me · friend' : '왕관 사다리: 나 · 친구'}>
-              {en ? 'Me' : '나'} {rankChip(myRank)} · {peerKeyNow ? nameOf(peerKeyNow) : (en ? 'Friend' : '친구')} {rankChip(peerRank)}
+              {en ? 'Me' : '나'} {rankChip(myRank)} · <b className={`peer-name${bestTrophy(peerRank?.trophies) ? ` frame-${bestTrophy(peerRank?.trophies)!.tier}` : ''}`} id="online-peer-name">{peerKeyNow ? nameOf(peerKeyNow) : (en ? 'Friend' : '친구')}</b> {rankChip(peerRank)}
             </span>
           )}
           {view?.ranked && view.peer && peerH2h?.games ? (
@@ -377,21 +379,41 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
                             </small>
                             {myRank.season && <small className="online-season" id="online-season">{seasonLine(myRank.season, en)}</small>}
                             {newSeasonLine(myRank.season, myRank.trophies, en) && <small className="online-season-new" id="online-season-new">{newSeasonLine(myRank.season, myRank.trophies, en)}</small>}
-                            {myRank.trophies && myRank.trophies.length > 0 && (
-                              <span className="online-trophies" id="online-trophies">{myRank.trophies.slice(0, 3).map((t) => <i key={t.season} className={`trophy-${t.tier}`}>{trophyLine(t, en)}</i>)}</span>
+                            {myRank.trophies && myRank.trophies.some((t) => t.frame !== false) && (
+                              <span className="online-trophies" id="online-trophies">{myRank.trophies.filter((t) => t.frame !== false).slice(0, 3).map((t) => <i key={t.season} className={`trophy-${t.tier}`}>{trophyLine(t, en)}</i>)}</span>
                             )}
                           </span>
                         </>
                       ) : <small>{rankOff ? (en ? 'Score server is not reachable' : '점수 서버에 닿지 않아요') : (en ? 'Loading my rank…' : '내 랭크 불러오는 중…')}</small>}
                     </div>
                   )}
+                  {rankBase !== null && myRank && (() => {
+                    // 왕관 도장(RW-1): 첫 도달 도장 셋(영원) + 시즌 리본. 받는 법을 늘 보여 준다. 도토리 없음.
+                    const mk = rankMarks(myRank);
+                    const left = ribbonLeft(myRank.season);
+                    return (
+                      <div className="online-rankmarks" id="online-rankmarks">
+                        <b className="online-sub">{en ? '🏵️ Crown stamps' : '🏵️ 왕관 도장'}</b>
+                        <div className="rankmarks-row">
+                          {mk.firsts.map((f) => {
+                            const st = firstStamp(f.tier, en);
+                            return <span key={f.tier} className={`rank-stamp${f.got ? ' got' : ''} tier-${f.tier}`} data-tier={f.tier} title={f.got ? st.name : st.how}>{st.name}{f.got ? '' : ` · ${st.how}`}</span>;
+                          })}
+                        </div>
+                        <div className="rankmarks-row">
+                          {mk.ribbons.slice(0, 4).map((rb) => <span key={rb.season} className={`rank-ribbon tier-${rb.tier}${rb.current ? ' current' : ''}`}>{ribbonText(rb, en)}</span>)}
+                          {left ? <small className="online-meta" id="ribbon-left">{en ? `${left} more ranked game${left > 1 ? 's' : ''} for this season’s ribbon` : `이번 시즌 리본까지 랭크 ${left}판`}</small> : null}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {rankBase !== null && myRank && (
                     <div className="online-circle" id="online-circle">
                       <b className="online-sub">{en ? '👑 Friend stage' : '👑 친구 무대'}{circle && standingLine(circle, en) ? <small id="online-standing"> · {standingLine(circle, en)}</small> : null}</b>
                       {circle && circle.length > 1 ? (
                         <ol className="circle-list">
                           {circle.map((f) => (
-                            <li key={f.id} className={f.me ? 'me' : ''} data-id={f.id}>
+                            <li key={f.id} className={`${f.me ? 'me' : ''}${f.frame ? ` frame-${f.frame}` : ''}`} data-id={f.id} data-frame={f.frame || ''}>
                               <span className="circle-rank">{f.rank}</span>
                               {f.me ? <span className="circle-name">{en ? 'Me' : '나'}</span> : renaming?.id === f.id ? (
                                 <input className="online-input circle-input" autoFocus value={renaming.text} maxLength={24} aria-label={en ? 'Friend name on this device' : '이 기기에서 부를 친구 이름'}

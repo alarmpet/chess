@@ -85,6 +85,9 @@ export function trophyLine(t, en = false) {
 export function newSeasonLine(s, trophies, en = false) {
   const t = trophies?.[0];
   if (!s || !t || s.games > 0 || t.season !== s.n - 1) return null;
+  if (t.frame === false || (t.games != null && t.games < 5)) {
+    return en ? `Season ${t.season} is over! You got the 🎀 ribbon · a new season has begun` : `시즌 ${t.season} 끝! 🎀 리본을 받았어요 · 새 시즌이 시작됐어요`;
+  }
   const b = badgeLabel(t.tier, en);
   return en ? `Season ${t.season} is over! You got the ${b.icon} ${b.name} frame · a new season has begun` : `시즌 ${t.season} 끝! ${b.icon} ${b.name} 테두리를 받았어요 · 새 시즌이 시작됐어요`;
 }

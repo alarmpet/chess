@@ -2,7 +2,8 @@
 // 랭크 판이 끝나면 두 사람이 각자 서명한 보고서를 보낸다. 둘 다 오고, 서명·글·다시 두기가 맞을 때만 Glicko-2 를 갱신한다.
 // 저장은 D1(binding RANK, worker/migrations). Supabase 무료 정지를 피하려고 랭크 기록은 Cloudflare 에 둔다(계획서 §4.2).
 //   POST /api/rank/result   body = src/rank/report.js 의 보고서 → { status: waiting | counted | mismatch | rejected, outcome?, ... }
-//   GET  /api/rank/player?id=<기기 id>[&vs=<상대 id>] → { id, rating, rd, games, wins, losses, draws, badge, ladder, season, trophies, pair? }
+//   GET  /api/rank/player?id=<기기 id>[&vs=<상대 id>] → { id, rating, rd, games, wins, losses, draws, badge, ladder, season, trophies, firsts, pair? }
+// RW-1·RW-2(랭커 보상, src/rank/rankMarks.js): 첫 도달 도장(firsts 표, counted 응답의 ladder.first), 친구 무대 줄에 친구 테두리(frame).
 // L-4(시즌, src/rank/season.js): 4주마다 사다리 300점 내림. 정해진 시각에 도는 작업 없이, 사람을 읽거나 판을 넣을 때 넘긴다(player()).
 // R-4(남용 막기, src/rank/abuse.js):
 //   · 같은 두 사람은 하루 3판·7일 10판까지만 점수에 든다. 넘으면 기록만(outcome 'capped').
@@ -15,7 +16,8 @@
 import { checkReport, checkAbandon, agree } from '../src/rank/report.js';
 import { START, rateGame, badgeOf } from '../src/rank/glicko2.js';
 import { START_LADDER, applyGame, placeOf } from '../src/rank/ladder.js';
-import { SEASON_MIN_GAMES, daysLeft, rollSeason, seasonEnd, seasonOf } from '../src/rank/season.js';
+import { RIBBON_MIN_GAMES, SEASON_MIN_GAMES, bestTrophy, daysLeft, rollSeason, seasonEnd, seasonOf } from '../src/rank/season.js';
+import { newFirsts } from '../src/rank/rankMarks.js';
 import { CIRCLE_MAX, circleOf, circleRequestError, circleText } from '../src/rank/circle.js';
 import { identityIdOf, verifySignature } from '../src/net/identity.js';
 import { ABANDON_WAIT_MS, MIN_PLIES, PAIR_DAILY_CAP, PAIR_WEEKLY_CAP, RANK_BUILD, dayOf, metaError, pairCapped } from '../src/rank/abuse.js';
@@ -46,7 +48,7 @@ async function player(db, id, now = Date.now()) {
 }
 const seasonView = (p, now) => {
   const n = seasonOf(now);
-  return { n, endsAt: seasonEnd(n), daysLeft: daysLeft(now), games: p.sgames || 0, peak: Math.max(p.peak || 0, p.points || 0), minGames: SEASON_MIN_GAMES };
+  return { n, endsAt: seasonEnd(n), daysLeft: daysLeft(now), games: p.sgames || 0, peak: Math.max(p.peak || 0, p.points || 0), minGames: SEASON_MIN_GAMES, ribbonGames: RIBBON_MIN_GAMES };
 };
 const publicView = (p, now = Date.now()) => p && ({
   id: p.id, rating: Math.round(p.rating), rd: Math.round(p.rd), games: p.games, wins: p.wins, losses: p.losses, draws: p.draws, badge: badgeOf(p.rating, p.games),
@@ -55,7 +57,7 @@ const publicView = (p, now = Date.now()) => p && ({
 });
 const ladderOf = (p) => ({ points: p.points || 0, floor: p.floor || 0, streak: p.streak || 0 });
 /** 화면에 보낼 사다리 변화 한 사람 몫. */
-const ladderView = (l) => ({ before: l.before.points, after: l.after.points, delta: l.delta, place: l.after, from: l.before, floored: l.floored, streakBonus: l.streakBonus, tierUp: l.tierUp, stepUp: l.stepUp, streak: l.state.streak });
+const ladderView = (l, first = null) => ({ first, before: l.before.points, after: l.after.points, delta: l.delta, place: l.after, from: l.before, floored: l.floored, streakBonus: l.streakBonus, tierUp: l.tierUp, stepUp: l.stepUp, streak: l.state.streak });
 const pairOf = (a, b) => (a < b ? `${a}:${b}` : `${b}:${a}`);
 const myPliesOf = (m, signer) => (signer === m.white ? Math.ceil(m.moves.length / 2) : Math.floor(m.moves.length / 2));
 
@@ -99,6 +101,12 @@ async function commit(db, matchId, m, whiteScore, pubOf, now) {
     // 사다리는 판 전 실력으로 계산한다(판 전 예고와 같은 값).
     const lw = applyGame(ladderOf(w), { score: whiteScore, me: w.rating, opp: b.rating });
     const lb = applyGame(ladderOf(b), { score: 1 - whiteScore, me: b.rating, opp: w.rating });
+    // 첫 도달 도장(RW-1): 이번 판으로 처음 닿은 큰 등급. 이미 가진 것은 빼고, INSERT OR IGNORE 라 두 번 들어가지 않는다.
+    const firstsOf = async (id) => ((await db.prepare('SELECT tier FROM firsts WHERE id = ?').bind(id).all())?.results || []).map((r) => r.tier);
+    const fw = newFirsts(await firstsOf(w.id), lw.state.points);
+    const fb = newFirsts(await firstsOf(b.id), lb.state.points);
+    const firstRows = [...fw.map((t) => [w.id, t]), ...fb.map((t) => [b.id, t])]
+      .map(([id, t]) => db.prepare('INSERT OR IGNORE INTO firsts (id, tier, season, at) VALUES (?, ?, ?, ?)').bind(id, t, seasonOf(now), now));
     const tally = (p, score) => ({ wins: p.wins + (score === 1 ? 1 : 0), losses: p.losses + (score === 0 ? 1 : 0), draws: p.draws + (score === 0.5 ? 1 : 0) });
     const upsert = (p, n, score, l) => {
       const t = tally(p, score);
@@ -111,9 +119,10 @@ async function commit(db, matchId, m, whiteScore, pubOf, now) {
           seasonOf(now), Math.max(p.peak || 0, l.state.points), (p.sgames || 0) + 1);
     };
     batch = [
-      insertMatch(next.white.rating, next.black.rating, JSON.stringify({ white: ladderView(lw), black: ladderView(lb) })),
+      insertMatch(next.white.rating, next.black.rating, JSON.stringify({ white: ladderView(lw, fw.at(-1) || null), black: ladderView(lb, fb.at(-1) || null) })),
       upsert(w, next.white, whiteScore, lw),
       upsert(b, next.black, 1 - whiteScore, lb),
+      ...firstRows,
       dropReports
     ];
   }
@@ -203,7 +212,10 @@ async function getPlayer(url, env, now) {
   const p = await player(db, id, now);
   const out = publicView(p, now) || publicView({ id, ...START, ...START_LADDER, games: 0, wins: 0, losses: 0, draws: 0 }, now);
   // 지난 시즌 테두리(최근 6개).
-  out.trophies = ((await db.prepare('SELECT season, tier, peak FROM trophies WHERE id = ? ORDER BY season DESC LIMIT 6').bind(id).all())?.results || []);
+  out.trophies = ((await db.prepare('SELECT season, tier, peak, games FROM trophies WHERE id = ? ORDER BY season DESC LIMIT 12').bind(id).all())?.results || [])
+    .map((t) => ({ ...t, frame: t.games >= SEASON_MIN_GAMES }));
+  // 첫 도달 도장(RW-1).
+  out.firsts = ((await db.prepare('SELECT tier, season, at FROM firsts WHERE id = ?').bind(id).all())?.results || []);
   const vs = url.searchParams.get('vs');
   if (vs && ID_RE.test(vs) && vs !== id) {
     const c = await pairCounts(db, id, vs, now);
@@ -232,7 +244,15 @@ async function postCircle(request, env, now) {
     const cur = seasonOf(now);
     for (const p of ps?.results || []) pointsOf[p.id] = { points: rollSeason(p, cur).row.points || 0 };
   }
-  return json({ circle: circleOf(id, rows, pointsOf) });
+  // 친구의 가장 높은 지난 시즌 테두리(RW-2) — 무대 줄에 같이 그린다.
+  const frameOf = {};
+  if (ids.length) {
+    const ts = await db.prepare(`SELECT id, season, tier, games FROM trophies WHERE id IN (${ids.map(() => '?').join(', ')})`).bind(...ids).all();
+    const by = {};
+    for (const t of ts?.results || []) (by[t.id] ||= []).push(t);
+    for (const [k, v] of Object.entries(by)) frameOf[k] = bestTrophy(v)?.tier || null;
+  }
+  return json({ circle: circleOf(id, rows, pointsOf).map((p) => ({ ...p, frame: frameOf[p.id] || null })) });
 }
 
 /** 로컬 시험에서만 시계를 민다(wrangler dev --var NOW_SHIFT_MS:2419200000 = 28일 뒤, 시즌 경계 확인). 배포 설정에는 넣지 않는다. */

@@ -1,0 +1,79 @@
+{
+  "me": {
+    "id": "L2Mx-4QMJsCmeaML",
+    "rating": 2096,
+    "rd": 138,
+    "games": 27,
+    "wins": 27,
+    "losses": 0,
+    "draws": 0,
+    "badge": "crown",
+    "ladder": {
+      "points": 781,
+      "floor": 600,
+      "streak": 27,
+      "place": {
+        "tier": "alpha",
+        "step": 2,
+        "into": 81,
+        "pct": 0.81,
+        "points": 781
+      }
+    },
+    "season": {
+      "n": 1,
+      "endsAt": 1795964400000,
+      "daysLeft": 20,
+      "games": 27,
+      "peak": 781,
+      "minGames": 5,
+      "ribbonGames": 3
+    },
+    "trophies": [],
+    "firsts": [
+      {
+        "tier": "adult",
+        "season": 1,
+        "at": 1794242220793
+      },
+      {
+        "tier": "alpha",
+        "season": 1,
+        "at": 1794242222194
+      }
+    ]
+  },
+  "o0": {
+    "id": "7TFW4VyOnoTIpH3d",
+    "rating": 1247,
+    "rd": 244,
+    "games": 3,
+    "wins": 0,
+    "losses": 3,
+    "draws": 0,
+    "badge": "cub",
+    "ladder": {
+      "points": 0,
+      "floor": 0,
+      "streak": 0,
+      "place": {
+        "tier": "cub",
+        "step": 3,
+        "into": 0,
+        "pct": 0,
+        "points": 0
+      }
+    },
+    "season": {
+      "n": 1,
+      "endsAt": 1795964400000,
+      "daysLeft": 20,
+      "games": 3,
+      "peak": 0,
+      "minGames": 5,
+      "ribbonGames": 3
+    },
+    "trophies": [],
+    "firsts": []
+  }
+}

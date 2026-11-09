@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-09T16:37:03.123Z",
+  "phase": 1,
+  "shiftMs": 0,
+  "pass": 3,
+  "total": 3,
+  "rows": [
+    {
+      "item": "판 뒤 첫 도달 알림(counted 응답 ladder.first)",
+      "want": "adult 한 번 · alpha 한 번",
+      "got": "[{\"game\":0,\"first\":\"adult\",\"after\":317},{\"game\":1,\"first\":\"alpha\",\"after\":607}]",
+      "ok": true
+    },
+    {
+      "item": "나 /player firsts",
+      "want": "adult·alpha · 이번 시즌 27판",
+      "got": "{\"firsts\":[\"adult\",\"alpha\"],\"points\":781,\"games\":27,\"ribbonGames\":3}",
+      "ok": true
+    },
+    {
+      "item": "3패 상대 O0",
+      "want": "firsts 없음 · 3판(이번 시즌 리본 조건)",
+      "got": "{\"firsts\":[],\"games\":3}",
+      "ok": true
+    }
+  ]
+}
