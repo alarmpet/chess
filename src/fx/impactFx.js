@@ -68,8 +68,15 @@ export function createImpactFx(scene) {
   const flashes = [];
   const hops = [];
   const dizzies = [];
-  const dizzyGeometry = starGeometry();
-  const dizzyMaterial = new THREE.MeshBasicMaterial({ color: 0xffe14d });
+  // 어지러운 별: 잡힌 말마다 별 3개를 따로 그리면 3콜이라, 모든 별을 InstancedMesh 하나로 그린다(잡기 드로우콜 11-09).
+  const DIZZY_STARS = 3;
+  const DIZZY_CAP = 8 * DIZZY_STARS;
+  const dizzyStars = new THREE.InstancedMesh(starGeometry(), new THREE.MeshBasicMaterial({ color: 0xffe14d }), DIZZY_CAP);
+  dizzyStars.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  dizzyStars.frustumCulled = false;
+  dizzyStars.count = 0;
+  dizzyStars.visible = false;
+  scene.add(dizzyStars);
   let shakeLeft = 0;
   let shakePower = 0;
   const m = new THREE.Matrix4();
@@ -173,14 +180,8 @@ export function createImpactFx(scene) {
 
   // Stars circling the head of a bonked piece. The piece goes on bouncing away underneath them.
   function dizzy(root, dur) {
-    const group = new THREE.Group();
-    for (let i = 0; i < 3; i++) {
-      const star = new THREE.Mesh(dizzyGeometry, dizzyMaterial);
-      star.scale.setScalar(0.028);
-      group.add(star);
-    }
-    scene.add(group);
-    dizzies.push({ root, group, age: 0, dur });
+    if (dizzies.length * DIZZY_STARS >= DIZZY_CAP) dizzies.shift();
+    dizzies.push({ root, age: 0, dur });
   }
 
   function shake(power) {
@@ -271,19 +272,22 @@ export function createImpactFx(scene) {
       if (u >= 1) hops.splice(i, 1);
     }
     for (let i = dizzies.length - 1; i >= 0; i--) {
-      const d = dizzies[i];
-      d.age += dt;
-      d.group.children.forEach((star, n) => {
-        const a = d.age * 9 + (n / 3) * Math.PI * 2;
-        star.position.set(Math.cos(a) * 0.11, 0, Math.sin(a) * 0.11);
-        star.rotation.z = a;
-      });
-      d.group.position.set(d.root.position.x, d.root.position.y + DIZZY_HEIGHT, d.root.position.z);
-      if (d.age >= d.dur) {
-        scene.remove(d.group);
-        dizzies.splice(i, 1);
+      dizzies[i].age += dt;
+      if (dizzies[i].age >= dizzies[i].dur) dizzies.splice(i, 1);
+    }
+    let star = 0;
+    for (const d of dizzies) {
+      for (let n = 0; n < DIZZY_STARS; n++) {
+        const a = d.age * 9 + (n / DIZZY_STARS) * Math.PI * 2;
+        p.set(d.root.position.x + Math.cos(a) * 0.11, d.root.position.y + DIZZY_HEIGHT, d.root.position.z + Math.sin(a) * 0.11);
+        q.setFromEuler(e.set(0, 0, a));
+        s.setScalar(0.028);
+        dizzyStars.setMatrixAt(star++, m.compose(p, q, s));
       }
     }
+    dizzyStars.count = star;
+    dizzyStars.visible = star > 0;
+    if (star) dizzyStars.instanceMatrix.needsUpdate = true;
   }
 
   return { burst, ring, word, label, flash, squash, hop, dizzy, shake, update, updateGame, shakeOffset, setWordsHidden };

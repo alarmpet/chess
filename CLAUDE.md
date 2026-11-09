@@ -36,7 +36,7 @@ npm run build      # vite build → dist/
 npm run lint       # tsc --noEmit, 오류 0 (CI 포함)
 npm run gate:assets   # GLB 삼각형·본·텍스처·크기·pack.json 참조 (--report 로 표)
 npm run gate:bundle   # 빌드 뒤 JS/CSS gzip 상한
-npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면 드로우콜 ≤ 100 (DRAWCALL_URL 로 떠 있는 서버 사용 가능)
+npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·잡기 세 칸 드로우콜 ≤ 100 (DRAWCALL_URL 로 떠 있는 서버 사용 가능)
 ```
 
 캐릭터·건물·소품 제작은 `~/.claude/skills/chess-character-pipeline` 스킬을 따른다(Flow/ComfyUI 콘셉트 → 로컬 TRELLIS → `tools/make_biped.py` → `tools/build_looks.py`). 긴 작업은 산출물이 늘어나는지로 감시한다.

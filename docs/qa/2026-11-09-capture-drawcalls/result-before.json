@@ -1,0 +1,92 @@
+{
+ "pawn>pawn": {
+  "idle": 208,
+  "before": 216,
+  "after": 216,
+  "frames": 129,
+  "peak": {
+   "calls": 216,
+   "added": {
+    "Mesh:?": 5,
+    "Sprite:?": 1
+   },
+   "at": 52
+  },
+  "over100": 129
+ },
+ "knight>pawn": {
+  "idle": 208,
+  "before": 216,
+  "after": 216,
+  "frames": 132,
+  "peak": {
+   "calls": 216,
+   "added": {
+    "Mesh:?": 5,
+    "Sprite:?": 1
+   },
+   "at": 54
+  },
+  "over100": 132
+ },
+ "bishop>knight": {
+  "idle": 208,
+  "before": 216,
+  "after": 216,
+  "frames": 125,
+  "peak": {
+   "calls": 216,
+   "added": {
+    "Mesh:?": 5,
+    "Sprite:?": 1
+   },
+   "at": 54
+  },
+  "over100": 125
+ },
+ "rook>queen": {
+  "idle": 194,
+  "before": 202,
+  "after": 202,
+  "frames": 136,
+  "peak": {
+   "calls": 202,
+   "added": {
+    "Mesh:?": 5,
+    "Sprite:?": 1
+   },
+   "at": 55
+  },
+  "over100": 136
+ },
+ "queen>queen": {
+  "idle": 200,
+  "before": 213,
+  "after": 213,
+  "frames": 132,
+  "peak": {
+   "calls": 213,
+   "added": {
+    "Mesh:?": 7,
+    "Sprite:?": 1
+   },
+   "at": 55
+  },
+  "over100": 132
+ },
+ "king>rook": {
+  "idle": 172,
+  "before": 181,
+  "after": 185,
+  "frames": 157,
+  "peak": {
+   "calls": 185,
+   "added": {
+    "Mesh:?": 7,
+    "Sprite:?": 1
+   },
+   "at": 89
+  },
+  "over100": 157
+ }
+}

@@ -2078,6 +2078,7 @@ let engineStarted = false;
             model.position.y += base.userData.height;
             const sr = base.userData.sideRing;
             if (sr) sideRings.slots.push({ root, mesh: sideRingMesh(sr.color, sr.R, sr.hex) });
+            pedestals.slots.push({ root, base, mesh: pedestalInstanced(base.userData.geometryKey) });
           }
           root.add(model);
           root.userData.animalModel = model;
@@ -2153,7 +2154,36 @@ let engineStarted = false;
     const ringLift = new THREE.Matrix4().makeTranslation(0, 0.004, 0);
     const ringTmp = new THREE.Matrix4();
     const ringZero = new THREE.Matrix4().makeScale(0, 0, 0);
+    // 받침도 진영(모양)별 InstancedMesh 하나로 그린다(잡기 드로우콜 11-09: 32콜 → 2콜). 기물 아래의 받침 메시는 높이·행렬만
+    // 주고 보이지 않는다. 그림자도 InstancedMesh 가 드리운다.
+    const pedestals = { meshes: {}, slots: [] };
+    function pedestalInstanced(key) {
+      if (!pedestals.meshes[key]) {
+        const im = new THREE.InstancedMesh(pedestalCache[key], pedestalMat, SIDE_RING_CAP);
+        im.count = 0;
+        im.frustumCulled = false;
+        im.castShadow = true;
+        im.receiveShadow = true;
+        im.name = 'pedestals';
+        scene.add(im);
+        pedestals.meshes[key] = im;
+      }
+      return pedestals.meshes[key];
+    }
+    function syncPedestals() {
+      for (const im of Object.values(pedestals.meshes)) im.count = 0;
+      for (let i = pedestals.slots.length - 1; i >= 0; i--) {
+        const slot = pedestals.slots[i];
+        if (slot.root.parent !== scene || slot.base.parent !== slot.root) { pedestals.slots.splice(i, 1); continue; }
+        const im = slot.mesh;
+        if (im.count >= SIDE_RING_CAP) continue;
+        slot.root.updateMatrixWorld();
+        im.setMatrixAt(im.count++, slot.root.visible ? slot.base.matrixWorld : ringZero);
+      }
+      for (const im of Object.values(pedestals.meshes)) im.instanceMatrix.needsUpdate = true;
+    }
     function syncSideRings() {
+      syncPedestals();
       for (const im of Object.values(sideRings.meshes)) im.count = 0;
       for (let i = sideRings.slots.length - 1; i >= 0; i--) {
         const slot = sideRings.slots[i];
@@ -2196,9 +2226,10 @@ let engineStarted = false;
         pedestalCache[key] = merged;
       }
       const m = new THREE.Mesh(pedestalCache[key], pedestalMat);
-      m.castShadow = true;
-      m.receiveShadow = true;
+      // Drawn by the per-shape InstancedMesh (pedestalInstanced); this one only carries the height and the matrix.
+      m.visible = false;
       m.name = 'pedestal';
+      m.userData.geometryKey = key;
       m.userData.height = H;
       // A flat ring of the side colour on the square: from the high default view the bases hide behind the
       // animals, but the ring still shows whose piece it is. Registered on the root by the caller (needs root).
@@ -3775,7 +3806,8 @@ let engineStarted = false;
       const quickMove = fxSettings().quick || teamGame;
       const camMoves = !quickMove && cameraLean > 0;
       const fullReturn = 0.4 + Math.min(0.3, camReturnDist * 0.35);
-      const returnDuration = isCapture ? Number((camMoves ? fullReturn : 0.22).toFixed(3)) : 0;
+      // A zero-size window (innerWidth 0) makes the camera NaN, and a NaN length never ends the move (11-09, ego 창 0×0).
+      const returnDuration = isCapture ? Number((camMoves && Number.isFinite(fullReturn) ? fullReturn : 0.22).toFixed(3)) : 0;
       const totalDuration = isCapture ? (tStrikeDone + returnDuration) : stdMoveDuration;
 
       if (!isCapture) {
@@ -3796,6 +3828,7 @@ let engineStarted = false;
 
       let elapsed = 0;
       let attackAnimStarted = false;
+      moveClock = { total: totalDuration, strikeDone: tStrikeDone, isCapture, elapsed: () => elapsed };
       let defenderFlinchTriggered = false;
       let shatterTriggered = false;
       let impactActualTime = tImpact;
@@ -4138,6 +4171,8 @@ let engineStarted = false;
     }
 
     const activeMoveTweens = [];
+    // Debug only: the running move's clock (debugMoveState).
+    let moveClock = null;
 
     // =========================================================================
     // Single-Player Tactical AI (Auto-Plays Opponent Turn + Manual AI Button)
@@ -5953,6 +5988,8 @@ let engineStarted = false;
       debugSpecial: () => ({ ...(lastSpecial || {}), impacts: impactCount, mirrorPose: lastMirrorPose && { ...lastMirrorPose }, swaying: roarSways.length }),
       // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
       debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask),
+      // Debug: why a move is still running (a test that waits on debugBusy can say what it is waiting for).
+      debugMoveState: () => ({ clock: moveClock && { total: moveClock.total, strikeDone: moveClock.strikeDone, isCapture: moveClock.isCapture, elapsed: moveClock.elapsed() }, animating: isAnimatingMove, preMove: Boolean(preMoveHighlightTask), tweens: activeMoveTweens.length, hitStopLeft, slowLeft, aiTimer: Boolean(aiTimer), gameOver, gameMode, aiAutoPlay, renderPaused, manualStepMode }),
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
       showThreats,
       takeBackMove,

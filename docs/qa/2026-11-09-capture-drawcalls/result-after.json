@@ -1,0 +1,103 @@
+{
+ "pawn>pawn": {
+  "idle": 178,
+  "before": 184,
+  "after": 184,
+  "frames": 132,
+  "peak": {
+   "calls": 184,
+   "added": {
+    "Mesh:ExtrudeGeometry:ffe14d:Scene:n3": 1,
+    "Mesh:OctahedronGeometry:ffe14d:Scene:n8": 1,
+    "Mesh:RingGeometry:ffd98a:Scene": 1,
+    "Sprite:BufferGeometry:ffffff:Scene": 1
+   },
+   "at": 54
+  },
+  "over100": 132
+ },
+ "knight>pawn": {
+  "idle": 178,
+  "before": 184,
+  "after": 184,
+  "frames": 138,
+  "peak": {
+   "calls": 184,
+   "added": {
+    "Mesh:ExtrudeGeometry:ffe14d:Scene:n3": 1,
+    "Mesh:IcosahedronGeometry:d9c08f:Scene:n24": 1,
+    "Mesh:RingGeometry:ffd98a:Scene": 1,
+    "Sprite:BufferGeometry:ffffff:Scene": 1
+   },
+   "at": 62
+  },
+  "over100": 138
+ },
+ "bishop>knight": {
+  "idle": 178,
+  "before": 184,
+  "after": 184,
+  "frames": 128,
+  "peak": {
+   "calls": 184,
+   "added": {
+    "Mesh:ExtrudeGeometry:ffe14d:Scene:n3": 1,
+    "Mesh:ShapeGeometry:6cc24a:Scene:n16": 1,
+    "Mesh:RingGeometry:ffd98a:Scene": 1,
+    "Sprite:BufferGeometry:ffffff:Scene": 1
+   },
+   "at": 56
+  },
+  "over100": 128
+ },
+ "rook>queen": {
+  "idle": 171,
+  "before": 177,
+  "after": 177,
+  "frames": 142,
+  "peak": {
+   "calls": 177,
+   "added": {
+    "Mesh:ExtrudeGeometry:ffe14d:Scene:n3": 1,
+    "Mesh:PlaneGeometry:ffffff:Scene": 1,
+    "Mesh:RingGeometry:ffd98a:Scene": 1,
+    "Sprite:BufferGeometry:ffffff:Scene": 1
+   },
+   "at": 56
+  },
+  "over100": 142
+ },
+ "queen>queen": {
+  "idle": 174,
+  "before": 185,
+  "after": 185,
+  "frames": 136,
+  "peak": {
+   "calls": 185,
+   "added": {
+    "Mesh:ExtrudeGeometry:ffe14d:Scene:n3": 1,
+    "Mesh:PlaneGeometry:fff1f5:Group": 3,
+    "Mesh:RingGeometry:ffd98a:Scene": 1,
+    "Sprite:BufferGeometry:ffffff:Scene": 1
+   },
+   "at": 60
+  },
+  "over100": 136
+ },
+ "king>rook": {
+  "idle": 160,
+  "before": 167,
+  "after": 171,
+  "frames": 159,
+  "peak": {
+   "calls": 171,
+   "added": {
+    "Mesh:ExtrudeGeometry:ffe14d:Scene:n3": 1,
+    "Mesh:RingGeometry:ffd98a:Scene": 4,
+    "Sprite:BufferGeometry:ffffff:Scene": 1
+   },
+   "at": 86
+  },
+  "over100": 159
+ }
+}

@@ -13,6 +13,9 @@ const SCENE = process.env.DRAWCALL_SCENE === 'village' || process.argv.includes(
 const MAX = Number(process.env.DRAWCALL_MAX || (SCENE === 'village' ? 150 : 100));
 const PORT = 4173;
 const SETTLE_MS = Number(process.env.DRAWCALL_SETTLE_MS || 15000);
+// 체스 장면은 첫 국면 뒤에 잡기 순간도 잰다(11-09): 잡기 효과(고리·글자·별·시그니처)가 더해지는 최대가 상한 안이어야 한다.
+// tools/fixtures/capture-lines.json 의 국면을 이어 하기로 세우고 마지막 잡기를 둔다. DRAWCALL_CAPTURE=0 이면 건너뛴다.
+const CAPTURE = SCENE === 'chess' && process.env.DRAWCALL_CAPTURE !== '0';
 const log = (m) => console.log(`[drawcall-gate] ${m}`);
 
 function findChrome() {
@@ -99,11 +102,40 @@ try {
     log(`엔진 준비. ${SETTLE_MS}ms 안정화`);
     await new Promise((ok) => setTimeout(ok, SETTLE_MS));
     const r = await c.evaluate(`new Promise((ok) => { let n = 0; const f = () => (++n >= 4 ? ok({ calls: window.wizardChess.debugRenderCalls(), tris: window.wizardChess.debugRenderer().info.render.triangles, pieces: window.wizardChess.debugScene().children.filter((o) => o.name === 'piece').length }) : requestAnimationFrame(f)); requestAnimationFrame(f); })`);
-    c.close();
     log(`드로우콜 ${r.calls} (삼각형 ${r.tris}, 기물 ${r.pieces}) · 상한 ${MAX}`);
     if (r.pieces < 32) { log('기물이 32개 아님 — 장면이 다 뜨지 않았다. DRAWCALL_SETTLE_MS 를 늘린다'); process.exitCode = 1; }
     else if (r.calls > MAX) { log('실패: 상한 초과'); process.exitCode = 1; }
     else log('통과');
+    if (CAPTURE) {
+      const lines = JSON.parse(readFileSync(new URL('./fixtures/capture-lines.json', import.meta.url), 'utf8'));
+      for (const L of lines) {
+        await c.evaluate(`(() => { localStorage.clear(); localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 })); localStorage.setItem('wildcrown.resume.v1', ${JSON.stringify(JSON.stringify({ v: 1, gameId: 777, color: L.color, rivalId: null, moves: L.moves }))}); location.reload(); return true; })()`);
+        await new Promise((ok) => setTimeout(ok, 1500));
+        await c.evaluate('new Promise((ok) => { const t = setInterval(() => { const w = window.wizardChess; const s = w?.getHandBrainState?.(); if (w?.isStarted?.() && s && s.ready && s.turn === s.playerColor && !w.debugBusy()) { clearInterval(t); ok(true); } }, 250); })');
+        await new Promise((ok) => setTimeout(ok, 4000));
+        const m = await c.evaluate(`new Promise((ok) => {
+          const w = window.wizardChess; const rr = w.debugRenderer(); const orig = rr.render.bind(rr);
+          document.querySelectorAll('.panel-overlay .panel-close').forEach((b) => b.click());
+          let still = 0, move = 0, after = 0, moved = false; const imp0 = w.debugImpacts(); let hitAt = 0;
+          rr.render = (a, b) => { orig(a, b); const n = rr.info.render.calls; if (hitAt) after = Math.max(after, n); else if (moved) move = Math.max(move, n); else still = Math.max(still, n); };
+          const L = ${JSON.stringify(L.last)};
+          setTimeout(() => {
+            moved = true;
+            w.executeChessMove(L.from[0], L.from[1], L.to[0], L.to[1], L.promotion ? { promotion: L.promotion } : {});
+            const t0 = performance.now();
+            const t = setInterval(() => {
+              if (!hitAt && w.debugImpacts() > imp0) hitAt = performance.now();
+              if ((hitAt && performance.now() - hitAt > 1500) || performance.now() - t0 > 60000) { clearInterval(t); rr.render = orig; ok({ still, move, after, peak: Math.max(still, move, after), hit: Boolean(hitAt) }); }
+            }, 50);
+          }, 600);
+        })`);
+        log(`잡기 ${L.key} (${L.san}): 두기 전 ${m.still} · 다가가며 ${m.move} · 타격 뒤 1.5초 ${m.after} → 최대 ${m.peak} · 상한 ${MAX}`);
+        if (!m.hit) { log(`실패: ${L.key} 잡기가 일어나지 않았다`); process.exitCode = 1; }
+        else if (m.peak > MAX) { log('실패: 잡기 순간 상한 초과'); process.exitCode = 1; }
+      }
+      await c.evaluate('(() => { localStorage.clear(); return true; })()');
+    }
+    c.close();
   }
 } catch (e) {
   log(`오류: ${e.message}`);
