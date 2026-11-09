@@ -5152,12 +5152,14 @@ let engineStarted = false;
       if (modeBadge) {
         modeBadge.textContent = playerColor === 'w' ? t.playingAsWhite : t.playingAsBlack;
       }
+      // 친구 대전(랭크 포함)에서는 「AI 수」·「색 바꾸기」를 숨긴다 — AI 가 내 수를 대신 두면 사람끼리 두는 판이 아니다
+      // (기획서 §12.1 「랭크 중 btn-ai-move 비활성」, LA-R R-1). 클릭 처리도 막는다.
       if (btnAiMove) {
-        btnAiMove.style.display = 'inline-flex';
+        btnAiMove.style.display = gameMode === 'multi' ? 'none' : 'inline-flex';
         btnAiMove.textContent = t.aiMove;
       }
       if (btnSideToggle) {
-        btnSideToggle.style.display = 'inline-flex';
+        btnSideToggle.style.display = gameMode === 'multi' ? 'none' : 'inline-flex';
         btnSideToggle.textContent = playerColor === 'w' ? t.playAsBlack : t.playAsWhite;
       }
       if (roomPill) {
@@ -5732,6 +5734,7 @@ let engineStarted = false;
     document.getElementById('btn-script-next')?.addEventListener('click', () => stepScriptForward());
 
     document.getElementById('btn-ai-move')?.addEventListener('click', () => {
+      if (gameMode === 'multi') return;
       triggerAIMoveNow();
     });
 

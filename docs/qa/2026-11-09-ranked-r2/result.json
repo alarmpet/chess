@@ -1,0 +1,73 @@
+{
+ "code": "HURJ7G",
+ "rule": "랭크 판: AI 수·되감기 없음, 끝나기 전엔 새 판 없음. 두 사람 결과를 맞춰 본 뒤 점수가 바뀌어요.",
+ "keysDiffer": true,
+ "game1": {
+  "host": {
+   "note": "🏆 1500 → 1338 (-162)",
+   "end": "졌어요 · 체크메이트",
+   "id": "3gHv1A6Y3freDuXz"
+  },
+  "guest": {
+   "note": "🏆 1500 → 1662 (+162)",
+   "end": "이겼어요 · 체크메이트",
+   "id": "4lvS_Xu8hgq4CFcM"
+  }
+ },
+ "server1": {
+  "host": {
+   "id": "3gHv1A6Y3freDuXz",
+   "rating": 1338,
+   "rd": 290,
+   "games": 1,
+   "wins": 0,
+   "losses": 1,
+   "draws": 0,
+   "badge": "cub"
+  },
+  "guest": {
+   "id": "4lvS_Xu8hgq4CFcM",
+   "rating": 1662,
+   "rd": 290,
+   "games": 1,
+   "wins": 1,
+   "losses": 0,
+   "draws": 0,
+   "badge": "cub"
+  }
+ },
+ "game2": {
+  "host": {
+   "note": "🏆 1338 → 1280 (-58)",
+   "end": "졌어요 · 기권",
+   "id": "3gHv1A6Y3freDuXz"
+  },
+  "guest": {
+   "note": "🏆 1662 → 1720 (+58)",
+   "end": "이겼어요 · 기권",
+   "id": "4lvS_Xu8hgq4CFcM"
+  }
+ },
+ "server2": {
+  "host": {
+   "id": "3gHv1A6Y3freDuXz",
+   "rating": 1280,
+   "rd": 260,
+   "games": 2,
+   "wins": 0,
+   "losses": 2,
+   "draws": 0,
+   "badge": "cub"
+  },
+  "guest": {
+   "id": "4lvS_Xu8hgq4CFcM",
+   "rating": 1720,
+   "rd": 260,
+   "games": 2,
+   "wins": 2,
+   "losses": 0,
+   "draws": 0,
+   "badge": "cub"
+  }
+ }
+}

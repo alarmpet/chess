@@ -51,6 +51,7 @@ npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·�
 | `src/cards/` | 카드 주머니·도감 |
 | `src/fx/`, `src/audio/` | 효과·바다·소리 |
 | `src/packs/packManifest.js` | 팩 매니페스트 로더·검사기 |
+| `src/net/`, `src/rank/`, `worker/` | 친구 대전 전송·기기 신분, 랭크 보고·Glicko-2, Cloudflare Worker `/api/rank` + D1 |
 | `public/packs/legend/` | 동물·건물·소품 GLB, `pack.json` |
 | `tools/` | Blender·TRELLIS 파이썬 도구 |
 | `test/*.test.mjs` | 규칙·경제·팩 테스트 |
@@ -58,4 +59,4 @@ npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·�
 
 ## 저장 키
 
-`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · 마을·카드·설정 스토어. 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.
+`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · `wildcrown.identity.v1`(기기 익명 서명 키, 랭크) · 마을·카드·설정 스토어. 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.

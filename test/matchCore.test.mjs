@@ -232,3 +232,37 @@ test('when the engine cannot take a catch-up move, the whole game is redrawn fro
   assert.ok(reset, 'redraw requested');
   assert.equal(reset.moves.length, 1);
 });
+
+test('a ranked room: the host decides, the guest follows, and each side learns the other’s device key (LA-R R-1)', async () => {
+  const r = room();
+  const host = r.add('h', { host: true, ranked: true, key: 'HOSTKEY_abc123' });
+  const guest = r.add('g', { host: false, ranked: false, key: 'GUESTKEY-xyz789' });
+  assert.equal(guest.core.view().ranked, false, 'a guest cannot make a room ranked by itself');
+  guest.core.join();
+  await r.settle();
+  assert.equal(host.core.view().ranked, true);
+  assert.equal(guest.core.view().ranked, true, 'taken from the host’s state');
+  assert.equal(host.core.view().peerKey, 'GUESTKEY-xyz789');
+  assert.equal(guest.core.view().peerKey, 'HOSTKEY_abc123');
+  // 다시 두기도 랭크 그대로
+  guest.core.takeReset();
+  await r.settle();
+  host.core.resign();
+  await r.settle();
+  guest.core.rematch();
+  host.core.rematch();
+  await r.settle();
+  assert.equal(host.core.view().game, 2);
+  assert.equal(guest.core.view().ranked, true);
+});
+
+test('a friendly room stays unranked, and a malformed key is ignored', async () => {
+  const r = room();
+  const host = r.add('h', { host: true, key: 'bad key with spaces' });
+  const guest = r.add('g', { host: false, key: '<script>' });
+  guest.core.join();
+  await r.settle();
+  assert.equal(guest.core.view().ranked, false);
+  assert.equal(host.core.view().peerKey, null);
+  assert.equal(guest.core.view().peerKey, null);
+});

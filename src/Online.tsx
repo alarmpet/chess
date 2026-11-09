@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { createMatchCore, newRoomCode, parseRoomCode } from './net/matchCore.js';
 import { openRoom, realtimeConfig } from './net/transport.js';
+import { deviceIdentity } from './net/identity.js';
+import { changeLine, fetchPlayer, myChange, rankApiBase, sendRankReport } from './rank/client.js';
+import { badgeLabel } from './rank/glicko2.js';
+
+type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string };
 
 // 친구와 두기 👫 (기획서 §12.1 · 협동 계획서 CO-4 를 앞당김, 2026-11-07 사용자 결정): 아는 사람을 방 코드·초대 링크로 불러 1:1.
 // 랜덤 매칭·자유 채팅·카드·도토리 없음. 규칙은 net/matchCore.js, 전송은 net/transport.js(Supabase Realtime 방송, 없으면 같은 브라우저 탭끼리).
 // 새로고침해도 주소의 ?room= 과 이 탭에 저장한 자리(id, sessionStorage — 탭마다 따로)로 같은 방에 다시 들어간다. 방장은 판 전체를 저장해 두고 손님에게 다시 준다.
 const KEY = 'wildcrown.online.v1';
-type Saved = { code: string; id: string; host: boolean; hostColor?: 'w' | 'b'; game?: number; moves?: string[]; ended?: any };
+type Saved = { code: string; id: string; host: boolean; hostColor?: 'w' | 'b'; game?: number; moves?: string[]; ended?: any; ranked?: boolean };
 type View = ReturnType<ReturnType<typeof createMatchCore>['view']>;
 const wc = () => (window as any).wizardChess;
 const readSaved = (): Saved | null => { try { return JSON.parse(window.sessionStorage.getItem(KEY) || 'null'); } catch (e) { return null; } };
@@ -17,6 +22,7 @@ const setUrl = (code: string | null) => {
   try { window.history.replaceState({}, '', code ? `?room=${code}` : window.location.pathname); } catch (e) { /* 주소만 안 바뀜 */ }
 };
 const config = realtimeConfig((import.meta as any).env);
+const rankBase = rankApiBase((import.meta as any).env);
 
 // 엔진의 시작 단계(모델 읽기 + 첫 판)가 끝날 때까지 기다린다. 그 전에 판을 세우면 시작 단계가 빈 판으로 덮어쓴다
 // (폰 첫 방문에서 규칙 층 4수 · 엔진 0수로 어긋난 것을 에뮬레이터에서 봤다, 2026-11-07).
@@ -31,9 +37,38 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
   const [view, setView] = useState<View | null>(null);
   const [link, setLink] = useState<'idle' | 'open' | 'connecting' | 'closed'>('idle');
   const [pick, setPick] = useState<'w' | 'b' | 'r'>('r');
+  // 🏆 랭크 판(LA-R R-1): 방장이 방을 만들 때 고른다. 손님은 방장 판을 따라간다. 점수 기록은 R-2(서버)부터.
+  const [rankedPick, setRankedPick] = useState(false);
   const [codeInput, setCodeInput] = useState('');
   const [note, setNote] = useState('');
   const [confirmResign, setConfirmResign] = useState(false);
+  // 랭크 판 결과 보고(LA-R R-2): 판이 끝나면 한 번 서명해 보낸다. 판 번호별로 한 번.
+  const [rankNote, setRankNote] = useState<{ game: number; text: string } | null>(null);
+  const reported = useRef<string>('');
+  // 점수 보기(LA-R R-3): 친구 창에 내 랭크, 랭크 방 막대에 두 사람 점수·뱃지.
+  const [myRank, setMyRank] = useState<Rank | null>(null);
+  const [peerRank, setPeerRank] = useState<Rank | null>(null);
+  const [rankOff, setRankOff] = useState(false);
+  const loadMine = async () => {
+    if (rankBase === null) return;
+    const me = await deviceIdentity().catch(() => null);
+    if (!me) return;
+    const p = await fetchPlayer(rankBase, me.id);
+    if (p) setMyRank(p as Rank);
+    setRankOff(!p);
+  };
+  useEffect(() => { if (open || room) loadMine(); }, [open, Boolean(room)]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const peerKeyNow = view?.ranked ? view?.peerKey : null;
+  useEffect(() => {
+    setPeerRank(null);
+    if (!peerKeyNow) return;
+    fetchPlayer(rankBase, peerKeyNow).then((p) => setPeerRank(p as Rank | null));
+  }, [peerKeyNow]);
+  const rankChip = (r: Rank | null) => {
+    if (!r) return '…';
+    const b = badgeLabel(r.badge, en);
+    return `${b.icon} ${r.rating}`;
+  };
   const core = useRef<ReturnType<typeof createMatchCore> | null>(null);
   const net = useRef<ReturnType<typeof openRoom> | null>(null);
   const saved = useRef<Saved | null>(null);
@@ -59,8 +94,9 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
     setRoom({ code: s.code, host: s.host });
     setNote('');
     await engineReady();
+    const me = await deviceIdentity().catch(() => null);
     const c = createMatchCore({
-      id: s.id, host: s.host, hostColor: s.hostColor || 'w',
+      id: s.id, host: s.host, hostColor: s.hostColor || 'w', ranked: Boolean(s.ranked), key: me?.id ?? null,
       send: (msg: any) => net.current?.send(msg),
       apply: (mv: any) => wc()?.applyOnlineMove?.(mv) ?? Promise.resolve(false)
     });
@@ -105,6 +141,40 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
     document.body.classList.toggle('online-game', Boolean(room));
     return () => document.body.classList.remove('online-game');
   }, [room]);
+  // 랭크 판이 진행 중이면 「새 판」 단추를 막는다(기획서 §12.1). 끝나면 다시 두기·나가기는 된다.
+  const rankedLive = Boolean(room && view?.ranked && !view?.ended);
+  useEffect(() => {
+    document.body.classList.toggle('ranked-game', rankedLive);
+    const reset = document.getElementById('btn-reset') as HTMLButtonElement | null;
+    if (reset) reset.disabled = rankedLive;
+    return () => { document.body.classList.remove('ranked-game'); if (reset) reset.disabled = false; };
+  }, [rankedLive]);
+
+  useEffect(() => {
+    if (!room || !view?.ranked || !view.ended || !view.myColor) return;
+    const tag = `${room.code}:${view.game}`;
+    if (reported.current === tag) return;
+    reported.current = tag;
+    const game = view.game;
+    const say = (text: string) => setRankNote({ game, text });
+    (async () => {
+      const me = await deviceIdentity().catch(() => null);
+      if (rankBase === null) { say(en ? 'Score server is off in this build' : '이 빌드에는 점수 서버가 없어요'); return; }
+      say(en ? 'Sending the result…' : '결과 보내는 중…');
+      const res = await sendRankReport({ base: rankBase, identity: me, room: room.code, game, myColor: view.myColor, peerKey: view.peerKey, moves: view.moves, ended: view.ended });
+      const ch = myChange(res, me?.id);
+      if (ch) {
+        const oldBadge = myRank?.badge;
+        const fresh = (await fetchPlayer(rankBase, me?.id)) as Rank | null;
+        if (fresh) setMyRank(fresh);
+        if (view.peerKey) fetchPlayer(rankBase, view.peerKey).then((p) => p && setPeerRank(p as Rank));
+        say(changeLine(ch, oldBadge, fresh?.badge, (b: string) => badgeLabel(b, en)));
+      }
+      else if (res.status === 'waiting') say(en ? 'Waiting for your friend’s result' : '친구 결과를 기다리는 중');
+      else if (res.status === 'mismatch') say(en ? 'Results did not match — not counted' : '두 결과가 달라 점수에 넣지 않았어요');
+      else say(en ? 'Could not record the score' : '점수를 기록하지 못했어요');
+    })();
+  }, [room, view?.ranked, view?.ended, view?.game]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   // 친구가 들어오면 초대 창을 닫는다(판을 가리지 않게).
   const peer = view?.peer;
@@ -125,7 +195,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
       const v = core.current?.view();
       if (!v) return;
       if (kind === 'resign') { if (!v.ended) setConfirmResign(true); }
-      else if (kind === 'new') { if (v.ended) core.current?.rematch(); else onOpen(); }
+      else if (kind === 'new') { if (v.ended) core.current?.rematch(); else if (!v.ranked) onOpen(); }
     };
     window.addEventListener('onlinemove', onMove);
     window.addEventListener('onlinebutton', onButton);
@@ -134,7 +204,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
 
   const create = () => {
     const color = pick === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : pick;
-    enter({ code: newRoomCode(), id: newId(), host: true, hostColor: color, game: 1, moves: [] });
+    enter({ code: newRoomCode(), id: newId(), host: true, hostColor: color, game: 1, moves: [], ranked: rankedPick });
   };
   const join = () => {
     const code = parseRoomCode(codeInput);
@@ -171,13 +241,20 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
   return (
     <>
       {room && (
-        <div className="online-bar" id="online-bar" role="status">
+        <div className={`online-bar${view?.ended ? ' ended' : ''}`} id="online-bar" role="status">
           <span className="online-code" title={en ? 'Room code' : '방 코드'}>👫 {room.code}</span>
+          {view?.ranked && view.peer && rankBase !== null && (
+            <span className="online-scores" id="online-scores" title={en ? 'Ranked score · badge' : '랭크 점수 · 뱃지'}>
+              {en ? 'Me' : '나'} {rankChip(myRank)} · {en ? 'Friend' : '친구'} {rankChip(peerRank)}
+            </span>
+          )}
+          {view?.ranked && <span className="online-ranked" id="online-ranked" title={en ? 'Ranked: no AI moves, no take-backs. Score changes after the game.' : '랭크 판: AI 수·되감기 없음. 판이 끝나면 점수가 바뀌어요.'}>🏆 {en ? 'Ranked' : '랭크'}</span>}
           <span className="online-peer" id="online-peer">{dot} {view?.full ? (en ? 'Room is full' : '방이 찼어요') : link === 'connecting' ? (en ? 'Connecting…' : '연결 중…') : peerText}</span>
           {me && !view?.ended && (
             <span className="online-turn" id="online-turn">{view?.turn === me ? (en ? `Your move (${colorName(me)})` : `내 차례 (${colorName(me)})`) : (en ? 'Friend’s move' : '친구 차례')}</span>
           )}
           {view?.ended && <b className="online-end" id="online-end">{endText(view.ended)}</b>}
+          {view?.ended && view.ranked && rankNote?.game === view.game && <span className="online-ranked" id="online-rank-note">{rankNote.text}</span>}
           {view?.ended && (
             <button type="button" className="online-btn primary" id="online-rematch" onClick={() => core.current?.rematch()} disabled={view.rematch === 'me'}>
               {view.rematch === 'peer' ? (en ? '👍 Friend wants a rematch — play' : '👍 친구가 한 판 더! 두기') : view.rematch === 'me' ? (en ? 'Asked…' : '물어봤어요…') : (en ? '🔁 Rematch (swap colors)' : '🔁 한 판 더 (색 바꿔)')}
@@ -217,12 +294,30 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
               ) : (
                 <>
                   <p className="online-rule">{en ? 'Invite someone you know with a link. No strangers, no chat, no cards — just a game.' : '아는 사람을 링크로 불러 1:1 로 둬요. 모르는 사람·채팅·카드 없이 체스만.'}</p>
+                  {rankBase !== null && (
+                    <div className="online-myrank" id="online-myrank">
+                      {myRank ? (
+                        <>
+                          <span className="online-myrank-badge">{badgeLabel(myRank.badge, en).icon}</span>
+                          <span>
+                            <b>{en ? 'My rank' : '내 랭크'} · {badgeLabel(myRank.badge, en).name} {myRank.rating}</b>
+                            <small>{en ? `${myRank.games} ranked games · ${myRank.wins}W ${myRank.losses}L ${myRank.draws}D` : `랭크 ${myRank.games}판 · ${myRank.wins}승 ${myRank.losses}패 ${myRank.draws}무`}{myRank.games < 5 ? (en ? ' · badge after 5 games' : ' · 5판부터 뱃지') : ''}</small>
+                          </span>
+                        </>
+                      ) : <small>{rankOff ? (en ? 'Score server is not reachable' : '점수 서버에 닿지 않아요') : (en ? 'Loading my rank…' : '내 랭크 불러오는 중…')}</small>}
+                    </div>
+                  )}
                   <b className="online-sub">{en ? 'Make a room' : '방 만들기'}</b>
                   <div className="online-row" role="radiogroup" aria-label={en ? 'My color' : '내 색'}>
                     {([['w', en ? '⚪ White' : '⚪ 백'], ['b', en ? '⚫ Black' : '⚫ 흑'], ['r', en ? '🎲 Random' : '🎲 무작위']] as const).map(([k, label]) => (
                       <button key={k} type="button" role="radio" aria-checked={pick === k} id={`online-pick-${k}`} className={`online-btn${pick === k ? ' on' : ''}`} onClick={() => setPick(k)}>{label}</button>
                     ))}
                   </div>
+                  <div className="online-row" role="radiogroup" aria-label={en ? 'Game type' : '판 종류'}>
+                    <button type="button" role="radio" aria-checked={!rankedPick} id="online-kind-friendly" className={`online-btn${!rankedPick ? ' on' : ''}`} onClick={() => setRankedPick(false)}>{en ? '🤝 Friendly' : '🤝 친선'}</button>
+                    <button type="button" role="radio" aria-checked={rankedPick} id="online-kind-ranked" className={`online-btn${rankedPick ? ' on' : ''}`} onClick={() => setRankedPick(true)}>{en ? '🏆 Ranked' : '🏆 랭크'}</button>
+                  </div>
+                  {rankedPick && <small className="online-meta" id="online-ranked-rule">{en ? 'Ranked: no AI moves, no take-backs, no new game until it ends. Both results are checked, then your score changes.' : '랭크 판: AI 수·되감기 없음, 끝나기 전엔 새 판 없음. 두 사람 결과를 맞춰 본 뒤 점수가 바뀌어요.'}</small>}
                   <button type="button" className="online-btn primary wide" id="online-create" onClick={create}>{en ? 'Make a room and get a link' : '방 만들고 링크 받기'}</button>
                   <b className="online-sub">{en ? 'Join with a code' : '코드로 들어가기'}</b>
                   <div className="online-row">

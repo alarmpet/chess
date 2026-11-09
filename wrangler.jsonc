@@ -1,9 +1,24 @@
-// 친구 초대 대전용 배포(2026-11-07): Cloudflare 정적 호스팅(Pages 가 Workers 정적 파일로 바뀜). 서버 코드 없음.
+// 친구 초대 대전용 배포(2026-11-07): Cloudflare 정적 호스팅(Pages 가 Workers 정적 파일로 바뀜).
 // 올리기: npm run build → npx wrangler@4 deploy. 중계 주소·키는 빌드 때 .env.local 의 VITE_WC_REALTIME_* 에서 들어간다.
+// 서버 랭크(LA-R R-2, 2026-11-09): /api/rank/* 만 worker/index.js 가 받고, 나머지 주소는 정적 파일 그대로.
+//   D1 은 아직 Cloudflare 계정에 만들지 않았다. 배포 전에 사람이 한 번:
+//     npx wrangler@4 d1 create wildcrown-rank   → 나온 database_id 를 아래에 넣는다
+//     npx wrangler@4 d1 migrations apply wildcrown-rank --remote
+//   로컬 시험: npx wrangler@4 d1 migrations apply wildcrown-rank --local → npx wrangler@4 dev --port 8787
 {
   "name": "wildcrown",
   "compatibility_date": "2026-11-04",
+  "main": "worker/index.js",
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "RANK",
+      "database_name": "wildcrown-rank",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "worker/migrations"
+    }
+  ]
 }

@@ -3,8 +3,9 @@
 // 순번은 「엔진 적용에 성공한 뒤에만」 올린다(옛 tryApplyNext 는 적용 전에 올리고 말이 없으면 조용히 건너뛰었다 — codex 지적).
 //
 // 방장(host)이 판의 기준이다. 메시지는 모두 { t, from: 보낸 사람 id, to?: 받을 사람 id, ... }:
-//   hello                               들어옴·다시 연결됨. 방장은 state 로, 손님은 hello 로 답한다.
-//   state { hostColor, moves, ended, game }   방장의 판 전체. 손님은 모자란 수만 적용하거나 새 판으로 받는다.
+//   hello { key? }                      들어옴·다시 연결됨. 방장은 state 로, 손님은 hello 로 답한다. key = 기기 신분 id(net/identity.js)
+//   state { hostColor, moves, ended, game, ranked, key? }   방장의 판 전체. 손님은 모자란 수만 적용하거나 새 판으로 받는다.
+//                                       ranked 는 방장이 방을 만들 때 정한다(LA-R R-1). 손님은 따라간다.
 //   move { seq, uci }  ack { seq }      seq 는 1부터. 방송 채널은 도착을 보장하지 않으므로 ack 가 올 때까지 다시 보낸다.
 //   resign · rematch · rematchOk { game, hostColor } · full · ping
 import { Chess } from 'chess.js';
@@ -66,11 +67,12 @@ const flipEnd = (e) => (!e || e.result === 'draw' ? e : { ...e, result: e.result
  * 한 사람 쪽 대전 상태. `send(msg)` 는 전송, `apply({from,to,promotion})` 는 엔진에 상대 수를 두고 Promise<boolean>.
  * 새 판을 엔진에 그려야 할 때 `view().reset` 이 생긴다 → 화면 층이 `takeReset()` 으로 받아 엔진을 새로 세운다.
  */
-export function createMatchCore({ id, host, hostColor = 'w', send, apply, now = () => Date.now() }) {
+export function createMatchCore({ id, host, hostColor = 'w', send, apply, now = () => Date.now(), ranked = false, key = null }) {
   const s = {
     host, hostColor: host ? hostColor : null, myColor: host ? hostColor : null, game: 1,
     moves: /** @type {string[]} */ ([]), ended: /** @type {any} */ (null), peerSeen: 0, unacked: new Map(), rematch: /** @type {null | 'me' | 'peer'} */ (null), full: false,
-    reset: /** @type {null | { color: string, game: number, moves: any[] }} */ (null), peer: /** @type {string | null} */ (null)
+    reset: /** @type {null | { color: string, game: number, moves: any[] }} */ (null), peer: /** @type {string | null} */ (null),
+    ranked: Boolean(host && ranked), peerKey: /** @type {string | null} */ (null)
   };
   let chess = new Chess();
   let busy = Promise.resolve();
@@ -78,11 +80,13 @@ export function createMatchCore({ id, host, hostColor = 'w', send, apply, now = 
   const view = () => ({
     myColor: s.myColor, game: s.game, plies: s.moves.length, moves: s.moves.slice(), ended: s.ended, full: s.full, reset: s.reset,
     peer: s.peer, peerOnline: Boolean(s.peer) && now() - s.peerSeen < PEER_LOST_MS, turn: chess.turn(), rematch: s.rematch,
-    waitingAck: s.unacked.size
+    waitingAck: s.unacked.size, ranked: s.ranked, peerKey: s.peerKey
   });
   const changed = () => { const v = view(); for (const f of listeners) f(v); };
   const out = (msg) => send({ ...msg, from: id });
-  const stateMsg = () => ({ t: 'state', hostColor: s.hostColor, moves: s.moves.slice(), ended: s.ended, game: s.game });
+  const stateMsg = () => ({ t: 'state', hostColor: s.hostColor, moves: s.moves.slice(), ended: s.ended, game: s.game, ranked: s.ranked, key });
+  const helloMsg = () => ({ t: 'hello', key });
+  const keyOf = (k) => (typeof k === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(k) ? k : null);
   const checkEnd = () => { if (!s.ended && s.myColor) s.ended = outcome(chess, s.myColor); };
   const newGame = (myColor, game, moves = [], ended = null) => {
     const r = replay(moves);
@@ -114,6 +118,7 @@ export function createMatchCore({ id, host, hostColor = 'w', send, apply, now = 
   async function adopt(st) {
     if (s.host || !Array.isArray(st.moves)) return;
     s.hostColor = st.hostColor === 'b' ? 'b' : 'w';
+    s.ranked = st.ranked === true;
     const mine = other(s.hostColor);
     const ended = flipEnd(st.ended || null);
     const same = s.myColor === mine && (st.game || 1) === s.game;
@@ -148,13 +153,14 @@ export function createMatchCore({ id, host, hostColor = 'w', send, apply, now = 
     if (!s.peer && (s.host ? msg.t === 'hello' : msg.t === 'state')) s.peer = msg.from;
     if (msg.from !== s.peer) { if (s.host && msg.t === 'hello') out({ t: 'full', to: msg.from }); return busy; }
     s.peerSeen = now();
+    if ((msg.t === 'hello' || msg.t === 'state') && keyOf(msg.key)) s.peerKey = keyOf(msg.key);
     busy = busy.then(async () => {
-      if (msg.t === 'hello') out(s.host ? stateMsg() : { t: 'hello' });
+      if (msg.t === 'hello') out(s.host ? stateMsg() : helloMsg());
       else if (msg.t === 'state') await adopt(msg);
       else if (msg.t === 'move') {
         if (msg.seq <= s.moves.length) out({ t: 'ack', seq: msg.seq });   // 이미 둔 수를 다시 받음
         else if (await applyRemote(msg.uci, msg.seq)) out({ t: 'ack', seq: msg.seq });
-        else out(s.host ? stateMsg() : { t: 'hello' });                    // 어긋남 → 방장 판으로 다시 맞춘다
+        else out(s.host ? stateMsg() : helloMsg());                    // 어긋남 → 방장 판으로 다시 맞춘다
       } else if (msg.t === 'ack') { for (const k of [...s.unacked.keys()]) if (k <= msg.seq) s.unacked.delete(k); }
       else if (msg.t === 'resign') { if (!s.ended) s.ended = { result: 'win', reason: 'resign' }; }
       // 둘 다 청했으면(한쪽이 새로고침해 요청을 잃은 경우 포함) 바로 시작: 방장은 새 판, 손님은 다시 「좋다」를 보낸다.
@@ -173,7 +179,7 @@ export function createMatchCore({ id, host, hostColor = 'w', send, apply, now = 
     /** @param {(v: ReturnType<typeof view>) => void} f */
     onChange: (f) => { listeners.add(f); return () => listeners.delete(f); },
     /** 방에 들어오거나 다시 연결되면 부른다. */
-    join() { out({ t: 'hello' }); },
+    join() { out(helloMsg()); },
     /** 방장이 새로고침 뒤 저장해 둔 판으로 되살린다. */
     restore({ hostColor: c, game, moves, ended }) {
       if (!s.host) return;
@@ -219,7 +225,7 @@ export function createMatchCore({ id, host, hostColor = 'w', send, apply, now = 
     takeReset() {
       const r = s.reset;
       s.reset = null;
-      if (r && !s.host) out({ t: 'hello' });   // 그리는 동안 방장이 둔 수를 마저 받는다
+      if (r && !s.host) out(helloMsg());   // 그리는 동안 방장이 둔 수를 마저 받는다
       changed();
       return r;
     },

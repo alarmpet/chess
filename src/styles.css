@@ -1302,6 +1302,8 @@ body:has(#card-reveal) #rival-offer { display: none; }
 /* 친구와 두기 👫 (기획서 §12.1): 판 위쪽 가운데 방 막대 + 방 만들기·들어가기 창. */
 .online-bar { position: fixed; z-index: 28; top: 64px; left: 0; right: 0; width: fit-content; max-width: calc(100vw - 32px); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; padding: 7px 12px; border-radius: 16px; background: rgba(232, 246, 255, 0.95); color: #173a55; font-weight: 800; font-size: 0.82rem; box-shadow: 0 4px 14px rgba(10, 30, 50, 0.28); }
 .online-code { letter-spacing: 0.08em; }
+.online-ranked { padding: 1px 8px; border-radius: 999px; background: #f6d365; color: #4a3200; font-weight: 700; }
+body.ranked-game #btn-reset { opacity: 0.4; cursor: not-allowed; }
 .online-turn { padding: 2px 8px; border-radius: 10px; background: #fff; }
 .online-end { color: #a0400c; }
 .online-btn { padding: 5px 10px; border: 2px solid transparent; border-radius: 12px; background: #fff; color: #173a55; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
@@ -1317,8 +1319,19 @@ body:has(#card-reveal) #rival-offer { display: none; }
 .online-input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.92); color: #173a55; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.06em; }
 .online-bigcode { margin: 4px 0 12px; text-align: center; font-size: 2.2rem; font-weight: 900; letter-spacing: 0.22em; color: #ffe9b8; }
 .online-meta { display: block; margin-top: 10px; opacity: 0.85; font-size: 0.78rem; }
+/* 판이 끝나면 위쪽은 체크메이트·무승부 카드 자리다. 막대를 아래(조작법 안내 위)로 내린다(LA-R R-3 qa: 넓은 화면·휴대폰 둘 다 카드를 가렸다). */
+.online-bar.ended { top: auto; bottom: 60px; }
 @media (max-width: 760px) {
   .online-bar { top: 58px; padding: 5px 8px; font-size: 0.76rem; }
+  .online-bar.ended { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  /* 점수 칩(「나 🍼 1500 · 친구 …」)이 있으면 「🏆 랭크」 칩은 같은 말이라 줄 수를 아끼려고 숨긴다. */
+  .online-scores ~ #online-ranked { display: none; }
 }
 /* 친구 대전 중에는 혼자 판 장치를 숨긴다(엔진도 되감기·손과 뇌를 혼자 판에서만 받는다). */
 body.online-game #handbrain-bar, body.online-game #card-skills, body.online-game #game-strip { display: none; }
+/* 랭크 점수 (LA-R R-3): 친구 창의 내 랭크 한 줄, 랭크 방 막대의 두 사람 점수. */
+.online-myrank { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px; padding: 8px 12px; border-radius: 12px; background: rgba(246, 211, 101, 0.16); border: 1px solid rgba(246, 211, 101, 0.5); }
+.online-myrank b { display: block; }
+.online-myrank small { display: block; opacity: 0.8; word-break: keep-all; }
+.online-myrank-badge { font-size: 1.6rem; line-height: 1; }
+.online-scores { padding: 1px 8px; border-radius: 999px; background: #fff; white-space: nowrap; }
