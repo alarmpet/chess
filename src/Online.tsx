@@ -8,6 +8,7 @@ import { preview } from './rank/ladder.js';
 import { ladderLine, newSeasonLine, outcomeLine, pairLine, placeChip, placeName, seasonLine, stakesLine, toNext, trophyLine } from './rank/ladderText.js';
 import { bestTrophy } from './rank/season.js';
 import { firstLine, firstStamp, rankMarks, ribbonLeft, ribbonText } from './rank/rankMarks.js';
+import { awardText, featLine, processStamps } from './rank/awards.js';
 import { plyText } from './rank/report.js';
 import { RANK_BUILD } from './rank/abuse.js';
 import { badgeLabel } from './rank/glicko2.js';
@@ -17,7 +18,8 @@ type Friend = { id: string; me?: boolean; rank: number; points: number; place: P
 type Pair = { today: number; week: number; dayCap: number; weekCap: number; capped: boolean };
 type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string; ladder?: { points: number; floor: number; streak: number; place: Place }; pair?: Pair;
   season?: { n: number; endsAt: number; daysLeft: number; games: number; peak: number; minGames: number; ribbonGames?: number }; trophies?: { season: number; tier: string; peak: number; games?: number; frame?: boolean }[];
-  firsts?: { tier: string; season: number; at: number }[] };
+  firsts?: { tier: string; season: number; at: number }[];
+  awards?: { season: number; kind: string; size: number }[] };
 
 // 친구와 두기 👫 (기획서 §12.1 · 협동 계획서 CO-4 를 앞당김, 2026-11-07 사용자 결정): 아는 사람을 방 코드·초대 링크로 불러 1:1.
 // 랜덤 매칭·자유 채팅·카드·도토리 없음. 규칙은 net/matchCore.js, 전송은 net/transport.js(Supabase Realtime 방송, 없으면 같은 브라우저 탭끼리).
@@ -224,7 +226,7 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
         loadPair(view.peerKey);
         loadCircle();
         if (view.peerKey) fetchPlayer(rankBase, view.peerKey).then((p) => p && setPeerRank(p as Rank));
-        say(outcomeLine(res.outcome, en) || (side.ladder ? [ladderLine(side.ladder, en), firstLine(side.ladder.first, en)].filter(Boolean).join(' · ') : `🏆 ${side.before} → ${side.after}`));
+        say(outcomeLine(res.outcome, en) || (side.ladder ? [ladderLine(side.ladder, en), firstLine(side.ladder.first, en), featLine(side.ladder.feat, en)].filter(Boolean).join(' · ') : `🏆 ${side.before} → ${side.after}`));
       }
       else if (res.status === 'waiting') say(claim ? (en ? 'Still waiting — it will count next time you open the game' : '아직 기다리는 중 — 다음에 게임을 열면 들어가요') : (en ? 'Waiting for your friend’s result' : '친구 결과를 기다리는 중'));
       else if (res.status === 'rejected' && (res.error === 'inhuman' || res.error === 'time')) say(en ? 'This game’s timing looked wrong — not counted' : '이 판의 시간 기록이 이상해 점수에 넣지 않았어요');
@@ -391,19 +393,30 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
                     // 왕관 도장(RW-1): 첫 도달 도장 셋(영원) + 시즌 리본. 받는 법을 늘 보여 준다. 도토리 없음.
                     const mk = rankMarks(myRank);
                     const left = ribbonLeft(myRank.season);
+                    // 받은 것은 펼치고, 못 받은 것은 접는다(받는 법은 그 안에) — 「받을 게 많다」는 압박을 줄인다.
+                    const all = [
+                      ...mk.firsts.map((f) => ({ key: f.tier, got: f.got, cls: `tier-${f.tier}`, ...firstStamp(f.tier, en) })),
+                      ...processStamps(myRank.games, (myRank.firsts || []).map((f) => f.tier), en).map((x) => ({ ...x, cls: '' }))
+                    ];
+                    const stamp = (x: { key: string; got: boolean; cls: string; name: string; how: string }) => (
+                      <span key={x.key} className={`rank-stamp${x.got ? ' got' : ''} ${x.cls}`} data-key={x.key} title={x.how}>{x.name}{x.got ? '' : ` · ${x.how}`}</span>
+                    );
+                    const todo = all.filter((x) => !x.got);
                     return (
                       <div className="online-rankmarks" id="online-rankmarks">
                         <b className="online-sub">{en ? '🏵️ Crown stamps' : '🏵️ 왕관 도장'}</b>
-                        <div className="rankmarks-row">
-                          {mk.firsts.map((f) => {
-                            const st = firstStamp(f.tier, en);
-                            return <span key={f.tier} className={`rank-stamp${f.got ? ' got' : ''} tier-${f.tier}`} data-tier={f.tier} title={f.got ? st.name : st.how}>{st.name}{f.got ? '' : ` · ${st.how}`}</span>;
-                          })}
-                        </div>
-                        <div className="rankmarks-row">
+                        <div className="rankmarks-row" id="rankmarks-got">
+                          {all.filter((x) => x.got).map(stamp)}
                           {mk.ribbons.slice(0, 4).map((rb) => <span key={rb.season} className={`rank-ribbon tier-${rb.tier}${rb.current ? ' current' : ''}`}>{ribbonText(rb, en)}</span>)}
+                          {(myRank.awards || []).slice(0, 4).map((a) => <span key={`${a.season}-${a.kind}`} className={`rank-award award-${a.kind}`}>{awardText(a, en)}</span>)}
                           {left ? <small className="online-meta" id="ribbon-left">{en ? `${left} more ranked game${left > 1 ? 's' : ''} for this season’s ribbon` : `이번 시즌 리본까지 랭크 ${left}판`}</small> : null}
                         </div>
+                        {todo.length > 0 && (
+                          <details className="rankmarks-more" id="rankmarks-todo">
+                            <summary>{en ? `${todo.length} stamps you can still earn` : `받을 수 있는 도장 ${todo.length}개`}</summary>
+                            <div className="rankmarks-row">{todo.map(stamp)}</div>
+                          </details>
+                        )}
                       </div>
                     );
                   })()}

@@ -7,6 +7,7 @@ import { START, rateGame } from '../src/rank/glicko2.js';
 import { RULES, START_LADDER, TIER_START, applyGame, placeOf, targetOf } from '../src/rank/ladder.js';
 import { PAIR_DAILY_CAP, PAIR_WEEKLY_CAP } from '../src/rank/abuse.js';
 import { seasonReset } from '../src/rank/season.js';
+import { stageAwards, upsetFeat } from '../src/rank/awards.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 let seed = Number(arg('--seed', 7));
@@ -154,17 +155,31 @@ function pair(days, perDay, cap, mkA, mkB, forced = null) {
   const PER = Number(arg('--per', 150));   // 시즌당 무리 안 짝 수(150 ≈ 한 사람 50판, 30 ≈ 10판)
   const MIN = Number(arg('--ribbon', 5));   // 시즌 리본 문턱(판)
   const groups = [];
-  for (let c = 0; c < 40; c++) groups.push(Array.from({ length: 6 }, () => ({ ...mk(1000 + rand() * 1100), act: 0.1 + rand() * 1.4, firsts: {}, ribbons: 0 })));
+  let pid = 0;
+  for (let c = 0; c < 40; c++) groups.push(Array.from({ length: 6 }, () => ({ ...mk(1000 + rand() * 1100), id: `p${pid++}`, act: 0.1 + rand() * 1.4, firsts: {}, ribbons: 0, awards: { top: 0, rise: 0 }, feats: {}, total: 0 })));
+  const NO_RISE = process.argv.includes('--no-rise');   // RW-3 비교: 「가장 많이 오름」 없이 1등만
   const pick = (g, skip) => { const tot = g.reduce((x, p) => x + (p === skip ? 0 : p.act), 0); let r = rand() * tot; for (const p of g) { if (p === skip) continue; r -= p.act; if (r <= 0) return p; } return g.find((p) => p !== skip); };
   const snap = {};
   for (let season = 1; season <= SEASONS; season++) {
     for (const g of groups) {
       for (const p of g) p.sg = 0;
+      const rows = [];
       for (let k = 0; k < PER; k++) {
         const a = pick(g, null), b = pick(g, a);
-        game(a, b);
-        a.sg++; b.sg++;
+        const pa = a.ladder.points, pb = b.ladder.points;
+        const score = play(a, b);
+        game(a, b, score);
+        rows.push({ white: a.id, black: b.id, at: k, ladder: { white: { before: pa, after: a.ladder.points }, black: { before: pb, after: b.ladder.points } } });
+        a.sg++; b.sg++; a.total++; b.total++;
+        // RW-4 과정 도장: 첫 50판 안에 받았는지
+        for (const [p, mine, theirs, sc] of [[a, pa, pb, score], [b, pb, pa, 1 - score]]) {
+          const f = upsetFeat(mine, theirs, sc);
+          if (f && p.feats[f] == null) p.feats[f] = p.total;
+        }
         for (const p of [a, b]) for (const t of ['adult', 'alpha', 'crown']) if (p.firsts[t] == null && p.ladder.points >= TIER_START[t]) p.firsts[t] = season;
+      }
+      for (const p of g) {
+        for (const aw of stageAwards(p.id, rows)) if (!(NO_RISE && aw.kind === 'rise')) p.awards[aw.kind]++;
       }
       for (const p of g) { if (p.sg >= MIN) p.ribbons++; p.ladder = seasonReset(p.ladder); }
     }
@@ -180,6 +195,16 @@ function pair(days, perDay, cap, mkA, mkB, forced = null) {
     medianRibbons: median(ps.map((p) => p.ribbons)), ribbons3plus: +(ps.filter((p) => p.ribbons >= 3).length / Math.max(1, ps.length)).toFixed(2),
     noneAtAll: +(ps.filter((p) => p.ribbons === 0 && !p.firsts.adult).length / Math.max(1, ps.length)).toFixed(2)
   });
+  const awardsOf = (p) => p.awards.top + p.awards.rise;
+  const featBy = (ps, f, n) => +(ps.filter((p) => p.feats[f] != null && p.feats[f] <= n).length / Math.max(1, ps.length)).toFixed(2);
+  out.stageAwards = {
+    noRise: NO_RISE,
+    anyAward: +(everyone.filter((p) => awardsOf(p) > 0).length / everyone.length).toFixed(2),
+    circlesHalfAwarded: +(groups.filter((g) => g.filter((p) => awardsOf(p) > 0).length >= 3).length / groups.length).toFixed(2),
+    topShareOfOnePerson: +(Math.max(...groups.map((g) => Math.max(...g.map((p) => p.awards.top)) / Math.max(1, g.reduce((x, p) => x + p.awards.top, 0))))).toFixed(2),
+    meanTopShareMax: +(groups.reduce((x, g) => x + Math.max(...g.map((p) => p.awards.top)) / Math.max(1, g.reduce((y, p) => y + p.awards.top, 0)), 0) / groups.length).toFixed(2),
+    bySkill: BANDS.map(([name, lo, hi]) => { const ps = everyone.filter((p) => p.skill >= lo && p.skill < hi); return { name, n: ps.length, anyAward: +(ps.filter((p) => awardsOf(p) > 0).length / Math.max(1, ps.length)).toFixed(2), top: ps.reduce((x, p) => x + p.awards.top, 0), rise: ps.reduce((x, p) => x + p.awards.rise, 0), upsetWin50: featBy(ps, 'upset-win', 50), upsetDraw50: featBy(ps, 'upset-draw', 50) }; })
+  };
   out.rankerRewards = {
     seasons: SEASONS, minGames: MIN, matchesPerCircleSeason: PER, gamesPerPersonSeason: Math.round(PER * 2 / 6),
     bySkill: BANDS.map(([name, lo, hi]) => row(name, everyone.filter((p) => p.skill >= lo && p.skill < hi))),
