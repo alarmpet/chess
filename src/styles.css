@@ -1335,3 +1335,8 @@ body.online-game #handbrain-bar, body.online-game #card-skills, body.online-game
 .online-myrank small { display: block; opacity: 0.8; word-break: keep-all; }
 .online-myrank-badge { font-size: 1.6rem; line-height: 1; }
 .online-scores { padding: 1px 8px; border-radius: 999px; background: #fff; white-space: nowrap; }
+/* 왕관 사다리 (계획서 §4.4 L-2): 다음 칸까지 막대 · 판 전 예고 칩. */
+.online-myrank-main { flex: 1; min-width: 0; }
+.ladder-bar { display: block; height: 8px; margin: 5px 0 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+.ladder-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6d365, #fda085); transition: width 0.6s ease; }
+.online-stakes { padding: 1px 8px; border-radius: 999px; background: #fff3d6; color: #6a4500; white-space: nowrap; }

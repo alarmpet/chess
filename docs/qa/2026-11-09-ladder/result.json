@@ -1,0 +1,193 @@
+{
+ "stakesBefore": {
+  "host": "이기면 +28 · 져도 그대로",
+  "guest": "이기면 +28 · 져도 그대로"
+ },
+ "panelBar": "0%",
+ "endLayout": {
+  "host": {
+   "w": 944,
+   "h": 505,
+   "bar": {
+    "top": 371,
+    "bottom": 445,
+    "left": 16,
+    "right": 928
+   },
+   "card": {
+    "top": 118,
+    "bottom": 323,
+    "left": 272,
+    "right": 672
+   },
+   "tray": null,
+   "hitsCard": false,
+   "hitsTray": false,
+   "hint": {
+    "top": 456,
+    "bottom": 489,
+    "left": 20,
+    "right": 730
+   },
+   "hitsHint": false,
+   "rankedChipShown": true
+  },
+  "guest": {
+   "w": 390,
+   "h": 844,
+   "bar": {
+    "top": 735,
+    "bottom": 828,
+    "left": 16,
+    "right": 374
+   },
+   "card": {
+    "top": 64,
+    "bottom": 263,
+    "left": 12,
+    "right": 378
+   },
+   "tray": null,
+   "hitsCard": false,
+   "hitsTray": false,
+   "hint": null,
+   "hitsHint": false,
+   "rankedChipShown": false
+  }
+ },
+ "code": "8VSV87",
+ "rule": "랭크 판: AI 수·되감기 없음, 끝나기 전엔 새 판 없음. 두 사람 결과를 맞춰 본 뒤 점수가 바뀌어요.",
+ "myRankLine": "🍼왕관 사다리 · 🍼 새끼 III · 0점다음 칸까지 100점 · 랭크 0판 · 0승 0패 0무 · 실력 1500",
+ "scoresBefore": {
+  "host": "나 🍼III 0 · 친구 🍼III 0",
+  "guest": "나 🍼III 0 · 친구 🍼III 0"
+ },
+ "barBox": {
+  "left": 16,
+  "right": 374,
+  "width": 390,
+  "height": 95
+ },
+ "scoresAfter": {
+  "host": "나 🍼III 0 · 친구 🍼III 28",
+  "guest": "나 🍼III 28 · 친구 🍼III 0"
+ },
+ "myRankAfter": "🍼왕관 사다리 · 🍼 새끼 III · 0점다음 칸까지 100점 · 랭크 2판 · 0승 2패 0무 · 실력 1280",
+ "keysDiffer": true,
+ "game1": {
+  "host": {
+   "note": "±0 · 🍼 새끼 III · 새끼 칸은 안 잃어요 · 끝까지 잘 뒀어요",
+   "end": "졌어요 · 체크메이트",
+   "id": "IwUv0PSF9PdjOhQa"
+  },
+  "guest": {
+   "note": "+28 · 🍼 새끼 III",
+   "end": "이겼어요 · 체크메이트",
+   "id": "6UsHL0ut-6Cs4XF_"
+  }
+ },
+ "server1": {
+  "host": {
+   "id": "IwUv0PSF9PdjOhQa",
+   "rating": 1338,
+   "rd": 290,
+   "games": 1,
+   "wins": 0,
+   "losses": 1,
+   "draws": 0,
+   "badge": "cub",
+   "ladder": {
+    "points": 0,
+    "floor": 0,
+    "streak": 0,
+    "place": {
+     "tier": "cub",
+     "step": 3,
+     "into": 0,
+     "pct": 0,
+     "points": 0
+    }
+   }
+  },
+  "guest": {
+   "id": "6UsHL0ut-6Cs4XF_",
+   "rating": 1662,
+   "rd": 290,
+   "games": 1,
+   "wins": 1,
+   "losses": 0,
+   "draws": 0,
+   "badge": "cub",
+   "ladder": {
+    "points": 28,
+    "floor": 0,
+    "streak": 1,
+    "place": {
+     "tier": "cub",
+     "step": 3,
+     "into": 28,
+     "pct": 0.28,
+     "points": 28
+    }
+   }
+  }
+ },
+ "game2": {
+  "host": {
+   "note": "±0 · 🍼 새끼 III · 새끼 칸은 안 잃어요 · 끝까지 잘 뒀어요",
+   "end": "졌어요 · 기권",
+   "id": "IwUv0PSF9PdjOhQa"
+  },
+  "guest": {
+   "note": "+21 · 🍼 새끼 III",
+   "end": "이겼어요 · 기권",
+   "id": "6UsHL0ut-6Cs4XF_"
+  }
+ },
+ "server2": {
+  "host": {
+   "id": "IwUv0PSF9PdjOhQa",
+   "rating": 1280,
+   "rd": 260,
+   "games": 2,
+   "wins": 0,
+   "losses": 2,
+   "draws": 0,
+   "badge": "cub",
+   "ladder": {
+    "points": 0,
+    "floor": 0,
+    "streak": 0,
+    "place": {
+     "tier": "cub",
+     "step": 3,
+     "into": 0,
+     "pct": 0,
+     "points": 0
+    }
+   }
+  },
+  "guest": {
+   "id": "6UsHL0ut-6Cs4XF_",
+   "rating": 1720,
+   "rd": 260,
+   "games": 2,
+   "wins": 2,
+   "losses": 0,
+   "draws": 0,
+   "badge": "cub",
+   "ladder": {
+    "points": 49,
+    "floor": 0,
+    "streak": 2,
+    "place": {
+     "tier": "cub",
+     "step": 3,
+     "into": 49,
+     "pct": 0.49,
+     "points": 49
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,175 @@
+{
+ "rules": {
+  "noLossBelow": 200,
+  "floorTiers": [
+   "adult",
+   "alpha",
+   "crown"
+  ],
+  "minWin": 3,
+  "minWinAbove": 3,
+  "adjMin": -8,
+  "streakBelowOnly": false
+ },
+ "seed": 7,
+ "players": 240,
+ "gamesPerPlayer": 200,
+ "spearmanSkillLadder": 0.926,
+ "spearmanSkillGlicko": 0.925,
+ "meanGapLadderToTarget": 157,
+ "bands": [
+  {
+   "band": "약함 <1300",
+   "n": 66,
+   "tiers": {
+    "cub": 57,
+    "adult": 9,
+    "alpha": 0,
+    "crown": 0
+   },
+   "medianPoints": 192,
+   "medianGamesTo": {
+    "adult": 60,
+    "alpha": null,
+    "crown": null
+   },
+   "reached": {
+    "adult": 9,
+    "alpha": 0,
+    "crown": 0
+   },
+   "lossShare": {
+    "free": 0.86,
+    "floored": 0.05
+   },
+   "meanWinDelta": 15
+  },
+  {
+   "band": "보통 1300~1600",
+   "n": 66,
+   "tiers": {
+    "cub": 14,
+    "adult": 28,
+    "alpha": 22,
+    "crown": 2
+   },
+   "medianPoints": 348,
+   "medianGamesTo": {
+    "adult": 29,
+    "alpha": 53,
+    "crown": 73
+   },
+   "reached": {
+    "adult": 52,
+    "alpha": 24,
+    "crown": 2
+   },
+   "lossShare": {
+    "free": 0.43,
+    "floored": 0.19
+   },
+   "meanWinDelta": 17
+  },
+  {
+   "band": "강함 1600~1900",
+   "n": 58,
+   "tiers": {
+    "cub": 0,
+    "adult": 7,
+    "alpha": 23,
+    "crown": 28
+   },
+   "medianPoints": 882,
+   "medianGamesTo": {
+    "adult": 19,
+    "alpha": 39,
+    "crown": 70
+   },
+   "reached": {
+    "adult": 58,
+    "alpha": 51,
+    "crown": 28
+   },
+   "lossShare": {
+    "free": 0.17,
+    "floored": 0.19
+   },
+   "meanWinDelta": 14
+  },
+  {
+   "band": "아주 강함 ≥1900",
+   "n": 50,
+   "tiers": {
+    "cub": 0,
+    "adult": 0,
+    "alpha": 3,
+    "crown": 47
+   },
+   "medianPoints": 1149,
+   "medianGamesTo": {
+    "adult": 14,
+    "alpha": 28,
+    "crown": 43
+   },
+   "reached": {
+    "adult": 50,
+    "alpha": 50,
+    "crown": 47
+   },
+   "lossShare": {
+    "free": 0.09,
+    "floored": 0.11
+   },
+   "meanWinDelta": 12
+  }
+ ],
+ "parentChild": {
+  "days": 20,
+  "perDay": 5,
+  "cap": 3,
+  "weekCap": 10,
+  "counted": 30,
+  "childWins": 3,
+  "childPoints": 95,
+  "childPlace": {
+   "tier": "cub",
+   "step": 3,
+   "into": 95,
+   "pct": 0.95,
+   "points": 95
+  },
+  "childWinDeltas": [
+   35,
+   29,
+   31
+  ],
+  "parentPoints": 678,
+  "parentPlace": {
+   "tier": "alpha",
+   "step": 3,
+   "into": 78,
+   "pct": 0.78,
+   "points": 678
+  },
+  "parentTarget": 754,
+  "parentLossDeltas": [
+   -21,
+   -21
+  ]
+ },
+ "winTrading": {
+  "days": 28,
+  "tried": 280,
+  "counted": 40,
+  "boosterPoints": 1066,
+  "boosterPlace": {
+   "tier": "crown",
+   "step": null,
+   "into": 166,
+   "pct": null,
+   "points": 1066
+  },
+  "boosterRating": 1936,
+  "feederRating": 1064
+ }
+}

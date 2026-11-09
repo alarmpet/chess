@@ -1,0 +1,161 @@
+{
+ "rules": {
+  "noLossBelow": 300,
+  "floorTiers": [
+   "adult",
+   "alpha",
+   "crown"
+  ],
+  "minWin": 8
+ },
+ "seed": 7,
+ "players": 240,
+ "gamesPerPlayer": 200,
+ "spearmanSkillLadder": 0.904,
+ "spearmanSkillGlicko": 0.925,
+ "meanGapLadderToTarget": 299,
+ "bands": [
+  {
+   "band": "약함 <1300",
+   "n": 66,
+   "tiers": {
+    "cub": 9,
+    "adult": 57,
+    "alpha": 0,
+    "crown": 0
+   },
+   "medianPoints": 300,
+   "medianGamesTo": {
+    "adult": 95,
+    "alpha": null,
+    "crown": null
+   },
+   "reached": {
+    "adult": 57,
+    "alpha": 0,
+    "crown": 0
+   },
+   "lossShare": {
+    "free": 0.87,
+    "floored": 0.38
+   },
+   "meanWinDelta": 14
+  },
+  {
+   "band": "보통 1300~1600",
+   "n": 66,
+   "tiers": {
+    "cub": 0,
+    "adult": 41,
+    "alpha": 22,
+    "crown": 3
+   },
+   "medianPoints": 348,
+   "medianGamesTo": {
+    "adult": 29,
+    "alpha": 51,
+    "crown": 73
+   },
+   "reached": {
+    "adult": 66,
+    "alpha": 25,
+    "crown": 3
+   },
+   "lossShare": {
+    "free": 0.48,
+    "floored": 0.4
+   },
+   "meanWinDelta": 16
+  },
+  {
+   "band": "강함 1600~1900",
+   "n": 58,
+   "tiers": {
+    "cub": 0,
+    "adult": 7,
+    "alpha": 19,
+    "crown": 32
+   },
+   "medianPoints": 917,
+   "medianGamesTo": {
+    "adult": 18,
+    "alpha": 36,
+    "crown": 75
+   },
+   "reached": {
+    "adult": 58,
+    "alpha": 51,
+    "crown": 32
+   },
+   "lossShare": {
+    "free": 0.19,
+    "floored": 0.17
+   },
+   "meanWinDelta": 15
+  },
+  {
+   "band": "아주 강함 ≥1900",
+   "n": 50,
+   "tiers": {
+    "cub": 0,
+    "adult": 0,
+    "alpha": 2,
+    "crown": 48
+   },
+   "medianPoints": 1527,
+   "medianGamesTo": {
+    "adult": 14,
+    "alpha": 28,
+    "crown": 44
+   },
+   "reached": {
+    "adult": 50,
+    "alpha": 50,
+    "crown": 48
+   },
+   "lossShare": {
+    "free": 0.1,
+    "floored": 0.07
+   },
+   "meanWinDelta": 15
+  }
+ ],
+ "parentChild": {
+  "childWins": 9,
+  "childPoints": 161,
+  "childPlace": {
+   "tier": "cub",
+   "step": 2,
+   "into": 61,
+   "pct": 0.61,
+   "points": 161
+  },
+  "childWinDeltas": [
+   35,
+   29,
+   31,
+   10,
+   9,
+   9,
+   25,
+   7,
+   6
+  ],
+  "parentPoints": 1380,
+  "parentPlace": {
+   "tier": "crown",
+   "step": null,
+   "into": 480,
+   "pct": null,
+   "points": 1380
+  },
+  "parentLossDeltas": [
+   -21,
+   -21,
+   -6,
+   -7,
+   -10,
+   -35
+  ]
+ }
+}

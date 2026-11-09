@@ -2,10 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { createMatchCore, newRoomCode, parseRoomCode } from './net/matchCore.js';
 import { openRoom, realtimeConfig } from './net/transport.js';
 import { deviceIdentity } from './net/identity.js';
-import { changeLine, fetchPlayer, myChange, rankApiBase, sendRankReport } from './rank/client.js';
+import { fetchPlayer, rankApiBase, sendRankReport } from './rank/client.js';
+import { preview } from './rank/ladder.js';
+import { ladderLine, outcomeLine, pairLine, placeChip, placeName, stakesLine, toNext } from './rank/ladderText.js';
+import { plyText } from './rank/report.js';
+import { RANK_BUILD } from './rank/abuse.js';
 import { badgeLabel } from './rank/glicko2.js';
 
-type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string };
+type Place = { tier: string; step: number | null; into: number; pct: number | null; points: number };
+type Pair = { today: number; week: number; dayCap: number; weekCap: number; capped: boolean };
+type Rank = { rating: number; rd: number; games: number; wins: number; losses: number; draws: number; badge: string; ladder?: { points: number; floor: number; streak: number; place: Place }; pair?: Pair };
 
 // 친구와 두기 👫 (기획서 §12.1 · 협동 계획서 CO-4 를 앞당김, 2026-11-07 사용자 결정): 아는 사람을 방 코드·초대 링크로 불러 1:1.
 // 랜덤 매칭·자유 채팅·카드·도토리 없음. 규칙은 net/matchCore.js, 전송은 net/transport.js(Supabase Realtime 방송, 없으면 같은 브라우저 탭끼리).
@@ -59,16 +65,24 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
   };
   useEffect(() => { if (open || room) loadMine(); }, [open, Boolean(room)]);   // eslint-disable-line react-hooks/exhaustive-deps
   const peerKeyNow = view?.ranked ? view?.peerKey : null;
+  // 같은 상대 상한(R-4): 내 랭크를 이 친구 기준(vs)으로 다시 읽어 오늘·이번 주 판 수를 받는다.
+  const [pair, setPair] = useState<Pair | null>(null);
+  const loadPair = async (peerKey: string | null | undefined) => {
+    if (!peerKey || rankBase === null) { setPair(null); return; }
+    const me = await deviceIdentity().catch(() => null);
+    const p = me ? ((await fetchPlayer(rankBase, me.id, fetch, peerKey)) as Rank | null) : null;
+    if (p) setMyRank(p);
+    setPair(p?.pair ?? null);
+  };
   useEffect(() => {
     setPeerRank(null);
+    loadPair(peerKeyNow);
     if (!peerKeyNow) return;
     fetchPlayer(rankBase, peerKeyNow).then((p) => setPeerRank(p as Rank | null));
-  }, [peerKeyNow]);
-  const rankChip = (r: Rank | null) => {
-    if (!r) return '…';
-    const b = badgeLabel(r.badge, en);
-    return `${b.icon} ${r.rating}`;
-  };
+  }, [peerKeyNow]);   // eslint-disable-line react-hooks/exhaustive-deps
+  // 왕관 사다리(계획서 §4.4 L-2): 보이는 랭크는 사다리 칸, 실력(Glicko)은 친구 창에 작게.
+  const rankChip = (r: Rank | null) => (r?.ladder ? placeChip(r.ladder.place) : '…');
+  const stakes = myRank?.ladder && peerRank ? preview(myRank.ladder, myRank.rating, peerRank.rating) : null;
   const core = useRef<ReturnType<typeof createMatchCore> | null>(null);
   const net = useRef<ReturnType<typeof openRoom> | null>(null);
   const saved = useRef<Saved | null>(null);
@@ -95,8 +109,16 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
     setNote('');
     await engineReady();
     const me = await deviceIdentity().catch(() => null);
+    // 수 영수증(R-4): 내 수를 둔 뒤 그때까지의 판에 서명한다. 상대가 내가 사라졌을 때 이탈 몰수를 청하는 증거.
+    const signPly = async (moves: string[], game: number) => {
+      const v = core.current?.view();
+      if (!me || !v?.peerKey || !v.myColor) return null;
+      const white = v.myColor === 'w' ? me.id : v.peerKey;
+      const black = v.myColor === 'w' ? v.peerKey : me.id;
+      return me.sign(plyText({ room: s.code, game, white, black, moves }));
+    };
     const c = createMatchCore({
-      id: s.id, host: s.host, hostColor: s.hostColor || 'w', ranked: Boolean(s.ranked), key: me?.id ?? null,
+      id: s.id, host: s.host, hostColor: s.hostColor || 'w', ranked: Boolean(s.ranked), key: me?.id ?? null, pub: me?.pub ?? null, signPly,
       send: (msg: any) => net.current?.send(msg),
       apply: (mv: any) => wc()?.applyOnlineMove?.(mv) ?? Promise.resolve(false)
     });
@@ -160,17 +182,25 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
     (async () => {
       const me = await deviceIdentity().catch(() => null);
       if (rankBase === null) { say(en ? 'Score server is off in this build' : '이 빌드에는 점수 서버가 없어요'); return; }
+      if (view.ended?.reason === 'void') { say(outcomeLine('void', en) || ''); return; }
       say(en ? 'Sending the result…' : '결과 보내는 중…');
-      const res = await sendRankReport({ base: rankBase, identity: me, room: room.code, game, myColor: view.myColor, peerKey: view.peerKey, moves: view.moves, ended: view.ended });
-      const ch = myChange(res, me?.id);
-      if (ch) {
-        const oldBadge = myRank?.badge;
-        const fresh = (await fetchPlayer(rankBase, me?.id)) as Rank | null;
-        if (fresh) setMyRank(fresh);
+      // 이탈 몰수로 이긴 쪽은 상대 영수증을 붙이고, 서버가 기다리는 3분 남짓 동안 다시 보낸다.
+      const claim = view.ended?.reason === 'abandon' && view.ended.result === 'win';
+      const meta = { build: RANK_BUILD, start: view.gameAt, end: view.endAt ?? Date.now(), think: view.think };
+      if (claim) say(en ? 'Your friend left. If they don’t come back in 3 minutes, the win is yours' : '친구가 나갔어요. 3분 안에 돌아오지 않으면 이긴 판으로 들어가요');
+      const res = await sendRankReport({
+        base: rankBase, identity: me, room: room.code, game, myColor: view.myColor, peerKey: view.peerKey, moves: view.moves, ended: view.ended,
+        meta, receipt: claim ? view.peerReceipt : null, ...(claim ? { tries: 30, waitMs: 8000 } : {})
+      });
+      const side = res?.status === 'counted' ? (res.white?.id === me?.id ? res.white : res.black?.id === me?.id ? res.black : null) : null;
+      if (side) {
+        loadPair(view.peerKey);
         if (view.peerKey) fetchPlayer(rankBase, view.peerKey).then((p) => p && setPeerRank(p as Rank));
-        say(changeLine(ch, oldBadge, fresh?.badge, (b: string) => badgeLabel(b, en)));
+        say(outcomeLine(res.outcome, en) || (side.ladder ? ladderLine(side.ladder, en) : `🏆 ${side.before} → ${side.after}`));
       }
-      else if (res.status === 'waiting') say(en ? 'Waiting for your friend’s result' : '친구 결과를 기다리는 중');
+      else if (res.status === 'waiting') say(claim ? (en ? 'Still waiting — it will count next time you open the game' : '아직 기다리는 중 — 다음에 게임을 열면 들어가요') : (en ? 'Waiting for your friend’s result' : '친구 결과를 기다리는 중'));
+      else if (res.status === 'rejected' && (res.error === 'inhuman' || res.error === 'time')) say(en ? 'This game’s timing looked wrong — not counted' : '이 판의 시간 기록이 이상해 점수에 넣지 않았어요');
+      else if (res.status === 'rejected' && res.error === 'old-build') say(en ? 'Update the game to record ranked scores' : '게임을 새로 고쳐야 랭크 점수가 기록돼요');
       else if (res.status === 'mismatch') say(en ? 'Results did not match — not counted' : '두 결과가 달라 점수에 넣지 않았어요');
       else say(en ? 'Could not record the score' : '점수를 기록하지 못했어요');
     })();
@@ -232,8 +262,10 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
   const endText = (e: any) => {
     if (!e) return '';
     const why: Record<string, string> = en
-      ? { checkmate: 'checkmate', resign: 'resignation', stalemate: 'stalemate', repetition: 'repetition', material: 'not enough pieces', fifty: '50-move rule' }
-      : { checkmate: '체크메이트', resign: '기권', stalemate: '스테일메이트', repetition: '같은 수 반복', material: '기물 부족', fifty: '50수 규칙' };
+      ? { checkmate: 'checkmate', resign: 'resignation', stalemate: 'stalemate', repetition: 'repetition', material: 'not enough pieces', fifty: '50-move rule', abandon: 'friend left' }
+      : { checkmate: '체크메이트', resign: '기권', stalemate: '스테일메이트', repetition: '같은 수 반복', material: '기물 부족', fifty: '50수 규칙', abandon: '친구가 나감' };
+    if (e.reason === 'void') return en ? 'Game called off · no first moves' : '판 무효 · 첫 수 없음';
+    if (e.reason === 'abandon' && e.result === 'loss') return en ? 'You left too long · counts as a loss' : '오래 자리를 비워 진 판이 됐어요';
     const res = e.result === 'win' ? (en ? 'You win' : '이겼어요') : e.result === 'loss' ? (en ? 'You lose' : '졌어요') : (en ? 'Draw' : '비겼어요');
     return `${res} · ${why[e.reason] || e.reason}`;
   };
@@ -244,10 +276,11 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
         <div className={`online-bar${view?.ended ? ' ended' : ''}`} id="online-bar" role="status">
           <span className="online-code" title={en ? 'Room code' : '방 코드'}>👫 {room.code}</span>
           {view?.ranked && view.peer && rankBase !== null && (
-            <span className="online-scores" id="online-scores" title={en ? 'Ranked score · badge' : '랭크 점수 · 뱃지'}>
+            <span className="online-scores" id="online-scores" title={en ? 'Crown ladder: me · friend' : '왕관 사다리: 나 · 친구'}>
               {en ? 'Me' : '나'} {rankChip(myRank)} · {en ? 'Friend' : '친구'} {rankChip(peerRank)}
             </span>
           )}
+          {view?.ranked && view.peer && !view.ended && (pair?.capped ? <span className="online-stakes" id="online-stakes">{pairLine(pair, en)}</span> : stakes && <span className="online-stakes" id="online-stakes">{stakesLine(stakes, en)}</span>)}
           {view?.ranked && <span className="online-ranked" id="online-ranked" title={en ? 'Ranked: no AI moves, no take-backs. Score changes after the game.' : '랭크 판: AI 수·되감기 없음. 판이 끝나면 점수가 바뀌어요.'}>🏆 {en ? 'Ranked' : '랭크'}</span>}
           <span className="online-peer" id="online-peer">{dot} {view?.full ? (en ? 'Room is full' : '방이 찼어요') : link === 'connecting' ? (en ? 'Connecting…' : '연결 중…') : peerText}</span>
           {me && !view?.ended && (
@@ -261,6 +294,8 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
             </button>
           )}
           {!view?.peer && room.host && <button type="button" className="online-btn" id="online-invite" onClick={copy}>{en ? '🔗 Invite link' : '🔗 초대 링크'}</button>}
+          {view?.canAbandon && <button type="button" className="online-btn primary" id="online-abandon" onClick={() => core.current?.claimAbandon()}>{en ? '🏳️ Friend gone over a minute — take the win' : '🏳️ 친구가 1분 넘게 없어요 — 이긴 판으로 끝내기'}</button>}
+          {view?.canVoid && <button type="button" className="online-btn" id="online-void" onClick={() => core.current?.voidGame()}>{en ? '⏱️ No first move — call the game off' : '⏱️ 첫 수가 없어요 — 판 무효로 하기'}</button>}
           {me && !view?.ended && view?.peer && <button type="button" className="online-btn" id="online-resign" onClick={() => setConfirmResign(true)}>{en ? 'Resign' : '기권'}</button>}
           <button type="button" className="online-btn" id="online-leave" onClick={leave}>{en ? 'Leave' : '나가기'}</button>
           {note && <span className="online-note">{note}</span>}
@@ -298,10 +333,19 @@ export default function Online({ open, onOpen, onClose, lang }: { open: boolean;
                     <div className="online-myrank" id="online-myrank">
                       {myRank ? (
                         <>
-                          <span className="online-myrank-badge">{badgeLabel(myRank.badge, en).icon}</span>
-                          <span>
-                            <b>{en ? 'My rank' : '내 랭크'} · {badgeLabel(myRank.badge, en).name} {myRank.rating}</b>
-                            <small>{en ? `${myRank.games} ranked games · ${myRank.wins}W ${myRank.losses}L ${myRank.draws}D` : `랭크 ${myRank.games}판 · ${myRank.wins}승 ${myRank.losses}패 ${myRank.draws}무`}{myRank.games < 5 ? (en ? ' · badge after 5 games' : ' · 5판부터 뱃지') : ''}</small>
+                          <span className="online-myrank-badge">{badgeLabel(myRank.ladder?.place.tier || 'cub', en).icon}</span>
+                          <span className="online-myrank-main">
+                            <b>{en ? 'Crown ladder' : '왕관 사다리'} · {myRank.ladder ? placeName(myRank.ladder.place, en) : '…'} · {myRank.ladder?.points ?? 0}{en ? ' pts' : '점'}</b>
+                            {myRank.ladder?.place.pct != null && (
+                              <span className="ladder-bar" id="ladder-bar" aria-label={toNext(myRank.ladder.place, en) || ''}><i style={{ width: `${Math.round(myRank.ladder.place.pct * 100)}%` }} /></span>
+                            )}
+                            <small>
+                              {[toNext(myRank.ladder?.place as Place, en),
+                                myRank.ladder && myRank.ladder.floor > 0 ? `🛡️ ${placeName({ tier: myRank.ladder.floor >= 900 ? 'crown' : myRank.ladder.floor >= 600 ? 'alpha' : 'adult', step: null, into: 0, pct: null, points: 0 }, en)} ${en ? 'floor' : '바닥'}` : null,
+                                myRank.ladder && myRank.ladder.streak >= 2 ? `🔥${myRank.ladder.streak}${en ? ' in a row' : '연승'}` : null,
+                                en ? `${myRank.games} ranked · ${myRank.wins}W ${myRank.losses}L ${myRank.draws}D · skill ${myRank.rating}` : `랭크 ${myRank.games}판 · ${myRank.wins}승 ${myRank.losses}패 ${myRank.draws}무 · 실력 ${myRank.rating}`
+                              ].filter(Boolean).join(' · ')}
+                            </small>
                           </span>
                         </>
                       ) : <small>{rankOff ? (en ? 'Score server is not reachable' : '점수 서버에 닿지 않아요') : (en ? 'Loading my rank…' : '내 랭크 불러오는 중…')}</small>}

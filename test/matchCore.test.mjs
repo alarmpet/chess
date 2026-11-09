@@ -266,3 +266,72 @@ test('a friendly room stays unranked, and a malformed key is ignored', async () 
   assert.equal(host.core.view().peerKey, null);
   assert.equal(guest.core.view().peerKey, null);
 });
+
+test('R-4: receipts, think times, abandon after 60s and void before the first moves', async () => {
+  const { loadIdentity } = await import('../src/net/identity.js');
+  const { plyText, signReport, checkReport, checkAbandon, buildMatch } = await import('../src/rank/report.js');
+  const { ABANDON_MS, FIRST_MOVE_MS } = await import('../src/net/matchCore.js');
+  const mem = () => { const m = new Map(); return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v) }; };
+  const hk = await loadIdentity(mem()), gk = await loadIdentity(mem());
+  const r = room();
+  const signer = (me, color) => (moves, game) => {
+    const peerKey = me === hk ? gk.id : hk.id;
+    return me.sign(plyText({ room: 'BJ8GK3', game, white: color === 'w' ? me.id : peerKey, black: color === 'w' ? peerKey : me.id, moves }));
+  };
+  const host = r.add('h', { host: true, hostColor: 'w', ranked: true, key: hk.id, pub: hk.pub, signPly: signer(hk, 'w') });
+  const guest = r.add('g', { host: false, key: gk.id, pub: gk.pub, signPly: signer(gk, 'b') });
+  guest.core.join();
+  await r.settle();
+  guest.core.takeReset();
+  await r.settle();
+  // 첫 수 전 60초: 무효로 끝낼 수 있다(아직 59초면 안 됨)
+  r.advance(FIRST_MOVE_MS - 1000);
+  assert.equal(host.core.view().canVoid, false);
+  r.advance(1000);
+  assert.equal(host.core.view().canVoid, true);
+  r.advance(-FIRST_MOVE_MS);   // 시계를 되돌려 판을 이어 간다(테스트용)
+  r.advance(3000);
+  assert.ok(host.core.local({ from: 'e2', to: 'e4' }));
+  await r.settle();
+  r.advance(800);
+  assert.ok(guest.core.local({ from: 'e7', to: 'e5' }));
+  await r.settle();
+  assert.deepEqual(host.core.view().think, [3000]);
+  assert.deepEqual(guest.core.view().think, [800]);
+  assert.equal(host.core.view().peerReceipt?.seq, 2, 'the guest signed the game after its own move');
+  assert.equal(host.core.view().canVoid, false, 'two moves made: no void any more');
+  // 손님이 사라졌다: 59초에는 아직, 60초가 지나면 이탈 몰수
+  r.remove(guest);
+  assert.ok(host.core.local({ from: 'g1', to: 'f3' }));
+  r.advance(ABANDON_MS - 1000);
+  assert.equal(host.core.claimAbandon(), false);
+  r.advance(1000);
+  assert.equal(host.core.claimAbandon(), true);
+  const v = host.core.view();
+  assert.deepEqual(v.ended, { result: 'win', reason: 'abandon' });
+  const match = buildMatch({ room: 'BJ8GK3', game: v.game, myColor: 'w', myKey: hk.id, peerKey: gk.id, moves: v.moves, ended: v.ended });
+  const meta = { build: 1, start: v.gameAt, end: v.endAt, think: v.think };
+  assert.deepEqual(v.peerReceipt.pub, { x: gk.pub.x, y: gk.pub.y }, 'the receipt carries the leaver’s public key');
+  const rep = await signReport(match, hk, meta, v.peerReceipt);
+  assert.equal((await checkReport(rep)).ok, true);
+  assert.equal((await checkAbandon(rep)).ok, true);
+});
+
+test('a late rematch request from the last game does not show up in the new one', async () => {
+  const r = room();
+  const host = r.add('h', { host: true });
+  const guest = r.add('g', { host: false });
+  guest.core.join();
+  await r.settle();
+  guest.core.takeReset();
+  host.core.resign();
+  await r.settle();
+  host.core.rematch();
+  await r.settle();
+  guest.core.rematch();
+  await r.settle();
+  guest.core.takeReset();
+  assert.equal(host.core.view().game, 2);
+  await host.core.receive({ t: 'rematch', game: 1, from: 'g' });   // 지난 판 요청이 늦게 도착
+  assert.equal(host.core.view().rematch, null);
+});
