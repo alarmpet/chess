@@ -54,14 +54,31 @@ const REACT = {
   queen: (u) => ({ back: 0.6 * u, up: arc(u, 0.8), tilt: TAU * easeInOut(u), roll: 0, spin: 0 })
 };
 
+/**
+ * 미어캣 반응 변형 (CX-6, docs/qa/2026-11-09-llm-human-tests.md). 미어캣이 잡히는 일이 잡기의 약 48%라
+ * 「매번 똑같아 질린다」는 판정이 세 모델에서 모두 나왔다. 길이는 그대로 두고, 그 판 몇 번째인지에 따라
+ * 도는 방향·높이·기울기만 바꾼다. 셋 다 「팽이처럼 돌며 튕겨 나가는 가벼운 미어캣」이라는 정체는 같다.
+ */
+const PAWN_VARIANTS = [
+  REACT.pawn,
+  // 반대로 돌며 낮게, 옆으로 비틀거리며 조금 더 멀리.
+  (u) => ({ back: 1.1 * easeOut(u), up: arc(u, 0.8), tilt: 0.3 * Math.sin(Math.PI * u), roll: 0.35 * Math.sin(Math.PI * u), spin: -3 * TAU * easeOut(u) }),
+  // 덜 밀리고 더 높이 퐁 떠서, 뒤로 크게 젖혀진다.
+  (u) => ({ back: 0.8 * easeOut(u), up: arc(u, 1.15), tilt: 0.75 * Math.sin(Math.PI * u), roll: 0, spin: 2 * TAU * easeOut(u) })
+];
+export const PAWN_VARIANT_COUNT = PAWN_VARIANTS.length;
+
 /** 퇴장 구간에서도 반응 자세를 그대로 두는 동물(넘어진 코뿔소는 누운 채 미끄러져 나간다). */
 const KEEP_POSE = { rook: true };
 
 export const REACTION_TYPES = Object.keys(REACT);
 
-/** `t`초 때 잡힌 `type` 동물의 자세. 모르는 종류(킹 등)는 폰 반응을 쓴다. */
-export function reactionPose(type, t) {
-  const react = REACT[type] || REACT.pawn;
+/**
+ * `t`초 때 잡힌 `type` 동물의 자세. 모르는 종류(킹 등)는 폰 반응을 쓴다.
+ * `variant` 는 미어캣만 쓴다(그 판에서 앞서 잡힌 미어캣 수). 다른 동물은 무시한다.
+ */
+export function reactionPose(type, t, variant = 0) {
+  const react = type === 'pawn' ? PAWN_VARIANTS[((variant % PAWN_VARIANT_COUNT) + PAWN_VARIANT_COUNT) % PAWN_VARIANT_COUNT] : REACT[type] || REACT.pawn;
   if (t <= REACT_SEC) return { ...react(clamp01(t / REACT_SEC)), toStorage: 0, scale: 1 };
   const end = react(1);
   const k = clamp01((t - REACT_SEC) / (REACTION_TOTAL - REACT_SEC));

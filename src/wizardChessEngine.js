@@ -1925,9 +1925,11 @@ let engineStarted = false;
       let dz = dir?.z || 0;
       const len = Math.hypot(dx, dz);
       if (len < 1e-6) { dx = side; dz = 0; } else { dx /= len; dz /= len; }
+      // A meerkat is taken in about half of all captures, so each one this game reacts a little differently (CX-6).
+      const variant = piece.type === 'pawn' ? referee.history().slice(0, -1).filter((m) => m.captured === 'p').length : 0;
       fadingPieces.push({
         piece, age: 0, start, endX: side * BOARD_SQ_SIZE * 5.4, spin: side * 7,
-        dx, dz, baseQ: piece.mesh.quaternion.clone(), type: piece.type
+        dx, dz, baseQ: piece.mesh.quaternion.clone(), type: piece.type, variant
       });
     }
     const contactShadows = createContactShadows(scene, { surfaceY: BOARD_SURFACE_Y, size: BOARD_SQ_SIZE * 0.92, opacity: 0.3 });
@@ -1988,7 +1990,7 @@ let engineStarted = false;
       for (let i = fadingPieces.length - 1; i >= 0; i--) {
         const f = fadingPieces[i];
         f.age += dt;
-        const pose = reactionPose(f.type, f.age);
+        const pose = reactionPose(f.type, f.age, f.variant);
         const mesh = f.piece.mesh;
         const px = f.start.x + f.dx * pose.back * BOARD_SQ_SIZE;
         const pz = f.start.z + f.dz * pose.back * BOARD_SQ_SIZE;
@@ -5985,6 +5987,8 @@ let engineStarted = false;
       // Debug: hide the impact words, for the muted who-took-whom quiz recordings (capture-matchup human test A).
       debugHideWords: (on) => impactFx.setWordsHidden(on),
       // Debug: the last capture's special case (CX-4): mirror match, pawn combo count and pitch, pieces swayed by a roar.
+      // Debug: the game's moves (chess.js verbose history), for the twenty-game capture log (capture-matchup human test B).
+      debugHistory: () => referee.history(),
       debugSpecial: () => ({ ...(lastSpecial || {}), impacts: impactCount, mirrorPose: lastMirrorPose && { ...lastMirrorPose }, swaying: roarSways.length }),
       // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
       debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask),
@@ -6077,7 +6081,7 @@ let engineStarted = false;
         const rect = renderer.domElement.getBoundingClientRect();
         const head = new THREE.Vector3(0, 1, 0).applyQuaternion(m.quaternion);
         return {
-          type: f.type, age: f.age,
+          type: f.type, age: f.age, variant: f.variant,
           up: (m.position.y - f.start.y) / BOARD_SQ_SIZE,
           back: ((m.position.x - f.start.x) * f.dx + (m.position.z - f.start.z) * f.dz) / BOARD_SQ_SIZE,
           leanDeg: Math.acos(Math.max(-1, Math.min(1, head.y))) * 180 / Math.PI,

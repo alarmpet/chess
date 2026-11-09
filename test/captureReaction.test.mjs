@@ -73,3 +73,28 @@ test('a fallen rhino slides out lying down; the others are upright again as they
     assert.ok(Math.abs(p.tilt) < 1e-9 && Math.abs(p.roll) < 1e-9, t);
   }
 });
+
+test('CX-6: 미어캣 반응은 그 판 몇 번째인지에 따라 세 가지로 갈리고, 길이·시작·끝은 같다', async () => {
+  const { PAWN_VARIANT_COUNT } = await import('../src/fx/captureReaction.js');
+  assert.equal(PAWN_VARIANT_COUNT, 3);
+  const sig = [];
+  for (let v = 0; v < PAWN_VARIANT_COUNT; v++) {
+    const s = Array.from({ length: 76 }, (_, i) => reactionPose('pawn', (i / 75) * REACTION_TOTAL, v));
+    for (const k of ['back', 'up', 'tilt', 'roll', 'spin', 'toStorage']) assert.ok(Math.abs(s[0][k]) < 1e-9, `v${v} ${k} 시작`);
+    assert.equal(s.at(-1).toStorage, 1);
+    for (let i = 1; i < s.length; i++) {
+      for (const k of ['back', 'up']) assert.ok(Math.abs(s[i][k] - s[i - 1][k]) < 0.2, `v${v} ${k} @${i}`);
+      for (const k of ['tilt', 'roll', 'spin']) { const d = s[i][k] - s[i - 1][k]; assert.ok(Math.abs(Math.atan2(Math.sin(d), Math.cos(d))) < Math.PI / 2, `v${v} ${k} @${i}`); }
+      assert.ok(s[i].back <= 1.2 && s[i].up <= 1.2);
+    }
+    const r = s.filter((_, i) => i <= 75 * (REACT_SEC / REACTION_TOTAL));
+    const max = (k) => Math.max(...r.map((p) => Math.abs(p[k])));
+    // 셋 다 팽이처럼 도는 미어캣(10라디안 넘게 돈다)이고, 서명은 서로 다르다.
+    assert.ok(max('spin') > 10, `v${v} spin`);
+    sig.push(['back', 'up', 'tilt', 'roll'].map((k) => max(k).toFixed(2)).join() + Math.sign(r.at(-1).spin));
+  }
+  assert.equal(new Set(sig).size, 3);
+  // 넷째는 처음과 같다(돌아가며 쓴다). 다른 동물은 variant 를 무시한다.
+  assert.deepEqual(reactionPose('pawn', 0.3, 3), reactionPose('pawn', 0.3, 0));
+  assert.deepEqual(reactionPose('rook', 0.3, 2), reactionPose('rook', 0.3));
+});

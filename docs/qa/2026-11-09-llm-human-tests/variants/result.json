@@ -1,0 +1,41 @@
+[
+ {
+  "move": "6,4->4,4",
+  "ok": true
+ },
+ {
+  "move": "1,3->3,3",
+  "ok": true
+ },
+ {
+  "move": "exd5",
+  "ok": true,
+  "variant": 0,
+  "maxUp": 1.1,
+  "backAt055": 0.82,
+  "maxLeanDeg": 26,
+  "samples": 12
+ },
+ {
+  "move": "Qxd5",
+  "ok": true,
+  "variant": 1,
+  "maxUp": 0.8,
+  "backAt055": 1.1,
+  "maxLeanDeg": 26,
+  "samples": 12
+ },
+ {
+  "move": "7,1->5,2",
+  "ok": true
+ },
+ {
+  "move": "Qxg2",
+  "ok": true,
+  "variant": 2,
+  "maxUp": 1.15,
+  "backAt055": 0.8,
+  "maxLeanDeg": 43,
+  "samples": 11
+ }
+]
