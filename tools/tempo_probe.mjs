@@ -13,15 +13,17 @@ import { chooseMove, positionKey } from '../src/rules/ai.js';
 const args = process.argv.slice(2);
 const GAMES = Number(args.find((a) => /^\d+$/.test(a)) || 2);
 const QUICK = args.includes('--quick');
+// --skip: 연출이 도는 동안 50ms 마다 판을 누른 것처럼 건너뛰기(DR-1c, window.wizardChess.skipAnimation — 탭과 같은 길)를 부른다. 계속 누르는 사람의 하한.
+const SKIP = args.includes('--skip');
 const jsonAt = args.indexOf('--json');
 const URL = process.env.TEMPO_URL || 'http://localhost:3000/';
-const PORT = 9431 + (QUICK ? 1 : 0);
+const PORT = 9431 + (QUICK ? 1 : 0) + (SKIP ? 2 : 0);
 const MAX_PLIES = 160;
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 let seed = 97531;
 const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
 
-const dir = `${process.env.TEMP}/wc-tempo-${QUICK ? 'quick' : 'normal'}`;
+const dir = `${process.env.TEMP}/wc-tempo-${QUICK ? 'quick' : 'normal'}${SKIP ? '-skip' : ''}`;
 try { rmSync(dir, { recursive: true, force: true }); } catch { /* */ }
 const chrome = spawn(process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe', [`--remote-debugging-port=${PORT}`, '--headless=new',
   '--no-first-run', '--mute-audio', '--window-size=960,640', `--user-data-dir=${dir}`, URL], { stdio: 'ignore' });
@@ -52,6 +54,7 @@ await sleep(1500);
 // 페이지 안 표본기: 4ms 마다 바쁨·수 번호가 바뀐 시각만 남긴다.
 await ev(`(() => { if (window.__tl) return 1; const w = window.wizardChess; window.__tl = []; let lb = null, ln = -1;
   setInterval(() => { const b = w.debugBusy(); const n = w.debugHistory().length; if (b !== lb || n !== ln) { window.__tl.push({ t: performance.now(), b, n }); lb = b; ln = n; } }, 4); return 1; })()`);
+if (SKIP) await ev(`(() => { setInterval(() => { const w = window.wizardChess; if (w.debugBusy()) w.skipAnimation?.(); }, 50); return 1; })()`);
 
 const rc = (sq) => [8 - Number(sq[1]), sq.charCodeAt(0) - 97];
 const rows = [];
@@ -65,6 +68,7 @@ for (let g = 0; g < GAMES; g++) {
     await sleep(1200);
     await ev(`(() => { const w = window.wizardChess; window.__tl = []; let lb = null, ln = -1;
       setInterval(() => { const b = w.debugBusy(); const n = w.debugHistory().length; if (b !== lb || n !== ln) { window.__tl.push({ t: performance.now(), b, n }); lb = b; ln = n; } }, 4); return 1; })()`);
+    if (SKIP) await ev(`(() => { setInterval(() => { const w = window.wizardChess; if (w.debugBusy()) w.skipAnimation?.(); }, 50); return 1; })()`);
   }
   const startHist = await ev('window.wizardChess.debugHistory().length');
   if (startHist !== 0) console.log(`판 ${g + 1}: 시작 수 ${startHist} (이어 하기가 남아 있음)`);
@@ -114,7 +118,7 @@ const p90 = (xs) => { const v = xs.filter((x) => x != null).sort((a, b) => a - b
 const sum = (xs) => xs.filter((x) => x != null).reduce((a, b) => a + b, 0);
 const part = (k, f = () => true) => ({ median: med(rows.filter(f).map((r) => r[k])), p90: p90(rows.filter(f).map((r) => r[k])), totalSec: +(sum(rows.filter(f).map((r) => r[k])) / 1000).toFixed(1) });
 const out = {
-  at: new Date().toISOString(), url: URL, quick: QUICK, games, cycles: rows.length,
+  at: new Date().toISOString(), url: URL, quick: QUICK, skip: SKIP, games, cycles: rows.length,
   note: '내 쪽 생각 시간 0(봇). 한 순환 = 내 수 → AI 답 → 다시 둘 수 있을 때. AI 대기 = 고정 540ms + 탐색 계산.',
   myAnim: part('myAnim'), myAnimQuiet: part('myAnim', (r) => !r.capture), myAnimCapture: part('myAnim', (r) => r.capture),
   aiWait: part('aiWait'), aiAnim: part('aiAnim'), aiAnimCapture: part('aiAnim', (r) => r.replyCapture),
@@ -122,6 +126,6 @@ const out = {
   perGameBlockedSec: games.map((g) => +(sum(rows.filter((r) => r.game === g.game).map((r) => r.blocked)) / 1000).toFixed(1)),
   rows
 };
-console.log(JSON.stringify({ quick: out.quick, games: out.games, myAnim: out.myAnim, myAnimQuiet: out.myAnimQuiet, myAnimCapture: out.myAnimCapture, aiWait: out.aiWait, aiAnim: out.aiAnim, aiAnimCapture: out.aiAnimCapture, blocked: out.blocked, perGameBlockedSec: out.perGameBlockedSec }, null, 1));
+console.log(JSON.stringify({ quick: out.quick, skip: out.skip, games: out.games, myAnim: out.myAnim, myAnimQuiet: out.myAnimQuiet, myAnimCapture: out.myAnimCapture, aiWait: out.aiWait, aiAnim: out.aiAnim, aiAnimCapture: out.aiAnimCapture, blocked: out.blocked, perGameBlockedSec: out.perGameBlockedSec }, null, 1));
 if (jsonAt >= 0) writeFileSync(args[jsonAt + 1], JSON.stringify(out, null, 1));
 process.exit(0);

@@ -19,7 +19,7 @@ import { fxSettings } from './fx/settings.js';
 import { kindAllows, lockKind } from './cards/teamPlay.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { attackStyle } from './fx/attackStyle.js';
-import { ROAR_REACH, ROAR_SEC, countPawnTrades, isMirror, mirrorPose, pawnComboPitch, roarSway } from './fx/captureSpecial.js';
+import { ROAR_REACH, ROAR_SEC, countPawnTrades, isMirror, mirrorPose, momentumSteps, pawnComboPitch, roarSway } from './fx/captureSpecial.js';
 import { REACTION_TOTAL, REACT_SEC, reactionPose } from './fx/captureReaction.js';
 import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset } from './fx/impactTier.js';
 
@@ -1814,6 +1814,13 @@ let engineStarted = false;
     let playerColor = 'w';   // 'w' | 'b' | 'spectator'
     let aiAutoPlay = true;
     let aiTimer = null;
+    // DR-1c (2026-11-10): the AI's pause before it moves. Its search takes about 10 ms; the old fixed 540 ms was a fifth of
+    // all the time the board was locked (tools/tempo_probe.mjs, docs/qa/2026-11-10-dr0.md). Long enough to see whose turn it is.
+    const AI_DELAY_MS = 250;
+    // DR-1c: a tap on the board while a move is playing fast-forwards that move (time runs SKIP_SPEED times faster until it
+    // lands) instead of jumping to the end, so the choreography's order — contact, fall, landing — stays the same.
+    const SKIP_SPEED = 4;
+    let skipFast = false;
 
     // Multiplayer State
     let roomCode = null;
@@ -3280,10 +3287,12 @@ let engineStarted = false;
       impactFx.shake(tier.shake);
       // Pawn takes pawn (CX-4): the commonest capture stays small, but each one this game lands a semitone higher.
       const comboN = attackerType === 'pawn' && captured.type === 'pawn' ? countPawnTrades(referee.history()) : 0;
-      const pitch = comboN ? pawnComboPitch(comboN) : 1;
+      // DR-1a: the side that keeps capturing or checking climbs too; the higher of the two steps is heard.
+      const streak = momentumSteps(referee.history(), attacker?.color || (captured.color === 'w' ? 'b' : 'w'));
+      const pitch = Math.max(comboN ? pawnComboPitch(comboN) : 1, streak ? pawnComboPitch(streak) : 1);
       sfx.impact(tierId, attackerType, pitch);
       const swayed = attackerType === 'king' ? startRoar(ground, [captured, attacker]) : 0;
-      lastSpecial = { mirror: isMirror(attackerType, captured.type), comboN, pitch, swayed };
+      lastSpecial = { mirror: isMirror(attackerType, captured.type), comboN, streak, pitch, swayed };
       reportCapture(captured, ground, attackerType);
       if (captured.rig !== 'statue' && captured.mesh) {
         impactFx.flash(captured.mesh);
@@ -3338,7 +3347,9 @@ let engineStarted = false;
       } else if (referee.gameOverReason()) {
         sfx.play('draw', 0.15);
       } else if (san.endsWith('+')) {
-        sfx.play('check', 0.08);
+        // DR-1a: a check that continues a run of captures and checks lands a semitone higher each time.
+        const streak = momentumSteps(referee.history(), moverColor);
+        sfx.play('check', 0.08, streak > 1 ? pawnComboPitch(streak) : 1);
         impactFx.label(kingGround, '체크!', 0.09);
         if (enemyKing?.mesh && enemyKing.rig !== 'statue') impactFx.hop(enemyKing.mesh, 0.09, 0.34);
       }
@@ -4202,6 +4213,15 @@ let engineStarted = false;
       return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion });
     }
 
+    /** DR-1c: hurry the move that is playing (a tap on the board, or the API). False when nothing is playing. */
+    function requestSkip() {
+      if (!isAnimatingMove && hitStopLeft <= 0 && slowLeft <= 0) return false;
+      skipFast = true;
+      hitStopLeft = 0;
+      slowLeft = 0;
+      return true;
+    }
+
     function maybeScheduleAIMove() {
       if (aiTimer) {
         clearTimeout(aiTimer);
@@ -4224,7 +4244,7 @@ let engineStarted = false;
           ) {
             triggerAIMoveNow();
           }
-        }, 540);
+        }, AI_DELAY_MS);
       }
     }
 
@@ -5201,11 +5221,19 @@ let engineStarted = false;
     renderer.domElement.addEventListener('pointerup', (e) => {
       const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
       if (moveDist > 6) return;
-      if (isAnimatingMove || gameOver) return;
+      if (gameOver) return;
+      // DR-1c: a tap while a move plays hurries it along; it never selects anything.
+      if (isAnimatingMove) { requestSkip(); return; }
 
       // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
       if (gameMode === 'multi' && currentTurn !== playerColor) return;
-      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) return;
+      // DR-1c: a tap while the AI is about to move lets it move now instead of waiting out its pause.
+      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+        triggerAIMoveNow();
+        return;
+      }
 
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -5995,6 +6023,8 @@ let engineStarted = false;
       debugSpecial: () => ({ ...(lastSpecial || {}), impacts: impactCount, mirrorPose: lastMirrorPose && { ...lastMirrorPose }, swaying: roarSways.length }),
       // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
       debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask),
+      // DR-1c: the same as tapping the board while a move plays.
+      skipAnimation: () => requestSkip(),
       // Debug: why a move is still running (a test that waits on debugBusy can say what it is waiting for).
       debugMoveState: () => ({ clock: moveClock && { total: moveClock.total, strikeDone: moveClock.strikeDone, isCapture: moveClock.isCapture, elapsed: moveClock.elapsed() }, animating: isAnimatingMove, preMove: Boolean(preMoveHighlightTask), tweens: activeMoveTweens.length, hitStopLeft, slowLeft, aiTimer: Boolean(aiTimer), gameOver, gameMode, aiAutoPlay, renderPaused, manualStepMode }),
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
@@ -6534,6 +6564,10 @@ let engineStarted = false;
     }
 
     function stepScene(dt, doRender = true) {
+      if (skipFast) {
+        if (isAnimatingMove || hitStopLeft > 0 || slowLeft > 0) dt *= SKIP_SPEED;
+        else skipFast = false;
+      }
       elapsedTotal += dt;
       const prevCamPos = camera.position.clone();
 

@@ -75,6 +75,22 @@ export function pawnComboPitch(n) {
   return 2 ** (steps / 12);
 }
 
+/**
+ * 흐름 음 계단(방향 계획서 DR-1a, 2026-11-10): 한쪽이 잡기나 체크를 이어 간 횟수. 상대 수는 건너뛰고 그쪽의 수만 거꾸로 센다.
+ * 조용한 수(잡기도 체크도 아님)를 두면 끊긴다. 마지막 수가 조용하면 0. 음높이는 pawnComboPitch(n) 과 같은 계단(반음, 7까지).
+ * @param {{color: string, san?: string, captured?: string}[]} history chess.js 자세한 기록
+ */
+export function momentumSteps(history = [], color) {
+  let n = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const m = history[i];
+    if (m.color !== color) continue;
+    if (m.captured || /[+#]$/.test(m.san || '')) n += 1;
+    else break;
+  }
+  return n;
+}
+
 /** chess.js 자세한 기록(verbose history)에서 폰이 폰을 잡은 수를 센다. 앙파상도 폰끼리라 센다. */
 export function countPawnTrades(history = []) {
   let n = 0;

@@ -13,6 +13,7 @@ import { bountyMarks, bountyStep, newBounty } from './bounty.js';
 import { STAMPS, STAMP_ACORNS, stampById, stampsOf } from './stamps.js';
 import { RALLY_ACORNS, newRally, rallyStep } from './rally.js';
 import { noteQueue } from './noteQueue.js';
+import { TALLY_STEP_MS, acornTally, runningTotal, tallyPitch } from './acornTally.js';
 import { QUEST_ACORNS, TIERS, dayNumber, questById, questStep, refreshQuests, sanitizeQuests, swapQuest } from './quests.js';
 import { loadVillage, payMissionAcorns } from '../village/store';
 import { clearPouch, loadCollection, loadPouch, loadQuestsRaw, logGame, readPlaylog, saveCollection, savePouch, saveQuests } from './store';
@@ -62,6 +63,9 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [count, setCount] = useState(0);
   const [result, setResult] = useState<Won[] | null>(null);
   const [reveal, setReveal] = useState<Won[] | null>(null);
+  // DR-1b: this game's acorns, counted in one line at a time on the end-of-game pouch. `shown` grows on a timer; a tap ends it.
+  const [tally, setTally] = useState<{ items: { key: string; n: number; ko: string; en: string }[]; total: number } | null>(null);
+  const [tallyShown, setTallyShown] = useState(0);
   const [col, setCol] = useState<any>(() => loadCollection());
   const [merged, setMerged] = useState<Won[] | null>(null);
   const [odds, setOdds] = useState(false);
@@ -303,6 +307,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       if (d.result) feedQuest({ kind: 'end', result: d.result });
       const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns + g.stampAcorns + g.questAcorns + g.rallyAcorns;
       if (extra) payMissionAcorns(extra);
+      setTally(acornTally({ result: d.result, mission: g.missionState === 'done' ? MISSION_ACORNS : 0, bounty: g.bountyAcorns, stamps: g.stampAcorns, quests: g.questAcorns, rally: g.rallyAcorns }));
+      setTallyShown(0);
       engine()?.setBountyMarks?.([]);
       setPlaying(false);
       setRallyGoal(null);
@@ -327,6 +333,19 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       window.removeEventListener('movelanded', onMoved);
     };
   }, []);
+
+  // DR-1b: one line every TALLY_STEP_MS while the pouch is up, each a semitone higher. Reduced motion shows all at once.
+  useEffect(() => {
+    if (!reveal || !tally) return;
+    const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (still) { setTallyShown(tally.items.length); return; }
+    if (tallyShown >= tally.items.length) return;
+    const t = setTimeout(() => {
+      sfx.play('button', 0, tallyPitch(tallyShown));
+      setTallyShown((k) => k + 1);
+    }, tallyShown === 0 ? 450 : TALLY_STEP_MS);
+    return () => clearTimeout(t);
+  }, [reveal, tally, tallyShown]);
 
   useEffect(() => {
     if (!open) return;
@@ -473,6 +492,15 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
               🎒 {en ? `This game's pouch · ${reveal.length}` : `이번 판 주머니 · ${reveal.length}장`}
               {checks > 0 && <small> ({en ? `${reveal.length - checks} caught + ${checks} for check` : `잡은 ${reveal.length - checks} + 체크 ${checks}`})</small>}
             </div>
+            {tally && tally.items.length > 0 && (
+              <button type="button" className={`acorn-tally${tallyShown >= tally.items.length ? ' done' : ''}`} id="acorn-tally"
+                onClick={() => setTallyShown(tally.items.length)} aria-label={en ? `Acorns this game: ${tally.total}` : `이번 판 도토리 ${tally.total}`}>
+                <span className="acorn-tally-lines">
+                  {tally.items.slice(0, tallyShown).map((x) => <span key={x.key} className="acorn-tally-line">{en ? x.en : x.ko} <b>+{x.n}</b></span>)}
+                </span>
+                <span className="acorn-tally-total">🌰 <b>{runningTotal(tally.items, tallyShown)}</b>{tallyShown < tally.items.length ? <small>{en ? ' tap to skip' : ' 누르면 바로'}</small> : null}</span>
+              </button>
+            )}
             <div className="card-reveal-row">
               {shown.map((c, i) => (
                 <div key={i} className={`card-reveal-card${c.rarity === HERO ? ' hero' : c.rarity >= RARE ? ' rare' : ''}`} style={{ animationDelay: `${i * step}ms` }}>

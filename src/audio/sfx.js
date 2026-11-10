@@ -142,9 +142,10 @@ function createSfx() {
     voice(attackerType, 0.03);
   }
 
-  function play(name, delay = 0) {
-    note(name);
-    return schedule(SOUNDS[name] || [], delay);
+  // `pitch` other than 1 is a deliberate step (the momentum ladder, DR-1a); 1 keeps the recipe as written.
+  function play(name, delay = 0, pitch = 1) {
+    note(pitch !== 1 ? `${name}@${pitch.toFixed(3)}` : name);
+    return schedule(SOUNDS[name] || [], delay, pitch);
   }
 
   function setMuted(next) {

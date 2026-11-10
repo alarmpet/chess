@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   COMBO_MAX_STEPS, MIRROR_SHARE, MIRROR_TYPES, ROAR_REACH, ROAR_SEC, ROAR_TILT,
-  countPawnTrades, isMirror, mirrorPose, pawnComboPitch, roarSway
+  countPawnTrades, isMirror, mirrorPose, momentumSteps, pawnComboPitch, roarSway
 } from '../src/fx/captureSpecial.js';
 import { attackWindPose } from '../src/fx/attackStyle.js';
 
@@ -90,4 +90,17 @@ test('폰끼리 잡기 세기: 다른 잡기와 조용한 수는 세지 않는�
   ];
   assert.equal(countPawnTrades(h), 2);
   assert.equal(countPawnTrades([]), 0);
+});
+
+test('momentum ladder: a side climbs while it keeps capturing or checking, a quiet move resets it (DR-1a)', () => {
+  const w = (san, captured) => ({ color: 'w', san, captured });
+  const b = (san, captured) => ({ color: 'b', san, captured });
+  assert.equal(momentumSteps([], 'w'), 0);
+  assert.equal(momentumSteps([w('e4'), b('d5')], 'w'), 0, 'last own move quiet');
+  assert.equal(momentumSteps([w('e4'), b('d5'), w('exd5', 'p')], 'w'), 1);
+  assert.equal(momentumSteps([w('exd5', 'p'), b('Nf6'), w('Bb5+'), b('c6'), w('dxc6', 'p')], 'w'), 3, 'capture, check, capture — the other side is skipped');
+  assert.equal(momentumSteps([w('Qxf7#', 'p')], 'w'), 1, 'mate counts as a check too');
+  assert.equal(momentumSteps([w('exd5', 'p'), b('Nf6'), w('Nc3'), b('a6'), w('Bxa6', 'p')], 'w'), 1, 'a quiet move in between starts over');
+  assert.equal(momentumSteps([w('exd5', 'p'), b('Qxd5', 'p')], 'b'), 1, 'each side keeps its own ladder');
+  assert.equal(pawnComboPitch(momentumSteps([w('exd5', 'p'), b('a6'), w('Bb5+')], 'w')), 2 ** (1 / 12), 'the second step is a semitone up');
 });
