@@ -1,0 +1,115 @@
+{
+ "n": 30,
+ "weak": "쉬움(d1·실수 0.3)",
+ "rows": [
+  {
+   "strong": "보통(d2·실수 0.1)",
+   "odds": "없음",
+   "win": 0,
+   "draw": 0.07,
+   "loss": 0.93,
+   "score": 0.03,
+   "meanPlies": 101
+  },
+  {
+   "strong": "보통(d2·실수 0.1)",
+   "odds": "폰 하나(f)",
+   "win": 0,
+   "draw": 0.03,
+   "loss": 0.97,
+   "score": 0.02,
+   "meanPlies": 91
+  },
+  {
+   "strong": "보통(d2·실수 0.1)",
+   "odds": "나이트(b)",
+   "win": 0.13,
+   "draw": 0.13,
+   "loss": 0.73,
+   "score": 0.2,
+   "meanPlies": 118
+  },
+  {
+   "strong": "보통(d2·실수 0.1)",
+   "odds": "룩(a)",
+   "win": 0.17,
+   "draw": 0.07,
+   "loss": 0.77,
+   "score": 0.2,
+   "meanPlies": 117
+  },
+  {
+   "strong": "보통(d2·실수 0.1)",
+   "odds": "퀸",
+   "win": 0.57,
+   "draw": 0.1,
+   "loss": 0.33,
+   "score": 0.62,
+   "meanPlies": 139
+  },
+  {
+   "strong": "보통(d2·실수 0.1)",
+   "odds": "퀸 + 룩(a)",
+   "win": 0.73,
+   "draw": 0.17,
+   "loss": 0.1,
+   "score": 0.82,
+   "meanPlies": 103
+  },
+  {
+   "strong": "어려움(d3·실수 0)",
+   "odds": "없음",
+   "win": 0,
+   "draw": 0,
+   "loss": 1,
+   "score": 0,
+   "meanPlies": 78
+  },
+  {
+   "strong": "어려움(d3·실수 0)",
+   "odds": "폰 하나(f)",
+   "win": 0.03,
+   "draw": 0,
+   "loss": 0.97,
+   "score": 0.03,
+   "meanPlies": 73
+  },
+  {
+   "strong": "어려움(d3·실수 0)",
+   "odds": "나이트(b)",
+   "win": 0,
+   "draw": 0.07,
+   "loss": 0.93,
+   "score": 0.03,
+   "meanPlies": 92
+  },
+  {
+   "strong": "어려움(d3·실수 0)",
+   "odds": "룩(a)",
+   "win": 0,
+   "draw": 0.13,
+   "loss": 0.87,
+   "score": 0.07,
+   "meanPlies": 93
+  },
+  {
+   "strong": "어려움(d3·실수 0)",
+   "odds": "퀸",
+   "win": 0.17,
+   "draw": 0.17,
+   "loss": 0.67,
+   "score": 0.25,
+   "meanPlies": 121
+  },
+  {
+   "strong": "어려움(d3·실수 0)",
+   "odds": "퀸 + 룩(a)",
+   "win": 0.67,
+   "draw": 0.13,
+   "loss": 0.2,
+   "score": 0.73,
+   "meanPlies": 116
+  }
+ ],
+ "seconds": 4448
+}
