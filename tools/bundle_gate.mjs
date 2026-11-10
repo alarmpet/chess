@@ -27,5 +27,16 @@ for (const ext of ['js', 'css']) {
   if (gzKb > LIMIT_GZ_KB[ext]) bad.push(`${ext} gzip ${gzKb.toFixed(0)}KB > ${LIMIT_GZ_KB[ext]}KB`);
   if (LIMIT_RAW_KB[ext] && rawKb > LIMIT_RAW_KB[ext]) bad.push(`${ext} 원본 ${rawKb.toFixed(0)}KB > ${LIMIT_RAW_KB[ext]}KB`);
 }
+// 첫 화면에 받는 JS(index.html 의 script·modulepreload) 대 늦게 받는 조각(DR-0b, 2026-11-10). 상한은 아직 전체 합에 건다 —
+// 「첫 화면 400 · 전체 600」으로 나눌지는 사용자 결정(방향 계획서 §7-2). 그 전까지는 보고만 한다.
+const html = readFileSync(join(DIST, '..', 'index.html'), 'utf8');
+const first = new Set([...html.matchAll(/(?:src|href)="\.\/assets\/([^"]+\.js)"/g)].map((m) => m[1]));
+let firstGz = 0, lazyGz = 0;
+for (const f of readdirSync(DIST)) {
+  if (!f.endsWith('.js')) continue;
+  const gz = gzipSync(readFileSync(join(DIST, f)), { level: 9 }).length;
+  if (first.has(f)) firstGz += gz; else lazyGz += gz;
+}
+console.log(`첫 화면 JS gzip ${(firstGz / 1024).toFixed(0)}KB · 늦게 받는 JS gzip ${(lazyGz / 1024).toFixed(0)}KB (보고만)`);
 if (bad.length) { console.log('어긋남: ' + bad.join(' · ')); process.exit(1); }
 console.log('번들 게이트 통과');

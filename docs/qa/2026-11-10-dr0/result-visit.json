@@ -1,0 +1,31 @@
+{
+  "at": "2026-11-10T09:37:24.766Z",
+  "pass": 4,
+  "total": 4,
+  "rows": [
+    {
+      "item": "wide 첫 열기(예전 시각 값)",
+      "want": "손님 없음 · visits 가 판 수 8 로 바뀜 · 도토리 50 그대로",
+      "got": "{\"rivals\":\"[[\\\"picnic\\\",\\\"shelter\\\"],[\\\"bamboo_band\\\",\\\"market\\\"],[\\\"acorn_court\\\",\\\"spring\\\"]]\",\"card\":null,\"v\":{\"coins\":50,\"stash\":{},\"visits\":{\"picnic\":8},\"games\":8}}",
+      "ok": true
+    },
+    {
+      "item": "wide 판 4번 뒤 열기",
+      "want": "「다녀감, 선물 🌷/🪑/🪧」 · 도토리 50 그대로 · 소품 1개",
+      "got": "{\"card\":\"♟ 한 판 두러 가기 🧺 거두기 판이 끝나면 💌 소풍 나온 미어캣단 다녀감, 선물 🌷 꽃밭 🌾 밭 🌰 20 💧 물레방아 🌰 40 🧺 장터 🌰 60 🥖 빵집 🌰 \",\"v\":{\"coins\":50,\"stash\":{\"flowerbed\":1},\"visits\":{\"picnic\":12},\"games\":12}}",
+      "ok": true
+    },
+    {
+      "item": "phone 첫 열기(예전 시각 값)",
+      "want": "손님 없음 · visits 가 판 수 8 로 바뀜 · 도토리 50 그대로",
+      "got": "{\"rivals\":\"[[\\\"picnic\\\",\\\"shelter\\\"],[\\\"bamboo_band\\\",\\\"market\\\"],[\\\"acorn_court\\\",\\\"spring\\\"]]\",\"card\":null,\"v\":{\"coins\":50,\"stash\":{},\"visits\":{\"picnic\":8},\"games\":8}}",
+      "ok": true
+    },
+    {
+      "item": "phone 판 4번 뒤 열기",
+      "want": "「다녀감, 선물 🌷/🪑/🪧」 · 도토리 50 그대로 · 소품 1개",
+      "got": "{\"card\":\"♟ 한 판 두러 가기 🧺 거두기 판이 끝나면 💌 소풍 나온 미어캣단 다녀감, 선물 🌷 꽃밭 🌾 밭 🌰 20 💧 물레방아 🌰 40 🧺 장터 🌰 60 🥖 빵집 🌰 \",\"v\":{\"coins\":50,\"stash\":{\"flowerbed\":1},\"visits\":{\"picnic\":12},\"games\":12}}",
+      "ok": true
+    }
+  ]
+}

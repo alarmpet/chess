@@ -332,8 +332,8 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
             <div className="village-quest" id="village-quest">🔔 {BUILDINGS[questHome.kind as keyof typeof BUILDINGS].ko}의 부탁: 다음 판에 {PIECE_ANIMAL[quest.piece]}{josa(PIECE_ANIMAL[quest.piece], '을', '를')} 잡아 주세요.</div>
           )}
           {hero && !note && !summary && <div>{slotLabel(hero, village?.names || {})}, 오늘 지나간 길을 다시 걷는 중이에요.</div>}
-          {away.length === 1 && <div>💌 {rivalName(away[0].rival)} 다녀감, 🌰 +{away[0].coins}{away[0].memory ? ` — "지난번 ${slotLabel(away[0].memory.mvp, village?.names || {})} 멋졌어!"` : ''}</div>}
-          {away.length > 1 && <div>💌 손님 {away.length}팀 다녀감, 🌰 +{away.reduce((n, e) => n + e.coins, 0)}</div>}
+          {away.length === 1 && <div>💌 {rivalName(away[0].rival)} 다녀감, 선물 {PROPS[away[0].gift as keyof typeof PROPS]?.icon || '🎁'} {PROPS[away[0].gift as keyof typeof PROPS]?.ko || ''}{away[0].memory ? ` — "지난번 ${slotLabel(away[0].memory.mvp, village?.names || {})} 멋졌어!"` : ''}</div>}
+          {away.length > 1 && <div>💌 손님 {away.length}팀 다녀감, 선물 {away.map((e) => PROPS[e.gift as keyof typeof PROPS]?.icon || '🎁').join('')}</div>}
           {note && <div>{note}{picking?.startsWith('prop:') && <button type="button" className="village-link" onClick={() => { setPicking(null); setNote(''); }}>그만두기</button>}</div>}
           {propAt && (() => {
             const d = village?.decor.find((x: any) => x.sq === propAt);

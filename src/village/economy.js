@@ -8,8 +8,12 @@ export const COINS = { win: 30, draw: 20, loss: 15 };
 export const PET_DAILY_CAP = 10;            // Pokémon GO buddy: a daily heart cap ends the session kindly
 export const MVP_HEARTS = 5;
 export const HEART_STAGES = [[60, 'starlit'], [30, 'adult'], [10, 'grown'], [0, 'baby']];
-export const VISIT_GAP_MS = 4 * 3600 * 1000;
-export const VISIT_GIFT = 10;
+// Rival visits run on finished games, not on the clock (island-economy plan §5, direction plan DR-0c, 2026-11-10):
+// the old 「10 acorns every 4 hours」 was the only income that needed no chess. A visitor now comes once every
+// VISIT_EVERY_GAMES finished games and leaves a common prop in the stash instead of acorns.
+export const VISIT_EVERY_GAMES = 4;
+export const VISIT_GIFT_PROPS = ['flowerbed', 'bench', 'signpost'];
+export const VISIT_GIFT = 0;                 // acorns from a visit — none since DR-0c (kept for old imports)
 export const GRAIN_MAX = 20;                // a full barn stops the field, nothing is thrown away
 export const BREAD_MAX = 10;
 export const GRAIN_PRICE = 2;
@@ -546,19 +550,35 @@ export function pet(v, slot, now) {
   return true;
 }
 
-/** Catch up with elapsed time. Only visitors use the clock, and absence only ever adds. Returns what happened. */
+/**
+ * Visitors on opening the village. They count finished games, never the clock: absence adds nothing and takes nothing.
+ * A rival comes when its building stands and VISIT_EVERY_GAMES games have ended since its last visit, and leaves a
+ * common prop in the stash. One visitor every VISIT_EVERY_GAMES games in all. `now` only stamps the gift. Returns what happened.
+ */
 export function tickVillage(v, rivals, now) {
   const events = [];
-  for (const r of rivals || []) {
-    if (!r.visitsFor || !v.built.some((b) => b.kind === r.visitsFor && b.ready)) continue;
-    const last = v.visits[r.id] || 0;
-    if (now - last >= VISIT_GAP_MS) {
-      v.visits[r.id] = now;
-      v.coins += VISIT_GIFT;
-      const memory = v.rivals[r.id] || null;
-      v.gifts.push({ rival: r.id, at: now, memory });
-      events.push({ type: 'visit', rival: r.id, memory, coins: VISIT_GIFT });
-    }
+  const due = [];
+  (rivals || []).forEach((r, i) => {
+    if (!r.visitsFor || !v.built.some((b) => b.kind === r.visitsFor && b.ready)) return;
+    let last = v.visits[r.id];
+    // Old saves kept a timestamp here; count from the games played so far instead.
+    if (typeof last === 'number' && last > 1e6) last = v.visits[r.id] = v.games;
+    const since = typeof last === 'number' ? v.games - last : v.games;
+    if (since >= VISIT_EVERY_GAMES) due.push({ r, i, since });
+  });
+  // One visitor every VISIT_EVERY_GAMES games in all, whoever waited longest (then pack order), so three rivals do not
+  // turn into three gifts (visit sim 2026-11-10: per rival it was one prop every second game for a heavy player).
+  const lastAny = Math.max(-Infinity, ...Object.values(v.visits).filter((x) => typeof x === 'number' && x <= 1e6));
+  due.sort((a, b) => b.since - a.since || a.i - b.i);
+  const pick = Number.isFinite(lastAny) && v.games - lastAny < VISIT_EVERY_GAMES ? null : due[0];
+  if (pick) {
+    const { r, i } = pick;
+    v.visits[r.id] = v.games;
+    const gift = VISIT_GIFT_PROPS[(v.games + i) % VISIT_GIFT_PROPS.length];
+    v.stash[gift] = (v.stash[gift] || 0) + 1;
+    const memory = v.rivals[r.id] || null;
+    v.gifts.push({ rival: r.id, at: now, memory, gift });
+    events.push({ type: 'visit', rival: r.id, memory, gift, coins: 0 });
   }
   v.gifts = v.gifts.slice(-10);
   return events;

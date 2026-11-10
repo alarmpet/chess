@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Chess } from 'chess.js';
-import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, dewReady, dayIndex, weekIndex, weekDue, rollWeek, weekPick, PROPS, PROP_PRICE, PROP_STOCK, SHELF_ODDS, SHELF_XP, growShelf, stockShelf, buyProp, placeProp, storeProp, DEW_GRAIN, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_GIFT, GRAIN_MAX, BONUS_MAX, shelfReserve } from '../src/village/economy.js';
+import { newVillage, sanitizeVillage, settleGame, startBuild, buildBlocked, tickVillage, pet, stageForHearts, pickMvp, routeOf, moveIn, moveOut, tenantBlocked, reconcileTenants, influenceSquares, influenceBonus, islandDone, startNewIsland, nightOpen, nextQuest, loopStep, dewReady, dayIndex, weekIndex, weekDue, rollWeek, weekPick, PROPS, PROP_PRICE, PROP_STOCK, SHELF_ODDS, SHELF_XP, growShelf, stockShelf, buyProp, placeProp, storeProp, DEW_GRAIN, BUILDINGS, KIND_ORDER, COINS, PET_DAILY_CAP, VISIT_EVERY_GAMES, VISIT_GIFT_PROPS, GRAIN_MAX, BONUS_MAX, shelfReserve } from '../src/village/economy.js';
 import { replayGame } from '../src/village/roster.js';
 
 const line = (sans) => { const c = new Chess(); return sans.map((s) => c.move(s)); };
@@ -212,22 +212,54 @@ test('hearts grow the look in order', () => {
   assert.deepEqual([0, 9, 10, 30, 60, 500].map(stageForHearts), ['baby', 'baby', 'grown', 'adult', 'starlit', 'starlit']);
 });
 
-test('a visitor needs its building, leaves a gift, remembers the last game, and absence costs nothing', () => {
+test('a visitor needs its building and finished games, leaves a prop not acorns, and the clock pays nothing', () => {
   const rivals = [{ id: 'picnic', visitsFor: 'shelter' }];
   const v = newVillage();
   const start = 10 ** 12;
-  assert.deepEqual(tickVillage(v, rivals, start), []);
+  assert.deepEqual(tickVillage(v, rivals, start), [], 'no building');
   v.built.push({ kind: 'shelter', sq: 'c3', ready: true });
   v.rivals.picnic = { result: 'win', mvp: 'w_e2', plies: 40 };
+  v.games = VISIT_EVERY_GAMES - 1;
+  assert.deepEqual(tickVillage(v, rivals, start), [], 'not before enough games');
+  v.games = VISIT_EVERY_GAMES;
   const coins = v.coins;
   const ev = tickVillage(v, rivals, start);
+  assert.equal(ev.length, 1);
   assert.equal(ev[0].memory.mvp, 'w_e2');
-  assert.equal(v.coins, coins + VISIT_GIFT);
-  assert.deepEqual(tickVillage(v, rivals, start + 1000), [], 'not again straight away');
+  assert.ok(VISIT_GIFT_PROPS.includes(ev[0].gift));
+  assert.equal(v.stash[ev[0].gift], 1, 'the gift goes to the stash');
+  assert.equal(v.coins, coins, 'a visit pays no acorns');
+  assert.deepEqual(tickVillage(v, rivals, start + 365 * 24 * 3600 * 1000), [], 'a year away without chess brings nobody');
+  v.games += VISIT_EVERY_GAMES;
+  assert.equal(tickVillage(v, rivals, start).length, 1, 'more games bring the visitor back');
   const hearts = { ...v.hearts };
-  tickVillage(v, rivals, start + 365 * 24 * 3600 * 1000);
-  assert.deepEqual(v.hearts, hearts, 'a year away changes no hearts');
+  assert.deepEqual(v.hearts, hearts);
   assert.equal(v.built.length, 1, 'nothing falls down');
+});
+
+test('an old save with a visit timestamp counts from the games played so far', () => {
+  const rivals = [{ id: 'picnic', visitsFor: 'shelter' }];
+  const v = newVillage();
+  v.built.push({ kind: 'shelter', sq: 'c3', ready: true });
+  v.games = 20;
+  v.visits.picnic = 1_790_000_000_000;
+  assert.deepEqual(tickVillage(v, rivals, 1_800_000_000_000), [], 'no visit on the first opening after the update');
+  assert.equal(v.visits.picnic, 20);
+  v.games = 24;
+  assert.equal(tickVillage(v, rivals, 1_800_000_000_000).length, 1);
+});
+
+test('one visitor every few games in all, the one who waited longest', () => {
+  const rivals = [{ id: 'a', visitsFor: 'shelter' }, { id: 'b', visitsFor: 'market' }];
+  const v = newVillage();
+  v.built.push({ kind: 'shelter', sq: 'c3', ready: true }, { kind: 'market', sq: 'c4', ready: true });
+  v.games = 8;
+  assert.deepEqual(tickVillage(v, rivals, 1).map((e) => e.rival), ['a'], 'nobody came yet: pack order');
+  assert.deepEqual(tickVillage(v, rivals, 2), [], 'b waits: one visitor per few games in all');
+  v.games += VISIT_EVERY_GAMES;
+  assert.deepEqual(tickVillage(v, rivals, 3).map((e) => e.rival), ['b'], 'b waited longest');
+  v.games += VISIT_EVERY_GAMES;
+  assert.deepEqual(tickVillage(v, rivals, 4).map((e) => e.rival), ['a']);
 });
 
 test('a broken or old save falls back safely', () => {
