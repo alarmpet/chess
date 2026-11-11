@@ -2801,6 +2801,7 @@ let engineStarted = false;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
       preMoveHighlightTask = null;
       activeMoveTweens.length = 0;
@@ -2878,6 +2879,7 @@ let engineStarted = false;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
       preMoveHighlightTask = null;
       activeMoveTweens.length = 0;
@@ -4197,21 +4199,86 @@ let engineStarted = false;
     // A short search (src/rules/ai.js): the AI guards its own pieces and finishes won games instead of shuffling.
     // The one-ply scorer it replaced drew 14 of 20 games against itself (island economy round, 2026-11-02).
     // A rival plays at its own level: a careless one searches less and slips more.
-    function chooseSmartAIMove(color) {
-      if (referee.turn() !== color) return null;
+    // What the AI is asked for this turn: the position and how this opponent plays.
+    function aiAskFor(color) {
       const rival = color === rivalColor() ? activeRival() : null;
       // FN-2: 라이벌의 탐색 단계는 팩의 `search`(없으면 옛 규칙: 실수 0.3 이상이면 쉬움). 라이벌 없는 자유 대국은 freePlay(첫 판들은 쉬움).
       const level = rival ? rival.search || (rival.mistake >= 0.3 ? 'easy' : 'normal') : freePlay.search;
       const history = referee.history().map((m) => positionKey(m.after));
-      const pick = chooseMove(referee.fen(), { level, history, slip: rival ? rival.mistake : freePlay.mistake, blind: rival ? 0 : freePlay.blind });
+      return { fen: referee.fen(), opts: { level, history, slip: rival ? rival.mistake : freePlay.mistake, blind: rival ? 0 : freePlay.blind } };
+    }
+    function engineMoveOf(pick) {
       if (!pick) return null;
       const from = squareRC(pick.from);
       const to = squareRC(pick.to);
       return { fromR: from.r, fromC: from.c, toR: to.r, toC: to.c, promotion: pick.promotion ? TYPE_FROM_LETTER[pick.promotion] : undefined };
     }
+    function chooseSmartAIMove(color) {
+      if (referee.turn() !== color) return null;
+      const ask = aiAskFor(color);
+      return engineMoveOf(chooseMove(ask.fen, ask.opts));
+    }
+
+    // FN-5 (2026-11-11): the AI thinks in a worker so the scene keeps moving. A 3-ply search (step 7, the lion king) took
+    // 1-2 s on the page's own thread and froze the board (docs/qa/2026-11-10-dr-m1.md). A reply counts only if the game,
+    // the position and the side to move are still the ones it was asked about; anything that resets the board bumps
+    // `aiAsk` and drops it. Without workers (or with ?aisync=1, for comparison) the AI thinks in place as before.
+    let aiWorker = null;          // null: not made yet · false: not available · Worker
+    let aiAsk = 0;
+    let aiThinking = false;
+    let aiPending = null;
+    function dropAiThought() {
+      aiAsk += 1;
+      aiThinking = false;
+      aiPending = null;
+    }
+    function aiWorkerOrNull() {
+      if (aiWorker === false) return null;
+      if (aiWorker) return aiWorker;
+      try {
+        if (typeof Worker === 'undefined' || new URLSearchParams(window.location.search).get('aisync') === '1') {
+          aiWorker = false;
+          return null;
+        }
+        aiWorker = new Worker(new URL('./rules/aiWorker.js', import.meta.url), { type: 'module' });
+        aiWorker.onmessage = (e) => onAiReply(e.data || {});
+        aiWorker.onerror = () => {
+          try { aiWorker.terminate(); } catch (err) { /* already gone */ }
+          aiWorker = false;
+          // The thought in flight is lost: think again in place.
+          if (aiThinking) {
+            dropAiThought();
+            triggerAIMoveNow();
+          }
+        };
+      } catch (err) {
+        aiWorker = false;
+      }
+      return aiWorker || null;
+    }
+    function onAiReply({ id, move }) {
+      if (id !== aiAsk || !aiPending) return;
+      const asked = aiPending;
+      aiThinking = false;
+      aiPending = null;
+      if (gameOver || isAnimatingMove || gameId !== asked.gameId || currentTurn !== asked.color || referee.fen() !== asked.fen) return;
+      const chosen = engineMoveOf(move);
+      if (!chosen) return;
+      executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion });
+    }
 
     function triggerAIMoveNow() {
-      if (isAnimatingMove || gameOver) return false;
+      if (isAnimatingMove || gameOver || aiThinking) return false;
+      if (referee.turn() !== currentTurn) return false;
+      const worker = aiWorkerOrNull();
+      if (worker) {
+        const ask = aiAskFor(currentTurn);
+        aiAsk += 1;
+        aiThinking = true;
+        aiPending = { fen: ask.fen, color: currentTurn, gameId };
+        worker.postMessage({ id: aiAsk, fen: ask.fen, opts: ask.opts });
+        return true;
+      }
       const chosen = chooseSmartAIMove(currentTurn);
       if (!chosen) return false;
       return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion });
@@ -4230,6 +4297,7 @@ let engineStarted = false;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
       if (gameOver || isAnimatingMove || preMoveHighlightTask) return;
       if (scriptedGameActive) return;
@@ -4564,6 +4632,7 @@ let engineStarted = false;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
 
       // Determine whether the next scripted move is still valid on the current board
@@ -5231,10 +5300,13 @@ let engineStarted = false;
 
       // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
       if (gameMode === 'multi' && currentTurn !== playerColor) return;
+      // FN-5: while the AI thinks in its worker the board waits too.
+      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiThinking) return;
       // DR-1c: a tap while the AI is about to move lets it move now instead of waiting out its pause.
       if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
         triggerAIMoveNow();
         return;
       }
@@ -5807,6 +5879,7 @@ let engineStarted = false;
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
       gameOver = true;
       showDrawBanner(getCurrentLang() === 'en' ? 'You resigned. Your cards are in.' : '기권했어요. 이번 판 카드는 받았어요.');
@@ -6026,7 +6099,8 @@ let engineStarted = false;
       debugHistory: () => referee.history(),
       debugSpecial: () => ({ ...(lastSpecial || {}), impacts: impactCount, mirrorPose: lastMirrorPose && { ...lastMirrorPose }, swaying: roarSways.length }),
       // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
-      debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask),
+      debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask) || aiThinking,
+      debugAiWorker: () => (aiWorker ? 'worker' : aiWorker === false ? 'sync' : 'unset'),
       // DR-1c: the same as tapping the board while a move plays.
       skipAnimation: () => requestSkip(),
       // Debug: why a move is still running (a test that waits on debugBusy can say what it is waiting for).
@@ -6262,6 +6336,7 @@ let engineStarted = false;
         if (aiTimer) {
           clearTimeout(aiTimer);
           aiTimer = null;
+          dropAiThought();
         }
         activeMoveTweens.length = 0;
         isAnimatingMove = false;
