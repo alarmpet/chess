@@ -51,9 +51,10 @@ await sleep(1500);
 await until('(() => { const w = window.wizardChess; return w?.isStarted?.() && !w.debugBusy(); })()', 90000);
 await sleep(1500);
 
-// 페이지 안 표본기: 4ms 마다 바쁨·수 번호가 바뀐 시각만 남긴다.
-await ev(`(() => { if (window.__tl) return 1; const w = window.wizardChess; window.__tl = []; let lb = null, ln = -1;
-  setInterval(() => { const b = w.debugBusy(); const n = w.debugHistory().length; if (b !== lb || n !== ln) { window.__tl.push({ t: performance.now(), b, n }); lb = b; ln = n; } }, 4); return 1; })()`);
+// 페이지 안 표본기: 4ms 마다 바쁨·수 번호·입력 열림이 바뀐 시각만 남긴다.
+// 입력 열림(o) = 바쁘지 않음, 또는 미리 두기(DR-2a)로 내 말을 고를 수 있음. 미리 두기 전에는 o = !바쁨 이라 「닫힘」 = 「막힘」.
+await ev(`(() => { if (window.__tl) return 1; const w = window.wizardChess; window.__tl = []; let lb = null, ln = -1, lo = null;
+  setInterval(() => { const b = w.debugBusy(); const n = w.debugHistory().length; const o = !b || Boolean(w.debugPremove?.().waiting); if (b !== lb || n !== ln || o !== lo) { window.__tl.push({ t: performance.now(), b, n, o }); lb = b; ln = n; lo = o; } }, 4); return 1; })()`);
 if (SKIP) await ev(`(() => { setInterval(() => { const w = window.wizardChess; if (w.debugBusy()) w.skipAnimation?.(); }, 50); return 1; })()`);
 
 const rc = (sq) => [8 - Number(sq[1]), sq.charCodeAt(0) - 97];
@@ -66,8 +67,8 @@ for (let g = 0; g < GAMES; g++) {
     await sleep(1500);
     await until('(() => { const w = window.wizardChess; return w?.isStarted?.() && !w.debugBusy(); })()', 90000);
     await sleep(1200);
-    await ev(`(() => { const w = window.wizardChess; window.__tl = []; let lb = null, ln = -1;
-      setInterval(() => { const b = w.debugBusy(); const n = w.debugHistory().length; if (b !== lb || n !== ln) { window.__tl.push({ t: performance.now(), b, n }); lb = b; ln = n; } }, 4); return 1; })()`);
+    await ev(`(() => { const w = window.wizardChess; window.__tl = []; let lb = null, ln = -1, lo = null;
+      setInterval(() => { const b = w.debugBusy(); const n = w.debugHistory().length; const o = !b || Boolean(w.debugPremove?.().waiting); if (b !== lb || n !== ln || o !== lo) { window.__tl.push({ t: performance.now(), b, n, o }); lb = b; ln = n; lo = o; } }, 4); return 1; })()`);
     if (SKIP) await ev(`(() => { setInterval(() => { const w = window.wizardChess; if (w.debugBusy()) w.skipAnimation?.(); }, 50); return 1; })()`);
   }
   const startHist = await ev('window.wizardChess.debugHistory().length');
@@ -89,7 +90,8 @@ for (let g = 0; g < GAMES; g++) {
     // AI 가 답하고 연출이 끝날 때까지(또는 판 끝)
     const ok = await until(`(() => { const w = window.wizardChess; const h = w.debugHistory(); if (h.length >= ${n0 + 2} && !w.debugBusy()) return true; if (h.length === ${n0 + 1} && !w.debugBusy()) { const c = h[h.length - 1]; return /#/.test(c.san || '') ; } return false; })()`, 90000);
     await sleep(30);
-    const tl = await ev(`window.__tl.filter((x) => x.t >= ${t0 - 1})`);
+    const tlAll = await ev(`window.__tl.slice(-400)`);
+    const tl = tlAll.filter((x) => x.t >= t0 - 1);
     const tEnd = await ev('performance.now()');
     // 조각 찾기: 내 수 연출 끝 = n0+1 이고 바쁨 false 가 된 첫 시각, AI 시작 = 그 뒤 바쁨 true 첫 시각, AI 끝 = n0+2 이고 바쁨 false 첫 시각
     const myEnd = tl.find((x) => x.n >= n0 + 1 && !x.b)?.t ?? null;
@@ -101,7 +103,16 @@ for (let g = 0; g < GAMES; g++) {
       myAnim: myEnd != null ? Math.round(myEnd - t0) : null,
       aiWait: aiStart != null && myEnd != null ? Math.round(aiStart - myEnd) : null,
       aiAnim: aiEnd != null && aiStart != null ? Math.round(aiEnd - aiStart) : null,
-      blocked: aiEnd != null ? Math.round(aiEnd - t0) : Math.round(tEnd - t0)
+      blocked: aiEnd != null ? Math.round(aiEnd - t0) : Math.round(tEnd - t0),
+      // 그 사이 내 말을 전혀 집을 수 없던 시간(바쁨이면서 미리 두기도 안 됨)
+      closed: (() => {
+        const t1 = aiEnd ?? tEnd;
+        let open = [...tlAll].reverse().find((x) => x.t <= t0)?.o ?? true;
+        let at = t0, shut = 0;
+        for (const x of tlAll.filter((y) => y.t > t0 && y.t <= t1)) { if (!open) shut += x.t - at; at = x.t; open = x.o ?? !x.b; }
+        if (!open) shut += t1 - at;
+        return Math.round(shut);
+      })()
     });
     const st2 = await ev(`(() => { const h = window.wizardChess.debugHistory(); return h.map((m) => m.after); })()`);
     history.length = 0;
@@ -122,10 +133,10 @@ const out = {
   note: '내 쪽 생각 시간 0(봇). 한 순환 = 내 수 → AI 답 → 다시 둘 수 있을 때. AI 대기 = 고정 540ms + 탐색 계산.',
   myAnim: part('myAnim'), myAnimQuiet: part('myAnim', (r) => !r.capture), myAnimCapture: part('myAnim', (r) => r.capture),
   aiWait: part('aiWait'), aiAnim: part('aiAnim'), aiAnimCapture: part('aiAnim', (r) => r.replyCapture),
-  blocked: part('blocked'),
+  blocked: part('blocked'), closed: part('closed'),
   perGameBlockedSec: games.map((g) => +(sum(rows.filter((r) => r.game === g.game).map((r) => r.blocked)) / 1000).toFixed(1)),
   rows
 };
-console.log(JSON.stringify({ quick: out.quick, skip: out.skip, games: out.games, myAnim: out.myAnim, myAnimQuiet: out.myAnimQuiet, myAnimCapture: out.myAnimCapture, aiWait: out.aiWait, aiAnim: out.aiAnim, aiAnimCapture: out.aiAnimCapture, blocked: out.blocked, perGameBlockedSec: out.perGameBlockedSec }, null, 1));
+console.log(JSON.stringify({ quick: out.quick, skip: out.skip, games: out.games, myAnim: out.myAnim, myAnimQuiet: out.myAnimQuiet, myAnimCapture: out.myAnimCapture, aiWait: out.aiWait, aiAnim: out.aiAnim, aiAnimCapture: out.aiAnimCapture, blocked: out.blocked, closed: out.closed, perGameBlockedSec: out.perGameBlockedSec }, null, 1));
 if (jsonAt >= 0) writeFileSync(args[jsonAt + 1], JSON.stringify(out, null, 1));
 process.exit(0);

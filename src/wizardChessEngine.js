@@ -1007,6 +1007,9 @@ export function initWizardChess() {
     scene.add(boardGroup);
     const squareHighlightsGroup = new THREE.Group(); squareHighlightsGroup.name = 'highlights';
     scene.add(squareHighlightsGroup);
+    // DR-2a 미리 두기: AI 차례·연출 중에 고른 말과 다음 수는 보라색으로, 수가 시작될 때 지워지는 선택 표시와 따로 둔다.
+    const premoveGroup = new THREE.Group(); premoveGroup.name = 'premove';
+    scene.add(premoveGroup);
     // FN-3 직전 수 표시: 방금 둔 수의 출발·도착 칸을 옅은 노란 칸으로(인스턴스 2개 = 그리기 1번). 첫 국면에는 숨어 있어
     // 드로우콜 게이트(초기 국면)는 그대로다. 되감기·이어 하기·새 판에서 심판 기록의 마지막 수로 다시 맞춘다.
     const lastMoveMark = (() => {
@@ -2798,6 +2801,7 @@ let engineStarted = false;
 
     function restoreBoardSnapshot(snap, { keepReferee = false } = {}) {
       if (!snap) return false;
+      clearPremove();   // DR-2a: a premove belongs to the position it was made in
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
@@ -2875,6 +2879,7 @@ let engineStarted = false;
       gameReported = false;
       lastMoveMark.visible = false;
       gameId = (gameId + 1) >>> 0;
+      clearPremove();   // DR-2a: a new game starts with no premove (the AI may be thinking with no timer pending)
       if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, rivalId: activeRivalId, color: playerColor, online: gameMode === 'multi' } }));
       if (aiTimer) {
         clearTimeout(aiTimer);
@@ -3933,6 +3938,8 @@ let engineStarted = false;
         isAnimatingMove = false;
         updateTurnUI();
         maybeScheduleAIMove();
+        // DR-2a: the player's premove goes the moment the turn is theirs (after this frame's bookkeeping).
+        if (premove && currentTurn === playerColor) setTimeout(runPremove, 0);
       }
 
       sfx.move(piece.type, isCapture ? tApproach : stdMoveDuration);
@@ -4231,6 +4238,7 @@ let engineStarted = false;
       aiAsk += 1;
       aiThinking = false;
       aiPending = null;
+      clearPremove();
     }
     function aiWorkerOrNull() {
       if (aiWorker === false) return null;
@@ -4282,6 +4290,109 @@ let engineStarted = false;
       const chosen = chooseSmartAIMove(currentTurn);
       if (!chosen) return false;
       return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion });
+    }
+
+    // ── DR-2a 미리 두기(premove) 1수 ──────────────────────────────────────────────────────────────────────────
+    // AI 가 생각하거나 수가 움직이는 동안에도 내 말을 고르고 다음 수를 정해 둘 수 있다. 내 차례가 오는 순간 그 수가
+    // 그 국면에서 합법이면 바로 두고, 아니면 조용히 버린다(lichess 와 같은 약속). 1수만, 승급은 퀸.
+    // 후보 칸은 심판의 국면으로 계산한다(심판은 연출보다 먼저 수를 둔다) — 내 차례인 것처럼 본 합법 수.
+    let premove = null;      // { fromR, fromC, toR, toC, gameId, ply } — ply: 이 수가 둘 심판 기록 길이
+    let preSel = null;       // { r, c, moves } 고르고 있는 말
+    const premoveStats = { set: 0, played: 0, dropped: 0 };
+    function premoveWaiting() {
+      return gameMode === 'single' && !scriptedGameActive && aiAutoPlay && !gameOver && !promotionPickerOpen &&
+        (playerColor === 'w' || playerColor === 'b') && (currentTurn !== playerColor || isAnimatingMove);
+    }
+    function clearPremove() {
+      premove = null;
+      preSel = null;
+      while (premoveGroup.children.length) {
+        const m = premoveGroup.children.pop();
+        m.geometry?.dispose();
+        m.material?.dispose();
+      }
+    }
+    function premoveMark(r, c, kind) {
+      const geo = kind === 'dot' ? new THREE.CircleGeometry(0.06, 24) : kind === 'to' ? new THREE.CircleGeometry(0.14, 32) : new THREE.RingGeometry(0.115, 0.158, 32);
+      geo.rotateX(-Math.PI / 2);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xa78bfa, transparent: true, opacity: kind === 'to' ? 0.6 : 0.9, side: THREE.DoubleSide, depthWrite: false }));
+      const pos = boardToWorld(r, c);
+      mesh.position.set(pos.x, BOARD_SURFACE_Y + 0.014, pos.z);
+      mesh.renderOrder = 3;
+      premoveGroup.add(mesh);
+    }
+    function drawPremove() {
+      const keep = { premove, preSel };
+      clearPremove();
+      ({ premove, preSel } = keep);
+      if (preSel) {
+        premoveMark(preSel.r, preSel.c, 'ring');
+        for (const m of preSel.moves) premoveMark(m.r, m.c, 'dot');
+      }
+      if (premove) {
+        premoveMark(premove.fromR, premove.fromC, 'ring');
+        premoveMark(premove.toR, premove.toC, 'to');
+      }
+    }
+    const tapMatches = (target) => (m) => (m.r === target.r && m.c === target.c) || (m.castle && m.r === target.r && m.rookFromC === target.c);
+    /** A board tap while waiting for the turn. True when the tap was about the premove (it then does nothing else). */
+    function premoveTap(target) {
+      if (!premoveWaiting()) {
+        if (premove || preSel) clearPremove();
+        return false;
+      }
+      const hadPlan = Boolean(premove || preSel);
+      if (target && preSel) {
+        const m = preSel.moves.find(tapMatches(target));
+        if (m) {
+          const L = referee.history().length;
+          premove = { fromR: preSel.r, fromC: preSel.c, toR: m.r, toC: m.c, gameId, ply: referee.turn() === playerColor ? L : L + 1 };
+          preSel = null;
+          premoveStats.set += 1;
+          drawPremove();
+          sfx.play('button', 0, 1.12);
+          // Ready for the next move: the AI need not wait out its pause either (DR-1c).
+          if (aiTimer !== null && !isAnimatingMove) {
+            clearTimeout(aiTimer);
+            aiTimer = null;
+            aiAsk += 1;
+            aiThinking = false;
+            aiPending = null;
+            triggerAIMoveNow();
+          }
+          return true;
+        }
+      }
+      if (target && referee.colorAt(target.r, target.c) === playerColor) {
+        if (preSel && preSel.r === target.r && preSel.c === target.c) {
+          clearPremove();
+          return true;
+        }
+        premove = null;
+        preSel = { r: target.r, c: target.c, moves: referee.legalMovesFor(target.r, target.c) };
+        drawPremove();
+        return true;
+      }
+      if (hadPlan) {
+        clearPremove();
+        return true;
+      }
+      return false;
+    }
+    /** At the hand-off to the player: play the premove when it is still legal, otherwise drop it without a word. */
+    function runPremove() {
+      const p = premove;
+      clearPremove();
+      if (!p) return false;
+      const ok = !gameOver && !isAnimatingMove && gameMode === 'single' && !scriptedGameActive && !promotionPickerOpen &&
+        currentTurn === playerColor && p.gameId === gameId && referee.history().length === p.ply;
+      const piece = ok && boardState[p.fromR]?.[p.fromC];
+      const legal = piece && piece.color === playerColor && kindAllows(handBrainKind, piece.type) &&
+        getLegalMovesForPiece(p.fromR, p.fromC).find(tapMatches({ r: p.toR, c: p.toC }));
+      const played = Boolean(legal) && executeChessMove(p.fromR, p.fromC, legal.r, legal.c, { promotion: 'queen' });
+      if (played) premoveStats.played += 1;
+      else premoveStats.dropped += 1;
+      return played;
     }
 
     /** DR-1c: hurry the move that is playing (a tap on the board, or the API). False when nothing is playing. */
@@ -5287,35 +5398,86 @@ let engineStarted = false;
     const pointer = new THREE.Vector2();
     let pointerDownPos = { x: 0, y: 0 };
 
-    renderer.domElement.addEventListener('pointerdown', (e) => {
-      pointerDownPos = { x: e.clientX, y: e.clientY };
-    });
-
-    renderer.domElement.addEventListener('pointerup', (e) => {
-      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
-      if (moveDist > 6) return;
-      if (gameOver) return;
-      // DR-1c: a tap while a move plays hurries it along; it never selects anything.
-      if (isAnimatingMove) { requestSkip(); return; }
-
-      // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
-      if (gameMode === 'multi' && currentTurn !== playerColor) return;
-      // FN-5: while the AI thinks in its worker the board waits too.
-      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiThinking) return;
-      // DR-1c: a tap while the AI is about to move lets it move now instead of waiting out its pause.
-      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) {
-        clearTimeout(aiTimer);
-        aiTimer = null;
-        dropAiThought();
-        triggerAIMoveNow();
-        return;
-      }
-
+    // DR-2b 끌기: 내 말에서 시작한 끌기는 카메라를 돌리지 않고 그 말을 옮긴다 — 끌기 시작 = 말 누르기, 놓은 칸 = 두 번째 누르기
+    // (미리 두기도 같은 길). 다른 곳에서 시작한 끌기는 예전처럼 카메라를 돌린다. 말이 손가락을 따라오지는 않는다(표시만).
+    let dragFrom = null;          // { r, c } — the press began on a piece the player may pick up
+    let dragShown = false;        // the pick-up already happened (marks are showing)
+    let dragHeldOrbit = false;    // this drag turned the camera controls off
+    const dragStats = { started: 0, moved: 0 };
+    function aimPointer(e) {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
       raycaster.setFromCamera(pointer, camera);
+    }
+    function releaseDrag() {
+      dragFrom = null;
+      dragShown = false;
+      // A capture duel that began during the drag owns the camera now; it turns the controls back on when it ends.
+      if (dragHeldOrbit && !activeDuelSavedCam) orbitControls.enabled = true;
+      dragHeldOrbit = false;
+    }
+    function mayPickUp(sq) {
+      if (!sq || gameOver || promotionPickerOpen) return false;
+      if (premoveWaiting()) return referee.colorAt(sq.r, sq.c) === playerColor;
+      if (isAnimatingMove || (gameMode === 'multi' && currentTurn !== playerColor)) return false;
+      if (gameMode === 'single' && !scriptedGameActive && currentTurn !== playerColor && (aiThinking || aiTimer !== null)) return false;
+      return boardState[sq.r][sq.c]?.color === currentTurn;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      pointerDownPos = { x: e.clientX, y: e.clientY };
+      releaseDrag();
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      aimPointer(e);
+      const sq = squareUnderPointer();
+      if (!mayPickUp(sq)) return;
+      dragFrom = sq;
+      if (orbitControls.enabled) {
+        orbitControls.enabled = false;
+        dragHeldOrbit = true;
+      }
+    });
+
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      if (!dragFrom || dragShown) return;
+      if (Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y) <= 6) return;
+      dragShown = true;
+      dragStats.started += 1;
+      // A premove pick of the same piece is already showing: picking it again would put it down.
+      if (!(preSel && preSel.r === dragFrom.r && preSel.c === dragFrom.c)) boardTap(dragFrom);
+    });
+
+    renderer.domElement.addEventListener('pointercancel', releaseDrag);
+
+    renderer.domElement.addEventListener('pointerup', (e) => {
+      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+      const from = dragFrom;
+      const shown = dragShown;
+      releaseDrag();
+      if (gameOver) return;
+      aimPointer(e);
+      if (moveDist > 6) {
+        if (!from) return;            // a drag that began off my pieces turned the camera
+        if (!shown && !(preSel && preSel.r === from.r && preSel.c === from.c)) boardTap(from);
+        const to = squareUnderPointer();
+        if (!to || (to.r === from.r && to.c === from.c)) return;   // dropped where it began: stays picked up
+        const sig = () => `${referee.history().length}:${premove ? `${premove.toR}${premove.toC}` : ''}`;
+        const before = sig();
+        boardTap(to);
+        if (sig() !== before) dragStats.moved += 1;   // a move made, or a premove set
+        return;
+      }
+      boardTap(squareUnderPointer());
+    });
+
+    // The square a tap means: null when the tap missed the board, undefined when it hit something that is no square.
+    function squareUnderPointer() {
+      const waiting = premoveWaiting();
+      // While waiting for the turn the referee says whose piece stands where (the animation may still be walking there).
+      const mine = waiting ? playerColor : currentTurn;
+      const colorOf = (r, c) => (waiting ? referee.colorAt(r, c) : boardState[r][c]?.color);
+      const choices = waiting ? (preSel ? preSel.moves : []) : (selectedSquare ? validMoves : []);
 
       const pieceMeshes = [];
       for (let r = 0; r < 8; r++) {
@@ -5327,13 +5489,7 @@ let engineStarted = false;
       }
 
       const hits = raycaster.intersectObjects([...pieceMeshes, ...boardSquareMeshes], true);
-      if (hits.length === 0) {
-        if (preMoveHighlightTask) preMoveHighlightTask = null;
-        clearSquareHighlights();
-        selectedSquare = null;
-        validMoves = [];
-        return;
-      }
+      if (hits.length === 0) return null;
 
       // What a hit stands for: a piece (its square) or a board square.
       const squareOf = (hit) => {
@@ -5353,11 +5509,38 @@ let engineStarted = false;
       const first = squareOf(hits[0]);
       const floorHit = hits.find((h) => squareOf(h)?.isPiece === false);
       const floor = floorHit && squareOf(floorHit);
-      const floorMatters = floor && (
-        boardState[floor.r][floor.c]?.color === currentTurn ||
-        (selectedSquare && validMoves.some((m) => (m.r === floor.r && m.c === floor.c) || (m.castle && m.r === floor.r && m.rookFromC === floor.c)))
-      );
+      const floorMatters = floor && (colorOf(floor.r, floor.c) === mine || choices.some(tapMatches(floor)));
       const target = floorMatters ? floor : first;
+      return target ? { r: target.r, c: target.c } : undefined;
+    }
+
+    /** What a tap on the board does. `target`: a square, null (missed the board) or undefined (no square). */
+    function boardTap(target) {
+      if (gameOver) return;
+      // DR-2a: while waiting for the turn a tap on my piece (or its move) is a premove.
+      if (premoveTap(target)) return;
+      // DR-1c: a tap while a move plays hurries it along; it never selects anything.
+      if (isAnimatingMove) { requestSkip(); return; }
+
+      // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
+      if (gameMode === 'multi' && currentTurn !== playerColor) return;
+      // FN-5: while the AI thinks in its worker the board waits too.
+      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiThinking) return;
+      // DR-1c: a tap while the AI is about to move lets it move now instead of waiting out its pause.
+      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+        dropAiThought();
+        triggerAIMoveNow();
+        return;
+      }
+      if (target === null) {
+        if (preMoveHighlightTask) preMoveHighlightTask = null;
+        clearSquareHighlights();
+        selectedSquare = null;
+        validMoves = [];
+        return;
+      }
       if (!target) return;
       const clickedR = target.r;
       const clickedC = target.c;
@@ -5407,7 +5590,7 @@ let engineStarted = false;
         selectedSquare = null;
         validMoves = [];
       }
-    });
+    }
 
     // =========================================================================
     // Multiplayer Room Synchronization (Same-Origin API + Static Site Fallback)
@@ -6103,6 +6286,10 @@ let engineStarted = false;
       debugAiWorker: () => (aiWorker ? 'worker' : aiWorker === false ? 'sync' : 'unset'),
       // DR-1c: the same as tapping the board while a move plays.
       skipAnimation: () => requestSkip(),
+      // DR-2a: the same as tapping square (r, c) on the board (tests drive the tap path without aiming the camera).
+      tapSquare: (r, c) => boardTap(r == null ? null : { r, c }),
+      debugDrag: () => ({ ...dragStats, holding: Boolean(dragFrom), orbit: orbitControls.enabled }),
+      debugPremove: () => ({ premove: premove && { ...premove }, preSel: preSel && { r: preSel.r, c: preSel.c, n: preSel.moves.length }, marks: premoveGroup.children.length, waiting: premoveWaiting(), ...premoveStats }),
       // Debug: why a move is still running (a test that waits on debugBusy can say what it is waiting for).
       debugMoveState: () => ({ clock: moveClock && { total: moveClock.total, strikeDone: moveClock.strikeDone, isCapture: moveClock.isCapture, elapsed: moveClock.elapsed() }, animating: isAnimatingMove, preMove: Boolean(preMoveHighlightTask), tweens: activeMoveTweens.length, hitStopLeft, slowLeft, aiTimer: Boolean(aiTimer), gameOver, gameMode, aiAutoPlay, renderPaused, manualStepMode }),
       debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),

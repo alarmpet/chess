@@ -129,6 +129,11 @@ export class Referee {
     }
   }
 
+  /** 'w' | 'b' | null: whose piece stands on (r, c) in the referee's position (it moves before the animation does). */
+  colorAt(r, c) {
+    return this.chess.get(squareName(r, c))?.color || null;
+  }
+
   /** Legal destinations for the piece on (r, c). Castling moves carry the rook columns. */
   legalMovesFor(r, c) {
     const sq = squareName(r, c);
