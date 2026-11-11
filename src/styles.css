@@ -1401,3 +1401,8 @@ span.circle-name { cursor: default; }
 .strength-controls .settings-switch { cursor: pointer; border: 0; font: inherit; }
 .strength-step { display: block; white-space: nowrap; font-weight: 600; margin: 1px 0 2px; }
 @media (max-width: 480px) { .settings-strength { flex-wrap: wrap; } .settings-strength .strength-controls { margin-left: auto; } }
+
+/* DR-3 「모아 받기」: 기다리는 손님 선물이 있을 때만 보이는 단추 */
+.village-collect { background: linear-gradient(180deg, #ffe7a3, #f6c453) !important; color: #5a3a00 !important; font-weight: 700; animation: collect-bob 1.6s ease-in-out infinite; }
+@keyframes collect-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .village-collect { animation: none; } }

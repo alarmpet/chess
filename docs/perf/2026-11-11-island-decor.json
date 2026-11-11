@@ -1,0 +1,54 @@
+{
+ "runs": 60,
+ "mode": "decor",
+ "profiles": [
+  {
+   "label": "strong",
+   "done": {
+    "median": 20,
+    "p90": 21,
+    "unfinished": 0
+   },
+   "guestShare": 0.095,
+   "guestPerGame": 3.91,
+   "at20": {
+    "score": 180,
+    "shelf": 4,
+    "props": 6,
+    "guestKinds": 3
+   }
+  },
+  {
+   "label": "even",
+   "done": {
+    "median": 21,
+    "p90": 23,
+    "unfinished": 0
+   },
+   "guestShare": 0.098,
+   "guestPerGame": 3.82,
+   "at20": {
+    "score": 165,
+    "shelf": 4,
+    "props": 5,
+    "guestKinds": 3
+   }
+  },
+  {
+   "label": "weak",
+   "done": {
+    "median": 22,
+    "p90": 24,
+    "unfinished": 0
+   },
+   "guestShare": 0.096,
+   "guestPerGame": 3.91,
+   "at20": {
+    "score": 155,
+    "shelf": 3,
+    "props": 5,
+    "guestKinds": 3
+   }
+  }
+ ]
+}

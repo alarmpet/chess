@@ -1,7 +1,7 @@
 // The village screen: the player's chess games as an island on water, and the captured animals who live on it.
 // The scene is in village/islandScene.ts; this file holds the save and the panels over it.
 import { useEffect, useRef, useState } from 'react';
-import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage, roleOfSlot, PROPS, TIER_KO, PROP_PRICE, SHELF_ODDS, SHELF_XP, SHELF_LEVEL_MAX, stockShelf, buyProp, placeProp, storeProp, shelfReserve } from './village/economy.js';
+import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage, roleOfSlot, GUESTS, collectGifts, decorScore, nextScoreLevel, shelfLevel, PROPS, TIER_KO, PROP_PRICE, SHELF_ODDS, SHELF_XP, SHELF_LEVEL_MAX, stockShelf, buyProp, placeProp, storeProp, shelfReserve } from './village/economy.js';
 // 섬 장면(three 장면 코드 약 110KB)은 마을을 열 때 받는다 — 첫 화면 JS 상한(방향 계획서 §7-2, 2026-11-10).
 import type { createIsland } from './village/islandScene';
 import { sfx } from './audio/sfx.js';
@@ -182,7 +182,19 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
 
   useEffect(() => {
     if (village) island.current?.draw(village);
-  }, [village]);
+    // DR-3: guests waiting with gifts stand over their props.
+    if (village) island.current?.setGifts((village.pending || []).map((g: any) => ({ sq: g.sq, icon: (GUESTS as any)[g.guest]?.icon || '🎁' })));
+  }, [village, sceneReady]);
+
+  // DR-3 「모아 받기」: every waiting gift in one tap, counted with a rising note per gift (DR-1a ladder).
+  const collect = () => {
+    const v = loadVillage();
+    const got = collectGifts(v);
+    if (!got.acorns) return;
+    commit(v);
+    got.gifts.slice(0, 8).forEach((_: any, i: number) => window.setTimeout(() => sfx.play('button', 0, 2 ** (Math.min(7, i) / 12)), i * 110));
+    setNote(`🧺 손님 선물 ${got.gifts.length}개 · 🌰 +${got.acorns}`);
+  };
 
   // The loop strip and the note card sit under the top row whatever height it wraps to. On a phone the pills and the tool
   // buttons wrap to four rows and the strip covered 「체스로」 (AT-9 LLM round, 11-phone-dome).
@@ -289,6 +301,16 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
         <span className="village-pill" title="도토리 — 판이 끝나면 받아요">🌰 도토리 {village?.coins ?? 0}</span>
         <span className="village-pill" title="곡물 — 밭에서 자라요">🌾 곡물 {village?.grain ?? 0}/{GRAIN_MAX}</span>
         <span className="village-pill" title="빵 — 빵집이 곡물로 구워요">🥖 빵 {village?.bread ?? 0}/{BREAD_MAX}</span>
+        {village && (() => {
+          const score = decorScore(village);
+          const nx = nextScoreLevel(village);
+          return <span className="village-pill" id="village-decor" title={nx ? `꾸밈 점수 — ${nx.need}점 더 모으면 매대 Lv.${nx.level}` : '꾸밈 점수 — 매대가 가장 높은 레벨이에요'}>✨ 꾸밈 {score}</span>;
+        })()}
+        {village && (
+          <span className="village-pill" id="village-guests" title={`손님 도감 — ${Object.keys(GUESTS).map((k) => `${(GUESTS as any)[k].icon} ${(GUESTS as any)[k].ko}${village.guestBook?.[k] ? ` ${village.guestBook[k]}번` : ' ?'}`).join(' · ')}`}>
+            🐠 손님 {Object.keys(village.guestBook || {}).length}/{Object.keys(GUESTS).length}
+          </span>
+        )}
         <span className="village-pill" title="쓰다듬기 — 하루에 열 번까지">🤚 쓰다듬기 {Math.min(village?.petCount ?? 0, PET_DAILY_CAP)}/{PET_DAILY_CAP}</span>
         <span className="village-tools">
           <button type="button" className="hud-btn" aria-label="왼쪽으로 돌리기" onClick={() => island.current?.rotate(-1)}>⟲</button>
@@ -308,6 +330,11 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
               }}
             >
               {night ? '☀️ 낮' : '🌙 밤'}
+            </button>
+          )}
+          {(village?.pending?.length || 0) > 0 && (
+            <button type="button" className="hud-btn village-collect" id="village-collect" onClick={collect}>
+              🧺 모아 받기 · 🎁 {village.pending.length} · 🌰 {village.pending.reduce((n: number, g: any) => n + (g.acorns || 0), 0)}
             </button>
           )}
           <button type="button" className="hud-btn" id="village-shelf" aria-label="매대" onClick={() => setShelfOpen(!shelfOpen)}>🛒</button>
@@ -332,7 +359,12 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
               {summary.added.houses.length > 0 && ' · 승급한 폰의 집'}
             </div>
           )}
-          {summary?.shelfUp && <div>🛒 섬 매대 레벨이 올랐어요(Lv.{village?.shelf.lv}). 더 귀한 소품이 들어와요.</div>}
+          {summary?.shelfUp && <div>🛒 섬 매대 레벨이 올랐어요(Lv.{village ? shelfLevel(village) : 1}). 더 귀한 소품이 들어와요.</div>}
+          {summary?.guests?.length > 0 && (
+            <div id="village-guest-line">
+              {summary.guests.map((g: any) => `${(GUESTS as any)[g.guest]?.icon} ${(GUESTS as any)[g.guest]?.ko}${g.fresh ? '(새 손님!)' : ''}`).join(' · ')}{josa((GUESTS as any)[summary.guests[summary.guests.length - 1].guest]?.ko || '손님', '이', '가')} 소품 보고 놀러 왔어요 — 선물 🌰 {summary.guests.reduce((n: number, g: any) => n + g.acorns, 0)} 기다리는 중
+            </div>
+          )}
           {summary?.dew && <div>💧 밤사이 이슬이 내려 밭마다 곡물 +{DEW_GRAIN}</div>}
           {dew && !summary && <div>💧 밤사이 밭에 이슬이 맺혔어요. 오늘 첫 판을 끝내면 밭마다 곡물 +{DEW_GRAIN}.</div>}
           {newWeek && <div className="village-week" id="village-week">📅 새 주가 왔어요.{newWeek.guest && ` 이번 주 손님은 ${rivalName(newWeek.guest)}.`} {newWeek.line?.[lang] || newWeek.line?.ko}</div>}
@@ -363,7 +395,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
         <div className="panel-overlay" role="dialog" aria-modal="true" onClick={() => setShelfOpen(false)}>
           <div className="panel-card shelf-panel" id="shelf-panel" onClick={(e) => e.stopPropagation()}>
             <div className="panel-header">
-              <div className="panel-title"><span>🛒</span><span>섬 매대 Lv.{village.shelf.lv}</span></div>
+              <div className="panel-title"><span>🛒</span><span>섬 매대 Lv.{shelfLevel(village)}</span></div>
               <button type="button" className="panel-close" onClick={() => setShelfOpen(false)}>✕</button>
             </div>
             <div className="panel-body">
@@ -407,8 +439,8 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
                 })}
               </div>
               <p className="shelf-odds" id="shelf-odds">
-                이 레벨의 확률: {SHELF_ODDS[village.shelf.lv - 1].map((w: number, t: number) => `${TIER_KO[t + 1]} ${w}%`).join(' · ')}
-                {village.shelf.lv < SHELF_LEVEL_MAX ? ` — 두 판마다 1점이 쌓여요. 다음 레벨까지 ${village.shelf.xp}/${SHELF_XP[village.shelf.lv - 1]}점.` : ' — 가장 높은 레벨이에요.'}
+                이 레벨의 확률: {SHELF_ODDS[shelfLevel(village) - 1].map((w: number, t: number) => `${TIER_KO[t + 1]} ${w}%`).join(' · ')}
+                {shelfLevel(village) < SHELF_LEVEL_MAX ? ` — 두 판마다 1점이 쌓여요(${village.shelf.xp}/${SHELF_XP[village.shelf.lv - 1]}점), 또는 ✨ 꾸밈 점수로도 올라요${nextScoreLevel(village) ? `(${nextScoreLevel(village)!.need}점 더 모으면 Lv.${nextScoreLevel(village)!.level})` : ''}.` : ' — 가장 높은 레벨이에요.'}
               </p>
               <div className="shelf-stash" id="shelf-stash">
                 <b>보관함</b>

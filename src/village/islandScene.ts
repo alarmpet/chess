@@ -995,6 +995,61 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     return pts;
   }
 
+  // DR-3 (2026-11-11): a guest waiting with its gift stands over its prop as an icon until 「모아 받기」. One Points draw.
+  const giftMat = badgeMat.clone();
+  giftMat.userData = NO_OUTLINE;
+  let giftPts: THREE.Points | null = null;
+  function setGifts(gifts: { sq: string; icon: string }[]) {
+    if (giftPts) {
+      scene.remove(giftPts);
+      giftPts.geometry.dispose();
+      giftPts = null;
+    }
+    const list = (gifts || []).slice(0, 24);
+    if (!list.length) return;
+    const icons = [...new Set(list.map((g) => g.icon))];
+    const C = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = C * icons.length;
+    canvas.height = C;
+    const ctx = canvas.getContext('2d')!;
+    icons.forEach((icon, i) => {
+      ctx.fillStyle = 'rgba(255,246,214,0.96)';
+      ctx.strokeStyle = '#e0a83a';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(i * C + C / 2, C / 2, C / 2 - 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(icon, i * C + C / 2, C / 2 + 2);
+    });
+    const atlas = new THREE.CanvasTexture(canvas);
+    atlas.colorSpace = THREE.SRGBColorSpace;
+    (giftMat.uniforms.uAtlas.value as THREE.Texture | null)?.dispose();
+    giftMat.uniforms.uAtlas.value = atlas;
+    giftMat.uniforms.uCells.value = icons.length;
+    giftMat.uniforms.uSize.value = badgeSize();
+    const pos: number[] = [];
+    const cell: number[] = [];
+    const seen: Record<string, number> = {};
+    for (const g of list) {
+      const [x, z] = squareXZ(g.sq);
+      const k = (seen[g.sq] = (seen[g.sq] || 0) + 1) - 1;   // two guests on one prop stand side by side
+      pos.push(x + k * 0.28, TILE_TOP + 0.75, z);
+      cell.push(icons.indexOf(g.icon));
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('aCell', new THREE.Float32BufferAttribute(cell, 1));
+    giftPts = new THREE.Points(geo, giftMat);
+    giftPts.renderOrder = 11;
+    giftPts.frustumCulled = false;
+    scene.add(giftPts);
+  }
+
   function drawGround(v: any) {
     ground.clear();
     const tiles = villageTiles(v.map) as Record<string, number>;
@@ -1769,6 +1824,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     drawRivalFlags,
     /** Dew drops over these field squares; an empty list clears them. */
     setDew,
+    setGifts,
     /** Tints squares: `cover` for reach, `strong` for reach that lands on a building, `origin` for the source. */
     setOverlay(cover: string[], strong: string[] = [], origin: string | null = null) {
       overlay.count = 0;

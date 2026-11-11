@@ -111,7 +111,9 @@ const blank = () => ({
   seed: 0,
   week: { w: -1, n: 0, pick: null },
   shelf: { g: -1, n: 0, lv: 1, xp: 0, slots: [] },
-  stash: {}
+  stash: {},
+  pending: [],          // DR-3: guests' gifts waiting on the island until 「모아 받기」
+  guestBook: {}         // DR-3: guest kind → visits so far
 });
 
 export const newVillage = blank;
@@ -129,7 +131,11 @@ export function sanitizeVillage(raw) {
   if (!raw || typeof raw !== 'object') return base;
   const v2 = raw.v === 1 ? fromV1(raw) : raw;
   if (v2.v !== 2) return base;
-  return { ...base, ...v2, map: { ...base.map, ...v2.map } };
+  const out = { ...base, ...v2, map: { ...base.map, ...v2.map } };
+  // DR-3 fields: a save from before them, or a broken one, starts with none waiting.
+  if (!Array.isArray(out.pending)) out.pending = [];
+  if (!out.guestBook || typeof out.guestBook !== 'object') out.guestBook = {};
+  return out;
 }
 
 export function stageForHearts(hearts = 0) {
@@ -293,9 +299,10 @@ export function settleGame(v, { moves, color, result, rivalId = null, gameId = n
   const opened = v.built.filter((b) => !b.ready).map((b) => b.kind);
   for (const b of v.built) b.ready = true;
   v.quest = nextQuest(v);
+  const guests = guestsVisit(v);
   const shelfUp = growShelf(v);
   stockShelf(v);
-  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest, dew, shelfUp };
+  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest, dew, shelfUp, guests };
 }
 
 const taken = (v, sq) => v.built.some((b) => b.sq === sq) || v.decor.some((d) => d.sq === sq);
@@ -479,7 +486,7 @@ export function stockShelf(v, newSeed = anySeed) {
   const s = v.shelf;
   if (s.g === v.games) return false;
   const seed = ensureSeed(v, newSeed);
-  const odds = SHELF_ODDS[s.lv - 1];
+  const odds = SHELF_ODDS[shelfLevel(v) - 1];
   s.slots = [];
   for (let i = 0; i < SHELF_SLOTS; i++) {
     const tier = weightedIndex(odds, seededRoll(seed, `shelf:${s.n}:tier`, i)) + 1;
@@ -582,4 +589,87 @@ export function tickVillage(v, rivals, now) {
   }
   v.gifts = v.gifts.slice(-10);
   return events;
+}
+
+// ── DR-3 (direction plan §4.2, 2026-11-11): placed props bring sea guests, gifts wait to be collected, decor scores ──
+// Neko Atsume's loop (research B §3: goodies bring cats, cats leave fish) on the island: each prop on a square may bring
+// a guest when a game ends; the guest leaves acorns on that square until the player taps 「모아 받기」. Nothing is lost by
+// waiting and nothing arrives without a finished game — the clock stays chess (island-economy plan §7).
+// Guests: three have island models (reeffish · butterfly · turtle in public/packs/legend/sea); for now all show as icons.
+export const GUESTS = {
+  reeffish: { ko: '열대어', en: 'Reef fish', icon: '🐠', gift: 2 },
+  butterfly: { ko: '나비고기', en: 'Butterflyfish', icon: '🐟', gift: 2 },
+  turtle: { ko: '바다거북', en: 'Sea turtle', icon: '🐢', gift: 3 },
+  crab: { ko: '꽃게', en: 'Crab', icon: '🦀', gift: 3 },
+  octopus: { ko: '문어', en: 'Octopus', icon: '🐙', gift: 4 },
+  whale: { ko: '아기 고래', en: 'Baby whale', icon: '🐳', gift: 6 }
+};
+/** Who each prop brings: [usual, rare]. The rare one comes GUEST_RARE of the time. */
+export const PROP_GUESTS = {
+  flowerbed: ['reeffish', 'butterfly'],
+  bench: ['turtle', 'reeffish'],
+  signpost: ['butterfly', 'crab'],
+  lantern: ['octopus', 'turtle'],
+  birdhouse: ['crab', 'butterfly'],
+  fountain: ['turtle', 'whale'],
+  arch: ['octopus', 'whale'],
+  statue: ['whale', 'whale']
+};
+export const GUEST_CHANCE = 0.4;      // per placed prop per finished game (starting guess, tools/island_sim.mjs)
+export const GUEST_RARE = 0.25;
+export const GUESTS_PER_GAME = 2;
+
+/** Guests for the game that just ended: placed props in order, each with GUEST_CHANCE, at most GUESTS_PER_GAME. */
+export function guestsVisit(v, newSeed = anySeed) {
+  const seed = ensureSeed(v, newSeed);
+  const props = (v.decor || []).filter((d) => PROPS[d.kind]);
+  const came = [];
+  // Start the scan at a game-dependent prop so the same corner of the island is not always first.
+  const start = props.length ? Math.floor(seededRoll(seed, `guest:${v.games}:start`, 0) * props.length) : 0;
+  for (let k = 0; k < props.length && came.length < GUESTS_PER_GAME; k++) {
+    const d = props[(start + k) % props.length];
+    if (seededRoll(seed, `guest:${v.games}:${d.sq}`, 0) >= GUEST_CHANCE) continue;
+    const [usual, rare] = PROP_GUESTS[d.kind];
+    const guest = seededRoll(seed, `guest:${v.games}:${d.sq}`, 1) < GUEST_RARE ? rare : usual;
+    const fresh = !(v.guestBook || {})[guest];
+    v.guestBook = { ...(v.guestBook || {}), [guest]: ((v.guestBook || {})[guest] || 0) + 1 };
+    const gift = { sq: d.sq, guest, acorns: GUESTS[guest].gift };
+    v.pending = [...(v.pending || []), gift];
+    came.push({ ...gift, fresh });
+  }
+  return came;
+}
+
+/** 「모아 받기」: every waiting gift into acorns at once. Returns what was collected. */
+export function collectGifts(v) {
+  const gifts = v.pending || [];
+  const acorns = gifts.reduce((n, g) => n + (Number(g.acorns) || 0), 0);
+  v.coins += acorns;
+  v.pending = [];
+  return { acorns, gifts };
+}
+
+// Decor score (research B §7 #3, Cookie Run's Decor Points): props and standing buildings add up to one number shown by
+// the island's name. Its thresholds open shelf levels, so decorating leads to better decorations; the games-grown level
+// still counts too — the shelf shows whichever is higher.
+export const DECOR_POINTS = [0, 5, 10, 20, 40];          // by prop tier
+export const BUILDING_POINTS = 10;                       // + 5 a level
+export const SCORE_LEVELS = [0, 40, 90, 160, 260];       // shelf level 1..5
+export function decorScore(v) {
+  const props = (v.decor || []).filter((d) => PROPS[d.kind]).reduce((n, d) => n + DECOR_POINTS[PROPS[d.kind].tier], 0);
+  const built = (v.built || []).filter((b) => b.ready).reduce((n, b) => n + BUILDING_POINTS + 5 * (b.level || 0), 0);
+  return props + built;
+}
+export function scoreLevel(score) {
+  let lv = 1;
+  SCORE_LEVELS.forEach((need, i) => { if (score >= need) lv = i + 1; });
+  return Math.min(SHELF_LEVEL_MAX, lv);
+}
+/** The shelf's level: the higher of the games-grown level and the decor-score level. */
+export const shelfLevel = (v) => Math.max(v.shelf?.lv || 1, scoreLevel(decorScore(v)));
+/** Points to the next score level, or null at the top. */
+export function nextScoreLevel(v) {
+  const score = decorScore(v);
+  const lv = scoreLevel(score);
+  return lv >= SHELF_LEVEL_MAX ? null : { level: lv + 1, need: SCORE_LEVELS[lv] - score };
 }
