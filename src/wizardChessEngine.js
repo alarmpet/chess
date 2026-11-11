@@ -957,10 +957,14 @@ export function initWizardChess() {
       try { window.dispatchEvent(new CustomEvent('gamefinished', { detail })); } catch (e) {}
     }
     // 자유 대국(라이벌 없음)의 AI 세기. 화면 쪽(RivalLadder.tsx)이 판 수에 따라 정한다 — 판 중에는 바뀌지 않는다.
-    let freePlay = { search: 'normal', mistake: undefined, stage: 'normal' };
+    // DR-M1: 7단계(src/rules/strength.js) — 탐색 깊이 · 실수 · 사람 같은 못 보기(blind).
+    let freePlay = { search: 'normal', mistake: undefined, stage: 'normal', blind: 0, step: null };
     function setFreePlay(next) {
-      if (!next || !['easy', 'normal'].includes(next.search)) return false;
-      freePlay = { search: next.search, mistake: typeof next.mistake === 'number' ? next.mistake : undefined, stage: next.stage || next.search };
+      if (!next || !['easy', 'normal', 'hard'].includes(next.search)) return false;
+      freePlay = {
+        search: next.search, mistake: typeof next.mistake === 'number' ? next.mistake : undefined, stage: next.stage || next.search,
+        blind: typeof next.blind === 'number' ? Math.max(0, Math.min(1, next.blind)) : 0, step: Number.isFinite(next.step) ? next.step : null
+      };
       return true;
     }
     function activeRival() {
@@ -4199,7 +4203,7 @@ let engineStarted = false;
       // FN-2: 라이벌의 탐색 단계는 팩의 `search`(없으면 옛 규칙: 실수 0.3 이상이면 쉬움). 라이벌 없는 자유 대국은 freePlay(첫 판들은 쉬움).
       const level = rival ? rival.search || (rival.mistake >= 0.3 ? 'easy' : 'normal') : freePlay.search;
       const history = referee.history().map((m) => positionKey(m.after));
-      const pick = chooseMove(referee.fen(), { level, history, slip: rival ? rival.mistake : freePlay.mistake });
+      const pick = chooseMove(referee.fen(), { level, history, slip: rival ? rival.mistake : freePlay.mistake, blind: rival ? 0 : freePlay.blind });
       if (!pick) return null;
       const from = squareRC(pick.from);
       const to = squareRC(pick.to);

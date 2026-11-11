@@ -1,0 +1,29 @@
+{
+ "n": 12,
+ "rows": [
+  {
+   "kind": "예전: 무작위 실수(쉬움 · slip 0.3)",
+   "moves": 778,
+   "blunders": 37,
+   "blunderRate": 0.048,
+   "hardRefutation": 0.22,
+   "medianLoss": 244
+  },
+  {
+   "kind": "새: 못 보기(1단계 · slip 0.4 · blind 0.6)",
+   "moves": 502,
+   "blunders": 48,
+   "blunderRate": 0.096,
+   "hardRefutation": 0.56,
+   "medianLoss": 358
+  },
+  {
+   "kind": "새: 못 보기만(slip 0 · blind 0.6)",
+   "moves": 587,
+   "blunders": 47,
+   "blunderRate": 0.08,
+   "hardRefutation": 0.62,
+   "medianLoss": 482
+  }
+ ]
+}

@@ -118,6 +118,55 @@ function search(chess, depth, alpha, beta, ply) {
   return best;
 }
 
+// Human-like blind spots (direction plan DR-M1 m3, 2026-11-10). Weak human players rarely miss a piece attacked next
+// to it; they miss the long diagonal, the rook from across the board and the piece that steps backwards to take
+// (players' complaint about bots: their mistakes are random, not human — research E A3). With `blind`, a reply of that
+// kind is unseen with that chance when the AI checks what its candidate moves allow. The choice is made once per reply
+// square pair for one decision, so a blind spot stays the same blind spot while it thinks.
+const SLIDERS = new Set(['b', 'r', 'q']);
+/** A reply a weak player tends not to see: a slide of four squares or more, or any backward move. */
+export function hardToSee(m) {
+  const fr = m.from >> 4, ff = m.from & 15, tr = m.to >> 4, tf = m.to & 15;
+  if (SLIDERS.has(m.piece) && Math.max(Math.abs(fr - tr), Math.abs(ff - tf)) >= 4) return true;
+  if (m.piece === 'p' || m.piece === 'k') return false;
+  return m.color === 'w' ? tr > fr : tr < fr;   // row 0 is rank 8: white going down the board goes backwards
+}
+
+// The opponent's replies, minus the ones this decision does not see.
+function seenReplies(chess, seen, capturesOnly) {
+  return ordered(chess).filter((m) => (!capturesOnly || m.flags & (CAPTURE | PROMOTION)) && seen(m));
+}
+function quiesceSeen(chess, alpha, beta, seen) {
+  const stand = evaluate(chess);
+  if (stand >= beta) return stand;
+  if (stand > alpha) alpha = stand;
+  for (const m of seenReplies(chess, seen, true)) {
+    chess._makeMove(m);
+    const score = -quiesce(chess, -beta, -alpha, QUIET_DEPTH - 1);
+    chess._undoMove();
+    if (score >= beta) return score;
+    if (score > alpha) alpha = score;
+  }
+  return alpha;
+}
+function searchSeen(chess, depth, seen) {
+  if (depth <= 0) return quiesceSeen(chess, -Infinity, Infinity, seen);
+  const all = chess._moves({ legal: true });
+  if (!all.length) return chess.inCheck() ? -MATE + 1 : 0;
+  const moves = seenReplies(chess, seen, false);
+  if (!moves.length) return evaluate(chess);
+  let best = -Infinity;
+  let alpha = -Infinity;
+  for (const m of moves) {
+    chess._makeMove(m);
+    const score = -search(chess, depth - 1, -Infinity, -alpha, 2);
+    chess._undoMove();
+    if (score > best) best = score;
+    if (score > alpha) alpha = score;
+  }
+  return best;
+}
+
 /** The position key the repetition check uses: board, turn, castling, en passant. */
 export const positionKey = (fen) => fen.split(' ').slice(0, 4).join(' ');
 
@@ -139,18 +188,27 @@ export function rootScores(fen, { depth = 2 } = {}) {
  * Picks a move for the side to move in `fen`. `history` holds position keys of the game so far, so a side that is
  * ahead does not walk into a repetition. `rand` is any 0..1 source.
  * `only` (a piece letter) keeps the choice to that piece kind — the hand in hand-and-brain mode.
+ * `blind` (0..1) gives the AI a weak human's blind spots instead of random slips (see hardToSee).
  * Returns { from, to, promotion } in algebraic squares, or null when there is no legal move.
  */
-export function chooseMove(fen, { level = 'normal', history = [], rand = Math.random, slip, only } = {}) {
+export function chooseMove(fen, { level = 'normal', history = [], rand = Math.random, slip, only, blind = 0 } = {}) {
   const chess = new Chess(fen);
   const root = only ? ordered(chess).filter((m) => m.piece === only) : ordered(chess);
   if (!root.length) return null;
   const { depth, slip: baseSlip } = LEVELS[level] || LEVELS.normal;
   const chance = slip ?? baseSlip;
   const recent = new Set(history.slice(-10));
+  // `blind` (0..1): the chance a hard-to-see reply goes unseen. Decided once per reply squares for this decision.
+  const unseen = new Map();
+  const seen = (m) => {
+    if (!(blind > 0) || !hardToSee(m)) return true;
+    const key = m.from * 128 + m.to;
+    if (!unseen.has(key)) unseen.set(key, rand() < blind);
+    return !unseen.get(key);
+  };
   const scored = root.map((m) => {
     chess._makeMove(m);
-    let score = -search(chess, depth - 1, -Infinity, Infinity, 1);
+    let score = blind > 0 ? -searchSeen(chess, depth - 1, seen) : -search(chess, depth - 1, -Infinity, Infinity, 1);
     const repeats = recent.has(positionKey(chess.fen()));
     chess._undoMove();
     // Repeating a position when ahead throws a win away; small noise keeps openings varied.

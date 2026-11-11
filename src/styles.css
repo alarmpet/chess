@@ -1392,3 +1392,12 @@ span.circle-name { cursor: default; }
 .circle-input { min-width: 0; width: 100%; padding: 2px 6px; }
 .circle-place, .circle-record { white-space: nowrap; font-size: 0.9em; }
 .circle-record { opacity: 0.85; }
+
+/* DR-M1 AI 세기: 설정 한 줄의 − + 자동 */
+.settings-strength { cursor: default; }
+.strength-controls { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.strength-controls button:not(.settings-switch) { width: 32px; height: 32px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.1); color: inherit; font: inherit; font-size: 1.1em; cursor: pointer; }
+.strength-controls button:disabled { opacity: 0.35; cursor: default; }
+.strength-controls .settings-switch { cursor: pointer; border: 0; font: inherit; }
+.strength-step { display: block; white-space: nowrap; font-weight: 600; margin: 1px 0 2px; }
+@media (max-width: 480px) { .settings-strength { flex-wrap: wrap; } .settings-strength .strength-controls { margin-left: auto; } }

@@ -1,8 +1,9 @@
 // The village screen: the player's chess games as an island on water, and the captured animals who live on it.
 // The scene is in village/islandScene.ts; this file holds the save and the panels over it.
 import { useEffect, useRef, useState } from 'react';
-import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage, PROPS, TIER_KO, PROP_PRICE, SHELF_ODDS, SHELF_XP, SHELF_LEVEL_MAX, stockShelf, buyProp, placeProp, storeProp, shelfReserve } from './village/economy.js';
-import { createIsland, slotRole } from './village/islandScene';
+import { BUILDINGS, BREAD_MAX, DEW_GRAIN, GRAIN_MAX, PET_DAILY_CAP, buildBlocked, dewReady, rollWeek, influenceBonus, influenceSquares, islandDone, moveIn, moveOut, nightOpen, pet, reconcileTenants, startBuild, startNewIsland, tenantAnimal, tenantBlocked, tenantRarity, tickVillage, roleOfSlot, PROPS, TIER_KO, PROP_PRICE, SHELF_ODDS, SHELF_XP, SHELF_LEVEL_MAX, stockShelf, buyProp, placeProp, storeProp, shelfReserve } from './village/economy.js';
+// 섬 장면(three 장면 코드 약 110KB)은 마을을 열 때 받는다 — 첫 화면 JS 상한(방향 계획서 §7-2, 2026-11-10).
+import type { createIsland } from './village/islandScene';
 import { sfx } from './audio/sfx.js';
 import CardFace, { ANIMAL_KO, RARITY_KO } from './cards/CardFace';
 import { loadCollection } from './cards/store';
@@ -97,9 +98,15 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
   }, [open]);
 
   // Build the island once per opening; later state changes redraw only what sits on it.
+  // The scene module arrives on the first opening (a later chunk); `sceneReady` lets the effects that read the scene run again.
+  const [sceneReady, setSceneReady] = useState(0);
   useEffect(() => {
     if (!open || !hostRef.current || !village) return;
-    const api = createIsland(hostRef.current, {
+    let dead = false;
+    let api: ReturnType<typeof createIsland> | null = null;
+    import('./village/islandScene').then(({ createIsland: make }) => {
+      if (dead || !hostRef.current) return;
+      api = make(hostRef.current, {
       onTile(sq) {
         const kind = live.current.picking;
         if (!kind) {
@@ -151,7 +158,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
         const v = loadVillage();
         const gained = pet(v, slot, Date.now());
         commit(v);
-        if (gained) sfx.voice(slotRole(slot));
+        if (gained) sfx.voice(roleOfSlot(slot));
         setNote(gained ? `${slotLabel(slot, v.names)}: 💗 ${v.hearts[slot]}` : '오늘은 충분히 쓰다듬었어요. 내일 또 만나요.');
       }
     });
@@ -162,8 +169,11 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
     api.drawRivalFlags(villageRivals());
     api.setNight(Boolean(village.night) && nightOpen(village));
     api.setDew(dewReady(village, Date.now()) ? village.built.filter((b: any) => b.kind === 'field' && b.ready && b.tenant).map((b: any) => b.sq) : []);
+      setSceneReady((n) => n + 1);
+    });
     return () => {
-      api.dispose();
+      dead = true;
+      api?.dispose();
       island.current = null;
     };
     // the scene is rebuilt per opening, not per coin
@@ -191,7 +201,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
     const watch = new ResizeObserver(fit);
     watch.observe(top);
     return () => watch.disconnect();
-  }, [open, !!village]);
+  }, [open, !!village, sceneReady]);
 
   const building = village?.built.find((b: any) => b.id === selected) || null;
 
@@ -215,7 +225,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
     const reach = influenceSquares(tenantAnimal(card), building.sq);
     const homes = village.built.filter((b: any) => reach.includes(b.sq)).map((b: any) => b.sq);
     api.setOverlay(reach, homes, building.sq);
-  }, [picking, trying, building, village]);
+  }, [picking, trying, building, village, sceneReady]);
 
   function currentMarks() {
     return earnedMarks({ rivals: villageRivals(), v: loadVillage(), col: loadCollection(), photos: loadIslandPhotos() });

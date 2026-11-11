@@ -3,12 +3,20 @@ import { sfx } from './audio/sfx.js';
 import { fxSettings, writeFxSettings } from './fx/settings.js';
 import { loadCollection } from './cards/store';
 import { UNLOCK_GAMES } from './cards/economy.js';
+import { STEP_COUNT, freePlayOf, loadSkill, pickStep, saveSkill, setAuto, stepLabel } from './rules/strength.js';
 
 // One place for the show-versus-speed choices, so the top bar does not grow a button for each.
 export default function SettingsPanel({ open, onClose, lang }: { open: boolean; onClose: () => void; lang: 'ko' | 'en' }) {
   const [fx, setFx] = useState(fxSettings());
   const [soundOn, setSoundOn] = useState(!sfx.isMuted());
+  const [skill, setSkill] = useState(() => loadSkill(typeof window === 'undefined' ? null : window.localStorage));
   if (!open) return null;
+  // DR-M1: AI 세기 — 자동 맞춤(기본) 또는 직접 고르기. 다음 판부터(판 중에는 바뀌지 않는다).
+  const saveStrength = (next: any) => {
+    setSkill(next);
+    saveSkill(window.localStorage, next);
+    (window as any).wizardChess?.setFreePlay?.(freePlayOf(next.step));
+  };
 
   const en = lang === 'en';
   const setOption = (key: 'shake' | 'quick' | 'cards' | 'dive' | 'quests' | 'blitz', value: boolean) => {
@@ -38,6 +46,21 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
           <button type="button" className="panel-close" onClick={onClose}>✕</button>
         </div>
         <div className="panel-body">
+          <div className="settings-row settings-strength" id="setting-strength">
+            <span className="settings-icon">🎚️</span>
+            <span className="settings-text">
+              <b>{en ? 'AI strength' : 'AI 세기'}</b>
+              <span className="strength-step" id="strength-step">{stepLabel(skill.step, en)}</span>
+              <small>{skill.mode === 'auto'
+                ? (en ? 'Auto: matched to you after each game (you win a bit more than half). Next game on' : '자동: 판이 끝날 때마다 나에게 맞춰요(절반 조금 넘게 이기도록). 다음 판부터')
+                : (en ? 'Fixed at this step. Next game on' : '이 단계로 고정. 다음 판부터')}</small>
+            </span>
+            <span className="strength-controls">
+              <button type="button" id="strength-down" aria-label={en ? 'Easier' : '더 쉽게'} disabled={skill.step <= 1} onClick={() => saveStrength(pickStep(skill, skill.step - 1))}>−</button>
+              <button type="button" id="strength-up" aria-label={en ? 'Harder' : '더 어렵게'} disabled={skill.step >= STEP_COUNT} onClick={() => saveStrength(pickStep(skill, skill.step + 1))}>+</button>
+              <button type="button" id="strength-auto" className={`settings-switch${skill.mode === 'auto' ? ' on' : ''}`} aria-pressed={skill.mode === 'auto'} onClick={() => saveStrength(setAuto(skill, skill.mode !== 'auto'))}>{en ? 'Auto' : '자동'}</button>
+            </span>
+          </div>
           {rows.map((r) => (
             <button key={r.id} type="button" className="settings-row" id={`setting-${r.id}`} aria-pressed={r.on} onClick={r.toggle}>
               <span className="settings-icon">{r.icon}</span>

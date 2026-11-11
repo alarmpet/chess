@@ -59,4 +59,4 @@ npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·�
 
 ## 저장 키
 
-`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · `wildcrown.identity.v1`(기기 익명 서명 키, 랭크) · 마을·카드·설정 스토어. 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.
+`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · `wildcrown.identity.v1`(기기 익명 서명 키, 랭크) · `wildcrown.skill.v1`(AI 판 실력 점수·단계, DR-M1) · 마을·카드·설정 스토어. 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.
