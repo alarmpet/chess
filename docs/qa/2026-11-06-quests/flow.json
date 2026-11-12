@@ -1,0 +1,99 @@
+{
+ "gid": 2901031678,
+ "r": {
+  "notes": [
+   "내 캥거루에 💰 현상금이 붙었어요. 지켜요!",
+   "✅ 퀘스트 완료: 공유 미션 먼저 해내기! 판이 끝나면 도토리 +10",
+   "내 판다에 💰 현상금이 붙었어요. 지켜요!"
+  ],
+  "strip": "🎯 판다로 먼저 잡기 · 내가 먼저 ✓\n📋 2/3\n7수째",
+  "quests0": {
+   "v": 1,
+   "slots": [
+    {
+     "id": "captures_3",
+     "have": 0,
+     "done": false,
+     "day": 20763
+    },
+    {
+     "id": "mission_1",
+     "have": 0,
+     "done": false,
+     "day": 20763
+    },
+    {
+     "id": "stamp_common",
+     "have": 0,
+     "done": false,
+     "day": 20763
+    }
+   ],
+   "swapDay": null
+  },
+  "quests1": {
+   "v": 1,
+   "slots": [
+    {
+     "id": "captures_3",
+     "have": 3,
+     "done": true,
+     "day": 20763
+    },
+    {
+     "id": "mission_1",
+     "have": 1,
+     "done": true,
+     "day": 20763
+    },
+    {
+     "id": "stamp_common",
+     "have": 0,
+     "done": false,
+     "day": 20763
+    }
+   ],
+   "swapDay": null
+  }
+ },
+ "swap": {
+  "before": [
+   "captures_3",
+   "mission_1",
+   "stamp_common"
+  ],
+  "after": [
+   "captures_3",
+   "mission_1",
+   "win_1"
+  ],
+  "buttonsLeft": 0
+ },
+ "end": {
+  "coins": 98,
+  "quests": {
+   "v": 1,
+   "slots": [
+    {
+     "id": "captures_3",
+     "have": 3,
+     "done": true,
+     "day": 20763
+    },
+    {
+     "id": "mission_1",
+     "have": 1,
+     "done": true,
+     "day": 20763
+    },
+    {
+     "id": "win_1",
+     "have": 1,
+     "done": true,
+     "day": 20763
+    }
+   ],
+   "swapDay": 20763
+  }
+ }
+}

@@ -1,0 +1,149 @@
+== topic:farming-game
+jeremyckahn/farmhand	147	gpl-2.0	TypeScript	2026-11-02	A resource management game that puts a farm in your hand
+ArshVermaGit/AgriSim	21	other	C#	2026-04-08	AgriSim is a cozy 2D farming sim 🌱 where you grow crops, brave dynamic
+Farmulty/Farmulty	18			2021-05-30	ISSUE TRACKER - RT Farming Game Farmulty
+UxxHans/Rainbow-Cats-Farming-Simulator	8		C#	2022-05-31	A cute farming simulator that can plant crops and construct buildings
+KrisCris/village-in-the-shade-guide	6	agpl-3.0	TypeScript	2026-11-01	Unofficial wiki for Village in the Shade (ほの暮しの庭 / 静谧田园): item databas
+appleweiping/paradise-isle	5	mit	TypeScript	2026-10-23	An island life-sim for the browser: farm, raise animals, fish, fight o
+samuelpasierb/decked-mini-jame-gam-53	4		GDScript	2026-06-08	A farm expansion game using deck building, where you are tasked with m
+KrasimirKralev/harvest-hollow	4	mit	JavaScript	2026-10-23	Harness Hollow: a cozy co-op 3D farming game for two, in the browser. 
+Soturine/fazenda-inteligente-cbr	4	mit	TypeScript	2026-05-12	Vale dos Causos — jogo web de fazenda com IA baseada em Raciocínio Bas
+devhitp/FarmSimulator	4	mit	JavaScript	2026-07-19	🌾 A 2D Farming Simulator powered by Harvest Engine — a custom game eng
+CookieNoir/TA-Casual-Farm	3	mit	ShaderLab	2023-02-21	Test assignment clone of My Mini Mart.
+levalyukov/little-farmer	3	gpl-3.0	GDScript	2026-11-03	Pixel farmer simulator game on Godot v4.2.2
+kmu1757/DreamFarm	3	other	Python	2026-07-24	밀어낸 당근 한 조각에는, 누군가의 새벽이 들어 있었다 — 아버지의 시간을 이해해 가는 감성 내러티브 픽셀 농장 게임 (Win
+u1974750/Pentafarm	3		C#	2024-11-19	Pentafarm is a 3D farming simulation game developed as a university pr
+pranay123-stack/web3-farming-game	3	mit	TypeScript	2026-08-27	Web3 farming game with onchain land, crops, item NFTs, a tokenized gam
+== topic:farming-simulator
+stijnwop/guidanceSteering	371		Lua	2023-09-30	Guidance Steering (AutoTrack) for Farming Simulator 22.
+stijnwop/manualAttach	155	gpl-3.0	Lua	2026-09-13	Manual Attach modification for Farming Simulator 2025
+Realistic-Farming/FS25_SoilFertilizer	116	other	Lua	2026-11-03	Realistic soil nutrient management for Farming Simulator 25. Track N/P
+FSGModding/FSG_Mod_Assistant	109	isc	JavaScript	2025-02-02	Farming Simulator 22 Mod Manager.
+StjerneIdioten/I3D-Blender-Addon	99	gpl-3.0	Python	2026-07-25	Rewriting the I3D blender addon from scratch and adding long-sought co
+nadine-brinkmann/blender-i3d-importer	64	gpl-3.0	Python	2026-10-01	Blender add-on for importing Farming Simulator 25 .i3d files with all 
+WispSnow/TinyFarm	63	mit	C++	2026-08-14	A farm game developed in C++ with SDL3, OpenGL, MiniAudio, Freetype, e
+TobiasF92/FS25_interactiveControl	58		Lua	2026-10-04	Interactive Control for Farming Simulator 25
+Mhytee/Trueforce-For-All	49	other	C#	2026-11-03	The ultimate companion for a Trueforce-enabled Logitech wheel: Truefor
+Realistic-Farming/FS25_NPCFavor	35	other	Lua	2026-11-02	Living NPC neighbors with AI field schedules and a favor system for Fa
+Realistic-Farming/FS25_MarketDynamics	34		Lua	2026-10-14	Dynamic crop pricing for FS25 — 7 world events, intraday volatility, f
+Peppie84/FS25_ExtendedLeasing	31	gpl-3.0	Lua	2025-01-29	Base costs (deposit) return & repair, washing costs have to be paid. M
+Realistic-Farming/FS25_SeasonalCropStress	29	other	Lua	2026-11-03	Soil moisture simulation, crop stress, and irrigation infrastructure f
+Donkie/I3DShapesTool	28	mit	C#	2022-08-12	Tool used for extracting the binary .i3d.shapes files used by the GIAN
+w33zl/FS25_PowerTools	28		Lua	2025-03-16	PowerTools mod for Farming Simulator 25
+== topic:farm-game
+seanpm2001/Hyper-realistic-farm-simulator	11	gpl-3.0	Python	2025-10-09	The most realistic, but least fun farming game (everything is set to r
+ErenElagz/Farm-Simulator-Game	5	mit	JavaScript	2025-01-22	The Farm Game starts on a small farm where you have a barn and a field
+ALGSN1386/qq-farm	0	mit	JavaScript	2026-10-19	QQ 农场网页版：种菜、浇水、施肥、偷菜、升级。纯前端，零依赖，存档在本地。
+Layheng-Hok/QQ-Farm	0		Java	2026-03-04	QQ Farm - SUSTech Assignment of CS209A: Computer System Design and App
+Far4Ru/farm-game	0		Haxe	2023-03-06	Игра в жанре "ферма"
+Asouts/diandian-farm	0	other	HTML	2026-10-14	快易典「点点农场」网页复刻版 · 数据全部来自 T5 固件逆向提取 · 单文件 HTML 双击即玩
+drwjkirkpatrick-web/obi-farm-3d	0	mit	JavaScript	2026-06-19	3D farm game where you catch Obi the dachshund before he catches the c
+== topic:cozy-game
+ash3151/volt-warden-console	55		HTML	2026-11-03	Best Chill Electronics Repairs Trainer Utility for PC Gamers in 2026
+FCNahian/restory-sandbox-mode	54		HTML	2026-10-21	Chill Electronics Repairs Trainer 2026: Infinite Money, Instant Delive
+AmethystineAlpaca/thank-you-for-the-fish	27	mit	JavaScript	2026-09-30	🐟 A free, open-source idle fishing game for your Mac desktop. A tiny b
+ArshVermaGit/AgriSim	21	other	C#	2026-04-08	AgriSim is a cozy 2D farming sim 🌱 where you grow crops, brave dynamic
+SnatchStageRoof13/dressmaker-modkit	17			2026-09-21	37-module Trainer/Cheat for Dressmaker — coins and shop, instant sewin
+yumiaura/myRoomie	16	mit	Python	2026-06-10	A cozy 2D life-sim: share an apartment with a procedurally-generated r
+FeatherGrouseCutters/Moon-Sweepers-cheats	11	mit	C++	2026-10-29	Moon Sweepers cheats — dust contrast outlines for grey-on-grey visibil
+SkyWalker541/Gone-Fishing	10		Shell	2026-10-31	A free, relaxing pixel-art fishing game for PortMaster handhelds, made
+TechProGabe/little-apartment-big-city	6	other	TypeScript	2026-11-01	A cozy pixel life-sim with no finish line. Fish the shore, work odd jo
+starity777-byte/naituan	6	mit	JavaScript	2026-10-31	🐾 一只住在手机里的白色小熊猫：摸摸、喂小鱼、玩小游戏、布置小窝。打开即玩的网页养成小游戏。
+gotcha-khushi/Focus_Picnic	4		JavaScript	2026-08-22	A realtime multiplayer Pomodoro study space with cozy pixel-art enviro
+KrasimirKralev/harvest-hollow	4	mit	JavaScript	2026-10-23	Harness Hollow: a cozy co-op 3D farming game for two, in the browser. 
+barbarabugajak/ScanFun	4		C++	2026-04-17	Fast‑paced scanning game made in Unreal Engine 5 using the Gameplay Ab
+kmu1757/DreamFarm	3	other	Python	2026-07-24	밀어낸 당근 한 조각에는, 누군가의 새벽이 들어 있었다 — 아버지의 시간을 이해해 가는 감성 내러티브 픽셀 농장 게임 (Win
+pashamuhammadd/lifetopia-platform	3		TypeScript	2026-07-23	Official monorepo for Lifetopia World - a cozy social sandbox platform
+== topic:stardew-valley-like
+berkefastik18/One-Lonely-Outpost-Full-Version	0	mit		2026-11-03	One Lonely Outpost is a free full-version farming simulator for Window
+== topic:idle-game farm
+shigake/tbh-copilot	43	other	HTML	2026-06-29	🔒 Local, free (no ads) optimization co-pilot for the idle-RPG TBH: Tas
+wantid/Idle-Action-Farm	18		C#	2022-08-04	A prototype of hypercasual game
+kobawan/idle-chicken-farm	6		TypeScript	2023-01-06	🐔🐓
+aaronvanston/farm-lib	4	mit	TypeScript	2026-10-30	The farm library behind farm-cli, clicker game
+SickSartori/espo-clicker	3		TypeScript	2026-11-03	A satirical idle clicker about developer life: click a manager's face,
+claude-farmer/claude-farmer	2	mit	TypeScript	2026-04-09	🌱 Your code grows a farm — an idle pixel-art farming game powered by C
+zlwzk/AutoFarmStation	2	mit	Python	2026-10-22	面向挂机游戏的 Windows 多开自动化工作站:多窗口实时预览 + 连点器/键盘宏/宏录制 + 多窗口同步执行与单窗口独立执行 + Ste
+bernardopg/steam-idler-python	2	mit	Python	2026-11-02	🎮 A lightweight Python script that idles Steam games to farm trading c
+MrGreenCheezz/FarmOnline	1	mit	C#	2026-09-25	Социальная ферма, где всё растёт в реальном времени: Unity 6 (WebGL/UR
+w1ck3ds0d4/NanoFarm	1	agpl-3.0	TypeScript	2026-11-01	Idle pixel-art city-builder that converts Claude Code tool calls into 
+gellermanchik/crossy-road-auto-farm	1	mit	Python	2026-06-29	🐔 Auto-farm free coins in Crossy Road on macOS (Apple Silicon). Fully 
+Mahinika/Idle-Party	1	other	Dart	2026-11-03	Idle RPG: grow a fantasy party, farm 15 dungeons AFK, chase KEYSTONE a
+myceliumweb/myceliumweb.github.io	0		HTML	2023-06-24	Mushroom Farm from Mycelium Games coming soon...
+KSiukee/text-farm	0	gpl-3.0	Rust	2026-11-03	纯文字、按真实时间生长的单机农场。Rust 内核 + Tauri 2 + Vue 3，同一份内核跑桌面、安卓和浏览器（wasm）。
+MrGreenCheezz/Idle_farm_game	0		C#	2026-06-03	Godot 4 C# idle farming game with crop growth, harvesting, merging, an
+== garden game javascript
+yannprada/cookie-garden-helper	15		JavaScript	2026-01-24	Automate your garden in the game Cookie Clicker
+chesterz184/sigmar-garden	11		JavaScript	2024-07-14	A minigame from Opus Magnum ( web version)
+Gmast2662/grow-your-garden	11	mit	JavaScript	2026-05-12	A feature-rich browser-based gardening simulation game
+deepujain/casadegema	3	mit	HTML	2026-10-17	A little garden of hidden gems :  a single-file watercolor Canvas game
+imshota1009/Nyan-Bomber	3	mit	HTML	2026-07-04	A browser-based 3D action-puzzle game built with Three.js. Control you
+kherrick/block-garden	2	agpl-3.0	JavaScript	2026-02-25	Block Garden
+CapriciousRebel/GardeningGame	1	mit	JavaScript	2022-07-31	A simple gardening game written in html, css and javascript using the 
+GoldPillowGames/GardenGnome-PruneTheWeeds	1	apache-2.0	JavaScript	2020-11-19	Rythm browser game 💻 Made with Phaser 3 💠 Available on itch.io 🔆
+kherrick/sprite-garden	1	agpl-3.0	JavaScript	2026-01-23	Sprite Garden
+ShreyaSirgound/Garden-of-Evo	1		JavaScript	2026-06-23	single-player browser adventure game built in one week with vanilla Ja
+alunix/RagingGardensFB	1	mit		2013-03-03	Facebook port of Raging Gardens - Javascript/HTML5 web browser game wh
+JAOG1V1/JAOG1V1-BloomGardenUltimate	1	mit	JavaScript	2026-06-09	🌸 Jogo/jardim mágico 3D para navegador com céu animado, partículas e f
+David-del-pix/mindbloom	1	mit	CSS	2026-04-22	🌸 Type words, grow flowers! A creative word-garden game for all ages —
+hsvewyhawefyu/cookie-clicker-addon	1			2021-09-24	the ultimate cookie cluicker addon so what you want to do is copy this
+toads-garden/toads-garden-web	0		JavaScript	2023-02-10	A wholesome web-based platformer game.  Players play as Toad and navig
+== idle farm game
+zevnda/steam-game-idler	780	other	TypeScript	2026-11-03	Farm Steam trading cards, manage achievements, and idle games automati
+danderfer/Comp_Sci_Sem_2	219		Python	2023-04-03	According to all known laws of aviation, there is no way that a bee sh
+tacheometry/steam-hour-farmer	76	mit	JavaScript	2026-02-13	Farm/boost/idle hours headlessly on Steam without game installation
+DrWarpMan/steam-hour-booster	47	mit	TypeScript	2025-11-22	Farm your in-game hours on Steam
+zZan54/BananaDropFarm	41	gpl-3.0	Python	2025-08-30	Banana Drop Farm is a game cheat for game Banana. This mod menu can ch
+citrongames/Idle-Action-Farm	35		C#	2025-10-24	Hyper casual game in Unity
+wantid/Idle-Action-Farm	18		C#	2022-08-04	A prototype of hypercasual game
+aaronvanston/farmclicker	13		JavaScript	2018-05-22	Idle clicker game built using React + Redux
+dive2Pro/steam-game-idler	7	mit		2026-02-10	Farm Steam trading cards, manage achievements, and idle games automati
+nTelio57/CryptoFarmGame	6		C#	2021-12-17	Personal Unity game project made in 2021. Crypto Farm is an idle/incre
+Lum1104/typing-farm	6	mit	Rust	2026-03-05	受 Steam 游戏 Typing Farmer（MilkywayStudio 开发）启发，将日常打字变成一场治愈的 idle game 体
+Shahril3001/idle_space_farm	4		Dart	2025-05-16	A personal experimental project to prove whether the Flutter framework
+bitcraft3r/farmcraft-web3-rpg	4		Solidity	2026-03-14	An on-chain farming simulator & idle-clicker game, deployed on Scroll 
+aaronvanston/farm-lib	4	mit	TypeScript	2026-10-30	The farm library behind farm-cli, clicker game
+paflya/Idle-Action-Farm	3		C#	2023-03-14	Android game made in Unity about collecting crops
+== godot farming template
+== topic:city-builder javascript
+victorqribeiro/isocity	3263	mit	JavaScript	2024-10-14	A isometric city builder in JavaScript
+rawprogress/fable-cities	84	other	JavaScript	2026-09-02	A Cities: Skylines-class city builder running in the browser, built in
+MHillier98/IntroToComputerGraphics-CityGenerator	49	mit	JavaScript	2020-09-04	A Procedural City Generator built in Three.js
+SOM-0x3B1/SomCity	12		JavaScript	2026-04-15	A simplified city building simulator designed to run in browsers
+Darkadia-Studio/JS-City	9	gpl-3.0	JavaScript	2017-03-07	A small city builder game
+jaycrossler/battlebox	7		JavaScript	2017-06-20	Javascript procedural land and city generator with some limited autono
+helpLost/rda	6	gpl-3.0	CSS	2023-08-28	Rising Dawns: Adventure is an incremental browser city builder that in
+frankvonk/Metropolis2127	4		JavaScript	2022-01-07	A dystopian city-builder game, in the theme of the 1927 film by Fritz 
+KuroiAkuma19/GridVille	3	mit	JavaScript	2026-07-27	A chill, browser-based city builder where you can lay down roads, hook
+herozhong0125/city-builder	2	mit	JavaScript	2026-09-06	都市·微城 (Metro·Microcity) — Three.js 3D city simulation builder: roads/z
+EngYoussefZaki/road-network-editor	2	mit	HTML	2026-10-02	An editor that allows you to create road, rail, bridge, tunnel and met
+nrshvch/isometrica	1		JavaScript	2026-11-03	This is JavaScript city building game prototype I've built around 2012
+valinux/ezeus-browser	1	gpl-3.0	C++	2026-09-19	Unofficial eZeus browser port: C++/SDL via WebAssembly, full-window ga
+jgss-gabriel-sousa/TownRise	1		JavaScript	2026-07-06	City-Building Strategy Game
+Leks2000/Hexkingdom	1	mit	JavaScript	2026-07-08	
+== topic:isometric-game typescript
+rjct/react-isometric-game	13	mit	TypeScript	2024-09-27	This is an isometric game developed using React/Hooks, TypeScript, LES
+FelipeIzolan/phaser-isometric-engine	6	mit	TypeScript	2024-02-28	🥧 phaser-isometric-engine (grid-based)
+WilliamDavidson-02/pixel-craft	3	mit	TypeScript	2026-03-24	Pixel craft is a 2D isometric open world game
+izure1/eriengine	3		TypeScript	2021-12-21	웹 2.5D 쿼터뷰 게임 엔진
+SikJa/syka-world	0	mit	TypeScript	2026-07-22	A cozy isometric world where Hermes AI profiles become visible, playab
+== building placement grid three.js
+NamanmeetSingh/CityScape	0		JavaScript	2026-02-23	A SimCity-inspired city builder built with Three.js and Vite, featurin
+== topic:sandbox-game farming
+DevStudio-AI/GreenValley_	0	other		2026-03-15	the pixel-art farming game
+== topic:life-sim
+marwasalmi681-ux/tomodachi-community-hub	54		HTML	2026-11-03	Tomodachi Life 2026 Desktop Sim - Island Living on PC
+mohamedsaid5363-star/MiiVerse-Archipelago	52		HTML	2026-11-03	Tomodachi Life 2026 PC: Ultimate Mii Sharing & Switch Modding Hub
+Cosmicgloexhibit/PAO-PAO-Trainer	16	mit	PowerShell	2026-10-30	PAO PAO Trainer for Windows — cozy seaside profile concepts with farm 
+TechProGabe/little-apartment-big-city	6	other	TypeScript	2026-11-01	A cozy pixel life-sim with no finish line. Fish the shore, work odd jo
+appleweiping/paradise-isle	5	mit	TypeScript	2026-10-23	An island life-sim for the browser: farm, raise animals, fish, fight o
+anshuman-krishna/master-of-none	3		GDScript	2026-09-03	a 3/4 top-down pixel art narrative life sim in godot 4. no combat, no 
+thalismind/bunnyland-server	3	agpl-3.0	Python	2026-10-20	An asynchronous social sandbox where humans and LLM agents share persi
+marcogonzalez99/GoldenValleyShowcase	1			2025-06-16	Golden Valley is a pixel art farming and life simulation game inspired
+bongo921-cankers/Doloc-Town-Community-2026	1			2026-11-03	Doloc Town Community Edition — standalone offline build of the pixel-a
+khangdh0202/SillyTavern-Storyline	1	gpl-3.0	JavaScript	2026-11-03	Storyteller chat mode for SillyTavern. You play the main character. Th
+xllmtv/harvest-valley	1	other	C#	2026-10-09	Harvest Valley is a cozy pixel-art farming and life simulation game wh
+wangxiaoer2026/newwebplay-resources	1			2026-05-26	New Web Play resource index: player-friendly game guides, hubs, tools,
+zeittresor/gan_organism_arena	1	mit	GDScript	2026-09-07	Conway's Game of Life in a 3D Enviroment with Evolution
+Bernesemountaindogvent8449/Tomodachi-Share-Discover-and-share-Mii	1	mit	C++	2026-10-12	Share and discover Mii residents for Tomodachi Life. Manage island pop
+Jeffrey114-514/us-admit-sim	1	mit	HTML	2026-09-04	申请人生 · College Life Sim — 单文件 HTML 美国大学申请模拟器（57 所真实院校数据 / 压力系统 / ED-RD

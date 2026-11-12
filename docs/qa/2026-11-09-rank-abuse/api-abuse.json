@@ -1,0 +1,123 @@
+{
+ "at": "2026-11-09T12:30:35.207Z",
+ "waitMs": 5000,
+ "pass": 19,
+ "total": 19,
+ "rows": [
+  {
+   "item": "불법 수 전송",
+   "want": "rejected illegal",
+   "got": "rejected illegal",
+   "ok": true
+  },
+  {
+   "item": "결과 불일치(서로 이겼다고)",
+   "want": "mismatch, 점수 그대로",
+   "got": "mismatch · 백 판수 0",
+   "ok": true
+  },
+  {
+   "item": "첫 수 전 끝남(1수)",
+   "want": "counted · outcome void · 실력·사다리 그대로",
+   "got": "void · rating 1500 · points 0 · games 0",
+   "ok": true
+  },
+  {
+   "item": "같은 상대 하루 4번째 판",
+   "want": "앞 3판 counted · 4번째 capped · 판수 3 · pair.capped",
+   "got": "counted,counted,counted,capped · games 3 · pair {\"today\":3,\"week\":3,\"dayCap\":3,\"weekCap\":10,\"capped\":true}",
+   "ok": true
+  },
+  {
+   "item": "같은 날 다른 친구",
+   "want": "counted",
+   "got": "counted",
+   "ok": true
+  },
+  {
+   "item": "수마다 0.1초 미만 5번 연속",
+   "want": "rejected inhuman",
+   "got": "rejected inhuman",
+   "ok": true
+  },
+  {
+   "item": "12수를 0.3초에",
+   "want": "rejected inhuman",
+   "got": "rejected inhuman",
+   "ok": true,
+   "signer": "ho3MZw8ZkTErZ7Ay"
+  },
+  {
+   "item": "옛 빌드",
+   "want": "rejected old-build",
+   "got": "rejected old-build",
+   "ok": true
+  },
+  {
+   "item": "시간 기록 없음(v1 클라이언트 흉내)",
+   "want": "rejected old-build",
+   "got": "rejected old-build",
+   "ok": true
+  },
+  {
+   "item": "이틀 지난 보고",
+   "want": "rejected stale",
+   "got": "rejected stale",
+   "ok": true
+  },
+  {
+   "item": "서명 뒤 시간 기록만 고침",
+   "want": "rejected signature",
+   "got": "rejected signature",
+   "ok": true
+  },
+  {
+   "item": "이탈 몰수 청함(바로)",
+   "want": "waiting + abandonAt",
+   "got": "waiting · 5s 뒤",
+   "ok": true
+  },
+  {
+   "item": "기다림 뒤 다시 보냄",
+   "want": "counted · 백 1승 · 흑 1패",
+   "got": "counted counted · 1승 / 1패",
+   "ok": true
+  },
+  {
+   "item": "몰수 청한 뒤 창 닫음 → 다음에 랭크 읽기",
+   "want": "1승 반영",
+   "got": "1승 · 1판",
+   "ok": true
+  },
+  {
+   "item": "내 키로 만든 상대 영수증",
+   "want": "rejected receipt-key",
+   "got": "rejected receipt-key",
+   "ok": true
+  },
+  {
+   "item": "영수증 없는 몰수",
+   "want": "rejected receipt",
+   "got": "rejected receipt",
+   "ok": true
+  },
+  {
+   "item": "… 기다림 뒤에도",
+   "want": "0판",
+   "got": "0판",
+   "ok": true
+  },
+  {
+   "item": "둘 다 몰수를 청함",
+   "want": "mismatch · 둘 다 0판",
+   "got": "mismatch · 0/0판",
+   "ok": true
+  },
+  {
+   "item": "나갔던 쪽이 돌아와 진 판 보고",
+   "want": "바로 counted",
+   "got": "counted counted",
+   "ok": true
+  }
+ ]
+}

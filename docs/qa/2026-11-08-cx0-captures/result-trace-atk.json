@@ -1,0 +1,686 @@
+{
+ "pawn>pawn": {
+  "frames": 137,
+  "pitch": [
+   -0.16,
+   0.5
+  ],
+  "liftMax": 0.03,
+  "rollMax": 0,
+  "yawAbs": 0,
+  "stretch": [
+   0.96,
+   1.2
+  ],
+  "shots": [
+   {
+    "name": "ta-pawn-x-pawn-00.png",
+    "u": 0,
+    "x": 1312,
+    "y": 635,
+    "pitch": 0
+   },
+   {
+    "name": "ta-pawn-x-pawn-01.png",
+    "u": 0.13,
+    "x": 1306,
+    "y": 629,
+    "pitch": -0.04
+   },
+   {
+    "name": "ta-pawn-x-pawn-02.png",
+    "u": 0.28,
+    "x": 1292,
+    "y": 615,
+    "pitch": -0.13
+   },
+   {
+    "name": "ta-pawn-x-pawn-03.png",
+    "u": 0.4,
+    "x": 1280,
+    "y": 606,
+    "pitch": -0.14
+   },
+   {
+    "name": "ta-pawn-x-pawn-04.png",
+    "u": 0.53,
+    "x": 1280,
+    "y": 613,
+    "pitch": 0.48
+   },
+   {
+    "name": "ta-pawn-x-pawn-05.png",
+    "u": 0.66,
+    "x": 1290,
+    "y": 623,
+    "pitch": 0.42
+   },
+   {
+    "name": "ta-pawn-x-pawn-06.png",
+    "u": 0.79,
+    "x": 1281,
+    "y": 619,
+    "pitch": 0.22
+   },
+   {
+    "name": "ta-pawn-x-pawn-07.png",
+    "u": 0.94,
+    "x": 1270,
+    "y": 613,
+    "pitch": 0.02
+   },
+   {
+    "name": "ta-pawn-x-pawn-08.png",
+    "u": 0.94,
+    "x": 1270,
+    "y": 613,
+    "pitch": 0.02
+   },
+   {
+    "name": "ta-pawn-x-pawn-09.png",
+    "u": 0.94,
+    "x": 1270,
+    "y": 613,
+    "pitch": 0.02
+   },
+   {
+    "name": "ta-pawn-x-pawn-10.png",
+    "u": 0.94,
+    "x": 1270,
+    "y": 613,
+    "pitch": 0.02
+   },
+   {
+    "name": "ta-pawn-x-pawn-11.png",
+    "u": 0.94,
+    "x": 1270,
+    "y": 613,
+    "pitch": 0.02
+   },
+   {
+    "name": "ta-pawn-x-pawn-12.png",
+    "u": 0.94,
+    "x": 1270,
+    "y": 613,
+    "pitch": 0.02
+   },
+   {
+    "name": "ta-pawn-x-pawn-13.png",
+    "u": 0.94,
+    "x": 1270,
+    "y": 613,
+    "pitch": 0.02
+   }
+  ]
+ },
+ "knight>pawn": {
+  "frames": 162,
+  "pitch": [
+   -0.55,
+   0.12
+  ],
+  "liftMax": 0.07,
+  "rollMax": 0,
+  "yawAbs": 0,
+  "stretch": [
+   0.84,
+   1.1
+  ],
+  "shots": [
+   {
+    "name": "ta-knight-x-pawn-00.png",
+    "u": 0,
+    "x": 1426,
+    "y": 652,
+    "pitch": 0
+   },
+   {
+    "name": "ta-knight-x-pawn-01.png",
+    "u": 0.14,
+    "x": 1423,
+    "y": 648,
+    "pitch": 0.03
+   },
+   {
+    "name": "ta-knight-x-pawn-02.png",
+    "u": 0.29,
+    "x": 1414,
+    "y": 638,
+    "pitch": 0.1
+   },
+   {
+    "name": "ta-knight-x-pawn-03.png",
+    "u": 0.43,
+    "x": 1408,
+    "y": 627,
+    "pitch": -0.02
+   },
+   {
+    "name": "ta-knight-x-pawn-04.png",
+    "u": 0.55,
+    "x": 1415,
+    "y": 640,
+    "pitch": -0.55
+   },
+   {
+    "name": "ta-knight-x-pawn-05.png",
+    "u": 0.62,
+    "x": 1411,
+    "y": 636,
+    "pitch": -0.51
+   },
+   {
+    "name": "ta-knight-x-pawn-06.png",
+    "u": 0.84,
+    "x": 1400,
+    "y": 637,
+    "pitch": -0.15
+   },
+   {
+    "name": "ta-knight-x-pawn-07.png",
+    "u": 0.98,
+    "x": 1393,
+    "y": 633,
+    "pitch": 0
+   },
+   {
+    "name": "ta-knight-x-pawn-08.png",
+    "u": 0.98,
+    "x": 1393,
+    "y": 633,
+    "pitch": 0
+   },
+   {
+    "name": "ta-knight-x-pawn-09.png",
+    "u": 0.98,
+    "x": 1393,
+    "y": 633,
+    "pitch": 0
+   },
+   {
+    "name": "ta-knight-x-pawn-10.png",
+    "u": 0.98,
+    "x": 1393,
+    "y": 633,
+    "pitch": 0
+   },
+   {
+    "name": "ta-knight-x-pawn-11.png",
+    "u": 0.98,
+    "x": 1393,
+    "y": 633,
+    "pitch": 0
+   },
+   {
+    "name": "ta-knight-x-pawn-12.png",
+    "u": 0.98,
+    "x": 1393,
+    "y": 633,
+    "pitch": 0
+   },
+   {
+    "name": "ta-knight-x-pawn-13.png",
+    "u": 0.98,
+    "x": 1393,
+    "y": 633,
+    "pitch": 0
+   }
+  ]
+ },
+ "bishop>knight": {
+  "frames": 73,
+  "pitch": [
+   0,
+   6.28
+  ],
+  "liftMax": 0.4,
+  "rollMax": 0,
+  "yawAbs": 0,
+  "stretch": [
+   1,
+   1
+  ],
+  "shots": [
+   {
+    "name": "ta-bishop-x-knight-00.png",
+    "u": 0.01,
+    "x": 1539,
+    "y": 593,
+    "pitch": 0
+   },
+   {
+    "name": "ta-bishop-x-knight-01.png",
+    "u": 0.05,
+    "x": 1541,
+    "y": 603,
+    "pitch": 0.15
+   },
+   {
+    "name": "ta-bishop-x-knight-02.png",
+    "u": 0.29,
+    "x": 1446,
+    "y": 471,
+    "pitch": 3.49
+   },
+   {
+    "name": "ta-bishop-x-knight-03.png",
+    "u": 0.34,
+    "x": 1387,
+    "y": 503,
+    "pitch": 4.27
+   },
+   {
+    "name": "ta-bishop-x-knight-04.png",
+    "u": 0.48,
+    "x": 1406,
+    "y": 654,
+    "pitch": 6.07
+   },
+   {
+    "name": "ta-bishop-x-knight-05.png",
+    "u": 0.62,
+    "x": 1430,
+    "y": 688,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-06.png",
+    "u": 0.75,
+    "x": 1405,
+    "y": 692,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-07.png",
+    "u": 0.88,
+    "x": 1385,
+    "y": 694,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-08.png",
+    "u": 1,
+    "x": 1366,
+    "y": 694,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-09.png",
+    "u": 1,
+    "x": 1366,
+    "y": 694,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-10.png",
+    "u": 1,
+    "x": 1366,
+    "y": 694,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-11.png",
+    "u": 1,
+    "x": 1366,
+    "y": 694,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-12.png",
+    "u": 1,
+    "x": 1366,
+    "y": 694,
+    "pitch": 6.28
+   },
+   {
+    "name": "ta-bishop-x-knight-13.png",
+    "u": 1,
+    "x": 1366,
+    "y": 694,
+    "pitch": 6.28
+   }
+  ]
+ },
+ "rook>rook": {
+  "frames": 201,
+  "pitch": [
+   -0.12,
+   0.36
+  ],
+  "liftMax": 0.01,
+  "rollMax": 0,
+  "yawAbs": 0.06,
+  "stretch": [
+   0.94,
+   1
+  ],
+  "shots": [
+   {
+    "name": "ta-rook-x-rook-00.png",
+    "u": 0.01,
+    "x": 1314,
+    "y": 592,
+    "pitch": -0.01
+   },
+   {
+    "name": "ta-rook-x-rook-01.png",
+    "u": 0.06,
+    "x": 1312,
+    "y": 599,
+    "pitch": -0.1
+   },
+   {
+    "name": "ta-rook-x-rook-02.png",
+    "u": 0.21,
+    "x": 1307,
+    "y": 621,
+    "pitch": -0.05
+   },
+   {
+    "name": "ta-rook-x-rook-03.png",
+    "u": 0.34,
+    "x": 1304,
+    "y": 629,
+    "pitch": -0.07
+   },
+   {
+    "name": "ta-rook-x-rook-04.png",
+    "u": 0.48,
+    "x": 1301,
+    "y": 639,
+    "pitch": 0.23
+   },
+   {
+    "name": "ta-rook-x-rook-05.png",
+    "u": 0.6,
+    "x": 1301,
+    "y": 654,
+    "pitch": 0.35
+   },
+   {
+    "name": "ta-rook-x-rook-06.png",
+    "u": 0.82,
+    "x": 1297,
+    "y": 661,
+    "pitch": 0.13
+   },
+   {
+    "name": "ta-rook-x-rook-07.png",
+    "u": 0.95,
+    "x": 1296,
+    "y": 663,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-rook-x-rook-08.png",
+    "u": 0.95,
+    "x": 1296,
+    "y": 663,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-rook-x-rook-09.png",
+    "u": 0.95,
+    "x": 1296,
+    "y": 663,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-rook-x-rook-10.png",
+    "u": 0.95,
+    "x": 1296,
+    "y": 663,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-rook-x-rook-11.png",
+    "u": 0.95,
+    "x": 1296,
+    "y": 663,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-rook-x-rook-12.png",
+    "u": 0.95,
+    "x": 1296,
+    "y": 663,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-rook-x-rook-13.png",
+    "u": 0.95,
+    "x": 1296,
+    "y": 663,
+    "pitch": 0.01
+   }
+  ]
+ },
+ "queen>knight": {
+  "frames": 65,
+  "pitch": [
+   -0.35,
+   0.3
+  ],
+  "liftMax": 0.05,
+  "rollMax": 0.26,
+  "yawAbs": 0.18,
+  "stretch": [
+   1,
+   1.1
+  ],
+  "shots": [
+   {
+    "name": "ta-queen-x-knight-00.png",
+    "u": 0,
+    "x": 1345,
+    "y": 783,
+    "pitch": 0
+   },
+   {
+    "name": "ta-queen-x-knight-01.png",
+    "u": 0.07,
+    "x": 1341,
+    "y": 782,
+    "pitch": -0.03
+   },
+   {
+    "name": "ta-queen-x-knight-02.png",
+    "u": 0.2,
+    "x": 1333,
+    "y": 773,
+    "pitch": -0.2
+   },
+   {
+    "name": "ta-queen-x-knight-03.png",
+    "u": 0.34,
+    "x": 1325,
+    "y": 751,
+    "pitch": -0.35
+   },
+   {
+    "name": "ta-queen-x-knight-04.png",
+    "u": 0.47,
+    "x": 1319,
+    "y": 760,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-queen-x-knight-05.png",
+    "u": 0.6,
+    "x": 1316,
+    "y": 788,
+    "pitch": 0.29
+   },
+   {
+    "name": "ta-queen-x-knight-06.png",
+    "u": 0.74,
+    "x": 1312,
+    "y": 781,
+    "pitch": 0.18
+   },
+   {
+    "name": "ta-queen-x-knight-07.png",
+    "u": 0.96,
+    "x": 1307,
+    "y": 766,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-queen-x-knight-08.png",
+    "u": 0.96,
+    "x": 1307,
+    "y": 766,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-queen-x-knight-09.png",
+    "u": 0.96,
+    "x": 1307,
+    "y": 766,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-queen-x-knight-10.png",
+    "u": 0.96,
+    "x": 1307,
+    "y": 766,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-queen-x-knight-11.png",
+    "u": 0.96,
+    "x": 1307,
+    "y": 766,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-queen-x-knight-12.png",
+    "u": 0.96,
+    "x": 1307,
+    "y": 766,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-queen-x-knight-13.png",
+    "u": 0.96,
+    "x": 1307,
+    "y": 766,
+    "pitch": 0.01
+   }
+  ]
+ },
+ "king>bishop": {
+  "frames": 76,
+  "pitch": [
+   -0.29,
+   0.15
+  ],
+  "liftMax": 0,
+  "rollMax": 0,
+  "yawAbs": 0.26,
+  "stretch": [
+   1,
+   1.17
+  ],
+  "shots": [
+   {
+    "name": "ta-king-x-bishop-00.png",
+    "u": 0.01,
+    "x": 1194,
+    "y": 972,
+    "pitch": 0
+   },
+   {
+    "name": "ta-king-x-bishop-01.png",
+    "u": 0.07,
+    "x": 1198,
+    "y": 962,
+    "pitch": -0.03
+   },
+   {
+    "name": "ta-king-x-bishop-02.png",
+    "u": 0.22,
+    "x": 1208,
+    "y": 939,
+    "pitch": -0.18
+   },
+   {
+    "name": "ta-king-x-bishop-03.png",
+    "u": 0.35,
+    "x": 1219,
+    "y": 901,
+    "pitch": -0.29
+   },
+   {
+    "name": "ta-king-x-bishop-04.png",
+    "u": 0.5,
+    "x": 1227,
+    "y": 883,
+    "pitch": 0.07
+   },
+   {
+    "name": "ta-king-x-bishop-05.png",
+    "u": 0.63,
+    "x": 1232,
+    "y": 883,
+    "pitch": 0.14
+   },
+   {
+    "name": "ta-king-x-bishop-06.png",
+    "u": 0.76,
+    "x": 1237,
+    "y": 867,
+    "pitch": 0.09
+   },
+   {
+    "name": "ta-king-x-bishop-07.png",
+    "u": 0.92,
+    "x": 1242,
+    "y": 849,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-king-x-bishop-08.png",
+    "u": 0.92,
+    "x": 1242,
+    "y": 849,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-king-x-bishop-09.png",
+    "u": 0.92,
+    "x": 1242,
+    "y": 849,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-king-x-bishop-10.png",
+    "u": 0.92,
+    "x": 1242,
+    "y": 849,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-king-x-bishop-11.png",
+    "u": 0.92,
+    "x": 1242,
+    "y": 849,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-king-x-bishop-12.png",
+    "u": 0.92,
+    "x": 1242,
+    "y": 849,
+    "pitch": 0.01
+   },
+   {
+    "name": "ta-king-x-bishop-13.png",
+    "u": 0.92,
+    "x": 1242,
+    "y": 849,
+    "pitch": 0.01
+   }
+  ]
+ }
+}

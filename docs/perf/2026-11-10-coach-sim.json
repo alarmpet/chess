@@ -1,0 +1,3357 @@
+{
+ "players": 300,
+ "games": 20,
+ "stepRating": [
+  600,
+  720,
+  780,
+  990,
+  1160,
+  1350,
+  1540
+ ],
+ "reached20": 0.81,
+ "endsGood": 0.61,
+ "medianReachedAt": 6,
+ "medianSwings": 1,
+ "swings3plus": 0.16,
+ "winRateMedian": 0.65,
+ "byBand": [
+  {
+   "band": "500~860",
+   "n": 99,
+   "endsGood": 0.66,
+   "medianReachedAt": 2,
+   "winRateMedian": 0.47
+  },
+  {
+   "band": "860~1219",
+   "n": 99,
+   "endsGood": 0.62,
+   "medianReachedAt": 5,
+   "winRateMedian": 0.65
+  },
+  {
+   "band": "1219~1601",
+   "n": 102,
+   "endsGood": 0.57,
+   "medianReachedAt": 13,
+   "winRateMedian": 0.82
+  }
+ ],
+ "rows": [
+  {
+   "truth": 502,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.23
+  },
+  {
+   "truth": 505,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.4
+  },
+  {
+   "truth": 509,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.38
+  },
+  {
+   "truth": 513,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.23
+  },
+  {
+   "truth": 516,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.28
+  },
+  {
+   "truth": 520,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.4
+  },
+  {
+   "truth": 524,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.33
+  },
+  {
+   "truth": 527,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.4
+  },
+  {
+   "truth": 531,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.42
+  },
+  {
+   "truth": 535,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.28
+  },
+  {
+   "truth": 538,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.4
+  },
+  {
+   "truth": 542,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 19,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.33
+  },
+  {
+   "truth": 545,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.35
+  },
+  {
+   "truth": 549,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.35
+  },
+  {
+   "truth": 553,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 2,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.55
+  },
+  {
+   "truth": 556,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.33
+  },
+  {
+   "truth": 560,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 9,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.38
+  },
+  {
+   "truth": 564,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.38
+  },
+  {
+   "truth": 567,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.45
+  },
+  {
+   "truth": 571,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.47
+  },
+  {
+   "truth": 574,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.4
+  },
+  {
+   "truth": 578,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.35
+  },
+  {
+   "truth": 582,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.3
+  },
+  {
+   "truth": 585,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.42
+  },
+  {
+   "truth": 589,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.42
+  },
+  {
+   "truth": 593,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.33
+  },
+  {
+   "truth": 596,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 7,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.3
+  },
+  {
+   "truth": 600,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 5,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.53
+  },
+  {
+   "truth": 604,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 16,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.47
+  },
+  {
+   "truth": 607,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.53
+  },
+  {
+   "truth": 611,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 6,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.47
+  },
+  {
+   "truth": 614,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.47
+  },
+  {
+   "truth": 618,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.5
+  },
+  {
+   "truth": 622,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.38
+  },
+  {
+   "truth": 625,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.47
+  },
+  {
+   "truth": 629,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 2,
+   "endsGood": false,
+   "swings": 3,
+   "winRate": 0.55
+  },
+  {
+   "truth": 633,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.53
+  },
+  {
+   "truth": 636,
+   "good": [
+    1
+   ],
+   "final": 3,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 5,
+   "winRate": 0.4
+  },
+  {
+   "truth": 640,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.55
+  },
+  {
+   "truth": 644,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.53
+  },
+  {
+   "truth": 647,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 11,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.45
+  },
+  {
+   "truth": 651,
+   "good": [
+    1
+   ],
+   "final": 3,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.45
+  },
+  {
+   "truth": 654,
+   "good": [
+    1
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.53
+  },
+  {
+   "truth": 658,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.53
+  },
+  {
+   "truth": 662,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.53
+  },
+  {
+   "truth": 665,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.6
+  },
+  {
+   "truth": 669,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.45
+  },
+  {
+   "truth": 673,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.38
+  },
+  {
+   "truth": 676,
+   "good": [
+    1
+   ],
+   "final": 1,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.45
+  },
+  {
+   "truth": 680,
+   "good": [
+    1
+   ],
+   "final": 2,
+   "reachedAt": 2,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.57
+  },
+  {
+   "truth": 683,
+   "good": [
+    1
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.57
+  },
+  {
+   "truth": 687,
+   "good": [
+    2
+   ],
+   "final": 1,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.4
+  },
+  {
+   "truth": 691,
+   "good": [
+    2
+   ],
+   "final": 1,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.5
+  },
+  {
+   "truth": 694,
+   "good": [
+    2
+   ],
+   "final": 3,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.47
+  },
+  {
+   "truth": 698,
+   "good": [
+    2
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.55
+  },
+  {
+   "truth": 702,
+   "good": [
+    2
+   ],
+   "final": 3,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.5
+  },
+  {
+   "truth": 705,
+   "good": [
+    2
+   ],
+   "final": 1,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.33
+  },
+  {
+   "truth": 709,
+   "good": [
+    2
+   ],
+   "final": 3,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.47
+  },
+  {
+   "truth": 713,
+   "good": [
+    2
+   ],
+   "final": 3,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.57
+  },
+  {
+   "truth": 716,
+   "good": [
+    2
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.5
+  },
+  {
+   "truth": 720,
+   "good": [
+    2
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.57
+  },
+  {
+   "truth": 723,
+   "good": [
+    2
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.53
+  },
+  {
+   "truth": 727,
+   "good": [
+    2
+   ],
+   "final": 1,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.53
+  },
+  {
+   "truth": 731,
+   "good": [
+    2
+   ],
+   "final": 1,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.47
+  },
+  {
+   "truth": 734,
+   "good": [
+    2
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.45
+  },
+  {
+   "truth": 738,
+   "good": [
+    2
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.6
+  },
+  {
+   "truth": 742,
+   "good": [
+    2
+   ],
+   "final": 1,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.4
+  },
+  {
+   "truth": 745,
+   "good": [
+    2,
+    3
+   ],
+   "final": 1,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.33
+  },
+  {
+   "truth": 749,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.57
+  },
+  {
+   "truth": 753,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.53
+  },
+  {
+   "truth": 756,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.55
+  },
+  {
+   "truth": 760,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.5
+  },
+  {
+   "truth": 763,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.53
+  },
+  {
+   "truth": 767,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.53
+  },
+  {
+   "truth": 771,
+   "good": [
+    2,
+    3
+   ],
+   "final": 3,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.5
+  },
+  {
+   "truth": 774,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.57
+  },
+  {
+   "truth": 778,
+   "good": [
+    2,
+    3
+   ],
+   "final": 2,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.55
+  },
+  {
+   "truth": 782,
+   "good": [
+    2,
+    3
+   ],
+   "final": 3,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.65
+  },
+  {
+   "truth": 785,
+   "good": [
+    2,
+    3
+   ],
+   "final": 4,
+   "reachedAt": 1,
+   "endsGood": false,
+   "swings": 4,
+   "winRate": 0.47
+  },
+  {
+   "truth": 789,
+   "good": [
+    2,
+    3
+   ],
+   "final": 3,
+   "reachedAt": 1,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.57
+  },
+  {
+   "truth": 792,
+   "good": [
+    3
+   ],
+   "final": 1,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.45
+  },
+  {
+   "truth": 796,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.6
+  },
+  {
+   "truth": 800,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.6
+  },
+  {
+   "truth": 803,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 7,
+   "winRate": 0.6
+  },
+  {
+   "truth": 807,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 5,
+   "winRate": 0.53
+  },
+  {
+   "truth": 811,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 4,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.5
+  },
+  {
+   "truth": 814,
+   "good": [
+    3
+   ],
+   "final": 2,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.57
+  },
+  {
+   "truth": 818,
+   "good": [
+    3
+   ],
+   "final": 2,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.53
+  },
+  {
+   "truth": 822,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.65
+  },
+  {
+   "truth": 825,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 4,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.57
+  },
+  {
+   "truth": 829,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.6
+  },
+  {
+   "truth": 832,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.57
+  },
+  {
+   "truth": 836,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 4,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.65
+  },
+  {
+   "truth": 840,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.63
+  },
+  {
+   "truth": 843,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 5,
+   "winRate": 0.47
+  },
+  {
+   "truth": 847,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.47
+  },
+  {
+   "truth": 851,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 7,
+   "winRate": 0.42
+  },
+  {
+   "truth": 854,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.57
+  },
+  {
+   "truth": 858,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.55
+  },
+  {
+   "truth": 862,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.45
+  },
+  {
+   "truth": 865,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.68
+  },
+  {
+   "truth": 869,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 4,
+   "endsGood": false,
+   "swings": 4,
+   "winRate": 0.65
+  },
+  {
+   "truth": 872,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 6,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.63
+  },
+  {
+   "truth": 876,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.57
+  },
+  {
+   "truth": 880,
+   "good": [
+    3
+   ],
+   "final": 2,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.6
+  },
+  {
+   "truth": 883,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 2,
+   "endsGood": false,
+   "swings": 4,
+   "winRate": 0.55
+  },
+  {
+   "truth": 887,
+   "good": [
+    3
+   ],
+   "final": 2,
+   "reachedAt": 10,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.47
+  },
+  {
+   "truth": 891,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.55
+  },
+  {
+   "truth": 894,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 4,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.63
+  },
+  {
+   "truth": 898,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 7,
+   "winRate": 0.55
+  },
+  {
+   "truth": 901,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.53
+  },
+  {
+   "truth": 905,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 5,
+   "endsGood": true,
+   "swings": 5,
+   "winRate": 0.55
+  },
+  {
+   "truth": 909,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 2,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.53
+  },
+  {
+   "truth": 912,
+   "good": [
+    3
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 8,
+   "winRate": 0.63
+  },
+  {
+   "truth": 916,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.6
+  },
+  {
+   "truth": 920,
+   "good": [
+    3
+   ],
+   "final": 3,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.63
+  },
+  {
+   "truth": 923,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 16,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.65
+  },
+  {
+   "truth": 927,
+   "good": [
+    4
+   ],
+   "final": 3,
+   "reachedAt": 9,
+   "endsGood": false,
+   "swings": 5,
+   "winRate": 0.6
+  },
+  {
+   "truth": 931,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.55
+  },
+  {
+   "truth": 934,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 14,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 938,
+   "good": [
+    4
+   ],
+   "final": 3,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 3,
+   "winRate": 0.6
+  },
+  {
+   "truth": 941,
+   "good": [
+    4
+   ],
+   "final": 3,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.7
+  },
+  {
+   "truth": 945,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 7,
+   "winRate": 0.68
+  },
+  {
+   "truth": 949,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 5,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.65
+  },
+  {
+   "truth": 952,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.63
+  },
+  {
+   "truth": 956,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.5
+  },
+  {
+   "truth": 960,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 5,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 963,
+   "good": [
+    4
+   ],
+   "final": 3,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 5,
+   "winRate": 0.6
+  },
+  {
+   "truth": 967,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 12,
+   "winRate": 0.6
+  },
+  {
+   "truth": 971,
+   "good": [
+    4
+   ],
+   "final": 3,
+   "reachedAt": 10,
+   "endsGood": false,
+   "swings": 7,
+   "winRate": 0.6
+  },
+  {
+   "truth": 974,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.65
+  },
+  {
+   "truth": 978,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 9,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.7
+  },
+  {
+   "truth": 981,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 5,
+   "winRate": 0.6
+  },
+  {
+   "truth": 985,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 5,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.7
+  },
+  {
+   "truth": 989,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 992,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.55
+  },
+  {
+   "truth": 996,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1000,
+   "good": [
+    4
+   ],
+   "final": 3,
+   "reachedAt": 5,
+   "endsGood": false,
+   "swings": 9,
+   "winRate": 0.53
+  },
+  {
+   "truth": 1003,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.53
+  },
+  {
+   "truth": 1007,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 14,
+   "endsGood": true,
+   "swings": 6,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1010,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 9,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1014,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 5,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1018,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1021,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.65
+  },
+  {
+   "truth": 1025,
+   "good": [
+    4
+   ],
+   "final": 3,
+   "reachedAt": 11,
+   "endsGood": false,
+   "swings": 5,
+   "winRate": 0.6
+  },
+  {
+   "truth": 1029,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 9,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1032,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 3,
+   "winRate": 0.6
+  },
+  {
+   "truth": 1036,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.57
+  },
+  {
+   "truth": 1040,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.55
+  },
+  {
+   "truth": 1043,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1047,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.57
+  },
+  {
+   "truth": 1050,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1054,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.65
+  },
+  {
+   "truth": 1058,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1061,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1065,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1069,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1072,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 7,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.65
+  },
+  {
+   "truth": 1076,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.55
+  },
+  {
+   "truth": 1080,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1083,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 4,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1087,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 3,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1090,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1094,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 5,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1098,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.6
+  },
+  {
+   "truth": 1101,
+   "good": [
+    4
+   ],
+   "final": 5,
+   "reachedAt": 3,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1105,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 5,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1109,
+   "good": [
+    4
+   ],
+   "final": 4,
+   "reachedAt": 4,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1112,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 8,
+   "winRate": 0.57
+  },
+  {
+   "truth": 1116,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1119,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1123,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 6,
+   "winRate": 0.6
+  },
+  {
+   "truth": 1127,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 14,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1130,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1134,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1138,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1141,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 4,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1145,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1149,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.65
+  },
+  {
+   "truth": 1152,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1156,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1159,
+   "good": [
+    5
+   ],
+   "final": 6,
+   "reachedAt": 6,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1163,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": 12,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1167,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1170,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.65
+  },
+  {
+   "truth": 1174,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1178,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1181,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1185,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1189,
+   "good": [
+    5
+   ],
+   "final": 6,
+   "reachedAt": 6,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1192,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 20,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1196,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1199,
+   "good": [
+    5
+   ],
+   "final": 6,
+   "reachedAt": 6,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1203,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1207,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1210,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": 16,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.6
+  },
+  {
+   "truth": 1214,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 8,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1218,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1221,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1225,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1228,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1232,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.65
+  },
+  {
+   "truth": 1236,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1239,
+   "good": [
+    5
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.63
+  },
+  {
+   "truth": 1243,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 9,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1247,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1250,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1254,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1258,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1261,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1265,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 9,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.65
+  },
+  {
+   "truth": 1268,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 6,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1272,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 11,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1276,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 9,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.68
+  },
+  {
+   "truth": 1279,
+   "good": [
+    5
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1283,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.82
+  },
+  {
+   "truth": 1287,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1290,
+   "good": [
+    5
+   ],
+   "final": 5,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1294,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1298,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.82
+  },
+  {
+   "truth": 1301,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 4,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1305,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": 17,
+   "endsGood": false,
+   "swings": 3,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1308,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1312,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": 16,
+   "endsGood": false,
+   "swings": 3,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1316,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 19,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1319,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": 14,
+   "endsGood": false,
+   "swings": 5,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1323,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1327,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 16,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1330,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.72
+  },
+  {
+   "truth": 1334,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1337,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1341,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1345,
+   "good": [
+    6
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1348,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1352,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1356,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1359,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1363,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1367,
+   "good": [
+    6
+   ],
+   "final": 4,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 1,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1370,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.7
+  },
+  {
+   "truth": 1374,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1377,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1381,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1385,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1388,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 19,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1392,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1396,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 20,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1399,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 14,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1403,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1407,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1410,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1414,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1417,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1421,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 17,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1425,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.82
+  },
+  {
+   "truth": 1428,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 14,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1432,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1436,
+   "good": [
+    6
+   ],
+   "final": 7,
+   "reachedAt": 10,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.95
+  },
+  {
+   "truth": 1439,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1443,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1446,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1450,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1454,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 1,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1457,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1461,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 12,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1465,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1468,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 13,
+   "endsGood": true,
+   "swings": 2,
+   "winRate": 0.82
+  },
+  {
+   "truth": 1472,
+   "good": [
+    6
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.82
+  },
+  {
+   "truth": 1476,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 20,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.82
+  },
+  {
+   "truth": 1479,
+   "good": [
+    6
+   ],
+   "final": 6,
+   "reachedAt": 10,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1483,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1486,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 4,
+   "winRate": 0.75
+  },
+  {
+   "truth": 1490,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.78
+  },
+  {
+   "truth": 1494,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1497,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1501,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1505,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1508,
+   "good": [
+    7
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.8
+  },
+  {
+   "truth": 1512,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1516,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1519,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1523,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1526,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 2,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1530,
+   "good": [
+    7
+   ],
+   "final": 7,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.97
+  },
+  {
+   "truth": 1534,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1537,
+   "good": [
+    7
+   ],
+   "final": 7,
+   "reachedAt": 15,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1541,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.93
+  },
+  {
+   "truth": 1545,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1548,
+   "good": [
+    7
+   ],
+   "final": 7,
+   "reachedAt": 18,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.93
+  },
+  {
+   "truth": 1552,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1555,
+   "good": [
+    7
+   ],
+   "final": 7,
+   "reachedAt": 20,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.93
+  },
+  {
+   "truth": 1559,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1563,
+   "good": [
+    7
+   ],
+   "final": 5,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.82
+  },
+  {
+   "truth": 1566,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1570,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.88
+  },
+  {
+   "truth": 1574,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.93
+  },
+  {
+   "truth": 1577,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  },
+  {
+   "truth": 1581,
+   "good": [
+    7
+   ],
+   "final": 7,
+   "reachedAt": 17,
+   "endsGood": true,
+   "swings": 0,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1585,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.9
+  },
+  {
+   "truth": 1588,
+   "good": [
+    7
+   ],
+   "final": 6,
+   "reachedAt": null,
+   "endsGood": false,
+   "swings": 0,
+   "winRate": 0.85
+  }
+ ]
+}

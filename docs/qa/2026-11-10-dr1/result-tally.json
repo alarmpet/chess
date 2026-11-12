@@ -1,0 +1,43 @@
+{
+  "at": "2026-11-10T12:18:34.765Z",
+  "pass": 6,
+  "total": 6,
+  "rows": [
+    {
+      "item": "wide 내 수 연출 중 판 클릭",
+      "want": "조용한 수 0.80초(DR-0 중앙값)보다 짧게 끝남 · 아무것도 선택 안 됨",
+      "got": "{\"myAnimMs\":349,\"selected\":\"null\"}",
+      "ok": true
+    },
+    {
+      "item": "wide 하나씩 세기",
+      "want": "처음엔 0줄·🌰 0 → 1.2초 뒤 「승리 +30」·합계 30·끝",
+      "got": "{\"early\":{\"lines\":[],\"total\":\"0\",\"done\":false},\"later\":{\"lines\":[\"승리 +30\"],\"total\":\"30\",\"done\":true},\"sounds\":\"[\\\"button\\\"]\"}",
+      "ok": true
+    },
+    {
+      "item": "wide 누르면 바로",
+      "want": "80ms 안에 모든 줄·합계·끝",
+      "got": "{\"lines\":[\"승리 +30\"],\"total\":\"30\",\"done\":true}",
+      "ok": true
+    },
+    {
+      "item": "phone 내 수 연출 중 판 클릭",
+      "want": "조용한 수 0.80초(DR-0 중앙값)보다 짧게 끝남 · 아무것도 선택 안 됨",
+      "got": "{\"myAnimMs\":347,\"selected\":\"null\"}",
+      "ok": true
+    },
+    {
+      "item": "phone 하나씩 세기",
+      "want": "처음엔 0줄·🌰 0 → 1.2초 뒤 「승리 +30」·합계 30·끝",
+      "got": "{\"early\":{\"lines\":[],\"total\":\"0\",\"done\":false},\"later\":{\"lines\":[\"승리 +30\"],\"total\":\"30\",\"done\":true},\"sounds\":\"[\\\"button\\\"]\"}",
+      "ok": true
+    },
+    {
+      "item": "phone 누르면 바로",
+      "want": "80ms 안에 모든 줄·합계·끝",
+      "got": "{\"lines\":[\"승리 +30\"],\"total\":\"30\",\"done\":true}",
+      "ok": true
+    }
+  ]
+}

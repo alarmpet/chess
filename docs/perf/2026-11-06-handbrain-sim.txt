@@ -1,0 +1,51 @@
+solo 225s {"win":0.03,"draw":0.1,"loss":0.87,"plies":96,"capsPerGame":7.4,"checksPerGame":1.4,"familyGamesMedian":{"together_games_3":3,"together_caps_12":2,"together_checks_4":4}}
+adviser 924s {"win":0,"draw":0.5,"loss":0.5,"plies":110,"capsPerGame":7.5,"checksPerGame":1,"familyGamesMedian":{"together_games_3":3,"together_caps_12":2,"together_checks_4":4},"handPlaysAdviserMove":0.43,"adviseMsAvg":58.1}
+random 1042s {"win":0,"draw":0,"loss":1,"plies":44,"capsPerGame":2,"checksPerGame":0.2,"familyGamesMedian":{"together_games_3":3,"together_caps_12":7,"together_checks_4":32}}
+{
+ "games": 60,
+ "hand": "easy",
+ "opponent": "normal",
+ "out": {
+  "solo": {
+   "win": 0.03,
+   "draw": 0.1,
+   "loss": 0.87,
+   "plies": 96,
+   "capsPerGame": 7.4,
+   "checksPerGame": 1.4,
+   "familyGamesMedian": {
+    "together_games_3": 3,
+    "together_caps_12": 2,
+    "together_checks_4": 4
+   }
+  },
+  "adviser": {
+   "win": 0,
+   "draw": 0.5,
+   "loss": 0.5,
+   "plies": 110,
+   "capsPerGame": 7.5,
+   "checksPerGame": 1,
+   "familyGamesMedian": {
+    "together_games_3": 3,
+    "together_caps_12": 2,
+    "together_checks_4": 4
+   },
+   "handPlaysAdviserMove": 0.43,
+   "adviseMsAvg": 58.1
+  },
+  "random": {
+   "win": 0,
+   "draw": 0,
+   "loss": 1,
+   "plies": 44,
+   "capsPerGame": 2,
+   "checksPerGame": 0.2,
+   "familyGamesMedian": {
+    "together_games_3": 3,
+    "together_caps_12": 7,
+    "together_checks_4": 32
+   }
+  }
+ }
+}

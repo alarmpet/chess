@@ -1,0 +1,58 @@
+easy-easy 58s {"games":60,"gamesWithBounty":0.98,"marksPerGame":4.27,"markedWhite":0.49,"claimedShare":0.62,"claimedByWhite":0.49,"acornsPerGame":{"w":6.4,"b":6.8},"firstMarkPly":29}
+normal-normal 395s {"games":60,"gamesWithBounty":0.98,"marksPerGame":4.42,"markedWhite":0.5,"claimedShare":0.66,"claimedByWhite":0.51,"acornsPerGame":{"w":7.3,"b":7.2},"firstMarkPly":26}
+normal-easy 327s {"games":60,"gamesWithBounty":0.95,"marksPerGame":3.75,"markedWhite":0.67,"claimedShare":0.64,"claimedByWhite":0.39,"acornsPerGame":{"w":4.3,"b":7.3},"firstMarkPly":26}
+easy-normal 268s {"games":60,"gamesWithBounty":1,"marksPerGame":4.5,"markedWhite":0.36,"claimedShare":0.66,"claimedByWhite":0.61,"acornsPerGame":{"w":8.9,"b":5.3},"firstMarkPly":26}
+{
+ "easy-easy": {
+  "games": 60,
+  "gamesWithBounty": 0.98,
+  "marksPerGame": 4.27,
+  "markedWhite": 0.49,
+  "claimedShare": 0.62,
+  "claimedByWhite": 0.49,
+  "acornsPerGame": {
+   "w": 6.4,
+   "b": 6.8
+  },
+  "firstMarkPly": 29
+ },
+ "normal-normal": {
+  "games": 60,
+  "gamesWithBounty": 0.98,
+  "marksPerGame": 4.42,
+  "markedWhite": 0.5,
+  "claimedShare": 0.66,
+  "claimedByWhite": 0.51,
+  "acornsPerGame": {
+   "w": 7.3,
+   "b": 7.2
+  },
+  "firstMarkPly": 26
+ },
+ "normal-easy": {
+  "games": 60,
+  "gamesWithBounty": 0.95,
+  "marksPerGame": 3.75,
+  "markedWhite": 0.67,
+  "claimedShare": 0.64,
+  "claimedByWhite": 0.39,
+  "acornsPerGame": {
+   "w": 4.3,
+   "b": 7.3
+  },
+  "firstMarkPly": 26
+ },
+ "easy-normal": {
+  "games": 60,
+  "gamesWithBounty": 1,
+  "marksPerGame": 4.5,
+  "markedWhite": 0.36,
+  "claimedShare": 0.66,
+  "claimedByWhite": 0.61,
+  "acornsPerGame": {
+   "w": 8.9,
+   "b": 5.3
+  },
+  "firstMarkPly": 26
+ }
+}

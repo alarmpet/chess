@@ -1,0 +1,375 @@
+{
+ "rules": {
+  "noLossBelow": 200,
+  "floorTiers": [
+   "adult",
+   "alpha",
+   "crown"
+  ],
+  "minWin": 3,
+  "minWinAbove": 1,
+  "adjMin": -16,
+  "streakBelowOnly": true
+ },
+ "seed": 7,
+ "players": 240,
+ "gamesPerPlayer": 200,
+ "spearmanSkillLadder": 0.917,
+ "spearmanSkillGlicko": 0.925,
+ "meanGapLadderToTarget": 118,
+ "bands": [
+  {
+   "band": "약함 <1300",
+   "n": 66,
+   "tiers": {
+    "cub": 57,
+    "adult": 9,
+    "alpha": 0,
+    "crown": 0
+   },
+   "medianPoints": 192,
+   "medianGamesTo": {
+    "adult": 60,
+    "alpha": null,
+    "crown": null
+   },
+   "reached": {
+    "adult": 9,
+    "alpha": 0,
+    "crown": 0
+   },
+   "lossShare": {
+    "free": 0.87,
+    "floored": 0.05
+   },
+   "meanWinDelta": 14
+  },
+  {
+   "band": "보통 1300~1600",
+   "n": 66,
+   "tiers": {
+    "cub": 15,
+    "adult": 28,
+    "alpha": 21,
+    "crown": 2
+   },
+   "medianPoints": 348,
+   "medianGamesTo": {
+    "adult": 29,
+    "alpha": 53,
+    "crown": 153
+   },
+   "reached": {
+    "adult": 51,
+    "alpha": 23,
+    "crown": 2
+   },
+   "lossShare": {
+    "free": 0.44,
+    "floored": 0.19
+   },
+   "meanWinDelta": 16
+  },
+  {
+   "band": "강함 1600~1900",
+   "n": 58,
+   "tiers": {
+    "cub": 0,
+    "adult": 7,
+    "alpha": 27,
+    "crown": 24
+   },
+   "medianPoints": 759,
+   "medianGamesTo": {
+    "adult": 19,
+    "alpha": 39,
+    "crown": 72
+   },
+   "reached": {
+    "adult": 58,
+    "alpha": 51,
+    "crown": 24
+   },
+   "lossShare": {
+    "free": 0.17,
+    "floored": 0.2
+   },
+   "meanWinDelta": 14
+  },
+  {
+   "band": "아주 강함 ≥1900",
+   "n": 50,
+   "tiers": {
+    "cub": 0,
+    "adult": 0,
+    "alpha": 3,
+    "crown": 47
+   },
+   "medianPoints": 1073,
+   "medianGamesTo": {
+    "adult": 14,
+    "alpha": 28,
+    "crown": 43
+   },
+   "reached": {
+    "adult": 50,
+    "alpha": 50,
+    "crown": 47
+   },
+   "lossShare": {
+    "free": 0.1,
+    "floored": 0.14
+   },
+   "meanWinDelta": 11
+  }
+ ],
+ "parentChild": {
+  "days": 20,
+  "perDay": 5,
+  "cap": 3,
+  "weekCap": 10,
+  "counted": 30,
+  "childWins": 3,
+  "childPoints": 95,
+  "childPlace": {
+   "tier": "cub",
+   "step": 3,
+   "into": 95,
+   "pct": 0.95,
+   "points": 95
+  },
+  "childWinDeltas": [
+   35,
+   29,
+   31
+  ],
+  "parentPoints": 678,
+  "parentPlace": {
+   "tier": "alpha",
+   "step": 3,
+   "into": 78,
+   "pct": 0.78,
+   "points": 678
+  },
+  "parentTarget": 754,
+  "parentLossDeltas": [
+   -21,
+   -21
+  ]
+ },
+ "winTrading": {
+  "days": 28,
+  "tried": 280,
+  "counted": 40,
+  "boosterPoints": 1066,
+  "boosterPlace": {
+   "tier": "crown",
+   "step": null,
+   "into": 166,
+   "pct": null,
+   "points": 1066
+  },
+  "boosterRating": 1936,
+  "feederRating": 1064
+ },
+ "season": {
+  "reset": "minus300",
+  "rhoBefore": 0.917,
+  "rhoAfterReset": 0.776,
+  "rhoAfter50": 0.901,
+  "bands": [
+   {
+    "band": "약함 <1300",
+    "n": 9,
+    "regained": 0,
+    "medianGamesToRegain": null,
+    "meanLossPoints": 129
+   },
+   {
+    "band": "보통 1300~1600",
+    "n": 51,
+    "regained": 32,
+    "medianGamesToRegain": 26,
+    "meanLossPoints": 217
+   },
+   {
+    "band": "강함 1600~1900",
+    "n": 58,
+    "regained": 41,
+    "medianGamesToRegain": 16,
+    "meanLossPoints": 242
+   },
+   {
+    "band": "아주 강함 ≥1900",
+    "n": 50,
+    "regained": 42,
+    "medianGamesToRegain": 5,
+    "meanLossPoints": 194
+   }
+  ]
+ },
+ "rankerRewards": {
+  "seasons": 6,
+  "minGames": 3,
+  "matchesPerCircleSeason": 150,
+  "gamesPerPersonSeason": 50,
+  "bySkill": [
+   {
+    "name": "약함 <1300",
+    "n": 62,
+    "firstBy1": {
+     "adult": 0.13,
+     "alpha": 0,
+     "crown": 0
+    },
+    "firstBy3": {
+     "adult": 0.24,
+     "alpha": 0,
+     "crown": 0
+    },
+    "firstBy6": {
+     "adult": 0.27,
+     "alpha": 0,
+     "crown": 0
+    },
+    "medianRibbons": 6,
+    "ribbons3plus": 1,
+    "noneAtAll": 0
+   },
+   {
+    "name": "보통 1300~1600",
+    "n": 76,
+    "firstBy1": {
+     "adult": 0.54,
+     "alpha": 0.13,
+     "crown": 0.01
+    },
+    "firstBy3": {
+     "adult": 0.76,
+     "alpha": 0.18,
+     "crown": 0.04
+    },
+    "firstBy6": {
+     "adult": 0.8,
+     "alpha": 0.24,
+     "crown": 0.05
+    },
+    "medianRibbons": 6,
+    "ribbons3plus": 1,
+    "noneAtAll": 0
+   },
+   {
+    "name": "강함 1600~1900",
+    "n": 59,
+    "firstBy1": {
+     "adult": 0.78,
+     "alpha": 0.42,
+     "crown": 0.15
+    },
+    "firstBy3": {
+     "adult": 0.95,
+     "alpha": 0.69,
+     "crown": 0.29
+    },
+    "firstBy6": {
+     "adult": 0.97,
+     "alpha": 0.73,
+     "crown": 0.34
+    },
+    "medianRibbons": 6,
+    "ribbons3plus": 1,
+    "noneAtAll": 0
+   },
+   {
+    "name": "아주 강함 ≥1900",
+    "n": 43,
+    "firstBy1": {
+     "adult": 0.91,
+     "alpha": 0.72,
+     "crown": 0.35
+    },
+    "firstBy3": {
+     "adult": 1,
+     "alpha": 0.88,
+     "crown": 0.67
+    },
+    "firstBy6": {
+     "adult": 1,
+     "alpha": 0.91,
+     "crown": 0.7
+    },
+    "medianRibbons": 6,
+    "ribbons3plus": 1,
+    "noneAtAll": 0
+   }
+  ],
+  "byActivity": [
+   {
+    "name": "적게 0.1~0.5",
+    "n": 62,
+    "firstBy1": {
+     "adult": 0.37,
+     "alpha": 0.1,
+     "crown": 0.02
+    },
+    "firstBy3": {
+     "adult": 0.69,
+     "alpha": 0.29,
+     "crown": 0.15
+    },
+    "firstBy6": {
+     "adult": 0.71,
+     "alpha": 0.32,
+     "crown": 0.19
+    },
+    "medianRibbons": 6,
+    "ribbons3plus": 1,
+    "noneAtAll": 0
+   },
+   {
+    "name": "보통 0.5~1.0",
+    "n": 81,
+    "firstBy1": {
+     "adult": 0.62,
+     "alpha": 0.28,
+     "crown": 0.1
+    },
+    "firstBy3": {
+     "adult": 0.77,
+     "alpha": 0.38,
+     "crown": 0.21
+    },
+    "firstBy6": {
+     "adult": 0.79,
+     "alpha": 0.41,
+     "crown": 0.21
+    },
+    "medianRibbons": 6,
+    "ribbons3plus": 1,
+    "noneAtAll": 0
+   },
+   {
+    "name": "많이 1.0~1.5",
+    "n": 97,
+    "firstBy1": {
+     "adult": 0.63,
+     "alpha": 0.38,
+     "crown": 0.16
+    },
+    "firstBy3": {
+     "adult": 0.69,
+     "alpha": 0.45,
+     "crown": 0.24
+    },
+    "firstBy6": {
+     "adult": 0.72,
+     "alpha": 0.48,
+     "crown": 0.26
+    },
+    "medianRibbons": 6,
+    "ribbons3plus": 1,
+    "noneAtAll": 0
+   }
+  ]
+ }
+}

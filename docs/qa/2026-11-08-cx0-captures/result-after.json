@@ -1,0 +1,100 @@
+[
+ {
+  "key": "pawn>pawn",
+  "san": "exd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2471,
+  "file": "pawn-x-pawn-after.webm",
+  "kb": 885,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "pawn>rook",
+  "san": "bxa1=Q",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3108,
+  "file": "pawn-x-rook-after.webm",
+  "kb": 1489,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "pawn>queen",
+  "san": "gxf3",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3133,
+  "file": "pawn-x-queen-after.webm",
+  "kb": 1521,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "knight>queen",
+  "san": "Nxg4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3188,
+  "file": "knight-x-queen-after.webm",
+  "kb": 1487,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "bishop>queen",
+  "san": "Bxe7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3124,
+  "file": "bishop-x-queen-after.webm",
+  "kb": 1494,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "rook>queen",
+  "san": "Rxd2",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 4040,
+  "file": "rook-x-queen-after.webm",
+  "kb": 1475,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "queen>queen",
+  "san": "Qxe7+",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3152,
+  "file": "queen-x-queen-after.webm",
+  "kb": 1428,
+  "impacts": 1,
+  "upset": false
+ }
+]

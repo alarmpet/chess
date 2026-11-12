@@ -1,0 +1,140 @@
+{
+ "endLayout": {
+  "host": {
+   "w": 944,
+   "h": 505,
+   "bar": {
+    "top": 371,
+    "bottom": 445,
+    "left": 16,
+    "right": 928
+   },
+   "card": {
+    "top": 118,
+    "bottom": 323,
+    "left": 272,
+    "right": 672
+   },
+   "tray": null,
+   "hitsCard": false,
+   "hitsTray": false,
+   "hint": {
+    "top": 456,
+    "bottom": 489,
+    "left": 20,
+    "right": 730
+   },
+   "hitsHint": false,
+   "rankedChipShown": true
+  },
+  "guest": {
+   "w": 390,
+   "h": 844,
+   "bar": {
+    "top": 698,
+    "bottom": 828,
+    "left": 16,
+    "right": 374
+   },
+   "card": {
+    "top": 64,
+    "bottom": 263,
+    "left": 12,
+    "right": 378
+   },
+   "tray": null,
+   "hitsCard": false,
+   "hitsTray": false,
+   "hint": null,
+   "hitsHint": false,
+   "rankedChipShown": false
+  }
+ },
+ "code": "DM9XM2",
+ "rule": "랭크 판: AI 수·되감기 없음, 끝나기 전엔 새 판 없음. 두 사람 결과를 맞춰 본 뒤 점수가 바뀌어요.",
+ "myRankLine": "🍼내 랭크 · 새끼 1500랭크 0판 · 0승 0패 0무 · 5판부터 뱃지",
+ "scoresBefore": {
+  "host": "나 🍼 1500 · 친구 🍼 1500",
+  "guest": "나 🍼 1500 · 친구 🍼 1500"
+ },
+ "barBox": {
+  "left": 16,
+  "right": 374,
+  "width": 390,
+  "height": 68
+ },
+ "scoresAfter": {
+  "host": "나 🍼 1338 · 친구 🍼 1662",
+  "guest": "나 🍼 1662 · 친구 🍼 1338"
+ },
+ "myRankAfter": "🍼내 랭크 · 새끼 1280랭크 2판 · 0승 2패 0무 · 5판부터 뱃지",
+ "keysDiffer": true,
+ "game1": {
+  "host": {
+   "note": "🏆 1500 → 1338 (-162)",
+   "end": "졌어요 · 체크메이트",
+   "id": "0IW9EX_30qohDgMP"
+  },
+  "guest": {
+   "note": "🏆 1500 → 1662 (+162)",
+   "end": "이겼어요 · 체크메이트",
+   "id": "hNfGeaiMDtIOOSpH"
+  }
+ },
+ "server1": {
+  "host": {
+   "id": "0IW9EX_30qohDgMP",
+   "rating": 1338,
+   "rd": 290,
+   "games": 1,
+   "wins": 0,
+   "losses": 1,
+   "draws": 0,
+   "badge": "cub"
+  },
+  "guest": {
+   "id": "hNfGeaiMDtIOOSpH",
+   "rating": 1662,
+   "rd": 290,
+   "games": 1,
+   "wins": 1,
+   "losses": 0,
+   "draws": 0,
+   "badge": "cub"
+  }
+ },
+ "game2": {
+  "host": {
+   "note": "🏆 1338 → 1280 (-58)",
+   "end": "졌어요 · 기권",
+   "id": "0IW9EX_30qohDgMP"
+  },
+  "guest": {
+   "note": "🏆 1662 → 1720 (+58)",
+   "end": "이겼어요 · 기권",
+   "id": "hNfGeaiMDtIOOSpH"
+  }
+ },
+ "server2": {
+  "host": {
+   "id": "0IW9EX_30qohDgMP",
+   "rating": 1280,
+   "rd": 260,
+   "games": 2,
+   "wins": 0,
+   "losses": 2,
+   "draws": 0,
+   "badge": "cub"
+  },
+  "guest": {
+   "id": "hNfGeaiMDtIOOSpH",
+   "rating": 1720,
+   "rd": 260,
+   "games": 2,
+   "wins": 2,
+   "losses": 0,
+   "draws": 0,
+   "badge": "cub"
+  }
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "player": "codex",
+ "id": 2,
+ "endScreen": "위저드 체스 3D\nSummoned KING...\n위저드 체스 3D\n체크메이트 — 백 승리\n백으로 플레이 중\n🌐 English\n🎨 외형\n🏆 라이벌\n🏡 마을\n흑으로 플레이\nAI 수 두기\n새 게임\n플레이어 시점\n수직 시점\n측면 시점\n성당 전경\nUI 숨기기 [H]\n🔊 소리 켜짐\n조작법: 말을 클릭하여 이동 • 좌클릭 드래그: 회전 • 우클릭 드래그: 이동 • 마우스 휠: 줌 • WASD+R/F: 비행 카메라 • H: UI 숨김\n잡은 말 — 백: 4 | 흑: 2\n✦ 성소의 심판 ✦\n♔\n체크메이트\n백의 승리 • 흑의 킹이 쓰러졌습니다\n전리품 획득: 밀짚모자\n킹 쓰러짐 다시보기\n새 게임\n닫기\n🌰 +30 · 💗 +5 — 마을로 가기",
+ "toastShown": "🌰 +30 · 💗 +5 — 마을로 가기",
+ "opened": true,
+ "village": "위저드 체스 3D\nSummoned KING...\n위저드 체스 3D\n체크메이트 — 백 승리\n백으로 플레이 중\n🌐 English\n🎨 외형\n🏆 라이벌\n🏡 마을\n흑으로 플레이\nAI 수 두기\n새 게임\n플레이어 시점\n수직 시점\n측면 시점\n성당 전경\nUI 숨기기 [H]\n🔊 소리 켜짐\n조작법: 말을 클릭하여 이동 • 좌클릭 드래그: 회전 • 우클릭 드래그: 이동 • 마우스 휠: 줌 • WASD+R/F: 비행 카메라 • H: UI 숨김\n잡은 말 — 백: 4 | 흑: 2\n✦ 성소의 심판 ✦\n♔\n체크메이트\n백의 승리 • 흑의 킹이 쓰러졌습니다\n전리품 획득: 밀짚모자\n킹 쓰러짐 다시보기\n새 게임\n닫기\n🌰 60\n💗 오늘 0/10\n♟ 체스로\n이번 판 🌰 +30 · d1 호랑이 💗 +5 · 나무 2그루 · 승급한 폰의 집\nd1 호랑이이(가) 오늘 지나간 길을 다시 걷고 있어요.\n🪑\n벤치\n🌰 20\n🎵\n작은 무대\n🌰 40\n🏠\n말의 집\n🌰 60\n⛲\n분수\n🌰 120",
+ "pickedBuilding": "🪑벤치🌰 20",
+ "afterPick": "위저드 체스 3D\nSummoned KING...\n위저드 체스 3D\n체크메이트 — 백 승리\n백으로 플레이 중\n🌐 English\n🎨 외형\n🏆 라이벌\n🏡 마을\n흑으로 플레이\nAI 수 두기\n새 게임\n플레이어 시점\n수직 시점\n측면 시점\n성당 전경\nUI 숨기기 [H]\n🔊 소리 켜짐\n조작법: 말을 클릭하여 이동 • 좌클릭 드래그: 회전 • 우클릭 드래그: 이동 • 마우스 휠: 줌 • WASD+R/F: 비행 카메라 • H: UI 숨김\n잡은 말 — 백: 4 | 흑: 2\n✦ 성소의 심판 ✦\n♔\n체크메이트\n백의 승리 • 흑의 킹이 쓰러졌습니다\n전리품 획득: 밀짚모자\n킹 쓰러짐 다시보기\n새 게임\n닫기\n🌰 60\n💗 오늘 0/10\n♟ 체스로\n이번 판 🌰 +30 · d1 호랑이 💗 +5 · 나무 2그루 · 승급한 폰의 집\nd1 호랑이이(가) 오늘 지나간 길을 다시 걷고 있어요.\n지을 칸을 누르세요.\n🪑\n벤치\n🌰 20\n🎵\n작은 무대\n🌰 40\n🏠\n말의 집\n🌰 60\n⛲\n분수\n🌰 120",
+ "save": {
+  "wildcrown.cosmetics.v1": "{\"w\":{\"pawn\":{\"stage\":\"baby\"},\"rook\":{\"stage\":\"baby\"},\"knight\":{\"stage\":\"baby\"},\"bishop\":{\"stage\":\"baby\"},\"queen\":{\"stage\":\"baby\",\"head\":\"strawhat\"},\"king\":{\"stage\":\"baby\"}},\"b\":{\"pawn\":{\"stage\":\"baby\"},\"rook\":{\"stage\":\"baby\"},\"knight\":{\"stage\":\"baby\"},\"bishop\":{\"stage\":\"baby\"},\"queen\":{\"stage\":\"baby\"},\"king\":{\"stage\":\"baby\"}}}",
+  "wildcrown.village.v1": "{\"v\":1,\"coins\":60,\"map\":{\"steps\":{\"e4\":1,\"d4\":1,\"f3\":1,\"c4\":1,\"g1\":1,\"e5\":1,\"e6\":1,\"b5\":1,\"d7\":1,\"c8\":1,\"a4\":1,\"g5\":1,\"h5\":1,\"f7\":1},\"trees\":[{\"sq\":\"a4\",\"slot\":\"w_f1\",\"game\":0},{\"sq\":\"c8\",\"slot\":\"w_e2\",\"game\":0}],\"gates\":[\"w_e1\"],\"houses\":[{\"slot\":\"w_e2\",\"game\":0}],\"games\":1},\"hearts\":{\"w_d1\":5},\"names\":{},\"built\":[{\"kind\":\"house\",\"sq\":\"d4\"}],\"build\":null,\"walk\":{\"slot\":\"w_d1\",\"route\":[\"d1\",\"h5\",\"f7\"]},\"petDay\":\"\",\"petCount\":0,\"rivals\":{\"picnic\":{\"result\":\"win\",\"mvp\":\"w_d1\",\"plies\":27}},\"visits\":{},\"gifts\":[],\"lastSeen\":1793381879573,\"games\":1}",
+  "wildcrown.rivals.v1": "{\"unlocked\":[\"strawhat\"],\"wins\":{\"picnic\":1}}"
+ }
+}
