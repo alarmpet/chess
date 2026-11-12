@@ -149,11 +149,11 @@ test('이어 하기 기록은 계약 세트 이름을 싣고, 모르는 이름�
 test('전용 기록: 판 수·승패·사유가 쌓이고, 망가진 저장은 빈 기록이 된다', () => {
   let store = emptyContractStore();
   store = addContractResult(store, { set: 'p2nb', result: 'win', reason: 'contract', plies: 21 });
-  store = addContractResult(store, { set: 'pnb', result: 'loss', reason: 'checkmate', plies: 30 });
-  store = addContractResult(store, { set: 'pnr', result: 'draw', reason: 'limit', plies: 48 });
+  store = addContractResult(store, { set: 'p3nb', result: 'loss', reason: 'checkmate', plies: 30 });
+  store = addContractResult(store, { set: 'p3nb', result: 'draw', reason: 'limit', plies: 48 });
   assert.deepEqual([store.games, store.win, store.loss, store.draw], [3, 1, 1, 1]);
   assert.deepEqual(store.byReason, { contract: 1, checkmate: 1, limit: 1 });
-  assert.deepEqual(store.last, { set: 'pnr', result: 'draw', reason: 'limit', plies: 48 });
+  assert.deepEqual(store.last, { set: 'p3nb', result: 'draw', reason: 'limit', plies: 48 });
   assert.deepEqual(sanitizeContractStore(JSON.parse(JSON.stringify(store))), store);
   assert.deepEqual(sanitizeContractStore('nope'), emptyContractStore());
   assert.deepEqual(sanitizeContractStore({ v: 1, games: -3, win: 'x' }).games, 0);

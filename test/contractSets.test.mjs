@@ -7,9 +7,13 @@ import {
   contractById, contractProblem, contractProgress, pickContract
 } from '../src/rules/contractSets.js';
 
+// 판정 함수 시험용 세트 — 풀에서 뺀 조합이라도 진도 세기는 같아야 한다
+const PNB = { id: 'pnb', goals: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }] };
+const PNR = { id: 'pnr', goals: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'r', count: 1 }] };
 const play = (sans) => { const g = new Chess(); return sans.map((s) => g.move(s)); };
 
 test('풀의 세트는 모두 규칙에 맞는다', () => {
+  assert.deepEqual(CONTRACT_SETS.map((s) => s.id), ['p2nb', 'p3nb']);   // SC-0(11-13): pnb·pnr 은 뺐다
   for (const set of CONTRACT_SETS) assert.equal(contractProblem(set), null, set.id);
   assert.equal(new Set(CONTRACT_SETS.map((s) => s.id)).size, CONTRACT_SETS.length);
 });
@@ -27,12 +31,11 @@ test('잘못된 세트는 이유와 함께 걸러진다', () => {
 test('첫 두 판은 고정 세트, 그 뒤는 시드 하나로 정해진다', () => {
   for (const roll of [0, 0.4, 0.99]) for (let n = 0; n < FIRST_GAMES; n++) assert.equal(pickContract(roll, n).id, FIRST_GAMES_SET);
   for (const roll of [0, 0.123, 0.5, 0.77, 0.999999]) assert.equal(pickContract(roll, 5).id, pickContract(roll, 9).id);
-  // 가중치 2:1:1 — 구간 경계
+  // 가중치 2:1 — 구간 경계(SC-0 풀)
   assert.equal(pickContract(0, 5).id, 'p2nb');
-  assert.equal(pickContract(0.49, 5).id, 'p2nb');
-  assert.equal(pickContract(0.5, 5).id, 'pnb');
-  assert.equal(pickContract(0.75, 5).id, 'pnr');
-  assert.equal(pickContract(1, 5).id, 'pnr');     // 범위를 벗어난 값도 세트 하나를 준다
+  assert.equal(pickContract(0.66, 5).id, 'p2nb');
+  assert.equal(pickContract(0.67, 5).id, 'p3nb');
+  assert.equal(pickContract(1, 5).id, 'p3nb');     // 범위를 벗어난 값도 세트 하나를 준다
   assert.equal(pickContract(-1, 5).id, 'p2nb');
 });
 
@@ -54,7 +57,7 @@ test('폰×2 는 두 마리를 잡아야 한 칸이고, 더 잡아도 늘지 않
 });
 
 test('목표 둘을 먼저 채운 쪽이 이기고, 그 뒤의 수는 세지 않는다', () => {
-  const set = contractById('pnb');
+  const set = PNB;
   // 1.e4 d5 2.exd5(폰) Nf6 3.Bb5+ c6 4.dxc6 Nxc6 5.Bxc6+(나이트) — 백이 폰·나이트로 둘
   const moves = play(['e4', 'd5', 'exd5', 'Nf6', 'Bb5+', 'c6', 'dxc6', 'Nxc6', 'Bxc6+', 'bxc6']);
   const p = contractProgress(set, moves);
@@ -66,7 +69,7 @@ test('목표 둘을 먼저 채운 쪽이 이기고, 그 뒤의 수는 세지 않
 });
 
 test('앙파상은 폰 한 마리, 승급한 말은 잡힌 순간의 종류로 센다', () => {
-  const set = contractById('pnr');
+  const set = PNR;
   const ep = play(['e4', 'a6', 'e5', 'd5', 'exd6']);
   assert.equal(ep[4].flags.includes('e'), true);
   assert.deepEqual(contractProgress(set, ep).w.counts, [1, 0, 0]);
@@ -78,7 +81,7 @@ test('앙파상은 폰 한 마리, 승급한 말은 잡힌 순간의 종류로 �
 });
 
 test('목표가 아닌 종류와 잡기 없는 수는 진도를 바꾸지 않는다', () => {
-  const set = contractById('pnb');
+  const set = PNB;
   const moves = play(['e4', 'e5', 'Qh5', 'Nc6', 'Qxf7+', 'Kxf7']);   // 흑이 퀸을 잡는다 — 목표가 아님
   const p = contractProgress(set, moves);
   assert.deepEqual(p.w.counts, [1, 0, 0]);

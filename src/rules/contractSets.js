@@ -13,15 +13,13 @@ export const START_COUNT = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 /** 셋 가운데 이만큼을 먼저 채우면 계약 승리. */
 export const CONTRACT_NEED = 2;
 
-// 풀: 기존 AI 기보 120판 후향 분석으로 잰 세 후보(docs/research/2026-11-11-slot-chess/fx-density.json).
-// 계약을 모르는 AI 의 기보라 공정성 검증이 아니다 — SC-0 에서 계약을 아는 AI 로 다시 재고 풀을 고친다.
-//   p2nb   멈춤 중앙 21반수 · 계약 종료 중 백 28/59·27/57  ← 첫 시제품 후보
-//   pnb    16반수 · 백 33/60·38/60
-//   pnr    16~20반수 · 백 34/60·35/58
+// 풀: SC-0(11-13) 계약을 아는 AI 끼리 보통 단계로 잰 값(docs/research/2026-11-11-slot-chess/sc0/TABLE.md).
+//   p2nb   300판 · 백 156 : 흑 144 · 반수 중앙 17~19 · 세 목표 모두 이긴 쪽의 44~92% 판에서 쓰임  ← 첫 판 세트
+//   p3nb   300판 · 백 153 : 흑 143 · 반수 중앙 22~25 · 폰×3 은 35~42% 판에서 쓰임
+// 뺀 것: pnb(반수 중앙 13 — 너무 짧다, 비숍 40%) · pnr(룩 목표 13~22% — 장식) · p2nr(룩 22%) · p2bn2(흑 쪽으로 기움 0.42)
 export const CONTRACT_SETS = [
   { id: 'p2nb', goals: [{ type: 'p', count: 2 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }], weight: 2 },
-  { id: 'pnb', goals: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }], weight: 1 },
-  { id: 'pnr', goals: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'r', count: 1 }], weight: 1 }
+  { id: 'p3nb', goals: [{ type: 'p', count: 3 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }], weight: 1 }
 ];
 /** 첫 두 판은 이 세트로 고정해 규칙을 익힌다(§2.3). */
 export const FIRST_GAMES_SET = 'p2nb';

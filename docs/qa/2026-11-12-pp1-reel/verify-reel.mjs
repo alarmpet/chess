@@ -120,7 +120,7 @@ for (const [port, name, phone] of [[9486, 'mouse', false], [9487, 'touch', true]
   const skipMs = Date.now() - t0;
   const third = await reel();
   measured[name].skipMs = skipMs;
-  check(`${name} 건너뛰기`, '누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트', { skipMs, contract: third.contract, games: third.games }, skipMs <= 1200 && ['p2nb', 'pnb', 'pnr'].includes(third.contract) && third.games === 3);
+  check(`${name} 건너뛰기`, '누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트', { skipMs, contract: third.contract, games: third.games }, skipMs <= 1200 && ['p2nb', 'p3nb'].includes(third.contract) && third.games === 3);
 
   // 5) 이어 하기로 판 중간에 돌아오면 릴이 안 돈다
   await tap(await at(6, 3));

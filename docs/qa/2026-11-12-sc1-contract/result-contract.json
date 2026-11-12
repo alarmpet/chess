@@ -1,23 +1,23 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T13:34:38.556Z",
+ "at": "2026-11-12T17:31:02.696Z",
  "pass": 19,
  "total": 19,
  "measured": {
   "fullGame": {
-   "seconds": 32,
-   "plies": 22,
+   "seconds": 25,
+   "plies": 18,
    "end": {
-    "gameId": 3489042067,
+    "gameId": 3503172456,
     "set": "p2nb",
     "result": "loss",
     "reason": "contract",
-    "plies": 22
+    "plies": 18
    },
    "progress": {
     "w": {
      "counts": [
-      1,
+      0,
       1,
       0
      ],
@@ -25,14 +25,14 @@
     },
     "b": {
      "counts": [
-      2,
       1,
-      0
+      1,
+      1
      ],
      "done": 2
     }
    },
-   "maxCalls": 78
+   "maxCalls": 80
   }
  },
  "rows": [
@@ -190,7 +190,7 @@
      1
     ],
     "reply": [
-     "Nf6"
+     "Nc6"
     ],
     "took": true,
     "back": [
@@ -223,13 +223,13 @@
    "want": "AI 대 AI 로 48반수 안에 종료 · 사유 기록 · 전용 기록 1판 · 배너 · 드로우콜 ≤ 100",
    "got": {
     "over": true,
-    "plies": 22,
+    "plies": 18,
     "end": {
-     "gameId": 3489042067,
+     "gameId": 3503172456,
      "set": "p2nb",
      "result": "loss",
      "reason": "contract",
-     "plies": 22
+     "plies": 18
     },
     "store": {
      "games": 1,
@@ -240,7 +240,7 @@
     "game": 0,
     "contract": 1,
     "bannerOn": true,
-    "maxCalls": 78
+    "maxCalls": 80
    },
    "ok": true
   },
@@ -398,7 +398,7 @@
      1
     ],
     "reply": [
-     "Nf6"
+     "Nc6"
     ],
     "took": true,
     "back": [

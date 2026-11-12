@@ -1,0 +1,51 @@
+{
+ "at": "2026-11-12T17:22:34.872Z",
+ "set": "p3nb",
+ "goals": [
+  {
+   "type": "p",
+   "count": 3
+  },
+  {
+   "type": "n",
+   "count": 1
+  },
+  {
+   "type": "b",
+   "count": 1
+  }
+ ],
+ "rule": "base",
+ "level": "normal",
+ "games": 50,
+ "seconds": 81,
+ "reasons": {
+  "contract": 49,
+  "limit": 1
+ },
+ "white": 28,
+ "black": 21,
+ "draw": 1,
+ "whiteShareOfDecided": 0.571,
+ "plies": {
+  "median": 23,
+  "p90": 36
+ },
+ "captures": {
+  "median": 6,
+  "min": 3
+ },
+ "firstCapture": 10,
+ "loserDoneOne": 45,
+ "winGoals": {
+  "n+b": 30,
+  "p3+n": 19,
+  "-": 1
+ },
+ "goalUse": {
+  "p3": 0.39,
+  "n": 1,
+  "b": 0.61
+ },
+ "seed": 5000000
+}

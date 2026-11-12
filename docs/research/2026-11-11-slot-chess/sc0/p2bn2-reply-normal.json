@@ -1,0 +1,54 @@
+{
+ "at": "2026-11-12T17:20:47.956Z",
+ "set": "p2bn2",
+ "goals": [
+  {
+   "type": "p",
+   "count": 2
+  },
+  {
+   "type": "b",
+   "count": 1
+  },
+  {
+   "type": "n",
+   "count": 2
+  }
+ ],
+ "rule": "reply",
+ "level": "normal",
+ "games": 100,
+ "seconds": 204,
+ "reasons": {
+  "contract": 86,
+  "tie": 10,
+  "limit": 3,
+  "checkmate": 1
+ },
+ "white": 31,
+ "black": 56,
+ "draw": 13,
+ "whiteShareOfDecided": 0.356,
+ "plies": {
+  "median": 26,
+  "p90": 42
+ },
+ "captures": {
+  "median": 6,
+  "min": 4
+ },
+ "firstCapture": 12,
+ "loserDoneOne": 65,
+ "winGoals": {
+  "b+n2": 9,
+  "p2+n2": 33,
+  "-": 14,
+  "p2+b": 44
+ },
+ "goalUse": {
+  "p2": 0.9,
+  "b": 0.62,
+  "n2": 0.49
+ },
+ "seed": 7000
+}
