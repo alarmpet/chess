@@ -269,6 +269,7 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
   water.renderOrder = 2;
   group.add(water);
 
+  let skyUniforms = null;
   if (withSky) {
     const sky = new THREE.Mesh(new THREE.SphereGeometry(SKY_RADIUS, 32, 16), new THREE.ShaderMaterial({
       vertexShader: WORLD_VERT,
@@ -280,6 +281,7 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
     }));
     sky.renderOrder = -1;
     group.add(sky);
+    skyUniforms = sky.material.uniforms;
   }
 
   const clouds = makeClouds(group, rand);
@@ -288,6 +290,8 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
     /** The live colour uniforms, for a scene that changes its light (the village at night). */
     floor: floor.material.uniforms,
     water: water.material.uniforms,
+    /** 하늘 색 유니폼(하늘을 그리지 않으면 null) — 매치 포인트 무대가 한 톤 낮춘다. uHorizon 은 물과 같은 색 객체다. */
+    sky: skyUniforms,
     waterY,
     /** Height of the sea floor under a point, for anything standing on it. */
     floorY: (x, z) => waterY - seaDepth(islandEdge(x, z, half)),

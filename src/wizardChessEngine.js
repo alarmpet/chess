@@ -12,6 +12,7 @@ import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry }
 import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
 import { SIGNATURE_WORD, createSignatureFx } from './fx/signatureFx.js';
+import { contractById, contractProgress, contractStage, openGoals, pickContract } from './rules/contractSets.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
 import { createContactShadows } from './fx/contactShadows.js';
 import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
@@ -1001,6 +1002,39 @@ export function initWizardChess() {
     const impactFx = createImpactFx(scene);
     // Signature captures (DY-1): each animal takes in its own way, alongside the impact and without changing its timing.
     const signatureFx = createSignatureFx(scene, impactFx, { surfaceY: BOARD_SURFACE_Y, square: BOARD_SQ_SIZE });
+    // 소라 릴 (슬롯 체스 PP-1): 판 시작에 이번 판 계약 목표 셋을 공개한다. 시험 스위치(?lab=contract) 뒤에서만 돈다 —
+    // 계약으로 판을 끝내는 규칙과 계약을 아는 AI 가 아직 없다(SC-1).
+    // 릴 모듈은 첫 화면 묶음에 넣지 않는다(번들 상한) — 시험 스위치가 켜질 때 받아 온다.
+    let reelLib = null;           // src/fx/shellReel.js
+    let shellReel = null;
+    function loadShellReel() {
+      if (shellReel) return Promise.resolve(shellReel);
+      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js')]).then(([lib, tagLib]) => {
+        reelLib = lib;
+        shellReel = shellReel || lib.createShellReel(scene, { surfaceY: BOARD_SURFACE_Y, square: BOARD_SQ_SIZE });
+        bountyTags = bountyTags || tagLib.createBountyTags(scene, { square: BOARD_SQ_SIZE });
+        return shellReel;
+      });
+    }
+    let contractLab = new URLSearchParams(window.location.search).get('lab') === 'contract';
+    if (contractLab) loadShellReel();
+    let contract = null;          // 이번 판의 계약 세트(시험 중에만)
+    let contractGames = 0;        // 이 접속에서 시작한 계약 판 수 — 첫 두 판은 고정 세트
+    let reelPendingFor = 0;       // 릴을 틀 판 번호(0 이면 없음). 이어 하기가 수를 되살리면 틀지 않는다
+    let reelPendingAge = 0;
+    // 현상 딱지 · 매치 포인트 무대(PP-1 ②·⑤). 진도는 늘 기보에서 다시 센다(되돌리기에도 맞는다).
+    let bountyTags = null;            // src/fx/bountyTags.js
+    let contractState = null;         // contractProgress(contract, 기보)
+    let contractStageNow = 'open';    // 'open' | 'matchPoint' | 'finalPoint' | 'done'
+    let contractRevealed = [false, false, false];   // 릴이 공개한 목표에만 딱지가 붙는다
+    const contractHot = new Set();    // 내 말이 지금 실제로 공격하고 있는 상대 말
+    let contractSig = '';
+    let contractWasAnimating = false;
+    let finalPointShown = false;      // 「결승점」 글자는 한 판에 한 번
+    let stageMix = 0;                 // 매치 포인트 무대 0~1
+    let stageBase = null;             // 무대가 손대기 전의 하늘·바다 색
+    let seaTime = 0;                  // 바다 시계 — 매치 포인트에서는 느리게 간다(잔잔해진다)
+    const tagItems = [];
     const clock = new THREE.Clock();
 
     const boardGroup = new THREE.Group(); boardGroup.name = 'board';
@@ -2000,6 +2034,138 @@ let engineStarted = false;
         w.mesh.quaternion.copy(roarQ).multiply(w.baseQ);
       }
     }
+    // 소라 릴의 파도타기(PP-1): 소라가 멈출 때마다 판 위 말들이 그쪽에서부터 차례로 폴짝 뛴다. 표적이 된 종류는 더 높이
+    // 뛴다(뜨끔). 높이만 잠깐 더하고 정확히 제자리로 돌아온다 — 수가 움직이기 시작하면 바로 내려놓는다.
+    const reelHops = [];   // { mesh, baseY, delay, age, amp }
+    function settleReelHops() {
+      for (const h of reelHops) h.mesh.position.y = h.baseY;
+      reelHops.length = 0;
+    }
+    function startReelWave(origin, targetType) {
+      let n = 0;
+      for (const row of boardState) {
+        for (const p of row) {
+          if (!p?.mesh || p.rig === 'statue') continue;
+          const riding = reelHops.find((h) => h.mesh === p.mesh);
+          const baseY = riding ? riding.baseY : p.mesh.position.y;
+          if (riding) reelHops.splice(reelHops.indexOf(riding), 1);
+          p.mesh.position.y = baseY;
+          const squares = Math.hypot(p.mesh.position.x - origin.x, p.mesh.position.z - origin.z) / BOARD_SQ_SIZE;
+          reelHops.push({ mesh: p.mesh, baseY, delay: reelLib.waveDelay(squares), age: 0, amp: BOARD_SQ_SIZE * (p.type === targetType ? 0.42 : 0.16) });
+          n += 1;
+        }
+      }
+      return n;
+    }
+    function stepReelHops(dt) {
+      if (!reelHops.length) return;
+      if (isAnimatingMove) { settleReelHops(); return; }
+      for (let i = reelHops.length - 1; i >= 0; i--) {
+        const h = reelHops[i];
+        h.age += dt;
+        const u = (h.age - h.delay) / reelLib.WAVE_HOP_SEC;
+        if (u >= 1) {
+          h.mesh.position.y = h.baseY;
+          reelHops.splice(i, 1);
+          continue;
+        }
+        h.mesh.position.y = h.baseY + h.amp * reelLib.hopHeight(u);
+      }
+    }
+    const REEL_TYPE = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen' };
+    /** 이번 판의 계약을 정하고 릴을 돌린다. `setId` 를 주면 그 세트(시험용). */
+    function startContractReel(setId = null) {
+      if (!shellReel) return null;   // 모듈을 아직 못 받았다
+      contract = (setId && contractById(setId)) || pickContract(Math.random(), contractGames);
+      contractGames += 1;
+      settleReelHops();
+      contractRevealed = [false, false, false];
+      contractState = null;
+      contractStageNow = 'open';
+      sfx.play('reelRise');
+      shellReel.play(contract, playerCamSide, (i, pos, goal) => {
+        sfx.play(i === 2 ? 'reelFinal' : 'reelStop', 0, 1 + i * 0.06);
+        startReelWave(pos, REEL_TYPE[goal.type]);
+        contractRevealed[i] = true;     // 이 소라가 멈춘 순간부터 그 종류의 상대 말에 딱지가 붙는다
+        refreshContract(false);
+      }, camera.aspect > 1.05 ? 'center' : 'far');
+      window.dispatchEvent(new CustomEvent('contractrevealed', { detail: { gameId, setId: contract.id, goals: contract.goals } }));
+      return contract.id;
+    }
+    // 계약 진도를 기보에서 다시 세고, 내 말이 노리는 상대 말을 다시 찾고, 막이 바뀌었으면 알린다.
+    // 수가 판에 놓였을 때와 되돌렸을 때 부른다. `announce` 가 false 면 소리·글자 없이 상태만 맞춘다.
+    function refreshContract(announce = true) {
+      contractSig = `${gameId}:${moveHistory.length}`;
+      contractHot.clear();
+      if (!contract) { contractState = null; contractStageNow = 'open'; return; }
+      contractState = contractProgress(contract, referee.history());
+      if (playerColor === 'w' || playerColor === 'b') {
+        for (const sq of referee.threatened(playerColor === 'w' ? 'b' : 'w')) {
+          const { r, c } = squareRC(sq);
+          if (boardState[r]?.[c]) contractHot.add(boardState[r][c]);
+        }
+      }
+      const stage = contractStage(contractState);
+      if (stage === contractStageNow) return;
+      const from = contractStageNow;
+      contractStageNow = stage;
+      window.dispatchEvent(new CustomEvent('contractstage', { detail: { gameId, stage, from, w: contractState.w, b: contractState.b, winner: contractState.winner } }));
+      if (!announce) return;
+      const mid = new THREE.Vector3(0, BOARD_SURFACE_Y + BOARD_SQ_SIZE * 0.6, 0);
+      if (stage === 'matchPoint' && from === 'open') {
+        sfx.play('heartBeat');
+      } else if (stage === 'finalPoint') {
+        sfx.play('heartBeat', 0, 1.12);
+        if (!finalPointShown) { finalPointShown = true; impactFx.label(mid, '결승점', 0.1); }
+      } else if (stage === 'done') {
+        impactFx.label(mid, '계약 완성!', 0.1);
+      }
+    }
+    // 매치 포인트 무대(⑤): 하늘과 바다 빛을 한 톤 낮춘다. 덜어 내는 연출 — 번쩍임도 되풀이 경고음도 없다.
+    function applyStage() {
+      const ocean = seaBiome?.ocean;
+      if (!ocean) return;
+      if (!stageBase || stageBase.ocean !== ocean) {
+        stageBase = { ocean, horizon: ocean.water.uHorizon.value.clone(), sky: ocean.water.uSky.value.clone(), deep: ocean.water.uDeep.value.clone(), shallow: ocean.water.uShallow.value.clone(), zenith: ocean.sky ? ocean.sky.uZenith.value.clone() : null };
+      }
+      const k = stageMix * stageMix * (3 - 2 * stageMix);
+      // 색은 선형 공간 값이다 — 0.4 를 덜면 화면(sRGB)에서는 약 20% 어둡다.
+      ocean.water.uHorizon.value.copy(stageBase.horizon).multiplyScalar(1 - 0.3 * k);
+      ocean.water.uSky.value.copy(stageBase.sky).multiplyScalar(1 - 0.3 * k);
+      ocean.water.uDeep.value.copy(stageBase.deep).multiplyScalar(1 - 0.3 * k);
+      ocean.water.uShallow.value.copy(stageBase.shallow).multiplyScalar(1 - 0.22 * k);
+      if (stageBase.zenith) ocean.sky.uZenith.value.copy(stageBase.zenith).multiplyScalar(1 - 0.4 * k);
+    }
+    function stepContract(dt) {
+      if (contract) {
+        if (!isAnimatingMove && (contractWasAnimating || contractSig !== `${gameId}:${moveHistory.length}`)) refreshContract();
+        contractWasAnimating = isAnimatingMove;
+      }
+      const want = contract && !gameOver && (contractStageNow === 'matchPoint' || contractStageNow === 'finalPoint') ? 1 : 0;
+      if (stageMix !== want) {
+        stageMix += Math.sign(want - stageMix) * Math.min(Math.abs(want - stageMix), dt / 1.2);
+        applyStage();
+      }
+      const had = tagItems.length;
+      tagItems.length = 0;
+      const enemy = playerColor === 'w' ? 'b' : playerColor === 'b' ? 'w' : null;
+      if (contract && contractState && enemy && !gameOver) {
+        const open = openGoals(contract, contractState, playerColor).filter((g) => contractRevealed[g.index]);
+        if (open.length) {
+          for (const row of boardState) {
+            for (const p of row) {
+              if (!p?.mesh || p.color !== enemy || p.rig === 'statue') continue;
+              const g = open.find((o) => REEL_TYPE[o.type] === p.type);
+              if (!g) continue;
+              tagItems.push({ id: p.mesh.id, slot: g.index, type: g.type, x: p.mesh.position.x, y: p.mesh.position.y + (PIECE_HEIGHTS[p.type] || 0.45) + BOARD_SQ_SIZE * 0.1, z: p.mesh.position.z, hot: contractHot.has(p) });
+            }
+          }
+        }
+      }
+      if (!bountyTags) return;
+      if (tagItems.length) bountyTags.update(dt, camera, tagItems, stageMix);
+      else if (had) bountyTags.clear();
+    }
     function stepFadingPieces(dt) {
       for (let i = fadingPieces.length - 1; i >= 0; i--) {
         const f = fadingPieces[i];
@@ -2931,6 +3097,16 @@ let engineStarted = false;
       updateTurnUI();
       if (typeof updateScriptBarUI === 'function') updateScriptBarUI();
       maybeScheduleAIMove();
+      // 소라 릴(PP-1): 새 판이면 잠시 뒤에 튼다. 그 사이 이어 하기가 수를 되살리면(판 중간) 틀지 않는다.
+      settleReelHops();
+      contract = null;
+      contractState = null;
+      contractStageNow = 'open';
+      contractRevealed = [false, false, false];
+      contractHot.clear();
+      finalPointShown = false;
+      reelPendingFor = contractLab && announce && gameMode === 'single' && !scriptedGameActive ? gameId : 0;
+      reelPendingAge = 0;
     }
 
     // =========================================================================
@@ -3330,6 +3506,12 @@ let engineStarted = false;
         // `move` is chess.js's verbose move: the shared race missions read it (cards/missions.js `raceStep`).
         const detail = { gameId, ply: referee.history().length, byPlayer: moverColor === playerColor, check: /[+#]$/.test(san), move: referee.history().at(-1) || null };
         window.dispatchEvent(new CustomEvent('movelanded', { detail }));
+      }
+      if (contract) {
+        // 매치 포인트 동안에는 수가 놓일 때마다 심장 박자 한 번(막이 방금 바뀐 수는 refreshContract 가 친다).
+        const before = contractStageNow;
+        refreshContract();
+        if (before === contractStageNow && (before === 'matchPoint' || before === 'finalPoint')) sfx.play('heartBeat', 0.1);
       }
       saveResume();
       const ground = new THREE.Vector3(landing.x, BOARD_SURFACE_Y, landing.z);
@@ -5516,6 +5698,8 @@ let engineStarted = false;
 
     /** What a tap on the board does. `target`: a square, null (missed the board) or undefined (no square). */
     function boardTap(target) {
+      // 소라 릴이 도는 중에 누르면 바로 목표를 공개한다. 누르기는 삼키지 않는다 — 말 고르기는 그대로 된다.
+      if (shellReel?.revealing()) shellReel.skip();
       if (gameOver) return;
       // DR-2a: while waiting for the turn a tap on my piece (or its move) is a premove.
       if (premoveTap(target)) return;
@@ -6400,6 +6584,21 @@ let engineStarted = false;
       setBountyMarks,
       // Debug: signature captures on or off, to compare a capture with and without them.
       setSignatureFx: (on) => signatureFx.setEnabled(on),
+      // 소라 릴(PP-1, 시험): 스위치 · 지금 릴 돌리기 · 상태.
+      setContractLab: (on) => { contractLab = Boolean(on); if (contractLab) loadShellReel(); return contractLab; },
+      playReel: (setId) => loadShellReel().then(() => startContractReel(setId)),
+      skipReel: () => Boolean(shellReel?.skip()),
+      // 파도타기로 지금 가장 높이 뜬 말(칸 단위)과, 쉬는 높이에서 벗어나 있는 말의 수(움직이는 수가 없을 때 0 이어야 한다).
+      debugReelHopMax: () => reelHops.reduce((m, h) => Math.max(m, (h.mesh.position.y - h.baseY) / BOARD_SQ_SIZE), 0),
+      debugReelOffBase: () => boardState.flat().filter((p) => p?.mesh && p.rig !== 'statue' && Math.abs(p.mesh.position.y - BOARD_SURFACE_Y) > 1e-6).length,
+      // 현상 딱지 · 매치 포인트 무대(PP-1 ②·⑤) 상태.
+      debugContract: () => ({
+        stage: contractStageNow, mix: +stageMix.toFixed(3), revealed: contractRevealed.slice(), finalShown: finalPointShown, hotPieces: contractHot.size,
+        progress: contractState && { w: contractState.w, b: contractState.b, winner: contractState.winner, matchPoint: contractState.matchPoint },
+        seaTime: +seaTime.toFixed(3), shallow: seaBiome?.ocean ? seaBiome.ocean.water.uShallow.value.getHexString() : null, zenith: seaBiome?.ocean?.sky ? seaBiome.ocean.sky.uZenith.value.getHexString() : null,
+        ...(bountyTags ? bountyTags.state() : { tags: 0, hot: 0, halos: 0, draws: 0, types: [] })
+      }),
+      debugReel: () => ({ lab: contractLab, contract: contract && contract.id, games: contractGames, hops: reelHops.length, pending: reelPendingFor !== 0, loaded: Boolean(shellReel), ...(shellReel ? shellReel.state() : { active: false, plays: 0, stopped: [], goals: [] }) }),
       // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.
       // 종류 잠금(CO-1): 부른 종류는 손이 둘 때까지 다른 종류로 못 바꾼다. 바뀌었는지 돌려준다.
       setHandBrain: (kind) => {
@@ -6840,6 +7039,14 @@ let engineStarted = false;
       // Effects run on real time; the game itself holds during a hit stop and slows through a big capture.
       impactFx.update(dt);
       signatureFx.update(dt, camera);
+      if (reelPendingFor) {
+        reelPendingAge += dt;
+        if (reelPendingFor !== gameId || moveHistory.length || gameOver) reelPendingFor = 0;
+        else if (reelPendingAge >= 0.3 && shellReel) { reelPendingFor = 0; startContractReel(); }
+      }
+      shellReel?.update(dt);
+      stepReelHops(dt);
+      stepContract(dt);
       const realDt = dt;
       if (hitStopLeft > 0) {
         hitStopLeft -= realDt;
@@ -7092,7 +7299,8 @@ let engineStarted = false;
       if (manualStepMode) return;
       const dt = Math.min(clock.getDelta(), 0.1);
       if (renderPaused) return;
-      seaBiome?.tick(clock.elapsedTime);
+      seaTime += dt * (1 - 0.6 * stageMix);
+      seaBiome?.tick(seaTime);
       stepScene(dt || 0.016, true);
     }
 

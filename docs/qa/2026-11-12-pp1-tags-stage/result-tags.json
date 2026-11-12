@@ -1,0 +1,336 @@
+{
+ "url": "http://localhost:3000/",
+ "at": "2026-11-12T12:02:32.228Z",
+ "pass": 24,
+ "total": 24,
+ "measured": {
+  "mouse": {
+   "idleCalls": 68,
+   "tagCalls": 71,
+   "idleMatch": 65,
+   "stageCalls": 69,
+   "zenithBase": "3f9fe8",
+   "zenithMatch": "307eb9",
+   "shallowBase": "46e2d2",
+   "shallowMatch": "3ecabc",
+   "seaRate": 0.39,
+   "doneCalls": 79
+  },
+  "touch": {
+   "idleCalls": 66,
+   "tagCalls": 69,
+   "idleMatch": 63,
+   "stageCalls": 67,
+   "zenithBase": "3f9fe8",
+   "zenithMatch": "307eb9",
+   "shallowBase": "46e2d2",
+   "shallowMatch": "3ecabc",
+   "seaRate": 0.4,
+   "doneCalls": 69
+  }
+ },
+ "rows": [
+  {
+   "item": "mouse 릴 전에는 딱지 없음",
+   "want": "딱지 0 · 막 open",
+   "got": {
+    "tags": 0,
+    "stage": "open"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 공개 뒤 딱지",
+   "want": "흑 폰 8 + 나이트 2 + 비숍 2 = 12 · 종류 p·n·b",
+   "got": {
+    "tags": 12,
+    "types": [
+     "p",
+     "n",
+     "b"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 노림 불빛",
+   "want": "내가 공격 중인 셋(b5 비숍 → c6 나이트·a6 폰, f3 나이트 → e5 폰)만 흔들림 · 빛 없음",
+   "got": {
+    "hot": 3,
+    "halos": 0,
+    "stage": "open",
+    "mix": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 딱지 드로우콜",
+   "want": "딱지가 그리는 메시 3(종류마다 하나) · 전체 ≤ 100",
+   "got": {
+    "draws": 3,
+    "idle": 68,
+    "calls": 71
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 매치 포인트 막",
+   "want": "흑이 하나 남김 → matchPoint · 무대 1.0",
+   "got": {
+    "stage": "matchPoint",
+    "mix": 1,
+    "reached": true,
+    "mp": {
+     "w": false,
+     "b": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 하늘 한 톤",
+   "want": "하늘 천정과 얕은 바다 색이 평소보다 어둡다(화면 값으로 8~30%)",
+   "got": {
+    "zenith": [
+     "3f9fe8",
+     "307eb9",
+     0.79
+    ],
+    "shallow": [
+     "46e2d2",
+     "3ecabc",
+     0.89
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 바다 잔잔",
+   "want": "바다 시계가 0.4배(±0.08)",
+   "got": {
+    "seaRate": 0.39
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 남은 딱지의 빛",
+   "want": "딱지마다 빛 하나 · 그리는 메시 4(딱지 3 + 빛 1) · 전체 ≤ 100",
+   "got": {
+    "tags": 11,
+    "halos": 11,
+    "draws": 4,
+    "idle": 65,
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 결승점",
+   "want": "Qxf3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음",
+   "got": {
+    "h": [
+     "Qxf3"
+    ],
+    "stage": "finalPoint",
+    "finalShown": true,
+    "types": [
+     "p",
+     "n",
+     null
+    ],
+    "beat": 2
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 되돌리기",
+   "want": "두 수를 무르면 matchPoint 로 · 비숍 딱지 다시",
+   "got": {
+    "took": true,
+    "plies": 10,
+    "stage": "matchPoint",
+    "types": [
+     "p",
+     "n",
+     "b"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 계약 완성",
+   "want": "Qxf7+ 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색",
+   "got": {
+    "from": "finalPoint",
+    "stage": "done",
+    "winner": "w",
+    "tags": 0,
+    "mix": 0,
+    "zenith": "3f9fe8"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 스위치 꺼짐",
+   "want": "딱지 0 · 무대 0 · 막 open",
+   "got": {
+    "tags": 0,
+    "mix": 0,
+    "stage": "open",
+    "zenith": "3f9fe8"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 릴 전에는 딱지 없음",
+   "want": "딱지 0 · 막 open",
+   "got": {
+    "tags": 0,
+    "stage": "open"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 공개 뒤 딱지",
+   "want": "흑 폰 8 + 나이트 2 + 비숍 2 = 12 · 종류 p·n·b",
+   "got": {
+    "tags": 12,
+    "types": [
+     "p",
+     "n",
+     "b"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 노림 불빛",
+   "want": "내가 공격 중인 셋(b5 비숍 → c6 나이트·a6 폰, f3 나이트 → e5 폰)만 흔들림 · 빛 없음",
+   "got": {
+    "hot": 3,
+    "halos": 0,
+    "stage": "open",
+    "mix": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 딱지 드로우콜",
+   "want": "딱지가 그리는 메시 3(종류마다 하나) · 전체 ≤ 100",
+   "got": {
+    "draws": 3,
+    "idle": 66,
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 매치 포인트 막",
+   "want": "흑이 하나 남김 → matchPoint · 무대 1.0",
+   "got": {
+    "stage": "matchPoint",
+    "mix": 1,
+    "reached": true,
+    "mp": {
+     "w": false,
+     "b": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 하늘 한 톤",
+   "want": "하늘 천정과 얕은 바다 색이 평소보다 어둡다(화면 값으로 8~30%)",
+   "got": {
+    "zenith": [
+     "3f9fe8",
+     "307eb9",
+     0.79
+    ],
+    "shallow": [
+     "46e2d2",
+     "3ecabc",
+     0.89
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 바다 잔잔",
+   "want": "바다 시계가 0.4배(±0.08)",
+   "got": {
+    "seaRate": 0.4
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 남은 딱지의 빛",
+   "want": "딱지마다 빛 하나 · 그리는 메시 4(딱지 3 + 빛 1) · 전체 ≤ 100",
+   "got": {
+    "tags": 11,
+    "halos": 11,
+    "draws": 4,
+    "idle": 63,
+    "calls": 67
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 결승점",
+   "want": "Qxf3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음",
+   "got": {
+    "h": [
+     "Qxf3"
+    ],
+    "stage": "finalPoint",
+    "finalShown": true,
+    "types": [
+     "p",
+     "n",
+     null
+    ],
+    "beat": 2
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 되돌리기",
+   "want": "두 수를 무르면 matchPoint 로 · 비숍 딱지 다시",
+   "got": {
+    "took": true,
+    "plies": 10,
+    "stage": "matchPoint",
+    "types": [
+     "p",
+     "n",
+     "b"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 계약 완성",
+   "want": "Qxf7+ 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색",
+   "got": {
+    "from": "finalPoint",
+    "stage": "done",
+    "winner": "w",
+    "tags": 0,
+    "mix": 0,
+    "zenith": "3f9fe8"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 스위치 꺼짐",
+   "want": "딱지 0 · 무대 0 · 막 open",
+   "got": {
+    "tags": 0,
+    "mix": 0,
+    "stage": "open",
+    "zenith": "3f9fe8"
+   },
+   "ok": true
+  }
+ ]
+}
