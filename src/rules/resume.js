@@ -3,6 +3,7 @@
 // the full history the village settles from, so a resumed game ends exactly as an unbroken one. Pure: no DOM.
 import { Chess } from 'chess.js';
 import { TYPE_FROM_LETTER, squareRC } from './referee.js';
+import { contractById } from './contractSets.js';
 
 export const RESUME_KEY = 'wildcrown.resume.v1';
 export const RESUME_MAX_PLIES = 600;
@@ -14,14 +15,17 @@ function cellsOf(chess, moved) {
 }
 
 /** What gets stored: enough to replay, nothing about cards or the island. */
-export function resumeRecord({ gameId, color, rivalId = null, history }) {
-  return {
+export function resumeRecord({ gameId, color, rivalId = null, history, contract = null }) {
+  const record = {
     v: 1,
     gameId: gameId >>> 0,
     color: color === 'b' ? 'b' : 'w',
     rivalId: rivalId || null,
     moves: history.map((m) => (m.promotion ? { from: m.from, to: m.to, promotion: m.promotion } : { from: m.from, to: m.to }))
   };
+  // 계약전(SC-1): 세트 이름만 둔다. 진도는 수에서 다시 센다 — 다시 접속해도 같은 계약, 같은 진도.
+  if (contract && contractById(contract)) record.contract = contract;
+  return record;
 }
 
 /** A stored record, checked by replaying it. Null when there is nothing worth resuming or it no longer replays. */
@@ -34,6 +38,7 @@ export function sanitizeResume(raw) {
     rivalId: typeof raw.rivalId === 'string' ? raw.rivalId : null,
     moves: raw.moves
   };
+  if (typeof raw.contract === 'string' && contractById(raw.contract)) record.contract = raw.contract;
   return replayResume(record) ? record : null;
 }
 

@@ -16,10 +16,11 @@ const measured = {};
 const mv = (s) => s.split(' ').map((m) => ({ from: m.slice(0, 2), to: m.slice(2, 4) }));
 // A: 1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 — 백 차례. 백 비숍이 c6 나이트를, 백 나이트가 e5 폰을 공격 중(노림 둘)
 const LINE_OPEN = mv('e2e4 e7e5 g1f3 b8c6 f1b5 a7a6');
-// B: 1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.Nf3 Bg4 5.h3 Bxf3 — 흑이 나이트를 잡아 흑만 하나 남김(매치 포인트), 백 차례
-const LINE_MATCH = mv('e2e4 d7d5 e4d5 d8d5 b1c3 d5a5 g1f3 c8g4 h2h3 g4f3');
-// C: … 6.Qxf3 c6 — 양쪽 다 하나 남김(결승점), 백 차례. 7.Qxf7+ 가 두 번째 폰 = 계약 완성
-const LINE_FINAL = [...LINE_MATCH, ...mv('d1f3 c7c6')];
+// B: 1.Nc3 d5 2.Nb5 Bd7 3.Nd4 e5 4.Nb3 Ba4 5.d3 Bxb3 — 흑이 나이트를 잡아 흑만 하나 남김(매치 포인트), 백 차례.
+//    폰을 한 번도 안 잡은 줄이라, 6.axb3 뒤에 흑이 한 수로 계약을 끝낼 길이 없다(AI 가 계약을 알게 된 SC-1 뒤로 필요).
+const LINE_MATCH = mv('b1c3 d7d5 c3b5 c8d7 b5d4 e7e5 d4b3 d7a4 d2d3 a4b3');
+// C: … 6.axb3 Na6 — 양쪽 다 하나 남김(결승점), 백 차례. 7.Rxa6 이 나이트 = 계약 완성
+const LINE_FINAL = [...LINE_MATCH, ...mv('a2b3 b8a6')];
 
 for (const [port, name, phone] of [[9488, 'mouse', false], [9489, 'touch', true]]) {
   const dir = `${process.env.TEMP}/wc-pp1-tags-${name}`;
@@ -113,16 +114,16 @@ for (const [port, name, phone] of [[9488, 'mouse', false], [9489, 'touch', true]
   check(`${name} 바다 잔잔`, '바다 시계가 0.4배(±0.08)', { seaRate }, Math.abs(seaRate - 0.4) <= 0.08);
   check(`${name} 남은 딱지의 빛`, '딱지마다 빛 하나 · 그리는 메시 4(딱지 3 + 빛 1) · 전체 ≤ 100', { tags: b.tags, halos: b.halos, draws: b.draws, idle: idleMatch, calls: bCalls }, b.tags > 0 && b.halos === b.tags && b.draws === 4 && bCalls <= 100);
 
-  // 3) 실제 클릭으로 6.Qxf3(비숍 잡기) → 양쪽 다 하나 남김: 「결승점」 한 번, 비숍 딱지는 내려간다
-  await tap(await at(7, 3));
-  await tap(await at(5, 5));
+  // 3) 실제 클릭으로 6.axb3(비숍 잡기) → 양쪽 다 하나 남김: 「결승점」 한 번, 비숍 딱지는 내려간다
+  await tap(await at(6, 0));
+  await tap(await at(5, 1));
   await until(`${W}.debugHistory().length >= 11`, 5000);
   const landed = await until(`${W}.debugContract().stage === 'finalPoint'`, 15000);
   const c = await con();
   const snd = await ev(`${W}.debugSounds().recent`);
   await sleep(250);
   await shot(`stage-final-${name}.jpg`);
-  check(`${name} 결승점`, 'Qxf3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음', { h: (await sans()).slice(10, 11), stage: c.stage, finalShown: c.finalShown, types: c.types, beat: snd.filter((n) => n.startsWith('heartBeat')).length },
+  check(`${name} 결승점`, 'axb3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음', { h: (await sans()).slice(10, 11), stage: c.stage, finalShown: c.finalShown, types: c.types, beat: snd.filter((n) => n.startsWith('heartBeat')).length },
     landed && c.finalShown === true && !c.types.includes('b') && snd.some((n) => n.startsWith('heartBeat')));
 
   // 4) 되돌리기: 막이 기보대로 되돌아간다(AI 가 답한 뒤 두 수를 무른다)
@@ -132,19 +133,19 @@ for (const [port, name, phone] of [[9488, 'mouse', false], [9489, 'touch', true]
   const d = await con();
   check(`${name} 되돌리기`, '두 수를 무르면 matchPoint 로 · 비숍 딱지 다시', { took, plies: (await sans()).length, stage: d.stage, types: d.types }, took === true && d.stage === 'matchPoint' && d.types.includes('b'));
 
-  // 5) 계약 완성: 7.Qxf7+ 로 두 번째 폰 → 딱지가 모두 내려가고 무대가 돌아온다
+  // 5) 계약 완성: 7.Rxa6 으로 나이트 → 딱지가 모두 내려가고 무대가 돌아온다
   await open(LINE_FINAL);
   await reveal();
   await until(`${W}.debugContract().mix >= 0.999`, 5000);
   const e0 = await con();
-  await tap(await at(5, 5));
-  await tap(await at(1, 5));
+  await tap(await at(7, 0));
+  await tap(await at(2, 0));
   const done = await until(`${W}.debugContract().stage === 'done'`, 15000);
   const back = await until(`${W}.debugContract().mix === 0`, 6000);
   const e = await con();
   await sleep(300);
   const eCalls = await calls(400);
-  check(`${name} 계약 완성`, 'Qxf7+ 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색', { from: e0.stage, stage: e.stage, winner: e.progress?.winner, tags: e.tags, mix: e.mix, zenith: e.zenith },
+  check(`${name} 계약 완성`, 'Rxa6 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색', { from: e0.stage, stage: e.stage, winner: e.progress?.winner, tags: e.tags, mix: e.mix, zenith: e.zenith },
     e0.stage === 'finalPoint' && done && back && e.progress.winner === 'w' && e.tags === 0 && e.draws === 0 && e.zenith === zenithBase);
   measured[name].doneCalls = eCalls;
 

@@ -1,32 +1,32 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T12:02:32.228Z",
+ "at": "2026-11-12T13:22:11.714Z",
  "pass": 24,
  "total": 24,
  "measured": {
   "mouse": {
    "idleCalls": 68,
    "tagCalls": 71,
+   "idleMatch": 67,
+   "stageCalls": 71,
+   "zenithBase": "3f9fe8",
+   "zenithMatch": "307eb9",
+   "shallowBase": "46e2d2",
+   "shallowMatch": "3ecabc",
+   "seaRate": 0.4,
+   "doneCalls": 66
+  },
+  "touch": {
+   "idleCalls": 66,
+   "tagCalls": 69,
    "idleMatch": 65,
    "stageCalls": 69,
    "zenithBase": "3f9fe8",
    "zenithMatch": "307eb9",
    "shallowBase": "46e2d2",
    "shallowMatch": "3ecabc",
-   "seaRate": 0.39,
-   "doneCalls": 79
-  },
-  "touch": {
-   "idleCalls": 66,
-   "tagCalls": 69,
-   "idleMatch": 63,
-   "stageCalls": 67,
-   "zenithBase": "3f9fe8",
-   "zenithMatch": "307eb9",
-   "shallowBase": "46e2d2",
-   "shallowMatch": "3ecabc",
    "seaRate": 0.4,
-   "doneCalls": 69
+   "doneCalls": 64
   }
  },
  "rows": [
@@ -108,7 +108,7 @@
    "item": "mouse 바다 잔잔",
    "want": "바다 시계가 0.4배(±0.08)",
    "got": {
-    "seaRate": 0.39
+    "seaRate": 0.4
    },
    "ok": true
   },
@@ -116,20 +116,20 @@
    "item": "mouse 남은 딱지의 빛",
    "want": "딱지마다 빛 하나 · 그리는 메시 4(딱지 3 + 빛 1) · 전체 ≤ 100",
    "got": {
-    "tags": 11,
-    "halos": 11,
+    "tags": 12,
+    "halos": 12,
     "draws": 4,
-    "idle": 65,
-    "calls": 69
+    "idle": 67,
+    "calls": 71
    },
    "ok": true
   },
   {
    "item": "mouse 결승점",
-   "want": "Qxf3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음",
+   "want": "axb3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음",
    "got": {
     "h": [
-     "Qxf3"
+     "axb3"
     ],
     "stage": "finalPoint",
     "finalShown": true,
@@ -159,7 +159,7 @@
   },
   {
    "item": "mouse 계약 완성",
-   "want": "Qxf7+ 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색",
+   "want": "Rxa6 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색",
    "got": {
     "from": "finalPoint",
     "stage": "done",
@@ -267,20 +267,20 @@
    "item": "touch 남은 딱지의 빛",
    "want": "딱지마다 빛 하나 · 그리는 메시 4(딱지 3 + 빛 1) · 전체 ≤ 100",
    "got": {
-    "tags": 11,
-    "halos": 11,
+    "tags": 12,
+    "halos": 12,
     "draws": 4,
-    "idle": 63,
-    "calls": 67
+    "idle": 65,
+    "calls": 69
    },
    "ok": true
   },
   {
    "item": "touch 결승점",
-   "want": "Qxf3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음",
+   "want": "axb3 뒤 finalPoint · 글자 한 번 · 심장 박자 · 비숍 딱지 없음",
    "got": {
     "h": [
-     "Qxf3"
+     "axb3"
     ],
     "stage": "finalPoint",
     "finalShown": true,
@@ -310,7 +310,7 @@
   },
   {
    "item": "touch 계약 완성",
-   "want": "Qxf7+ 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색",
+   "want": "Rxa6 뒤 done · 딱지 0 · 무대 0 · 하늘 원래 색",
    "got": {
     "from": "finalPoint",
     "stage": "done",

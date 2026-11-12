@@ -80,6 +80,83 @@ export function evaluate(chess) {
   return chess._turn === 'w' ? score : -score;
 }
 
+// ── 계약전(슬롯 체스 계획서 §3.3, SC-1) ─────────────────────────────────────────────────────────────
+// 계약이 걸린 판에서는 같은 국면이라도 지난 포획에 따라 다른 게임이다. 그래서 탐색이 수를 놓고 무를 때마다
+// 양쪽 진도와 남은 차례를 함께 놓고 무른다. `ctx` 가 null 이면(일반 판) 아래 함수들은 예전과 똑같이 움직인다.
+//   ctx = { goals:[{type,count}], need, counts:{w:[],b:[]}, done:{w,b}, left, index:{p:0,…}, undo:[] }
+let ctx = null;
+const GOAL_VALUE = 300;        // 목표 하나를 다 채운 값(작은 말 하나쯤). 채우는 중이면 비례
+const MATCH_POINT_VALUE = 150; // 하나만 남긴 쪽의 덤 — 남은 표적을 지키고 노리게 한다
+function contractContext(c) {
+  if (!c || !Array.isArray(c.goals) || !c.counts) return null;
+  const index = {};
+  c.goals.forEach((g, i) => { index[g.type] = i; });
+  const doneOf = (side) => c.goals.reduce((n, g, i) => n + ((c.counts[side]?.[i] || 0) >= g.count ? 1 : 0), 0);
+  return {
+    goals: c.goals, need: c.need || 2, index, undo: [],
+    counts: { w: c.goals.map((_, i) => c.counts.w?.[i] || 0), b: c.goals.map((_, i) => c.counts.b?.[i] || 0) },
+    done: { w: doneOf('w'), b: doneOf('b') },
+    left: Number.isFinite(c.left) ? c.left : Infinity
+  };
+}
+/** 이 수가 둔 쪽의 계약을 완성하는가(= 판이 끝나는 잡기). */
+function completesContract(m) {
+  if (!ctx || !m.captured) return false;
+  const gi = ctx.index[m.captured];
+  if (gi === undefined) return false;
+  const have = ctx.counts[m.color][gi];
+  return have + 1 === ctx.goals[gi].count && ctx.done[m.color] + 1 >= ctx.need;
+}
+/** 수를 놓는다. 둔 쪽이 이 수로 계약을 완성했으면 true. */
+function make(chess, m) {
+  chess._makeMove(m);
+  if (!ctx) return false;
+  let gi = -1;
+  let filled = 0;
+  if (m.captured) {
+    const at = ctx.index[m.captured];
+    if (at !== undefined && ctx.counts[m.color][at] < ctx.goals[at].count) {
+      gi = at;
+      ctx.counts[m.color][gi] += 1;
+      if (ctx.counts[m.color][gi] === ctx.goals[gi].count) { ctx.done[m.color] += 1; filled = 1; }
+    }
+  }
+  ctx.left -= 1;
+  ctx.undo.push(m.color, gi, filled);
+  return ctx.done[m.color] >= ctx.need;
+}
+function unmake(chess) {
+  chess._undoMove();
+  if (!ctx) return;
+  const filled = ctx.undo.pop();
+  const gi = ctx.undo.pop();
+  const color = ctx.undo.pop();
+  ctx.left += 1;
+  if (gi >= 0) {
+    ctx.counts[color][gi] -= 1;
+    if (filled) ctx.done[color] -= 1;
+  }
+}
+function contractValue(side) {
+  let v = 0;
+  for (let i = 0; i < ctx.goals.length; i++) v += (ctx.counts[side][i] / ctx.goals[i].count) * GOAL_VALUE;
+  return v + (ctx.done[side] >= ctx.need - 1 ? MATCH_POINT_VALUE : 0);
+}
+/** 차는 쪽에서 본 점수. 계약이 걸렸으면 진도 차이를 더한다. */
+function score(chess) {
+  const base = evaluate(chess);
+  if (!ctx) return base;
+  const me = chess._turn;
+  return base + contractValue(me) - contractValue(me === 'w' ? 'b' : 'w');
+}
+/** 차례 상한에 닿았을 때(방금 `mover` 가 마지막 수를 뒀다) 둔 쪽에서 본 값. 메이트가 먼저다(§3.2-1). */
+function limitValue(chess, mover, ply) {
+  if (!chess._moves({ legal: true }).length && chess.inCheck()) return MATE - ply;
+  const other = mover === 'w' ? 'b' : 'w';
+  const d = ctx.done[mover] - ctx.done[other];
+  return d > 0 ? MATE - ply - 1 : d < 0 ? -(MATE - ply - 1) : 0;
+}
+
 // Captures first, biggest prize with the smallest piece; that is what makes alpha-beta cut early.
 const orderKey = (m) => (m.flags & CAPTURE ? 10 * VALUE[m.captured || 'p'] - VALUE[m.piece] : 0) + (m.flags & PROMOTION ? 800 : 0);
 function ordered(chess) {
@@ -88,16 +165,16 @@ function ordered(chess) {
 
 // Captures only, so a search never stops in the middle of an exchange.
 function quiesce(chess, alpha, beta, depth) {
-  const stand = evaluate(chess);
-  if (stand >= beta || depth === 0) return stand;
+  const stand = score(chess);
+  if (stand >= beta || depth === 0 || (ctx && ctx.left <= 0)) return stand;
   if (stand > alpha) alpha = stand;
   for (const m of ordered(chess)) {
     if (!(m.flags & (CAPTURE | PROMOTION))) continue;
-    chess._makeMove(m);
-    const score = -quiesce(chess, -beta, -alpha, depth - 1);
-    chess._undoMove();
-    if (score >= beta) return score;
-    if (score > alpha) alpha = score;
+    const won = make(chess, m);
+    const value = won ? MATE - 50 : -quiesce(chess, -beta, -alpha, depth - 1);
+    unmake(chess);
+    if (value >= beta) return value;
+    if (value > alpha) alpha = value;
   }
   return alpha;
 }
@@ -108,11 +185,11 @@ function search(chess, depth, alpha, beta, ply) {
   if (depth === 0) return quiesce(chess, alpha, beta, QUIET_DEPTH);
   let best = -Infinity;
   for (const m of moves) {
-    chess._makeMove(m);
-    const score = -search(chess, depth - 1, -beta, -alpha, ply + 1);
-    chess._undoMove();
-    if (score > best) best = score;
-    if (score > alpha) alpha = score;
+    const won = make(chess, m);
+    const value = won ? MATE - ply : ctx && ctx.left <= 0 ? limitValue(chess, m.color, ply) : -search(chess, depth - 1, -beta, -alpha, ply + 1);
+    unmake(chess);
+    if (value > best) best = value;
+    if (value > alpha) alpha = value;
     if (alpha >= beta) break;
   }
   return best;
@@ -134,18 +211,19 @@ export function hardToSee(m) {
 
 // The opponent's replies, minus the ones this decision does not see.
 function seenReplies(chess, seen, capturesOnly) {
-  return ordered(chess).filter((m) => (!capturesOnly || m.flags & (CAPTURE | PROMOTION)) && seen(m));
+  // 약한 단계도 「무엇으로 지는지」는 안다: 상대의 계약을 끝내는 잡기는 사각이어도 본다(§3.3).
+  return ordered(chess).filter((m) => (!capturesOnly || m.flags & (CAPTURE | PROMOTION)) && (seen(m) || completesContract(m)));
 }
 function quiesceSeen(chess, alpha, beta, seen) {
-  const stand = evaluate(chess);
-  if (stand >= beta) return stand;
+  const stand = score(chess);
+  if (stand >= beta || (ctx && ctx.left <= 0)) return stand;
   if (stand > alpha) alpha = stand;
   for (const m of seenReplies(chess, seen, true)) {
-    chess._makeMove(m);
-    const score = -quiesce(chess, -beta, -alpha, QUIET_DEPTH - 1);
-    chess._undoMove();
-    if (score >= beta) return score;
-    if (score > alpha) alpha = score;
+    const won = make(chess, m);
+    const value = won ? MATE - 50 : -quiesce(chess, -beta, -alpha, QUIET_DEPTH - 1);
+    unmake(chess);
+    if (value >= beta) return value;
+    if (value > alpha) alpha = value;
   }
   return alpha;
 }
@@ -154,15 +232,15 @@ function searchSeen(chess, depth, seen) {
   const all = chess._moves({ legal: true });
   if (!all.length) return chess.inCheck() ? -MATE + 1 : 0;
   const moves = seenReplies(chess, seen, false);
-  if (!moves.length) return evaluate(chess);
+  if (!moves.length) return score(chess);
   let best = -Infinity;
   let alpha = -Infinity;
   for (const m of moves) {
-    chess._makeMove(m);
-    const score = -search(chess, depth - 1, -Infinity, -alpha, 2);
-    chess._undoMove();
-    if (score > best) best = score;
-    if (score > alpha) alpha = score;
+    const won = make(chess, m);
+    const value = won ? MATE - 1 : ctx && ctx.left <= 0 ? limitValue(chess, m.color, 1) : -search(chess, depth - 1, -Infinity, -alpha, 2);
+    unmake(chess);
+    if (value > best) best = value;
+    if (value > alpha) alpha = value;
   }
   return best;
 }
@@ -189,9 +267,19 @@ export function rootScores(fen, { depth = 2 } = {}) {
  * ahead does not walk into a repetition. `rand` is any 0..1 source.
  * `only` (a piece letter) keeps the choice to that piece kind — the hand in hand-and-brain mode.
  * `blind` (0..1) gives the AI a weak human's blind spots instead of random slips (see hardToSee).
+ * `contract` (src/rules/contractGame.js `contractAiState`) makes it play the contract game: completing two goals
+ * wins like a mate, the opponent's finishing capture is always seen, and the turn limit is scored by goals done.
  * Returns { from, to, promotion } in algebraic squares, or null when there is no legal move.
  */
-export function chooseMove(fen, { level = 'normal', history = [], rand = Math.random, slip, only, blind = 0 } = {}) {
+export function chooseMove(fen, opts = {}) {
+  ctx = contractContext(opts.contract);
+  try {
+    return pickMove(fen, opts);
+  } finally {
+    ctx = null;
+  }
+}
+function pickMove(fen, { level = 'normal', history = [], rand = Math.random, slip, only, blind = 0 } = {}) {
   const chess = new Chess(fen);
   const root = only ? ordered(chess).filter((m) => m.piece === only) : ordered(chess);
   if (!root.length) return null;
@@ -207,10 +295,11 @@ export function chooseMove(fen, { level = 'normal', history = [], rand = Math.ra
     return !unseen.get(key);
   };
   const scored = root.map((m) => {
-    chess._makeMove(m);
-    let score = blind > 0 ? -searchSeen(chess, depth - 1, seen) : -search(chess, depth - 1, -Infinity, Infinity, 1);
+    const won = make(chess, m);
+    let score = won ? MATE : ctx && ctx.left <= 0 ? limitValue(chess, m.color, 0)
+      : blind > 0 ? -searchSeen(chess, depth - 1, seen) : -search(chess, depth - 1, -Infinity, Infinity, 1);
     const repeats = recent.has(positionKey(chess.fen()));
-    chess._undoMove();
+    unmake(chess);
     // Repeating a position when ahead throws a win away; small noise keeps openings varied.
     if (repeats && score > 0) score -= 60;
     return { m, score: score + (rand() - 0.5) * 12 };

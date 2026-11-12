@@ -189,6 +189,18 @@ export class Referee {
     return this.chess.isDraw();
   }
 
+  /** 계약전 판정(src/rules/contractGame.js)이 읽는 표준 종료 사실. 기물 부족은 「킹만 남음」만 센다. */
+  contractStandard() {
+    const c = this.chess;
+    return {
+      checkmate: c.isCheckmate(),
+      stalemate: c.isStalemate(),
+      threefold: c.isThreefoldRepetition(),
+      fifty: c.isDrawByFiftyMoves ? c.isDrawByFiftyMoves() : false,
+      kingsOnly: c.board().flat().filter(Boolean).length <= 2
+    };
+  }
+
   /** 'checkmate' | 'stalemate' | 'threefold' | 'insufficient' | 'fifty' | null */
   gameOverReason() {
     const c = this.chess;

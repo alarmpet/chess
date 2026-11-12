@@ -1,0 +1,67 @@
+// 계약전 한 판의 판정 (슬롯 체스 계획서 2026-11-11 §3.1 · §3.2, SC-1).
+// 표준 합법 행마는 그대로 두고, 「언제·누가 이겨서 끝나는가」만 다시 정한다. 순수 함수(DOM·three·chess.js 없음).
+import { CONTRACT_NEED, contractById, contractProgress } from './contractSets.js';
+
+/** 길이 상한: 양쪽 24차례씩(§3.1). 흑의 24번째 수까지 둔 뒤에 판정한다. */
+export const CONTRACT_PLY_LIMIT = 48;
+
+/**
+ * 방금 수까지의 판정. `moves` 는 chess.js verbose 기보, `standard` 는 지금 국면의 표준 종료 사실:
+ *   { checkmate, stalemate, threefold, fifty, kingsOnly }
+ * 순서(§3.2-1): 체크메이트 → 계약 2개 → 스테일메이트 → 3회 반복 → 50수 → 킹만 남음 → 차례 상한.
+ * 기물 부족 무승부는 「킹만 남음」 말고는 쓰지 않는다 — 메이트가 안 돼도 목표 포획으로 이길 수 있다(§3.2-5).
+ * 돌려주는 값: { over, winner('w'|'b'|null), reason, progress, pliesLeft }
+ *   reason: 'checkmate' | 'contract' | 'stalemate' | 'threefold' | 'fifty' | 'kings' | 'limit' | null
+ */
+export function contractVerdict(set, moves = [], standard = {}, limit = CONTRACT_PLY_LIMIT) {
+  const progress = contractProgress(set, moves);
+  const pliesLeft = Math.max(0, limit - moves.length);
+  const end = (winner, reason) => ({ over: true, winner, reason, progress, pliesLeft });
+  if (standard.checkmate) return end(moves.length ? moves[moves.length - 1].color : null, 'checkmate');
+  if (progress.winner) return end(progress.winner, 'contract');
+  if (standard.stalemate) return end(null, 'stalemate');
+  if (standard.threefold) return end(null, 'threefold');
+  if (standard.fifty) return end(null, 'fifty');
+  if (standard.kingsOnly) return end(null, 'kings');
+  if (moves.length >= limit) {
+    const w = progress.w.done, b = progress.b.done;
+    return end(w > b ? 'w' : b > w ? 'b' : null, 'limit');
+  }
+  return { over: false, winner: null, reason: null, progress, pliesLeft };
+}
+
+/** AI 에게 넘기는 계약 상태(평범한 데이터 — 작업자 스레드로 건너간다). */
+export function contractAiState(set, moves = [], limit = CONTRACT_PLY_LIMIT) {
+  const progress = contractProgress(set, moves);
+  return {
+    goals: set.goals.map((g) => ({ type: g.type, count: g.count })),
+    need: CONTRACT_NEED,
+    counts: { w: progress.w.counts.slice(), b: progress.b.counts.slice() },
+    left: Math.max(0, limit - moves.length)
+  };
+}
+
+// ── 전용 기록(§3.1 「계약전과 일반 체스의 결과를 분리」). 일반 판의 실력 점수·카드·마을 정산과 섞지 않는다.
+export const CONTRACT_STORE_KEY = 'wildcrown.contract.v1';
+export const emptyContractStore = () => ({ v: 1, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null });
+
+export function sanitizeContractStore(raw) {
+  const base = emptyContractStore();
+  if (!raw || raw.v !== 1) return base;
+  const n = (x) => (Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0);
+  const byReason = {};
+  for (const [k, v] of Object.entries(raw.byReason || {})) if (typeof k === 'string' && k.length < 20) byReason[k] = n(v);
+  const last = raw.last && contractById(raw.last.set) ? { set: raw.last.set, result: String(raw.last.result), reason: String(raw.last.reason), plies: n(raw.last.plies) } : null;
+  return { v: 1, games: n(raw.games), win: n(raw.win), loss: n(raw.loss), draw: n(raw.draw), byReason, last };
+}
+
+/** 끝난 판 하나를 기록에 더한다. `result` 는 내 쪽에서 본 'win' | 'loss' | 'draw'. */
+export function addContractResult(store, { set, result, reason, plies }) {
+  const next = sanitizeContractStore(store);
+  if (!['win', 'loss', 'draw'].includes(result)) return next;
+  next.games += 1;
+  next[result] += 1;
+  next.byReason[reason] = (next.byReason[reason] || 0) + 1;
+  next.last = { set, result, reason, plies };
+  return next;
+}
