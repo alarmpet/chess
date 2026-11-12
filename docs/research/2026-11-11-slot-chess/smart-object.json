@@ -1,0 +1,90 @@
+{
+  "title": "NPC가 하루 종일 서 있는 이유 — 랜덤 배회 vs 일과표 vs 스마트 오브젝트 | 밥따뚜의 AI게임 유튜브",
+  "text": "처음 › NPC 하루 · 스마트 오브젝트\n 테스트해 보기\n 쇼츠와 정리\n게임 AI · 쇼츠 17편\nNPC가 하루 종일 서 있는 이유\n\n랜덤 배회 vs 일과표 vs 스마트 오브젝트 — 마을이 살아 있는 것처럼 보이게 하는 세 가지 방법\n\n마을 사람들의 하루 보기\n유튜브에서 보기\n공유\n\n사람 여덟 명이 사는 마을에서 NPC 두뇌 세 가지를 비교합니다.\n\n 랜덤 배회\n아무 칸이나 골라 걷습니다. 밤 11시에도 집에 가지 않아요 — 마을 기분 18%.\n 일과표\n\n5시 반  · 7시  · 12시  · 18시  · 20시  · 22시  — 모두 같은 표를 따릅니다.\n\n 모두 같은 시각\n줄 6명 우물 · 술집에 한꺼번에 몰립니다.\n 출발 시각 어긋나게\n줄 4명 줄지만 표를 사람마다 짜야 합니다.\n 스마트 오브젝트\n\n물건이 먼저 \"나를 쓰면 이게 채워져요\"라고 알리고, 사람은 급하고 가까운 것에 높은 점수를 매겨 1등으로 갑니다. 유틸리티 AI의 점수를 물건 쪽에 둔 셈입니다.\n\n① 농부의 욕구 막대\n  물\n20%\n  식사\n70%\n  잠\n60%\n  어울림\n50%\n물이 바닥에 가까워 가장 급합니다\n② 물건 알림 → 점수\n  우물\n +70 · 8칸\n0.75\n  벤치\n +12  +25 · 4칸\n0.21\n  솥\n +50 · 5칸\n0.11\n채워 주는 양 × 급한 정도 × 가까움 → 1등 우물로\n욕구마다 흩어져 저마다 다른 하루를 보냅니다. 자리가 찬 물건은 알리기를 멈춰 줄이 없습니다.\n새 벤치를 놓으면\n 일과표\n하루 0번 표에 없으니 아무도 앉지 않습니다.\n 스마트 오브젝트\n하루 12번 코드를 안 고쳐도 와서 앉습니다.\n하루 동안 재 보면\n0%\n50%\n100%\n  랜덤 배회\n18%\n  줄 0명\n  일과표\n51%\n  줄 6명\n  어긋나게\n54%\n  줄 4명\n  스마트\n75%\n  줄 0명\n  +   섞기\n72%\n  줄 0명\n마을 기분(욕구 평균) · 사람 여덟 명 · 하루\n\n시드 셋으로 새벽 5시부터 하루씩 돌린 평균 · 마을 기분 = 모든 사람 욕구의 평균\n\n대신 — 언제 어디 있을지 모른다\n 스마트 오브젝트\n11시 45분, 대장간은 비고 대장장이는 술집에 있습니다.\n +  섞어 쓰기\n기분 72% 일하는 시간은 일과표, 그 안은 점수로.\n무엇을 쓰면 좋을까\n 랜덤 배회\n\n잠깐 지나가는 배경 NPC\n\n 일과표\n\n정해진 시간에 꼭 그 자리에 있어야 하는 퀘스트 · 상점 NPC\n\n 스마트 오브젝트\n\n마을 전체가 살아 있는 느낌 — 큰 틀은 일과표와 섞기\n\n 직접 물건을 놓아 보세요\n\n벤치 · 우물 · 모닥불을 놓으면 마을 생활이 바로 바뀝니다.\n\n테스트해 보기 →\n\n 마을 사람 여덟 명은 밥따뚜가 직접 그린 Tiny Questers 8 NPC Pack(itch.io 유료 에셋), 마을 바닥 · 집 · 물건은 The Fan-tasy Tileset(만든 사람 ventilatore, itch.io 유료 에셋)입니다. 그림을 직접 쓰시려면 itch.io 에서 받아 주세요.\n\n그림: Kenney (CC0)\n타일: The Fan-tasy Tileset (itch.io 구매)\n캐릭터: Tiny Questers (밥따뚜 제작)\n던전: 트리거 테일즈 방 스타일 (원본 Pixel Crawler)\n전투 이펙트: Beat 'em Up Combat Effects – 2D Pixel Art VFX Pack (itch.io 구매)\n엔진: Phaser 3\n개인정보 처리방침\n이용약관\nCopyright © 2026 bobddadoo\n무단 복제 · 재배포 · AI 학습 금지\n문의",
+  "links": [
+    {
+      "text": "유튜브 채널",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    },
+    {
+      "text": "불 번짐 · 재료 · 바람 · 습기\n쇼츠 23편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/fire-spread/play"
+    },
+    {
+      "text": "퀘스트 만들기 · 월드 스테이트\n쇼츠 22편 · 게임 디자인",
+      "url": "https://game.bobthief.com/procedural-quest/play"
+    },
+    {
+      "text": "밧줄 물리 · 버렛\n쇼츠 21편 · 물리 시뮬레이션",
+      "url": "https://game.bobthief.com/rope-physics/play"
+    },
+    {
+      "text": "승률 그래프 · 역전 기회\n쇼츠 20편 · 게임 디자인",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "좀비 감염 · SIR\n쇼츠 19편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/zombie-outbreak/play"
+    },
+    {
+      "text": "턴제 전투 · 행동 타임라인\n쇼츠 18편 · 전투 시스템",
+      "url": "https://game.bobthief.com/turn-order/play"
+    },
+    {
+      "text": "NPC 하루 · 스마트 오브젝트\n쇼츠 17편 · 마을 AI",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "공격 토큰 · 포위 자리\n쇼츠 16편 · 무리 전투",
+      "url": "https://game.bobthief.com/attack-token/play"
+    },
+    {
+      "text": "우선순위 vs 유틸리티 AI\n쇼츠 15편 · 게임 AI",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "던전 생성 · BSP · 동굴\n쇼츠 14편 · 맵 만들기",
+      "url": "https://game.bobthief.com/dungeon-gen/play"
+    },
+    {
+      "text": "몬스터 무리 · 보이드\n쇼츠 13편 · 무리 AI",
+      "url": "https://game.bobthief.com/boids/play"
+    },
+    {
+      "text": "길 안내 · 미니맵 · 발자국\n쇼츠 12편 · 웨이파인딩",
+      "url": "https://game.bobthief.com/wayfinding/play"
+    },
+    {
+      "text": "게임 주스 · 타격감\n쇼츠 11편 · 손맛 살리기",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "랜덤 맵 · 노이즈 · WFC\n쇼츠 10편 · 맵 만들기",
+      "url": "https://game.bobthief.com/random-map/play"
+    },
+    {
+      "text": "FSM vs 비헤이비어 트리\n쇼츠 9편 · 게임 AI",
+      "url": "https://game.bobthief.com/fsm-vs-bt/play"
+    },
+    {
+      "text": " 테스트해 보기",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "마을 사람들의 하루 보기",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "유튜브에서 보기",
+      "url": "https://youtube.com/shorts/W3c1qVYbgD0"
+    },
+    {
+      "text": "테스트해 보기 →",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "bobddadoo",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    }
+  ]
+}

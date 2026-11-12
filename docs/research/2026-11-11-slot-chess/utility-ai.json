@@ -1,0 +1,90 @@
+{
+  "title": "몬스터가 늘 똑같이 움직이는 이유 — 정해진 우선순위 vs 유틸리티 AI | 밥따뚜의 AI게임 유튜브",
+  "text": "처음 › 우선순위 vs 유틸리티 AI\n 테스트해 보기\n 쇼츠와 정리\n게임 AI · 쇼츠 15편\n몬스터가 늘 똑같이 움직이는 이유\n\n정해진 우선순위 vs 유틸리티 AI — 행동마다 점수를 매기면 무엇이 달라질까\n\n스켈레톤 두뇌 바꿔 보기\n유튜브에서 보기\n공유\n\n위에서부터 확인하는 우선순위와, 행동마다 점수를 매기는 유틸리티 AI 를 비교합니다.\n\n정해진 우선순위 — 1% 차이로 정반대\n 31%\n 공격\n 29%\n 도망\n\n줄마다 \"예 · 아니오\"로만 답해 문턱(30%) 옆에서 행동이 뒤집히고, 따질 상황이 늘면 줄도 늘어납니다.\n\n유틸리티 AI — 행동마다 0 ~ 1 점수\n 정해진 우선순위\n 도망\n 유틸리티 AI\n 0.57 >  0.20\n\n 20% ·  10% — 공격 점수에 거리 × 상대 체력을 곱해, 도망 대신 마지막 공격을 고릅니다.\n\n곡선 모양 = 성격\n  조심스러운 · 직선 → 체력 53%부터 도망\n  기본 · S자 → 체력 36%부터 도망\n  끝까지 버티는 · 가파르게 → 체력 17%부터 도망\n1\n0\n0%\n50%\n100%\n  스켈레톤 체력 →\n  도망 점수\n  공격 점수 0.38\n53%\n36%\n17%\n상황을 점수로 바꾸는 반응 곡선. 도망 곡선만 바꿔도 도망을 고르는 체력이 53% · 36% · 17%로 달라집니다.\n그래서 훨씬 다양하게\n 막기 ·  뼈 던지기 ·  뼈 맞추기 — 20초 동안 쓴 행동이 우선순위는 최대 3가지, 유틸리티는 최대 7가지. 점수가 비슷하면  조금 무작위로 고릅니다.\n대신 — 맞출 숫자가 많다\n  정해진 우선순위\n    체력<30%\n→   도망\n2   가까움\n→   공격\n3   그 밖에\n→   쫓아가기\n첫 줄이 \"예\" → 바로 도망\n기본 줄은 셋 — 막기 · 던지기 ·\n뼈 맞추기는 줄을 더 적어야\n할 수 있습니다\n  유틸리티 AI\n  공격\n0.57\n  뼈 던지기\n0.06\n  막기\n0.00\n  쫓아가기\n0.07\n  맴돌기\n0.00\n  도망\n0.20\n  뼈 맞추기\n0.02\n상대가 약해 공격이 1등 → 마지막 공격\n곡선 하나에 순서가 뒤바뀌고 왜 골랐는지 알기 어려워서, 머리 위에 점수판을 띄워 맞춰 보는 게 좋은 것 같습니다.\n무엇을 쓰면 좋을까\n 정해진 우선순위\n\n행동이 적고, 패턴을 외워 이기는 몬스터\n\n 유틸리티 AI\n\n여러 상황을 함께 따져 살아 있는 것처럼\n\n 섞어 쓰기\n\n트리의 공격 줄 안에서만 어떤 공격을 할지 점수로\n\n 직접 바꿔 보면 더 잘 보입니다\n\n체력 31% → 29%, 도망 곡선 직선 · S자 · 계단을 바꿔 보세요.\n\n테스트해 보기 →\n\n 스켈레톤 · 워리어: Tiny Questers (밥따뚜 제작) · 결투장 타일: The Fan-tasy Tileset (ventilatore, itch.io 구매)\n\n그림: Kenney (CC0)\n타일: The Fan-tasy Tileset (itch.io 구매)\n캐릭터: Tiny Questers (밥따뚜 제작)\n던전: 트리거 테일즈 방 스타일 (원본 Pixel Crawler)\n전투 이펙트: Beat 'em Up Combat Effects – 2D Pixel Art VFX Pack (itch.io 구매)\n엔진: Phaser 3\n개인정보 처리방침\n이용약관\nCopyright © 2026 bobddadoo\n무단 복제 · 재배포 · AI 학습 금지\n문의",
+  "links": [
+    {
+      "text": "유튜브 채널",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    },
+    {
+      "text": "불 번짐 · 재료 · 바람 · 습기\n쇼츠 23편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/fire-spread/play"
+    },
+    {
+      "text": "퀘스트 만들기 · 월드 스테이트\n쇼츠 22편 · 게임 디자인",
+      "url": "https://game.bobthief.com/procedural-quest/play"
+    },
+    {
+      "text": "밧줄 물리 · 버렛\n쇼츠 21편 · 물리 시뮬레이션",
+      "url": "https://game.bobthief.com/rope-physics/play"
+    },
+    {
+      "text": "승률 그래프 · 역전 기회\n쇼츠 20편 · 게임 디자인",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "좀비 감염 · SIR\n쇼츠 19편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/zombie-outbreak/play"
+    },
+    {
+      "text": "턴제 전투 · 행동 타임라인\n쇼츠 18편 · 전투 시스템",
+      "url": "https://game.bobthief.com/turn-order/play"
+    },
+    {
+      "text": "NPC 하루 · 스마트 오브젝트\n쇼츠 17편 · 마을 AI",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "공격 토큰 · 포위 자리\n쇼츠 16편 · 무리 전투",
+      "url": "https://game.bobthief.com/attack-token/play"
+    },
+    {
+      "text": "우선순위 vs 유틸리티 AI\n쇼츠 15편 · 게임 AI",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "던전 생성 · BSP · 동굴\n쇼츠 14편 · 맵 만들기",
+      "url": "https://game.bobthief.com/dungeon-gen/play"
+    },
+    {
+      "text": "몬스터 무리 · 보이드\n쇼츠 13편 · 무리 AI",
+      "url": "https://game.bobthief.com/boids/play"
+    },
+    {
+      "text": "길 안내 · 미니맵 · 발자국\n쇼츠 12편 · 웨이파인딩",
+      "url": "https://game.bobthief.com/wayfinding/play"
+    },
+    {
+      "text": "게임 주스 · 타격감\n쇼츠 11편 · 손맛 살리기",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "랜덤 맵 · 노이즈 · WFC\n쇼츠 10편 · 맵 만들기",
+      "url": "https://game.bobthief.com/random-map/play"
+    },
+    {
+      "text": "FSM vs 비헤이비어 트리\n쇼츠 9편 · 게임 AI",
+      "url": "https://game.bobthief.com/fsm-vs-bt/play"
+    },
+    {
+      "text": " 테스트해 보기",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "스켈레톤 두뇌 바꿔 보기",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "유튜브에서 보기",
+      "url": "https://youtube.com/shorts/pXl47aZCNA8"
+    },
+    {
+      "text": "테스트해 보기 →",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "bobddadoo",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    }
+  ]
+}

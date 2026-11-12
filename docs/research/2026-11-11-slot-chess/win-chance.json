@@ -1,0 +1,90 @@
+{
+  "title": "결과가 뻔한 게임이 재미없는 이유 — 눈덩이 굴리기 vs 아무 장치 없음 vs 역전 기회 | 밥따뚜의 AI게임 유튜브",
+  "text": "처음 › 승률 그래프 · 역전 기회\n 테스트해 보기\n 쇼츠와 정리\n게임 디자인 · 쇼츠 20편\n결과가 뻔한 게임이 재미없는 이유\n\n눈덩이 굴리기 vs 아무 장치 없음 vs 역전 기회 — 재미를 승률 그래프로 재기\n\n승부 예측 자동 전투\n유튜브에서 보기\n공유\n\n같은 자동 전투에 승률 선을 띄우고, 이기는 규칙만 바꿔 봅니다.\n\n 승률 = 끝까지 몰래 돌려 보기\n0.5초마다 지금 상태를 복사해 160번 끝까지 싸워 본 비율 (몬테카를로). 선이 오르내린 길이 = 명승부 점수.\n   세 규칙의 승률 선\n  눈덩이\n8.7초에 정해짐 · 게임 10.2초 · 명승부 47점\n  그냥\n8.3초에 정해짐 · 게임 19.1초 · 명승부 68점\n  역전 기회\n20.5초에 정해짐 · 게임 23.0초 · 명승부 84점\n빗금 = 승부가 정해진 뒤 확인 작업.\n 누가 뒤집었나\n명승부 점수\n  눈덩이\n48점\n  그냥\n68점\n  역전 기회\n85점\n먼저 한 명 잃은 쪽이 이김\n  눈덩이\n0%\n  그냥\n17%\n  역전 기회\n33%\n시드 60개 — 눈덩이에서 먼저 한 명 잃은 쪽이 이긴 게임은 0번, 역전 기회는 20번.\n\n역전 장치를 2배로 올리면 필살기가 쏟아져 게임이 짧아지고 점수도 떨어집니다 — 지는 쪽엔 기회만.\n\n무엇을 쓰면 좋을까\n 눈덩이\n\n짧고 시원하게 끝나는 게임.\n\n 그냥\n\n숫자만 두면 후반이 늘어지기 쉽습니다.\n\n 역전 기회\n\n대전 · 보스전처럼 끝까지 손에 땀을 쥐게.\n\n 이길 쪽을 맞혀 보세요\n\n세기 슬라이더를 바꾸면 승률 선이 일찍 붙기도, 끝까지 넘나들기도 합니다.\n\n테스트해 보기 →\n\n 캐릭터 = Tiny Questers(밥따뚜 제작), 결투장 = The Fan-tasy Tileset(itch.io 유료 에셋)\n\n그림: Kenney (CC0)\n타일: The Fan-tasy Tileset (itch.io 구매)\n캐릭터: Tiny Questers (밥따뚜 제작)\n던전: 트리거 테일즈 방 스타일 (원본 Pixel Crawler)\n전투 이펙트: Beat 'em Up Combat Effects – 2D Pixel Art VFX Pack (itch.io 구매)\n엔진: Phaser 3\n개인정보 처리방침\n이용약관\nCopyright © 2026 bobddadoo\n무단 복제 · 재배포 · AI 학습 금지\n문의",
+  "links": [
+    {
+      "text": "유튜브 채널",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    },
+    {
+      "text": "불 번짐 · 재료 · 바람 · 습기\n쇼츠 23편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/fire-spread/play"
+    },
+    {
+      "text": "퀘스트 만들기 · 월드 스테이트\n쇼츠 22편 · 게임 디자인",
+      "url": "https://game.bobthief.com/procedural-quest/play"
+    },
+    {
+      "text": "밧줄 물리 · 버렛\n쇼츠 21편 · 물리 시뮬레이션",
+      "url": "https://game.bobthief.com/rope-physics/play"
+    },
+    {
+      "text": "승률 그래프 · 역전 기회\n쇼츠 20편 · 게임 디자인",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "좀비 감염 · SIR\n쇼츠 19편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/zombie-outbreak/play"
+    },
+    {
+      "text": "턴제 전투 · 행동 타임라인\n쇼츠 18편 · 전투 시스템",
+      "url": "https://game.bobthief.com/turn-order/play"
+    },
+    {
+      "text": "NPC 하루 · 스마트 오브젝트\n쇼츠 17편 · 마을 AI",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "공격 토큰 · 포위 자리\n쇼츠 16편 · 무리 전투",
+      "url": "https://game.bobthief.com/attack-token/play"
+    },
+    {
+      "text": "우선순위 vs 유틸리티 AI\n쇼츠 15편 · 게임 AI",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "던전 생성 · BSP · 동굴\n쇼츠 14편 · 맵 만들기",
+      "url": "https://game.bobthief.com/dungeon-gen/play"
+    },
+    {
+      "text": "몬스터 무리 · 보이드\n쇼츠 13편 · 무리 AI",
+      "url": "https://game.bobthief.com/boids/play"
+    },
+    {
+      "text": "길 안내 · 미니맵 · 발자국\n쇼츠 12편 · 웨이파인딩",
+      "url": "https://game.bobthief.com/wayfinding/play"
+    },
+    {
+      "text": "게임 주스 · 타격감\n쇼츠 11편 · 손맛 살리기",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "랜덤 맵 · 노이즈 · WFC\n쇼츠 10편 · 맵 만들기",
+      "url": "https://game.bobthief.com/random-map/play"
+    },
+    {
+      "text": "FSM vs 비헤이비어 트리\n쇼츠 9편 · 게임 AI",
+      "url": "https://game.bobthief.com/fsm-vs-bt/play"
+    },
+    {
+      "text": " 테스트해 보기",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "승부 예측 자동 전투",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "유튜브에서 보기",
+      "url": "https://youtube.com/shorts/kHjA7wGAa_g"
+    },
+    {
+      "text": "테스트해 보기 →",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "bobddadoo",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    }
+  ]
+}
