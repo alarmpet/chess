@@ -94,8 +94,8 @@ for (const [port, name, phone] of [[9494, 'mouse', false], [9495, 'touch', true]
   await sleep(2500);
   const w = await box();
   await shot(`end-win-${name}.jpg`);
-  check(`${name} 계약 승리 화면`, 'HUD 접힘 · 배너 안에 결과 · 화면 안 · 「미어캣 ×2 · 판다 목표를 먼저 채워 이겼어요.」 · 보조 글자 비움', { hud: w.hud, banner: w.banner, result: w.result, line: w.line, sub: w.sub, title: w.title },
-    endOk(w) && w.line === '미어캣 ×2 · 판다 목표를 먼저 채워 이겼어요.' && w.sub === '' && w.title === '계약 완성');
+  check(`${name} 계약 승리 화면`, 'HUD 접힘 · 배너 안에 결과 · 화면 안 · 「미어캣 ×2 · 판다 보석으로 왕관을 먼저 완성했어요.」 · 보조 글자 비움', { hud: w.hud, banner: w.banner, result: w.result, line: w.line, sub: w.sub, title: w.title },
+    endOk(w) && w.line === '미어캣 ×2 · 판다 보석으로 왕관을 먼저 완성했어요.' && w.sub === '' && w.title === '왕관 완성');
 
   // 3) 새 게임: 결과는 치워지고 HUD 가 다시 선다
   await ev(`document.getElementById('btn-checkmate-newgame').click()`);
@@ -113,8 +113,8 @@ for (const [port, name, phone] of [[9494, 'mouse', false], [9495, 'touch', true]
   await sleep(2000);
   const l = await box();
   await shot(`end-loss-${name}.jpg`);
-  check(`${name} 계약 패배 화면`, 'HUD 접힘 · 배너 안에 결과 · 「상대가 미어캣 ×2 · 캥거루 목표를 먼저 채웠어요.」', { hud: l.hud, banner: l.banner, result: l.result, line: l.line, sub: l.sub },
-    endOk(l) && l.line === '상대가 미어캣 ×2 · 캥거루 목표를 먼저 채웠어요.' && l.sub === '');
+  check(`${name} 계약 패배 화면`, 'HUD 접힘 · 배너 안에 결과 · 「상대가 미어캣 ×2 · 캥거루 보석으로 왕관을 먼저 완성했어요.」', { hud: l.hud, banner: l.banner, result: l.result, line: l.line, sub: l.sub },
+    endOk(l) && l.line === '상대가 미어캣 ×2 · 캥거루 보석으로 왕관을 먼저 완성했어요.' && l.sub === '');
 
   // 5) 기권: 「카드는 받았어요」라는 거짓 안내가 없다. 내 수 10번부터 기권이 진 판으로 남는다 — 잡기 없는 20반수
   await open({ moves: mv('a2a3 a7a6 b2b3 b7b6 c2c3 c7c6 d2d3 d7d6 e2e3 e7e6 f2f3 f7f6 g2g3 g7g6 h2h3 h7h6 b1d2 b8d7 c1b2 c8b7'), contract: 'p2nb' });

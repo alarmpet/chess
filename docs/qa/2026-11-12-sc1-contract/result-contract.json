@@ -1,38 +1,38 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T18:43:49.679Z",
+ "at": "2026-11-13T03:18:33.212Z",
  "pass": 19,
  "total": 19,
  "measured": {
   "fullGame": {
-   "seconds": 26,
-   "plies": 19,
+   "seconds": 45,
+   "plies": 32,
    "end": {
-    "gameId": 3507564729,
+    "gameId": 3538388752,
     "set": "p2nb",
-    "result": "win",
+    "result": "loss",
     "reason": "contract",
-    "plies": 19
+    "plies": 32
    },
    "progress": {
     "w": {
-     "counts": [
-      2,
-      0,
-      1
-     ],
-     "done": 2
-    },
-    "b": {
      "counts": [
       1,
       0,
       0
      ],
      "done": 0
+    },
+    "b": {
+     "counts": [
+      2,
+      0,
+      1
+     ],
+     "done": 2
     }
    },
-   "maxCalls": 78
+   "maxCalls": 82
   }
  },
  "rows": [
@@ -74,11 +74,21 @@
     "mineDone": 0,
     "theirsDone": 0,
     "turnsLeft": 24,
+    "crown": {
+     "mine": [
+      null,
+      null
+     ],
+     "theirs": [
+      null,
+      null
+     ]
+    },
     "rect": {
      "x": 14,
-     "y": 113,
+     "y": 105,
      "w": 132,
-     "h": 320
+     "h": 336
     }
    },
    "ok": true
@@ -123,12 +133,12 @@
   },
   {
    "item": "mouse 종료 화면",
-   "want": "배너 「계약 완성」 · 차례 글자에 사유",
+   "want": "배너 「왕관 완성」 · 차례 글자에 사유",
    "got": {
     "visible": true,
-    "title": "계약 완성",
+    "title": "왕관 완성",
     "sub": "",
-    "turn": "백 계약 완성"
+    "turn": "백 왕관 완성"
    },
    "ok": true
   },
@@ -174,7 +184,7 @@
      1,
      0
     ],
-    "title": "계약 완성"
+    "title": "왕관 완성"
    },
    "ok": true
   },
@@ -193,7 +203,7 @@
      1
     ],
     "reply": [
-     "Nf6"
+     "Nc6"
     ],
     "took": true,
     "back": [
@@ -226,24 +236,24 @@
    "want": "AI 대 AI 로 48반수 안에 종료 · 사유 기록 · 전용 기록 1판 · 배너 · 드로우콜 ≤ 100",
    "got": {
     "over": true,
-    "plies": 19,
+    "plies": 32,
     "end": {
-     "gameId": 3507564729,
+     "gameId": 3538388752,
      "set": "p2nb",
-     "result": "win",
+     "result": "loss",
      "reason": "contract",
-     "plies": 19
+     "plies": 32
     },
     "store": {
      "games": 1,
-     "win": 1,
-     "loss": 0,
+     "win": 0,
+     "loss": 1,
      "draw": 0
     },
     "game": 0,
     "contract": 1,
     "bannerOn": true,
-    "maxCalls": 78
+    "maxCalls": 82
    },
    "ok": true
   },
@@ -285,11 +295,21 @@
     "mineDone": 0,
     "theirsDone": 0,
     "turnsLeft": 24,
+    "crown": {
+     "mine": [
+      null,
+      null
+     ],
+     "theirs": [
+      null,
+      null
+     ]
+    },
     "rect": {
      "x": 8,
      "y": 104,
      "w": 360,
-     "h": 125
+     "h": 141
     }
    },
    "ok": true
@@ -334,12 +354,12 @@
   },
   {
    "item": "touch 종료 화면",
-   "want": "배너 「계약 완성」 · 차례 글자에 사유",
+   "want": "배너 「왕관 완성」 · 차례 글자에 사유",
    "got": {
     "visible": true,
-    "title": "계약 완성",
+    "title": "왕관 완성",
     "sub": "",
-    "turn": "백 계약 완성"
+    "turn": "백 왕관 완성"
    },
    "ok": true
   },
@@ -385,7 +405,7 @@
      1,
      0
     ],
-    "title": "계약 완성"
+    "title": "왕관 완성"
    },
    "ok": true
   },
@@ -404,7 +424,7 @@
      1
     ],
     "reply": [
-     "Nd7"
+     "Nc6"
     ],
     "took": true,
     "back": [

@@ -1,32 +1,32 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T18:54:30.709Z",
+ "at": "2026-11-13T03:11:55.306Z",
  "pass": 24,
  "total": 24,
  "measured": {
   "mouse": {
    "idleCalls": 68,
-   "tagCalls": 71,
+   "tagCalls": 73,
    "idleMatch": 67,
-   "stageCalls": 71,
+   "stageCalls": 74,
    "zenithBase": "3f9fe8",
    "zenithMatch": "307eb9",
    "shallowBase": "46e2d2",
    "shallowMatch": "3ecabc",
    "seaRate": 0.4,
-   "doneCalls": 66
+   "doneCalls": 69
   },
   "touch": {
    "idleCalls": 66,
-   "tagCalls": 69,
+   "tagCalls": 71,
    "idleMatch": 65,
-   "stageCalls": 69,
+   "stageCalls": 72,
    "zenithBase": "3f9fe8",
    "zenithMatch": "307eb9",
    "shallowBase": "46e2d2",
    "shallowMatch": "3ecabc",
-   "seaRate": 0.39,
-   "doneCalls": 64
+   "seaRate": 0.4,
+   "doneCalls": 67
   }
  },
  "rows": [
@@ -71,7 +71,7 @@
    "got": {
     "draws": 3,
     "idle": 68,
-    "calls": 71
+    "calls": 73
    },
    "ok": true
   },
@@ -122,7 +122,7 @@
     "halos": 12,
     "draws": 4,
     "idle": 67,
-    "calls": 71
+    "calls": 74
    },
    "ok": true
   },
@@ -228,7 +228,7 @@
    "got": {
     "draws": 3,
     "idle": 66,
-    "calls": 69
+    "calls": 71
    },
    "ok": true
   },
@@ -267,7 +267,7 @@
    "item": "touch 바다 잔잔",
    "want": "바다 시계가 0.4배(±0.08)",
    "got": {
-    "seaRate": 0.39
+    "seaRate": 0.4
    },
    "ok": true
   },
@@ -279,7 +279,7 @@
     "halos": 12,
     "draws": 4,
     "idle": 65,
-    "calls": 69
+    "calls": 72
    },
    "ok": true
   },

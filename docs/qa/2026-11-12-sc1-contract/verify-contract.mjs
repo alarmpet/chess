@@ -111,7 +111,7 @@ for (const [port, name, phone] of [[9490, 'mouse', false], [9491, 'touch', true]
   const stored = await ev(`JSON.parse(localStorage.getItem('wildcrown.contract.v1') || 'null')`);
   await shot(`end-contract-${name}.jpg`);
   check(`${name} 계약으로 종료`, 'Qxf7+ 에서 끝 · 승 · 사유 contract · 13반수 · AI 가 더 안 둠', { ended, end: c.end, plies: (await sans()).length }, ended && c.end?.result === 'win' && c.end?.reason === 'contract' && c.end?.plies === 13 && (await sans()).length === 13);
-  check(`${name} 종료 화면`, '배너 「계약 완성」 · 차례 글자에 사유', banner, banner.visible && banner.title === '계약 완성' && /계약 완성/.test(banner.turn));
+  check(`${name} 종료 화면`, '배너 「왕관 완성」 · 차례 글자에 사유', banner, banner.visible && banner.title === '왕관 완성' && /왕관 완성/.test(banner.turn));
   check(`${name} 전용 기록`, '계약 기록 1판 1승 · 일반 정산 사건(gamefinished) 0번 · contractfinished 1번 · 이어 하기 지워짐', { store: c.store, game: ends.game, contract: ends.contract.length, resumeLeft, last: stored?.last },
     c.store.games === 1 && c.store.win === 1 && ends.game === 0 && ends.contract.length === 1 && resumeLeft === null && stored?.last?.reason === 'contract');
 
@@ -126,7 +126,7 @@ for (const [port, name, phone] of [[9490, 'mouse', false], [9491, 'touch', true]
   const kTitle = await ev(`document.getElementById('checkmate-title').textContent`);
   await shot(`end-ai-wins-${name}.jpg`);
   check(`${name} AI 가 계약으로 이긴다`, '6.Qxf3 뒤 AI 가 폰을 잡아 계약 완성 · 패 · 사유 contract · 12반수', { aiEnded, reply: (await sans()).slice(11, 12), end: k.end, theirs: k.hud?.theirs, title: kTitle },
-    aiEnded && k.end?.result === 'loss' && k.end?.reason === 'contract' && k.end?.plies === 12 && k.hud?.theirsDone === 2 && kTitle === '계약 완성');
+    aiEnded && k.end?.result === 'loss' && k.end?.reason === 'contract' && k.end?.plies === 12 && k.hud?.theirsDone === 2 && kTitle === '왕관 완성');
 
   // 4-2) 되돌리기: 진도·HUD·남은 차례가 함께 되돌아간다
   await open({ moves: LINE_QUIET, contract: 'p2nb' });

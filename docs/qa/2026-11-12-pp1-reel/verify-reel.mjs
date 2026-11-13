@@ -95,7 +95,8 @@ for (const [port, name, phone] of [[9486, 'mouse', false], [9487, 'touch', true]
   const afterCalls = await ev(`${W}.debugRenderCalls()`);
   // 릴이 끝나면 릴 메시는 다 숨는다. 남는 것은 현상 딱지 메시 셋(목표 종류마다 하나, PP-1 ②)뿐이다.
   const tagDraws = await ev(`${W}.debugContract ? ${W}.debugContract().draws : 0`);
-  check(`${name} 드로우콜`, '도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3)', { idle: idleCalls, during: R.calls, after: afterCalls, tagDraws }, R.calls <= 100 && tagDraws === 3 && afterCalls <= idleCalls + tagDraws);
+  const crownDraws = await ev(`${W}.debugContract ? (${W}.debugContract().crown?.draws ?? 0) : 0`);
+  check(`${name} 드로우콜`, '도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3) + 왕관 고리(1)', { idle: idleCalls, during: R.calls, after: afterCalls, tagDraws, crownDraws }, R.calls <= 100 && tagDraws === 3 && crownDraws === 1 && afterCalls <= idleCalls + tagDraws + crownDraws);
 
   // 3) 입력을 막지 않는다: 릴이 도는 중(첫 멈춤 전)에 실제 클릭으로 e2 → e4
   await ev(`${W}.resetChessBoard(true, false), 1`);

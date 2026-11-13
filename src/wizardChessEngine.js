@@ -1023,7 +1023,9 @@ export function initWizardChess() {
     let shellReel = null;
     function loadShellReel() {
       if (shellReel) return Promise.resolve(shellReel);
-      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js'), import('./fx/contractHud.js')]).then(([lib, tagLib, hudLib]) => {
+      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js'), import('./fx/contractHud.js'), import('./fx/crownGems.js')]).then(([lib, tagLib, hudLib, gemsLib]) => {
+        gemLib = gemsLib;
+        crownGems = crownGems || gemsLib.createCrownGems(scene, { square: BOARD_SQ_SIZE });
         reelLib = lib;
         shellReel = shellReel || lib.createShellReel(scene, { surfaceY: BOARD_SURFACE_Y, square: BOARD_SQ_SIZE });
         bountyTags = bountyTags || tagLib.createBountyTags(scene, { square: BOARD_SQ_SIZE });
@@ -1039,6 +1041,12 @@ export function initWizardChess() {
     let reelPendingAge = 0;
     // 현상 딱지 · 매치 포인트 무대(PP-1 ②·⑤). 진도는 늘 기보에서 다시 센다(되돌리기에도 맞는다).
     let bountyTags = null;            // src/fx/bountyTags.js
+    // 왕관 보석(IR-2): 채운 목표가 보석이 되어 왕 머리 위 자리에 박힌다. 목록은 늘 기보에서 다시 센다.
+    let gemLib = null;                // src/fx/crownGems.js
+    let crownGems = null;
+    let contractGems = null;          // crownGemList(contract, 기보) — 모듈을 받기 전이면 null
+    const crownKings = { w: null, b: null };
+    const crownSpot = { w: { x: 0, y: 0, z: 0 }, b: { x: 0, y: 0, z: 0 } };
     let contractState = null;         // contractProgress(contract, 기보)
     let contractStageNow = 'open';    // 'open' | 'matchPoint' | 'finalPoint' | 'done'
     let contractRevealed = [false, false, false];   // 릴이 공개한 목표에만 딱지가 붙는다
@@ -1050,6 +1058,7 @@ export function initWizardChess() {
     let stageBase = null;             // 무대가 손대기 전의 하늘·바다 색
     let seaTime = 0;                  // 바다 시계 — 매치 포인트에서는 느리게 간다(잔잔해진다)
     const tagItems = [];
+    let crownWas = false;
     // 계약 규칙(SC-1): 판정 · HUD · 전용 기록
     let contractHud = null;           // src/fx/contractHud.js
     let hudGame = 0;                  // HUD 가 지금 보여 주는 판(0 이면 숨김)
@@ -2136,9 +2145,17 @@ let engineStarted = false;
       contractHot.clear();
       contractGold.clear();
       contractDanger.clear();
-      if (!contract) { contractState = null; contractStageNow = 'open'; return; }
+      if (!contract) { contractState = null; contractStageNow = 'open'; contractGems = null; crownGems?.clear(); return; }
       const played = referee.history();
       contractState = contractProgress(contract, played);
+      if (gemLib && crownGems) {
+        contractGems = gemLib.crownGemList(contract, played);
+        crownGems.set(contractGems, {
+          fly: announce, plies: played.length,
+          pos: (sq) => { const { r, c } = squareRC(sq); const v = boardToWorld(r, c); v.y += BOARD_SQ_SIZE * 0.45; return v; },
+          land: () => sfx.play('reelStop', 0, 1.25)
+        });
+      }
       contractPliesLeft = Math.max(0, CONTRACT_PLY_LIMIT - played.length);
       hudDirty = true;
       if (playerColor === 'w' || playerColor === 'b') {
@@ -2168,7 +2185,7 @@ let engineStarted = false;
         sfx.play('heartBeat', 0, 1.12);
         if (!finalPointShown) { finalPointShown = true; impactFx.label(mid, '결승점', 0.1); }
       } else if (stage === 'done') {
-        impactFx.label(mid, '계약 완성!', 0.1);
+        impactFx.label(mid, '왕관 완성!', 0.1);
       }
     }
     // 매치 포인트 무대(⑤): 하늘과 바다 빛을 한 톤 낮춘다. 덜어 내는 연출 — 번쩍임도 되풀이 경고음도 없다.
@@ -2219,7 +2236,7 @@ let engineStarted = false;
       }
       if (hudWide !== wide) { hudWide = wide; contractHud.layout(wide); }
       if (hudDirty && contractState) {
-        contractHud.update(contractState, contractPliesLeft, currentTurn);
+        contractHud.update(contractState, contractPliesLeft, currentTurn, contractGems);
         hudDirty = false;
       }
       // 판이 끝나면 HUD 를 접고 종료 배너 안에 까닭과 최종 진도를 넣는다(IR-0). 되돌리면 다시 편다.
@@ -2228,7 +2245,7 @@ let engineStarted = false;
         hudEnded = ended;
         if (ended) {
           const me = playerColor === 'b' ? 'b' : 'w';
-          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote });
+          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, gems: contractGems });
         } else contractHud.resume(wide);
       }
       contractHud.tick(dt);
@@ -2266,6 +2283,21 @@ let engineStarted = false;
           if (!p?.mesh || p.rig === 'statue') continue;
           tagItems.push({ id: p.mesh.id, slot: 4, type: 'shield', x: p.mesh.position.x, y: p.mesh.position.y + (PIECE_HEIGHTS[p.type] || 0.45) + BOARD_SQ_SIZE * 0.1, z: p.mesh.position.z, hot: false });
         }
+      }
+      if (crownGems) {
+        // 모듈을 늦게 받았으면 지금 센다
+        if (contract && contractState && !contractGems) refreshContract(false);
+        const showCrowns = Boolean(contract && contractState && contractRevealed.every(Boolean));
+        for (const side of ['w', 'b']) {
+          const k = showCrowns ? kingOf(side) : null;
+          if (k?.mesh && k.rig !== 'statue') {
+            const spot = crownSpot[side];
+            spot.x = k.mesh.position.x; spot.y = k.mesh.position.y + PIECE_HEIGHTS.king; spot.z = k.mesh.position.z;
+            crownKings[side] = spot;
+          } else crownKings[side] = null;
+        }
+        if (showCrowns || crownWas) crownGems.update(dt, camera, crownKings);
+        crownWas = showCrowns;
       }
       if (!bountyTags) return;
       if (tagItems.length) bountyTags.update(dt, camera, tagItems, stageMix);
@@ -3212,6 +3244,8 @@ let engineStarted = false;
       rungNote = '';
       oopsKey = '';
       contractState = null;
+      contractGems = null;
+      crownGems?.clear();
       contractStageNow = 'open';
       contractRevealed = [false, false, false];
       contractHot.clear();
@@ -3484,6 +3518,8 @@ let engineStarted = false;
       finalPointShown = false;
       lastContractEnd = null;
       contractStageNow = 'open';
+      contractGems = null;
+      crownGems?.clear();
       if (contract) revealContractNow();
       window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: record.moves.length, rivalId: activeRivalId, color: playerColor } }));
       notifyRivalChange();
@@ -5669,16 +5705,16 @@ let engineStarted = false;
           gameOver = true;
           const { w, b } = verdict.progress;
           const sideName = (c) => (c === 'w' ? t.whiteColor : t.blackColor);
-          const line = verdict.reason === 'contract' ? `${sideName(verdict.winner)} 계약 완성 — 목표 둘을 먼저 채웠습니다`
+          const line = verdict.reason === 'contract' ? `${sideName(verdict.winner)} 왕관 완성 — 보석 둘을 먼저 모았습니다`
             : verdict.reason === 'kings' ? '킹만 남았습니다 — 무승부'
             : verdict.winner ? `24차례 끝 — ${sideName(verdict.winner)} 승리 (계약 ${Math.max(w.done, b.done)} 대 ${Math.min(w.done, b.done)})`
             : `24차례 끝 — 무승부 (계약 ${w.done} 대 ${b.done})`;
           // 위쪽 차례 글자는 짧게(길면 단추 줄을 밀어낸다), 자세한 줄은 배너에
-          turnText.textContent = verdict.reason === 'contract' ? `${sideName(verdict.winner)} 계약 완성` : verdict.winner ? `24차례 판정 — ${sideName(verdict.winner)} 승` : '무승부';
+          turnText.textContent = verdict.reason === 'contract' ? `${sideName(verdict.winner)} 왕관 완성` : verdict.winner ? `24차례 판정 — ${sideName(verdict.winner)} 승` : '무승부';
           const result = !verdict.winner ? 'draw' : verdict.winner === playerColor ? 'win' : 'loss';
           showDrawBanner(line);
           document.getElementById('checkmate-crown').textContent = result === 'win' ? '👑' : result === 'loss' ? '🏳️' : '🤝';
-          document.getElementById('checkmate-title').textContent = verdict.reason === 'contract' ? '계약 완성' : result === 'draw' ? t.drawTitle : '24차례 판정';
+          document.getElementById('checkmate-title').textContent = verdict.reason === 'contract' ? '왕관 완성' : result === 'draw' ? t.drawTitle : '24차례 판정';
           sfx.play(result === 'win' ? 'mate' : result === 'loss' ? 'lose' : 'draw', 0.25);
           if (verdict.winner) playFlourish(kingOf(verdict.winner), 'roar');
           refreshContract(false);
@@ -6783,6 +6819,7 @@ let engineStarted = false;
         rung: contractRung, rungName: RUNG_NAMES[contractRung], storeRung: contractStore.rung, goldPieces: contractGold.size, dangerPieces: contractDanger.size, oops: { ...oopsStats },
         progress: contractState && { w: contractState.w, b: contractState.b, winner: contractState.winner, matchPoint: contractState.matchPoint },
         seaTime: +seaTime.toFixed(3), shallow: seaBiome?.ocean ? seaBiome.ocean.water.uShallow.value.getHexString() : null, zenith: seaBiome?.ocean?.sky ? seaBiome.ocean.sky.uZenith.value.getHexString() : null,
+        crown: crownGems ? crownGems.state() : null,
         ...(bountyTags ? bountyTags.state() : { tags: 0, hot: 0, halos: 0, gold: 0, shield: 0, draws: 0, types: [] })
       }),
       debugReel: () => ({ lab: contractLab, contract: contract && contract.id, games: contractGames, hops: reelHops.length, pending: reelPendingFor !== 0, loaded: Boolean(shellReel), ...(shellReel ? shellReel.state() : { active: false, plays: 0, stopped: [], goals: [] }) }),

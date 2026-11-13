@@ -3,9 +3,13 @@
 // 누를 수 없다(pointer-events 없음): 판을 가리지 않고 입력을 가로채지 않는다.
 // 세로 화면은 위쪽 하늘 자리에 가로로, 가로 화면은 왼쪽 바다 자리에 세로로 선다.
 // 시험 스위치가 켜질 때만 받는 묶음이라 화면 틀(React)이 아니라 여기서 DOM 을 만든다.
+// IR-2 왕관 보석: 머리줄은 판 위 두 왕관의 거울이다 — 「내 왕관 ◆◇ · 상대 ◇◇」. 찬 보석은 색과 함께 그 목표의 체스 기호를 적는다.
 
 const NAMES = { p: '미어캣', n: '캥거루', b: '판다', r: '코뿔소', q: '호랑이' };
 const GLYPHS = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
+// 판 위 보석(src/fx/crownGems.js 의 GEM_COLORS)과 같은 색
+const GEM_COLORS = { p: '#ffc233', n: '#35d6b8', b: '#a877ff', r: '#ff7a5c', q: '#ff7ec0' };
+const CROWN_SLOTS = 2;
 
 const CSS = `
 #contract-hud { position: fixed; z-index: 30; pointer-events: none; display: none; gap: 8px; align-items: stretch;
@@ -22,6 +26,16 @@ body.cinematic-ui-hidden #contract-hud { display: none; }
 #contract-hud .ch-turns { color: #fff; font-variant-numeric: tabular-nums; }
 #contract-hud .ch-turns.low { color: #ffd166; }
 #contract-hud .ch-rival { color: #bfe3ff; font-weight: 600; }
+#contract-hud .ch-crown { display: inline-flex; align-items: center; gap: 3px; }
+#contract-hud .ch-crown.theirs { color: #bfe3ff; font-weight: 600; }
+.ch-gem { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; box-sizing: border-box; border: 2px solid #ffd23f; border-radius: 50%;
+  font: 10px/1 serif; color: #2b1d10; }
+.ch-gem.full { background: var(--gem, #ffd23f); border-color: #fff6c8; }
+.ch-gem.new { animation: ch-gem-pop 0.5s ease-out; }
+@keyframes ch-gem-pop { 0% { transform: scale(0.2); } 60% { transform: scale(1.5); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .ch-gem.new { animation: none; } }
+.contract-result .ch-gem { border-color: #d9912b; }
+.contract-result .ch-gem.full { border-color: #8a5a00; }
 .contract-result .cr-note { margin-top: 6px; font-size: 0.78rem; font-weight: 700; color: #1f5a8a; }
 #contract-hud .ch-goal { background: rgba(255, 248, 231, 0.94); border: 2px solid #d9912b; border-radius: 12px; padding: 5px 8px;
   display: grid; grid-template-columns: auto 1fr; column-gap: 6px; align-items: center; opacity: 0.25; transition: opacity 0.25s; }
@@ -49,7 +63,8 @@ body.contract-hud-wide .card-note { left: 160px; }
 .contract-result { margin: 0 0 12px; color: #2b1d10; font-family: system-ui, 'Malgun Gothic', sans-serif; }
 .contract-result .cr-line { font-size: 0.95rem; font-weight: 800; color: #5a2d0c; line-height: 1.35; word-break: keep-all; }
 .contract-result .cr-score { margin: 6px 0; font-size: 0.85rem; font-weight: 700; display: flex; justify-content: center; gap: 14px; }
-.contract-result .cr-gems { letter-spacing: 2px; color: #d9912b; }
+.contract-result .cr-gems { display: inline-flex; gap: 3px; vertical-align: middle; }
+.contract-result .cr-score > span { display: inline-flex; align-items: center; gap: 5px; }
 .contract-result .cr-goals { display: flex; justify-content: center; gap: 5px; }
 .contract-result .cr-goal { border: 2px solid #d9912b; border-radius: 10px; padding: 3px 4px; font-size: 0.72rem; font-weight: 700; background: #fffdf5; display: flex; flex-direction: column; align-items: center; gap: 1px; flex: 1 1 0; min-width: 0; max-width: 120px; white-space: nowrap; }
 .contract-result .cr-goal.mine-done { background: #e3f7d6; border-color: #3f9a3a; }
@@ -59,7 +74,7 @@ body.contract-hud-wide .card-note { left: 160px; }
 .contract-result .cr-goal small { font-size: 0.62rem; font-weight: 600; opacity: 0.8; font-variant-numeric: tabular-nums; }
 `;
 
-export const HINT_TEXT = '목표 둘을 먼저 채우거나 왕을 제압하면 이깁니다';
+export const HINT_TEXT = '보석 둘로 왕관을 먼저 완성하면 승리! 상대 왕을 제압해도 이겨요.';
 export const HINT_SEC = 5;
 
 /** 남은 내 차례 수: 남은 반수 가운데 내가 둘 몫. `turn` 은 지금 둘 색. */
@@ -76,9 +91,9 @@ const filled = (set, side) => set.goals.filter((g, i) => side.counts[i] >= g.cou
  */
 export function resultLine(set, { reason, result, mine, theirs }) {
   // 「0으로 · 1로 · 2로」 — 끝 숫자의 받침에 맞춘다
-  const score = `채운 목표 ${mine.done} 대 ${theirs.done}${[0, 3, 6].includes(theirs.done % 10) ? '으' : ''}`;
+  const score = `보석 ${mine.done} 대 ${theirs.done}${[0, 3, 6].includes(theirs.done % 10) ? '으' : ''}`;
   if (reason === 'checkmate') return result === 'win' ? '상대 왕을 제압해 이겼어요.' : '내 왕이 제압당했어요.';
-  if (reason === 'contract') return result === 'win' ? `${filled(set, mine)} 목표를 먼저 채워 이겼어요.` : `상대가 ${filled(set, theirs)} 목표를 먼저 채웠어요.`;
+  if (reason === 'contract') return result === 'win' ? `${filled(set, mine)} 보석으로 왕관을 먼저 완성했어요.` : `상대가 ${filled(set, theirs)} 보석으로 왕관을 먼저 완성했어요.`;
   if (reason === 'limit') return result === 'win' ? `24차례가 끝났어요. ${score}로 이겼어요.` : result === 'loss' ? `24차례가 끝났어요. ${score}로 졌어요.` : `24차례가 끝났어요. ${score}로 같아 비겼어요.`;
   if (reason === 'resign') return '기권했어요.';
   if (reason === 'kings') return '왕만 남아 비겼어요.';
@@ -109,6 +124,26 @@ export function createContractHud(doc = document) {
   let rivalName = '';
 
   const el = (tag, cls, text) => { const n = doc.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+  /** 왕관 자리 둘. `paint(types)` 로 찬 만큼 칠한다 — 색 + 그 목표의 체스 기호. 새로 찬 자리는 한 번 통 튄다. */
+  const crownRow = () => {
+    const gems = Array.from({ length: CROWN_SLOTS }, () => el('span', 'ch-gem'));
+    let had = 0;
+    const paint = (types = [], pop = true) => {
+      gems.forEach((g, i) => {
+        const type = types[i] || null;
+        g.classList.toggle('full', Boolean(type));
+        g.classList.toggle('new', Boolean(type) && pop && i >= had);
+        g.textContent = type ? GLYPHS[type] : '';
+        if (type) g.style.setProperty('--gem', GEM_COLORS[type]); else g.style.removeProperty('--gem');
+      });
+      had = types.length;
+    };
+    return { gems, paint };
+  };
+  // 보석 목록이 없으면(모듈을 받기 전) 채운 목표를 세트 순서로 적는다
+  const gemTypes = (side, list) => (list ? list.map((g) => g.type) : set.goals.filter((g, i) => side.counts[i] >= g.count).map((g) => g.type)).slice(0, CROWN_SLOTS);
+  let myCrown = null;
+  let theirCrown = null;
 
   /** 새 판의 계약을 건다. 목표 칸은 `reveal(i)` 로 하나씩 드러난다(릴이 멈출 때마다). */
   const dropResult = () => { doc.getElementById('contract-result')?.remove(); ended = null; };
@@ -136,11 +171,14 @@ export function createContractHud(doc = document) {
     const box = el('div', 'contract-result');
     box.id = 'contract-result';
     const line = resultLine(set, end);
-    const gems = (n) => '◆'.repeat(n) + '◇'.repeat(Math.max(0, 2 - n));
     const score = el('div', 'cr-score');
-    for (const [who, side] of [['나', end.mine], ['상대', end.theirs]]) {
-      const part = el('span', '', `${who} `);
-      part.appendChild(el('span', 'cr-gems', gems(side.done)));
+    for (const [who, side, color] of [['내 왕관', end.mine, me], ['상대', end.theirs, me === 'w' ? 'b' : 'w']]) {
+      const part = el('span', '', who);
+      const row = crownRow();
+      row.paint(gemTypes(side, end.gems?.[color]), false);
+      const box = el('span', 'cr-gems');
+      box.append(...row.gems);
+      part.appendChild(box);
       score.appendChild(part);
     }
     const goals = el('div', 'cr-goals');
@@ -176,8 +214,14 @@ export function createContractHud(doc = document) {
     root.textContent = '';
     root.className = `on ${wide ? 'wide' : 'tall'}`;
     const head = el('div', 'ch-head');
-    head.append(el('span', '', '셋 중 둘을 먼저'), (turnsEl = el('span', 'ch-turns', '')));
-    if (rival) head.appendChild(el('span', 'ch-rival', `상대 ${rival}`));
+    myCrown = crownRow();
+    theirCrown = crownRow();
+    const mineEl = el('span', 'ch-crown', '내 왕관');
+    mineEl.append(...myCrown.gems);
+    // 상대 단계 이름(IR-1)은 상대 왕관 앞에 붙는다: 「입문 상대 ◇◇」
+    const theirsEl = el('span', 'ch-crown theirs', rival ? `${rival} 상대` : '상대');
+    theirsEl.append(...theirCrown.gems);
+    head.append(mineEl, theirsEl, (turnsEl = el('span', 'ch-turns', '')));
     rivalName = rival;
     root.appendChild(head);
     goalEls = set.goals.map((g) => {
@@ -210,10 +254,12 @@ export function createContractHud(doc = document) {
   }
 
   /** 진도와 남은 차례. `progress` 는 contractProgress, `turn` 은 지금 둘 색. */
-  function update(progress, pliesLeft, turn) {
+  function update(progress, pliesLeft, turn, gems = null) {
     if (!set || !progress) return;
     const mine = progress[me];
     const theirs = progress[me === 'w' ? 'b' : 'w'];
+    myCrown?.paint(gemTypes(mine, gems?.[me]));
+    theirCrown?.paint(gemTypes(theirs, gems?.[me === 'w' ? 'b' : 'w']));
     goalEls.forEach((g, i) => {
       g.pips.forEach((p, k) => { const full = k < mine.counts[i]; p.classList.toggle('full', full); p.textContent = full ? '✓' : ''; });
       g.dots.forEach((d, k) => d.classList.toggle('full', k < theirs.counts[i]));
@@ -223,7 +269,8 @@ export function createContractHud(doc = document) {
     const left = turnsLeftFor(pliesLeft, turn, me);
     turnsEl.textContent = `남은 차례 ${left}`;
     turnsEl.classList.toggle('low', left <= 5);
-    last = { mine: mine.counts.slice(), theirs: theirs.counts.slice(), mineDone: mine.done, theirsDone: theirs.done, turnsLeft: left };
+    last = { mine: mine.counts.slice(), theirs: theirs.counts.slice(), mineDone: mine.done, theirsDone: theirs.done, turnsLeft: left,
+      crown: { mine: myCrown.gems.map((g) => g.textContent || null), theirs: theirCrown.gems.map((g) => g.textContent || null) } };
   }
 
   function tick(dt) {

@@ -1,50 +1,50 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T18:40:50.242Z",
+ "at": "2026-11-13T03:29:22.976Z",
  "pass": 16,
  "total": 16,
  "measured": {
   "mouse": {
    "stops": [
     {
-     "t": 0.7,
-     "ms": 574
+     "t": 0.708,
+     "ms": 571
     },
     {
-     "t": 1.011,
-     "ms": 812
+     "t": 1.018,
+     "ms": 819
     },
     {
-     "t": 1.316,
-     "ms": 1118
+     "t": 1.304,
+     "ms": 1170
     }
    ],
    "maxHopSquares": 0.42,
    "callsIdle": 67,
-   "callsDuring": 77,
-   "frames": 136,
-   "skipMs": 868
+   "callsDuring": 78,
+   "frames": 143,
+   "skipMs": 873
   },
   "touch": {
    "stops": [
     {
      "t": 0.702,
-     "ms": 669
+     "ms": 577
     },
     {
-     "t": 1.007,
-     "ms": 898
+     "t": 1.001,
+     "ms": 802
     },
     {
-     "t": 1.323,
-     "ms": 1213
+     "t": 1.318,
+     "ms": 1198
     }
    ],
    "maxHopSquares": 0.42,
    "callsIdle": 65,
-   "callsDuring": 75,
-   "frames": 118,
-   "skipMs": 874
+   "callsDuring": 76,
+   "frames": 117,
+   "skipMs": 842
   }
  },
  "rows": [
@@ -76,9 +76,9 @@
    "item": "mouse 쿵·쿵·쾅 시간표",
    "want": "0.7 · 1.0 · 1.3초(±0.12)",
    "got": [
-    0.7,
-    1.011,
-    1.316
+    0.708,
+    1.018,
+    1.304
    ],
    "ok": true
   },
@@ -95,12 +95,13 @@
   },
   {
    "item": "mouse 드로우콜",
-   "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3)",
+   "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3) + 왕관 고리(1)",
    "got": {
     "idle": 67,
-    "during": 77,
-    "after": 70,
-    "tagDraws": 3
+    "during": 78,
+    "after": 71,
+    "tagDraws": 3,
+    "crownDraws": 1
    },
    "ok": true
   },
@@ -108,7 +109,7 @@
    "item": "mouse 도는 중에 수 두기",
    "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
    "got": {
-    "tBefore": 0.105,
+    "tBefore": 0.118,
     "skipped": true,
     "stopped": [
      true,
@@ -127,7 +128,7 @@
    "item": "mouse 건너뛰기",
    "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
    "got": {
-    "skipMs": 868,
+    "skipMs": 873,
     "contract": "p2nb",
     "games": 3
    },
@@ -172,8 +173,8 @@
    "want": "0.7 · 1.0 · 1.3초(±0.12)",
    "got": [
     0.702,
-    1.007,
-    1.323
+    1.001,
+    1.318
    ],
    "ok": true
   },
@@ -190,12 +191,13 @@
   },
   {
    "item": "touch 드로우콜",
-   "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3)",
+   "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3) + 왕관 고리(1)",
    "got": {
     "idle": 65,
-    "during": 75,
-    "after": 68,
-    "tagDraws": 3
+    "during": 76,
+    "after": 69,
+    "tagDraws": 3,
+    "crownDraws": 1
    },
    "ok": true
   },
@@ -203,7 +205,7 @@
    "item": "touch 도는 중에 수 두기",
    "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
    "got": {
-    "tBefore": 0.124,
+    "tBefore": 0.12,
     "skipped": true,
     "stopped": [
      true,
@@ -222,7 +224,7 @@
    "item": "touch 건너뛰기",
    "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
    "got": {
-    "skipMs": 874,
+    "skipMs": 842,
     "contract": "p2nb",
     "games": 3
    },

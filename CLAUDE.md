@@ -30,7 +30,7 @@
 
 ```bash
 npm run dev        # Vite, 3000 포트 (.claude/launch.json 의 dev)
-npm test           # 빠른 테스트 319개, 약 10초
+npm test           # 빠른 테스트 322개, 약 10초
 npm run test:slow  # 300판 시뮬 1개, 약 150초 (CI 에서 돈다)
 npm run build      # vite build → dist/
 npm run lint       # tsc --noEmit, 오류 0 (CI 포함)

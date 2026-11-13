@@ -166,13 +166,13 @@ test('끝난 까닭은 내 쪽에서 본 한 문장이고, 실제로 채운 목�
   const set = contractById('p2nb');
   const side = (counts) => ({ counts, done: counts.filter((n, i) => n >= set.goals[i].count).length });
   const line = (reason, result, mine, theirs) => resultLine(set, { reason, result, mine: side(mine), theirs: side(theirs) });
-  assert.equal(line('contract', 'win', [2, 1, 0], [1, 0, 1]), '미어캣 ×2 · 캥거루 목표를 먼저 채워 이겼어요.');
-  assert.equal(line('contract', 'loss', [1, 0, 1], [0, 1, 1]), '상대가 캥거루 · 판다 목표를 먼저 채웠어요.');
+  assert.equal(line('contract', 'win', [2, 1, 0], [1, 0, 1]), '미어캣 ×2 · 캥거루 보석으로 왕관을 먼저 완성했어요.');
+  assert.equal(line('contract', 'loss', [1, 0, 1], [0, 1, 1]), '상대가 캥거루 · 판다 보석으로 왕관을 먼저 완성했어요.');
   assert.equal(line('checkmate', 'win', [0, 0, 0], [0, 1, 0]), '상대 왕을 제압해 이겼어요.');
   assert.equal(line('checkmate', 'loss', [2, 0, 0], [0, 0, 0]), '내 왕이 제압당했어요.');
-  assert.equal(line('limit', 'win', [2, 0, 0], [1, 0, 0]), '24차례가 끝났어요. 채운 목표 1 대 0으로 이겼어요.');
-  assert.equal(line('limit', 'loss', [0, 0, 0], [0, 1, 0]), '24차례가 끝났어요. 채운 목표 0 대 1로 졌어요.');
-  assert.equal(line('limit', 'draw', [0, 1, 0], [0, 0, 1]), '24차례가 끝났어요. 채운 목표 1 대 1로 같아 비겼어요.');
+  assert.equal(line('limit', 'win', [2, 0, 0], [1, 0, 0]), '24차례가 끝났어요. 보석 1 대 0으로 이겼어요.');
+  assert.equal(line('limit', 'loss', [0, 0, 0], [0, 1, 0]), '24차례가 끝났어요. 보석 0 대 1로 졌어요.');
+  assert.equal(line('limit', 'draw', [0, 1, 0], [0, 0, 1]), '24차례가 끝났어요. 보석 1 대 1로 같아 비겼어요.');
   assert.equal(line('resign', 'loss', [0, 0, 0], [0, 0, 0]), '기권했어요.');
   for (const reason of ['kings', 'stalemate', 'threefold', 'fifty', 'other']) assert.match(line(reason, 'draw', [0, 0, 0], [0, 0, 0]), /비겼어요\.$/);
 });
