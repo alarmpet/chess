@@ -30,7 +30,7 @@
 
 ```bash
 npm run dev        # Vite, 3000 포트 (.claude/launch.json 의 dev)
-npm test           # 빠른 테스트 134개, 약 10초
+npm test           # 빠른 테스트 319개, 약 10초
 npm run test:slow  # 300판 시뮬 1개, 약 150초 (CI 에서 돈다)
 npm run build      # vite build → dist/
 npm run lint       # tsc --noEmit, 오류 0 (CI 포함)
@@ -59,4 +59,4 @@ npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·�
 
 ## 저장 키
 
-`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · `wildcrown.identity.v1`(기기 익명 서명 키, 랭크) · `wildcrown.skill.v1`(AI 판 실력 점수·단계, DR-M1) · `wildcrown.contract.v1`(계약전 전용 기록, 시험 스위치 `?lab=contract`, SC-1) · 마을·카드·설정 스토어. 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.
+`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · `wildcrown.identity.v1`(기기 익명 서명 키, 랭크) · `wildcrown.skill.v1`(AI 판 실력 점수·단계, DR-M1) · `wildcrown.contract.v1`(계약전 전용 기록과 상대 사다리 `rung`, 시험 스위치 `?lab=contract`, SC-1·IR-1) · 마을·카드·설정 스토어. 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.

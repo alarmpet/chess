@@ -13,7 +13,8 @@ import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
 import { SIGNATURE_WORD, createSignatureFx } from './fx/signatureFx.js';
 import { contractById, contractProgress, contractStage, openGoals, pickContract } from './rules/contractSets.js';
-import { CONTRACT_PLY_LIMIT, CONTRACT_STORE_KEY, addContractResult, contractAiState, contractVerdict, sanitizeContractStore } from './rules/contractGame.js';
+import { CONTRACT_PLY_LIMIT, CONTRACT_STORE_KEY, RUNG_FULL, RUNG_NAMES, addContractResult, contractAiState, contractVerdict, sanitizeContractStore } from './rules/contractGame.js';
+import { dangerSquares, finishersAt, oopsCheck } from './rules/contractGuard.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
 import { createContactShadows } from './fx/contactShadows.js';
 import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
@@ -959,7 +960,9 @@ export function initWizardChess() {
         // 계약전(SC-1): 결과를 전용 기록에만 남긴다. 일반 판의 실력 점수·카드·마을 정산(gamefinished)에는 섞지 않는다(§3.1).
         const reason = extra.reason || (extra.resigned ? 'resign' : 'other');
         const plies = referee.history().length;
+        const rungBefore = contractStore.rung;
         contractStore = addContractResult(contractStore, { set: contract.id, result, reason, plies });
+        rungNote = contractStore.rung > rungBefore ? `다음 상대는 한 단계 위 「${RUNG_NAMES[contractStore.rung]}」이에요.` : contractStore.rung < rungBefore ? `다음 상대는 「${RUNG_NAMES[contractStore.rung]}」로 내려와요.` : '';
         try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* 저장이 막히면 기록만 잃는다 */ }
         lastContractEnd = { gameId, set: contract.id, result, reason, plies };
         try { window.dispatchEvent(new CustomEvent('contractfinished', { detail: { ...lastContractEnd, color: playerColor, w: contractState?.w, b: contractState?.b } })); } catch (e) {}
@@ -1055,6 +1058,16 @@ export function initWizardChess() {
     let hudDirty = false;
     let contractPliesLeft = CONTRACT_PLY_LIMIT;
     let lastContractEnd = null;
+    let hudWide = null;
+    let hudEnded = false;
+    // IR-1 「지기 전에 보인다」: 상대가 계약을 아는 정도(사다리), 금빛 결정타·위험 방패가 붙을 말, 아차 방지의 마지막 경고.
+    let contractRung = RUNG_FULL;
+    let rungNote = '';
+    const contractGold = new Set();     // 지금 내가 잡으면 계약이 완성되는 상대 말
+    const contractDanger = new Set();   // 상대가 한 수로 계약을 완성할 수 있는 내 말
+    let oopsKey = '';                   // 한 번 경고한 수 — 같은 수를 다시 누르면 그대로 둔다
+    const oopsStats = { warned: 0, played: 0, last: null, game: 0, inGame: 0 };
+    const sqName = (r, c) => 'abcdefgh'[c] + (8 - r);
     let contractStore = (() => {
       try { return sanitizeContractStore(JSON.parse(window.localStorage.getItem(CONTRACT_STORE_KEY) || 'null')); } catch (e) { return sanitizeContractStore(null); }
     })();
@@ -2121,6 +2134,8 @@ let engineStarted = false;
     function refreshContract(announce = true) {
       contractSig = `${gameId}:${moveHistory.length}`;
       contractHot.clear();
+      contractGold.clear();
+      contractDanger.clear();
       if (!contract) { contractState = null; contractStageNow = 'open'; return; }
       const played = referee.history();
       contractState = contractProgress(contract, played);
@@ -2131,6 +2146,14 @@ let engineStarted = false;
           const { r, c } = squareRC(sq);
           if (boardState[r]?.[c]) contractHot.add(boardState[r][c]);
         }
+      }
+      // 금빛 결정타 · 위험 방패: 내 차례에만, 심판이 센 합법 수로만.
+      if ((playerColor === 'w' || playerColor === 'b') && referee.turn() === playerColor && !contractState.winner && !gameOver) {
+        const pieceAt = (sq) => { const { r, c } = squareRC(sq); return boardState[r]?.[c] || null; };
+        try {
+          for (const m of finishersAt(referee.fen(), contract, contractState)) { const p = pieceAt(m.target); if (p) contractGold.add(p); }
+          for (const sq of dangerSquares(referee.fen(), contract, contractState)) { const p = pieceAt(sq); if (p) contractDanger.add(p); }
+        } catch (e) { /* 표시만 잃는다 */ }
       }
       const stage = contractStage(contractState);
       if (stage === contractStageNow) return;
@@ -2176,10 +2199,13 @@ let engineStarted = false;
         if (hudGame) { contractHud.hide(); hudGame = 0; hudSet = null; }
         return;
       }
+      const wide = camera.aspect > 1.05;
       if (hudGame !== gameId || hudSet !== contract) {
-        contractHud.show(contract, playerColor, camera.aspect > 1.05);
+        contractHud.show(contract, playerColor, wide, RUNG_NAMES[contractRung]);
         hudGame = gameId;
         hudSet = contract;
+        hudWide = wide;
+        hudEnded = false;
         hudShown = [false, false, false];
         hudDirty = true;
       }
@@ -2191,9 +2217,19 @@ let engineStarted = false;
           if (hudShown.every(Boolean) && contractStore.games < 3 && !moveHistory.length) contractHud.hint();
         }
       }
+      if (hudWide !== wide) { hudWide = wide; contractHud.layout(wide); }
       if (hudDirty && contractState) {
         contractHud.update(contractState, contractPliesLeft, currentTurn);
         hudDirty = false;
+      }
+      // 판이 끝나면 HUD 를 접고 종료 배너 안에 까닭과 최종 진도를 넣는다(IR-0). 되돌리면 다시 편다.
+      const ended = Boolean(gameOver && lastContractEnd && lastContractEnd.gameId === gameId && contractState);
+      if (ended !== hudEnded) {
+        hudEnded = ended;
+        if (ended) {
+          const me = playerColor === 'b' ? 'b' : 'w';
+          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote });
+        } else contractHud.resume(wide);
       }
       contractHud.tick(dt);
     }
@@ -2219,9 +2255,16 @@ let engineStarted = false;
               if (!p?.mesh || p.color !== enemy || p.rig === 'statue') continue;
               const g = open.find((o) => REEL_TYPE[o.type] === p.type);
               if (!g) continue;
-              tagItems.push({ id: p.mesh.id, slot: g.index, type: g.type, x: p.mesh.position.x, y: p.mesh.position.y + (PIECE_HEIGHTS[p.type] || 0.45) + BOARD_SQ_SIZE * 0.1, z: p.mesh.position.z, hot: contractHot.has(p) });
+              const gold = contractGold.has(p);
+              tagItems.push({ id: p.mesh.id, slot: gold ? 3 : g.index, type: gold ? 'gold' : g.type, x: p.mesh.position.x, y: p.mesh.position.y + (PIECE_HEIGHTS[p.type] || 0.45) + BOARD_SQ_SIZE * 0.1, z: p.mesh.position.z, hot: gold || contractHot.has(p) });
             }
           }
+        }
+      }
+      if (contract && !gameOver) {
+        for (const p of contractDanger) {
+          if (!p?.mesh || p.rig === 'statue') continue;
+          tagItems.push({ id: p.mesh.id, slot: 4, type: 'shield', x: p.mesh.position.x, y: p.mesh.position.y + (PIECE_HEIGHTS[p.type] || 0.45) + BOARD_SQ_SIZE * 0.1, z: p.mesh.position.z, hot: false });
         }
       }
       if (!bountyTags) return;
@@ -3165,6 +3208,9 @@ let engineStarted = false;
       const contractGame = contractLab && announce && gameMode === 'single' && !scriptedGameActive && (playerColor === 'w' || playerColor === 'b');
       contract = contractGame ? pickContract(Math.random(), contractStore.games) : null;
       if (contract) contractGames += 1;
+      contractRung = contractStore.rung;
+      rungNote = '';
+      oopsKey = '';
       contractState = null;
       contractStageNow = 'open';
       contractRevealed = [false, false, false];
@@ -3432,6 +3478,8 @@ let engineStarted = false;
       moveHistory = back.before.map(takebackEntry);
       // 계약전을 이어 한다: 같은 세트, 진도는 수에서 다시 센다. 릴은 다시 돌지 않고 목표는 바로 다 보인다.
       contract = contractLab && record.contract ? contractById(record.contract) : null;
+      contractRung = contractStore.rung;
+      oopsKey = '';
       reelPendingFor = 0;
       finalPointShown = false;
       lastContractEnd = null;
@@ -3681,6 +3729,38 @@ let engineStarted = false;
       // Strictly forbid friendly fire (a piece can never move onto or attack a piece of the same color)
       if (targetOnDest && targetOnDest.color === piece.color) {
         return false;
+      }
+
+      // 아차 방지(IR-1): 이 수 뒤에 상대가 한 수로 계약을 완성할 수 있고 그걸 막는 다른 수가 있으면, 놓기 전에 한 번 알린다.
+      // 같은 수를 다시 고르면 그대로 둔다. 입문·초급 상대에서만 — 정식 상대는 스스로 본다.
+      if (contract && contractRung < RUNG_FULL && contractState && gameMode === 'single' && !scriptedGameActive && !options.fromRemote && !options.fromAi && !options.fromScript && piece.color === playerColor) {
+        const key = `${gameId}:${referee.history().length}:${fromR}${fromC}:${toR}${toC}:${options.promotion || ''}`;
+        if (key === oopsKey) { oopsStats.played += 1; oopsKey = ''; }
+        else {
+          let check = null;
+          try {
+            const played = referee.history();
+            const promo = options.promotion ? { queen: 'q', rook: 'r', bishop: 'b', knight: 'n' }[options.promotion] : (piece.type === 'pawn' && (toR === 0 || toR === 7) ? 'q' : undefined);
+            check = oopsCheck(referee.fen(), contract, { from: sqName(fromR, fromC), to: sqName(toR, toC), promotion: promo }, (m) => contractProgress(contract, [...played, m]));
+          } catch (e) { check = null; }
+          if (check?.oops && check.avoidable && oopsStats.game === gameId && oopsStats.inGame >= 3) check = null;   // 한 판에 세 번까지만 — 잔소리가 되지 않게
+          if (check?.oops && check.avoidable) {
+            if (oopsStats.game !== gameId) { oopsStats.game = gameId; oopsStats.inGame = 0; }
+            oopsStats.inGame += 1;
+            oopsKey = key;
+            oopsStats.warned += 1;
+            oopsStats.last = { from: sqName(fromR, fromC), to: sqName(toR, toC), threats: check.threats.map((t) => t.san) };
+            contractDanger.clear();
+            for (const t of check.threats) {
+              const at = t.target === sqName(toR, toC) ? piece : (() => { const { r, c } = squareRC(t.target); return boardState[r]?.[c]; })();
+              if (at && at.color === playerColor) contractDanger.add(at);
+            }
+            sfx.play('heartBeat', 0, 0.9);
+            window.dispatchEvent(new CustomEvent('gamenote', { detail: { ko: '이렇게 두면 상대가 다음 수에 목표를 다 채워요. 그래도 두려면 한 번 더.', en: 'This lets your opponent finish next move. Tap again to play it anyway.', ms: 4200 } }));
+            return false;
+          }
+          oopsKey = '';
+        }
       }
 
       // 손과 뇌: 클릭 말고 다른 길(디버그 API·승급 고르기 뒤 호출)로도 부르지 않은 종류는 둘 수 없다(CO-1).
@@ -4469,7 +4549,8 @@ let engineStarted = false;
       const level = rival ? rival.search || (rival.mistake >= 0.3 ? 'easy' : 'normal') : freePlay.search;
       const history = referee.history().map((m) => positionKey(m.after));
       // 계약전(SC-1): AI 도 같은 게임을 안다 — 양쪽 진도와 남은 차례를 함께 넘긴다.
-      const contractOpt = contract ? contractAiState(contract, referee.history()) : undefined;
+      // IR-1: 상대는 사다리 칸만큼만 계약을 안다 — 입문은 모르고, 초급은 제 목표만 노린다.
+      const contractOpt = contract ? contractAiState(contract, referee.history(), undefined, contractRung, color) : undefined;
       return { fen: referee.fen(), opts: { level, history, slip: rival ? rival.mistake : freePlay.mistake, blind: rival ? 0 : freePlay.blind, contract: contractOpt } };
     }
     function engineMoveOf(pick) {
@@ -4530,7 +4611,7 @@ let engineStarted = false;
       if (gameOver || isAnimatingMove || gameId !== asked.gameId || currentTurn !== asked.color || referee.fen() !== asked.fen) return;
       const chosen = engineMoveOf(move);
       if (!chosen) return;
-      executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion });
+      executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion, fromAi: true });
     }
 
     function triggerAIMoveNow() {
@@ -4547,7 +4628,7 @@ let engineStarted = false;
       }
       const chosen = chooseSmartAIMove(currentTurn);
       if (!chosen) return false;
-      return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion });
+      return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion, fromAi: true });
     }
 
     // ── DR-2a 미리 두기(premove) 1수 ──────────────────────────────────────────────────────────────────────────
@@ -6349,7 +6430,8 @@ let engineStarted = false;
         dropAiThought();
       }
       gameOver = true;
-      showDrawBanner(getCurrentLang() === 'en' ? 'You resigned. Your cards are in.' : '기권했어요. 이번 판 카드는 받았어요.');
+      // 계약전은 카드를 주지 않는다 — 「카드는 받았어요」는 일반 판에서만 참이다(IR-0)
+      showDrawBanner(contract ? '' : getCurrentLang() === 'en' ? 'You resigned. Your cards are in.' : '기권했어요. 이번 판 카드는 받았어요.');
       document.getElementById('checkmate-crown').textContent = '🏳️';
       document.getElementById('checkmate-title').textContent = getCurrentLang() === 'en' ? 'Game over' : '대국 끝';
       reportGameEnd('loss', { resigned: true });
@@ -6697,10 +6779,11 @@ let engineStarted = false;
         set: contract ? contract.id : null, pliesLeft: contractPliesLeft, gameOver, end: lastContractEnd && { ...lastContractEnd },
         store: { games: contractStore.games, win: contractStore.win, loss: contractStore.loss, draw: contractStore.draw },
         hud: contractHud ? contractHud.state() : null,
-        aiContract: contract ? contractAiState(contract, referee.history()) : null,
+        aiContract: contract ? contractAiState(contract, referee.history(), undefined, contractRung, playerColor === 'w' ? 'b' : 'w') || null : null,
+        rung: contractRung, rungName: RUNG_NAMES[contractRung], storeRung: contractStore.rung, goldPieces: contractGold.size, dangerPieces: contractDanger.size, oops: { ...oopsStats },
         progress: contractState && { w: contractState.w, b: contractState.b, winner: contractState.winner, matchPoint: contractState.matchPoint },
         seaTime: +seaTime.toFixed(3), shallow: seaBiome?.ocean ? seaBiome.ocean.water.uShallow.value.getHexString() : null, zenith: seaBiome?.ocean?.sky ? seaBiome.ocean.sky.uZenith.value.getHexString() : null,
-        ...(bountyTags ? bountyTags.state() : { tags: 0, hot: 0, halos: 0, draws: 0, types: [] })
+        ...(bountyTags ? bountyTags.state() : { tags: 0, hot: 0, halos: 0, gold: 0, shield: 0, draws: 0, types: [] })
       }),
       debugReel: () => ({ lab: contractLab, contract: contract && contract.id, games: contractGames, hops: reelHops.length, pending: reelPendingFor !== 0, loaded: Boolean(shellReel), ...(shellReel ? shellReel.state() : { active: false, plays: 0, stopped: [], goals: [] }) }),
       // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.

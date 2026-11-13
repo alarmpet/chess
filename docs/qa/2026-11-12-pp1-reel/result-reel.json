@@ -1,50 +1,50 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T17:27:39.369Z",
+ "at": "2026-11-12T18:40:50.242Z",
  "pass": 16,
  "total": 16,
  "measured": {
   "mouse": {
    "stops": [
     {
-     "t": 0.718,
-     "ms": 587
+     "t": 0.7,
+     "ms": 574
     },
     {
-     "t": 1.006,
-     "ms": 806
+     "t": 1.011,
+     "ms": 812
     },
     {
-     "t": 1.306,
-     "ms": 1106
+     "t": 1.316,
+     "ms": 1118
     }
    ],
    "maxHopSquares": 0.42,
    "callsIdle": 67,
    "callsDuring": 77,
-   "frames": 121,
-   "skipMs": 867
+   "frames": 136,
+   "skipMs": 868
   },
   "touch": {
    "stops": [
     {
-     "t": 0.717,
-     "ms": 602
+     "t": 0.702,
+     "ms": 669
     },
     {
-     "t": 1.024,
-     "ms": 828
+     "t": 1.007,
+     "ms": 898
     },
     {
-     "t": 1.303,
-     "ms": 1107
+     "t": 1.323,
+     "ms": 1213
     }
    ],
    "maxHopSquares": 0.42,
    "callsIdle": 65,
    "callsDuring": 75,
-   "frames": 104,
-   "skipMs": 867
+   "frames": 118,
+   "skipMs": 874
   }
  },
  "rows": [
@@ -76,9 +76,9 @@
    "item": "mouse 쿵·쿵·쾅 시간표",
    "want": "0.7 · 1.0 · 1.3초(±0.12)",
    "got": [
-    0.718,
-    1.006,
-    1.306
+    0.7,
+    1.011,
+    1.316
    ],
    "ok": true
   },
@@ -108,7 +108,7 @@
    "item": "mouse 도는 중에 수 두기",
    "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
    "got": {
-    "tBefore": 0.116,
+    "tBefore": 0.105,
     "skipped": true,
     "stopped": [
      true,
@@ -127,7 +127,7 @@
    "item": "mouse 건너뛰기",
    "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
    "got": {
-    "skipMs": 867,
+    "skipMs": 868,
     "contract": "p2nb",
     "games": 3
    },
@@ -171,9 +171,9 @@
    "item": "touch 쿵·쿵·쾅 시간표",
    "want": "0.7 · 1.0 · 1.3초(±0.12)",
    "got": [
-    0.717,
-    1.024,
-    1.303
+    0.702,
+    1.007,
+    1.323
    ],
    "ok": true
   },
@@ -203,7 +203,7 @@
    "item": "touch 도는 중에 수 두기",
    "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
    "got": {
-    "tBefore": 0.128,
+    "tBefore": 0.124,
     "skipped": true,
     "stopped": [
      true,
@@ -222,7 +222,7 @@
    "item": "touch 건너뛰기",
    "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
    "got": {
-    "skipMs": 867,
+    "skipMs": 874,
     "contract": "p2nb",
     "games": 3
    },

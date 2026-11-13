@@ -83,7 +83,8 @@ export function evaluate(chess) {
 // ── 계약전(슬롯 체스 계획서 §3.3, SC-1) ─────────────────────────────────────────────────────────────
 // 계약이 걸린 판에서는 같은 국면이라도 지난 포획에 따라 다른 게임이다. 그래서 탐색이 수를 놓고 무를 때마다
 // 양쪽 진도와 남은 차례를 함께 놓고 무른다. `ctx` 가 null 이면(일반 판) 아래 함수들은 예전과 똑같이 움직인다.
-//   ctx = { goals:[{type,count}], need, counts:{w:[],b:[]}, done:{w,b}, left, index:{p:0,…}, undo:[] }
+//   ctx = { goals:[{type,count}], need, counts:{w:[],b:[]}, done:{w,b}, left, index:{p:0,…}, undo:[], only }
+//   `only`(색)가 있으면 그 색의 목표만 센다 — 「노리기만 하고 지키지 않는」 초급 상대(IR-1).
 let ctx = null;
 const GOAL_VALUE = 300;        // 목표 하나를 다 채운 값(작은 말 하나쯤). 채우는 중이면 비례
 const MATCH_POINT_VALUE = 150; // 하나만 남긴 쪽의 덤 — 남은 표적을 지키고 노리게 한다
@@ -93,7 +94,7 @@ function contractContext(c) {
   c.goals.forEach((g, i) => { index[g.type] = i; });
   const doneOf = (side) => c.goals.reduce((n, g, i) => n + ((c.counts[side]?.[i] || 0) >= g.count ? 1 : 0), 0);
   return {
-    goals: c.goals, need: c.need || 2, index, undo: [],
+    goals: c.goals, need: c.need || 2, index, undo: [], only: c.only === 'w' || c.only === 'b' ? c.only : null,
     counts: { w: c.goals.map((_, i) => c.counts.w?.[i] || 0), b: c.goals.map((_, i) => c.counts.b?.[i] || 0) },
     done: { w: doneOf('w'), b: doneOf('b') },
     left: Number.isFinite(c.left) ? c.left : Infinity
@@ -101,7 +102,7 @@ function contractContext(c) {
 }
 /** 이 수가 둔 쪽의 계약을 완성하는가(= 판이 끝나는 잡기). */
 function completesContract(m) {
-  if (!ctx || !m.captured) return false;
+  if (!ctx || !m.captured || (ctx.only && m.color !== ctx.only)) return false;
   const gi = ctx.index[m.captured];
   if (gi === undefined) return false;
   const have = ctx.counts[m.color][gi];
@@ -113,7 +114,7 @@ function make(chess, m) {
   if (!ctx) return false;
   let gi = -1;
   let filled = 0;
-  if (m.captured) {
+  if (m.captured && (!ctx.only || m.color === ctx.only)) {
     const at = ctx.index[m.captured];
     if (at !== undefined && ctx.counts[m.color][at] < ctx.goals[at].count) {
       gi = at;
@@ -138,6 +139,7 @@ function unmake(chess) {
   }
 }
 function contractValue(side) {
+  if (ctx.only && side !== ctx.only) return 0;
   let v = 0;
   for (let i = 0; i < ctx.goals.length; i++) v += (ctx.counts[side][i] / ctx.goals[i].count) * GOAL_VALUE;
   return v + (ctx.done[side] >= ctx.need - 1 ? MATCH_POINT_VALUE : 0);

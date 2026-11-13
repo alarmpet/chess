@@ -1,5 +1,5 @@
 {
- "at": "2026-11-12T17:25:27.909Z",
+ "at": "2026-11-12T18:45:17.096Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
@@ -50,9 +50,9 @@
     ],
     "rect": {
      "x": 14,
-     "y": 122,
+     "y": 113,
      "w": 132,
-     "h": 302
+     "h": 320
     },
     "vw": {
      "w": 944,
@@ -69,7 +69,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    },
    "ok": true
@@ -141,7 +143,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    },
    "ok": true
@@ -171,6 +175,9 @@
     ]
    ],
    "hud": {
+    "ended": null,
+    "rival": "정식",
+    "resultIn": false,
     "on": true,
     "layout": "wide",
     "shown": [
@@ -194,9 +201,9 @@
     "turnsLeft": 22,
     "rect": {
      "x": 14,
-     "y": 122,
+     "y": 113,
      "w": 132,
-     "h": 302
+     "h": 320
     }
    },
    "tags": {
@@ -204,7 +211,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    }
   },
@@ -231,6 +240,9 @@
     ]
    ],
    "hud": {
+    "ended": null,
+    "rival": "정식",
+    "resultIn": false,
     "on": true,
     "layout": "tall",
     "shown": [
@@ -264,7 +276,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    }
   }

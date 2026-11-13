@@ -1,38 +1,38 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T17:31:02.696Z",
+ "at": "2026-11-12T18:43:49.679Z",
  "pass": 19,
  "total": 19,
  "measured": {
   "fullGame": {
-   "seconds": 25,
-   "plies": 18,
+   "seconds": 26,
+   "plies": 19,
    "end": {
-    "gameId": 3503172456,
+    "gameId": 3507564729,
     "set": "p2nb",
-    "result": "loss",
+    "result": "win",
     "reason": "contract",
-    "plies": 18
+    "plies": 19
    },
    "progress": {
     "w": {
      "counts": [
+      2,
       0,
-      1,
-      0
+      1
      ],
-     "done": 1
+     "done": 2
     },
     "b": {
      "counts": [
       1,
-      1,
-      1
+      0,
+      0
      ],
-     "done": 2
+     "done": 0
     }
    },
-   "maxCalls": 80
+   "maxCalls": 78
   }
  },
  "rows": [
@@ -50,6 +50,9 @@
    "item": "mouse HUD",
    "want": "세 칸 다 드러남 · 규칙 한 줄 · 남은 차례 24 · 가로(wide) · 화면 안",
    "got": {
+    "ended": null,
+    "rival": "정식",
+    "resultIn": false,
     "on": true,
     "layout": "wide",
     "shown": [
@@ -73,9 +76,9 @@
     "turnsLeft": 24,
     "rect": {
      "x": 14,
-     "y": 122,
+     "y": 113,
      "w": 132,
-     "h": 302
+     "h": 320
     }
    },
    "ok": true
@@ -98,7 +101,7 @@
     ],
     "stage": "finalPoint",
     "turnsLeft": 18,
-    "tags": 9
+    "tags": 10
    },
    "ok": true
   },
@@ -124,7 +127,7 @@
    "got": {
     "visible": true,
     "title": "계약 완성",
-    "sub": "백 계약 완성 — 목표 둘을 먼저 채웠습니다",
+    "sub": "",
     "turn": "백 계약 완성"
    },
    "ok": true
@@ -190,7 +193,7 @@
      1
     ],
     "reply": [
-     "Nc6"
+     "Nf6"
     ],
     "took": true,
     "back": [
@@ -223,24 +226,24 @@
    "want": "AI 대 AI 로 48반수 안에 종료 · 사유 기록 · 전용 기록 1판 · 배너 · 드로우콜 ≤ 100",
    "got": {
     "over": true,
-    "plies": 18,
+    "plies": 19,
     "end": {
-     "gameId": 3503172456,
+     "gameId": 3507564729,
      "set": "p2nb",
-     "result": "loss",
+     "result": "win",
      "reason": "contract",
-     "plies": 18
+     "plies": 19
     },
     "store": {
      "games": 1,
-     "win": 0,
-     "loss": 1,
+     "win": 1,
+     "loss": 0,
      "draw": 0
     },
     "game": 0,
     "contract": 1,
     "bannerOn": true,
-    "maxCalls": 80
+    "maxCalls": 78
    },
    "ok": true
   },
@@ -258,6 +261,9 @@
    "item": "touch HUD",
    "want": "세 칸 다 드러남 · 규칙 한 줄 · 남은 차례 24 · 세로(tall) · 화면 안",
    "got": {
+    "ended": null,
+    "rival": "정식",
+    "resultIn": false,
     "on": true,
     "layout": "tall",
     "shown": [
@@ -306,7 +312,7 @@
     ],
     "stage": "finalPoint",
     "turnsLeft": 18,
-    "tags": 9
+    "tags": 10
    },
    "ok": true
   },
@@ -332,7 +338,7 @@
    "got": {
     "visible": true,
     "title": "계약 완성",
-    "sub": "백 계약 완성 — 목표 둘을 먼저 채웠습니다",
+    "sub": "",
     "turn": "백 계약 완성"
    },
    "ok": true
@@ -398,7 +404,7 @@
      1
     ],
     "reply": [
-     "Nc6"
+     "Nd7"
     ],
     "took": true,
     "back": [

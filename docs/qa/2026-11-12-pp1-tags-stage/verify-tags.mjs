@@ -63,6 +63,7 @@ for (const [port, name, phone] of [[9488, 'mouse', false], [9489, 'touch', true]
     await ev(`(() => { localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 }));
       localStorage.setItem('wildcrown.fx.v1', JSON.stringify({ shake: true, quick: false, cards: false, dive: false, quests: false, blitz: false }));
       localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null }));
+      localStorage.setItem('wildcrown.contract.v1', JSON.stringify({ v: 1, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: 2, lossRun: 0 }));   // IR-1 뒤: 상대는 「정식」으로 고정
       localStorage.setItem('wildcrown.resume.v1', ${JSON.stringify(JSON.stringify({ v: 1, gameId: 777, color: 'w', rivalId: null, moves }))}); return 1; })()`);
     await send('Page.navigate', { url: BASE + '?lab=contract' });
     await sleep(1500);
@@ -89,7 +90,7 @@ for (const [port, name, phone] of [[9488, 'mouse', false], [9489, 'touch', true]
   const aCalls = await calls();
   await shot(`tags-open-${name}.jpg`);
   check(`${name} 릴 전에는 딱지 없음`, '딱지 0 · 막 open', { tags: before.tags, stage: before.stage }, before.tags === 0 && before.stage === 'open');
-  check(`${name} 공개 뒤 딱지`, '흑 폰 8 + 나이트 2 + 비숍 2 = 12 · 종류 p·n·b', { tags: a.tags, types: a.types }, a.tags === 12 && a.types.join() === 'p,n,b');
+  check(`${name} 공개 뒤 딱지`, '흑 폰 8 + 나이트 2 + 비숍 2 = 12 · 종류 p·n·b', { tags: a.tags, types: a.types }, a.tags === 12 && a.types.slice(0, 3).join() === 'p,n,b');   // 자리 3·4 는 금빛 결정타·위험 방패(IR-1)
   check(`${name} 노림 불빛`, '내가 공격 중인 셋(b5 비숍 → c6 나이트·a6 폰, f3 나이트 → e5 폰)만 흔들림 · 빛 없음', { hot: a.hot, halos: a.halos, stage: a.stage, mix: a.mix }, a.hot === 3 && a.halos === 0 && a.stage === 'open' && a.mix === 0);
   check(`${name} 딱지 드로우콜`, '딱지가 그리는 메시 3(종류마다 하나) · 전체 ≤ 100', { draws: a.draws, idle: idleCalls, calls: aCalls }, a.draws === 3 && aCalls <= 100);
   const zenithBase = a.zenith;

@@ -1,0 +1,252 @@
+{
+ "at": "2026-11-12T18:23:37.233Z",
+ "base": "http://localhost:4173/",
+ "rows": [
+  {
+   "item": "mouse 복귀 알림",
+   "want": "알림 줄과 HUD 가 둘 다 보이고 겹치지 않는다",
+   "got": {
+    "note": {
+     "x": 160,
+     "y": 100,
+     "w": 176,
+     "h": 33
+    },
+    "hud": {
+     "x": 14,
+     "y": 122,
+     "w": 132,
+     "h": 302
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 계약 승리 화면",
+   "want": "HUD 접힘 · 배너 안에 결과 · 화면 안 · 「미어캣 ×2 · 판다 목표를 먼저 채워 이겼어요.」 · 보조 글자 비움",
+   "got": {
+    "hud": null,
+    "banner": {
+     "x": 287,
+     "y": 118,
+     "w": 370,
+     "h": 274
+    },
+    "result": {
+     "x": 318,
+     "y": 236,
+     "w": 308,
+     "h": 91
+    },
+    "line": "미어캣 ×2 · 판다 목표를 먼저 채워 이겼어요.",
+    "sub": "",
+    "title": "계약 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 새 게임",
+   "want": "결과 없음 · HUD 다시 보임 · 배너 닫힘",
+   "got": {
+    "result": null,
+    "hud": {
+     "x": 14,
+     "y": 122,
+     "w": 132,
+     "h": 302
+    },
+    "visible": false
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 계약 패배 화면",
+   "want": "HUD 접힘 · 배너 안에 결과 · 「상대가 미어캣 ×2 · 캥거루 목표를 먼저 채웠어요.」",
+   "got": {
+    "hud": null,
+    "banner": {
+     "x": 272,
+     "y": 118,
+     "w": 401,
+     "h": 274
+    },
+    "result": {
+     "x": 303,
+     "y": 236,
+     "w": 339,
+     "h": 91
+    },
+    "line": "상대가 미어캣 ×2 · 캥거루 목표를 먼저 채웠어요.",
+    "sub": ""
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 기권 화면",
+   "want": "HUD 접힘 · 「기권했어요.」 · 카드 문구 없음",
+   "got": {
+    "quit": {
+     "keeps": true,
+     "did": true
+    },
+    "hud": null,
+    "line": "기권했어요.",
+    "sub": "",
+    "title": "대국 끝"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 메이트 화면",
+   "want": "Qxf7# · 사유 checkmate(폰 하나를 잡았어도 계약이 아님) · HUD 접힘 · 「상대 왕을 제압해 이겼어요.」",
+   "got": {
+    "last": [
+     "Qxf7#"
+    ],
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "checkmate",
+     "plies": 7
+    },
+    "hud": null,
+    "line": "상대 왕을 제압해 이겼어요.",
+    "sub": "백 승리! 체크메이트로 흑의 사자가 무릎을 꿇었어요",
+    "title": "체크메이트"
+   },
+   "ok": true
+  },
+  {
+   "item": "화면 돌리기",
+   "want": "wide → tall → wide · 세로에서 화면 안",
+   "got": {
+    "before": "wide",
+    "turned": "tall",
+    "rect": {
+     "x": 8,
+     "y": 104,
+     "w": 403,
+     "h": 125
+    },
+    "backTo": "wide"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 복귀 알림",
+   "want": "알림 줄과 HUD 가 둘 다 보이고 겹치지 않는다",
+   "got": {
+    "note": {
+     "x": 16,
+     "y": 56,
+     "w": 176,
+     "h": 33
+    },
+    "hud": {
+     "x": 8,
+     "y": 104,
+     "w": 360,
+     "h": 125
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 계약 승리 화면",
+   "want": "HUD 접힘 · 배너 안에 결과 · 화면 안 · 「미어캣 ×2 · 판다 목표를 먼저 채워 이겼어요.」 · 보조 글자 비움",
+   "got": {
+    "hud": null,
+    "banner": {
+     "x": 12,
+     "y": 64,
+     "w": 351,
+     "h": 270
+    },
+    "result": {
+     "x": 33,
+     "y": 178,
+     "w": 309,
+     "h": 91
+    },
+    "line": "미어캣 ×2 · 판다 목표를 먼저 채워 이겼어요.",
+    "sub": "",
+    "title": "계약 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 새 게임",
+   "want": "결과 없음 · HUD 다시 보임 · 배너 닫힘",
+   "got": {
+    "result": null,
+    "hud": {
+     "x": 8,
+     "y": 104,
+     "w": 360,
+     "h": 125
+    },
+    "visible": false
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 계약 패배 화면",
+   "want": "HUD 접힘 · 배너 안에 결과 · 「상대가 미어캣 ×2 · 캥거루 목표를 먼저 채웠어요.」",
+   "got": {
+    "hud": null,
+    "banner": {
+     "x": 12,
+     "y": 64,
+     "w": 351,
+     "h": 291
+    },
+    "result": {
+     "x": 33,
+     "y": 178,
+     "w": 309,
+     "h": 111
+    },
+    "line": "상대가 미어캣 ×2 · 캥거루 목표를 먼저 채웠어요.",
+    "sub": ""
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 기권 화면",
+   "want": "HUD 접힘 · 「기권했어요.」 · 카드 문구 없음",
+   "got": {
+    "quit": {
+     "keeps": true,
+     "did": true
+    },
+    "hud": null,
+    "line": "기권했어요.",
+    "sub": "",
+    "title": "대국 끝"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 메이트 화면",
+   "want": "Qxf7# · 사유 checkmate(폰 하나를 잡았어도 계약이 아님) · HUD 접힘 · 「상대 왕을 제압해 이겼어요.」",
+   "got": {
+    "last": [
+     "Qxf7#"
+    ],
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "checkmate",
+     "plies": 7
+    },
+    "hud": null,
+    "line": "상대 왕을 제압해 이겼어요.",
+    "sub": "백 승리! 체크메이트로 흑의 사자가 무릎을 꿇었어요",
+    "title": "체크메이트"
+   },
+   "ok": true
+  }
+ ]
+}

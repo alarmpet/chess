@@ -30,10 +30,26 @@ export function contractVerdict(set, moves = [], standard = {}, limit = CONTRACT
   return { over: false, winner: null, reason: null, progress, pliesLeft };
 }
 
+// ── 상대가 함께 자란다(직관성 계획 §0.2 ②, IR-1): AI 가 「계약을 아는 정도」가 계약전의 첫 난이도다.
+//   0 입문 — 계약을 모른다 · 1 초급 — 제 목표를 노리기만 하고 내 표적은 지키지 않는다 · 2 정식 — 다 안다
+// 이기면 한 칸 오르고, 두 판을 내리 지면 한 칸 내려온다. 판 사이에만 바뀌고 화면에 이름으로 적는다.
+export const RUNG_NOVICE = 0;
+export const RUNG_ATTACK = 1;
+export const RUNG_FULL = 2;
+export const RUNG_NAMES = ['입문', '초급', '정식'];
+export const RUNG_DROP_AFTER = 2;
+export function nextRung(rung, lossRun, result) {
+  if (result === 'win') return { rung: Math.min(RUNG_FULL, rung + 1), lossRun: 0 };
+  if (result !== 'loss') return { rung, lossRun };
+  return lossRun + 1 >= RUNG_DROP_AFTER ? { rung: Math.max(RUNG_NOVICE, rung - 1), lossRun: 0 } : { rung, lossRun: lossRun + 1 };
+}
+
 /** AI 에게 넘기는 계약 상태(평범한 데이터 — 작업자 스레드로 건너간다). */
-export function contractAiState(set, moves = [], limit = CONTRACT_PLY_LIMIT) {
+export function contractAiState(set, moves = [], limit = CONTRACT_PLY_LIMIT, rung = RUNG_FULL, aiColor = null) {
+  if (rung <= RUNG_NOVICE) return undefined;   // 입문: 상대는 계약을 모른다 — 일반 체스처럼 둔다
   const progress = contractProgress(set, moves);
   return {
+    ...(rung === RUNG_ATTACK && aiColor ? { only: aiColor } : {}),
     goals: set.goals.map((g) => ({ type: g.type, count: g.count })),
     need: CONTRACT_NEED,
     counts: { w: progress.w.counts.slice(), b: progress.b.counts.slice() },
@@ -43,7 +59,7 @@ export function contractAiState(set, moves = [], limit = CONTRACT_PLY_LIMIT) {
 
 // ── 전용 기록(§3.1 「계약전과 일반 체스의 결과를 분리」). 일반 판의 실력 점수·카드·마을 정산과 섞지 않는다.
 export const CONTRACT_STORE_KEY = 'wildcrown.contract.v1';
-export const emptyContractStore = () => ({ v: 1, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null });
+export const emptyContractStore = () => ({ v: 1, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: RUNG_NOVICE, lossRun: 0 });
 
 export function sanitizeContractStore(raw) {
   const base = emptyContractStore();
@@ -52,7 +68,7 @@ export function sanitizeContractStore(raw) {
   const byReason = {};
   for (const [k, v] of Object.entries(raw.byReason || {})) if (typeof k === 'string' && k.length < 20) byReason[k] = n(v);
   const last = raw.last && contractById(raw.last.set) ? { set: raw.last.set, result: String(raw.last.result), reason: String(raw.last.reason), plies: n(raw.last.plies) } : null;
-  return { v: 1, games: n(raw.games), win: n(raw.win), loss: n(raw.loss), draw: n(raw.draw), byReason, last };
+  return { v: 1, games: n(raw.games), win: n(raw.win), loss: n(raw.loss), draw: n(raw.draw), byReason, last, rung: Math.min(RUNG_FULL, n(raw.rung)), lossRun: Math.min(RUNG_DROP_AFTER, n(raw.lossRun)) };
 }
 
 /** 끝난 판 하나를 기록에 더한다. `result` 는 내 쪽에서 본 'win' | 'loss' | 'draw'. */
@@ -63,5 +79,6 @@ export function addContractResult(store, { set, result, reason, plies }) {
   next[result] += 1;
   next.byReason[reason] = (next.byReason[reason] || 0) + 1;
   next.last = { set, result, reason, plies };
+  Object.assign(next, nextRung(next.rung, next.lossRun, result));
   return next;
 }

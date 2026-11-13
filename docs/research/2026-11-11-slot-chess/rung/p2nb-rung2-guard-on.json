@@ -1,0 +1,30 @@
+{
+ "at": "2026-11-12T18:30:46.198Z",
+ "rung": 2,
+ "rungName": "정식",
+ "guard": true,
+ "set": "p2nb",
+ "games": 100,
+ "seed": 11000,
+ "seconds": 85,
+ "win": 19,
+ "loss": 81,
+ "draw": 0,
+ "reasons": {
+  "contract": 99,
+  "limit": 1
+ },
+ "plies": {
+  "median": 18,
+  "min": 11
+ },
+ "goldUsed": {
+  "total": 19,
+  "gamesWith": 19
+ },
+ "oopsWarned": {
+  "total": 97,
+  "gamesWith": 40,
+  "perGameMax": 15
+ }
+}

@@ -52,6 +52,7 @@ for (const [port, name, phone] of [[9486, 'mouse', false], [9487, 'touch', true]
     await ev(`(() => { localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 }));
       localStorage.setItem('wildcrown.fx.v1', JSON.stringify({ shake: true, quick: false, cards: false, dive: false, quests: false, blitz: false }));
       localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null }));
+      localStorage.setItem('wildcrown.contract.v1', JSON.stringify({ v: 1, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: 2, lossRun: 0 }));   // IR-1 뒤: 상대는 「정식」으로 고정
       localStorage.removeItem('wildcrown.resume.v1'); return 1; })()`);
     await send('Page.navigate', { url: BASE + query });
     await sleep(1500);

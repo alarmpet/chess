@@ -1,0 +1,246 @@
+{
+ "at": "2026-11-12T18:50:02.465Z",
+ "base": "http://localhost:3000/",
+ "rows": [
+  {
+   "item": "mouse 입문 상대",
+   "want": "사다리 0 · HUD 에 「입문」 · AI 에게 계약을 넘기지 않음",
+   "got": {
+    "rung": 0,
+    "name": "입문",
+    "rival": "입문",
+    "ai": null
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 금빛·방패",
+   "want": "금빛 1 이상 · 방패 1 이상 · 딱지 메시 ≤ 6 · 드로우콜 ≤ 100",
+   "got": {
+    "gold": 2,
+    "shield": 1,
+    "goldPieces": 2,
+    "dangerPieces": 1,
+    "draws": 5,
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 사다리 오름",
+   "want": "승 · 기록의 사다리 1 · 결과에 「다음 상대는 한 단계 위 「초급」이에요.」 · 금빛·방패 걷힘",
+   "got": {
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13
+    },
+    "storeRung": 1,
+    "note": "다음 상대는 한 단계 위 「초급」이에요.",
+    "gold": 0,
+    "shield": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 초급 상대",
+   "want": "새 판 사다리 1 · 「초급」 · AI 는 제 색(흑)만 센다",
+   "got": {
+    "rung": 1,
+    "rival": "초급",
+    "only": "b"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 아차 알림",
+   "want": "수가 놓이지 않음(10반수 그대로) · 알림 글 · 경고 1번 · 걸린 비숍에 방패",
+   "got": {
+    "plies": 10,
+    "note": "이렇게 두면 상대가 다음 수에 목표를 다 채워요. 그래도 두려면 한 번 더.",
+    "oops": {
+     "warned": 1,
+     "played": 0,
+     "last": {
+      "from": "c1",
+      "to": "g5",
+      "threats": [
+       "Qxg5"
+      ]
+     },
+     "game": 4242,
+     "inGame": 1
+    },
+    "shield": 1
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 다른 수는 그냥",
+   "want": "6.axb3 가 바로 놓임 · 경고는 그대로 1번",
+   "got": {
+    "san": "axb3",
+    "warned": 1,
+    "played": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 한 번 더 누르면 둔다",
+   "want": "6.Bg5 가 놓임 · 경고 뒤 그대로 둔 수 1",
+   "got": {
+    "san": "Bg5",
+    "oops": {
+     "warned": 1,
+     "played": 1,
+     "last": {
+      "from": "c1",
+      "to": "g5",
+      "threats": [
+       "Qxg5"
+      ]
+     },
+     "game": 4242,
+     "inGame": 1
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 정식은 알림 없음",
+   "want": "사다리 2 · 6.Bg5 가 바로 놓임 · 경고 수 그대로 · AI 는 전부 안다",
+   "got": {
+    "rung": 2,
+    "san": "Bg5",
+    "warned": [
+     0,
+     0
+    ],
+    "only": null
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 입문 상대",
+   "want": "사다리 0 · HUD 에 「입문」 · AI 에게 계약을 넘기지 않음",
+   "got": {
+    "rung": 0,
+    "name": "입문",
+    "rival": "입문",
+    "ai": null
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 금빛·방패",
+   "want": "금빛 1 이상 · 방패 1 이상 · 딱지 메시 ≤ 6 · 드로우콜 ≤ 100",
+   "got": {
+    "gold": 2,
+    "shield": 1,
+    "goldPieces": 2,
+    "dangerPieces": 1,
+    "draws": 5,
+    "calls": 54
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 사다리 오름",
+   "want": "승 · 기록의 사다리 1 · 결과에 「다음 상대는 한 단계 위 「초급」이에요.」 · 금빛·방패 걷힘",
+   "got": {
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13
+    },
+    "storeRung": 1,
+    "note": "다음 상대는 한 단계 위 「초급」이에요.",
+    "gold": 0,
+    "shield": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 초급 상대",
+   "want": "새 판 사다리 1 · 「초급」 · AI 는 제 색(흑)만 센다",
+   "got": {
+    "rung": 1,
+    "rival": "초급",
+    "only": "b"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 아차 알림",
+   "want": "수가 놓이지 않음(10반수 그대로) · 알림 글 · 경고 1번 · 걸린 비숍에 방패",
+   "got": {
+    "plies": 10,
+    "note": "이렇게 두면 상대가 다음 수에 목표를 다 채워요. 그래도 두려면 한 번 더.",
+    "oops": {
+     "warned": 1,
+     "played": 0,
+     "last": {
+      "from": "c1",
+      "to": "g5",
+      "threats": [
+       "Qxg5"
+      ]
+     },
+     "game": 4242,
+     "inGame": 1
+    },
+    "shield": 1
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 다른 수는 그냥",
+   "want": "6.axb3 가 바로 놓임 · 경고는 그대로 1번",
+   "got": {
+    "san": "axb3",
+    "warned": 1,
+    "played": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 한 번 더 누르면 둔다",
+   "want": "6.Bg5 가 놓임 · 경고 뒤 그대로 둔 수 1",
+   "got": {
+    "san": "Bg5",
+    "oops": {
+     "warned": 1,
+     "played": 1,
+     "last": {
+      "from": "c1",
+      "to": "g5",
+      "threats": [
+       "Qxg5"
+      ]
+     },
+     "game": 4242,
+     "inGame": 1
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 정식은 알림 없음",
+   "want": "사다리 2 · 6.Bg5 가 바로 놓임 · 경고 수 그대로 · AI 는 전부 안다",
+   "got": {
+    "rung": 2,
+    "san": "Bg5",
+    "warned": [
+     0,
+     0
+    ],
+    "only": null
+   },
+   "ok": true
+  }
+ ]
+}

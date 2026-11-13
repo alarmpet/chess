@@ -1,6 +1,6 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-12T13:22:11.714Z",
+ "at": "2026-11-12T18:54:30.709Z",
  "pass": 24,
  "total": 24,
  "measured": {
@@ -25,7 +25,7 @@
    "zenithMatch": "307eb9",
    "shallowBase": "46e2d2",
    "shallowMatch": "3ecabc",
-   "seaRate": 0.4,
+   "seaRate": 0.39,
    "doneCalls": 64
   }
  },
@@ -47,7 +47,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    },
    "ok": true
@@ -136,6 +138,8 @@
     "types": [
      "p",
      "n",
+     null,
+     null,
      null
     ],
     "beat": 2
@@ -152,7 +156,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    },
    "ok": true
@@ -198,7 +204,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    },
    "ok": true
@@ -259,7 +267,7 @@
    "item": "touch 바다 잔잔",
    "want": "바다 시계가 0.4배(±0.08)",
    "got": {
-    "seaRate": 0.4
+    "seaRate": 0.39
    },
    "ok": true
   },
@@ -287,6 +295,8 @@
     "types": [
      "p",
      "n",
+     null,
+     null,
      null
     ],
     "beat": 2
@@ -303,7 +313,9 @@
     "types": [
      "p",
      "n",
-     "b"
+     "b",
+     null,
+     null
     ]
    },
    "ok": true

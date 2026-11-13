@@ -2,7 +2,9 @@
 // 계약의 표적이 된 종류의 상대 말 머리 위에 작은 딱지가 붙는다(색 + 무늬 + 체스 기호 — 색만으로 구분하지 않는다).
 // 내 말이 그 말을 실제로 공격하고 있으면 딱지가 흔들린다(노림 불빛). 매치 포인트에서는 남은 딱지 뒤에 은은한 빛이 깔린다.
 // 보여 주기만 한다: 수를 추천하지 않고, 번쩍이지 않는다(§9).
-// 드로우콜: 목표 자리마다 인스턴스 하나(최대 3) + 빛 하나. 딱지가 없으면 전부 숨겨 0.
+// IR-1(지기 전에 보인다): 한 수로 계약이 완성되는 표적은 딱지 대신 금빛 왕관(자리 3), 상대가 한 수로 끝낼 수 있는 내 말에는 방패(자리 4).
+// 둘 다 심판이 확인한 사실만 그린다.
+// 드로우콜: 목표 자리마다 인스턴스 하나(최대 3) + 빛 하나 + 금빛·방패가 있을 때 하나씩. 딱지가 없으면 전부 숨겨 0.
 import * as THREE from 'three';
 
 export const TAG_POP_SEC = 0.26;       // 붙을 때 통 튀어나오는 시간
@@ -38,7 +40,43 @@ const STYLE = {
   q: { fill: '#ffb3d9', edge: '#b8327a', pattern: 'stars' }
 };
 
+export const GOLD_SLOT = 3;
+export const SHIELD_SLOT = 4;
+
+/** 금빛 왕관(결정타)과 방패(위험) — 색만이 아니라 꼴이 다르다: 왕관은 톱니, 방패는 아래가 뾰족한 문장 꼴에 느낌표. */
+function markTexture(kind) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 128;
+  const g = cv.getContext('2d');
+  g.lineJoin = 'round';
+  if (kind === 'gold') {
+    g.beginPath();
+    g.moveTo(64, 124); g.lineTo(46, 100); g.lineTo(82, 100); g.closePath();
+    g.fillStyle = '#b9770e'; g.fill();
+    g.beginPath();
+    g.moveTo(14, 96); g.lineTo(8, 34); g.lineTo(36, 58); g.lineTo(64, 14); g.lineTo(92, 58); g.lineTo(120, 34); g.lineTo(114, 96); g.closePath();
+    g.fillStyle = '#ffd23f'; g.fill();
+    g.lineWidth = 8; g.strokeStyle = '#8a5a00'; g.stroke();
+    g.fillStyle = '#fff6c8';
+    for (const [x, y] of [[8, 32], [64, 12], [120, 32]]) { g.beginPath(); g.arc(x, y, 7, 0, Math.PI * 2); g.fill(); g.stroke(); }
+    g.fillStyle = '#e0483a';
+    g.beginPath(); g.arc(64, 74, 11, 0, Math.PI * 2); g.fill();
+  } else {
+    g.beginPath();
+    g.moveTo(64, 124); g.bezierCurveTo(20, 100, 12, 70, 12, 22); g.lineTo(64, 6); g.lineTo(116, 22); g.bezierCurveTo(116, 70, 108, 100, 64, 124); g.closePath();
+    g.fillStyle = '#e8f1ff'; g.fill();
+    g.lineWidth = 9; g.strokeStyle = '#c0392b'; g.stroke();
+    g.fillStyle = '#c0392b';
+    g.fillRect(56, 30, 16, 44);
+    g.beginPath(); g.arc(64, 92, 9, 0, Math.PI * 2); g.fill();
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function tagTexture(type) {
+  if (type === 'gold' || type === 'shield') return markTexture(type);
   const st = STYLE[type] || STYLE.p;
   const cv = document.createElement('canvas');
   cv.width = cv.height = 128;
@@ -102,7 +140,7 @@ function haloTexture() {
 }
 
 const PER_GOAL = 8;    // 한 종류는 많아야 폰 여덟
-const SLOTS = 3;
+const SLOTS = 5;       // 목표 셋 + 금빛 결정타 + 위험 방패
 
 export function createBountyTags(scene, { square }) {
   const SIZE = square * 0.5;
@@ -151,7 +189,7 @@ export function createBountyTags(scene, { square }) {
    */
   function update(dt, camera, items, glow = 0) {
     t += dt;
-    const counts = [0, 0, 0];
+    const counts = slots.map(() => 0);
     let h = 0;
     hotShown = 0;
     const seen = new Set();
@@ -165,7 +203,10 @@ export function createBountyTags(scene, { square }) {
       a.age += dt;
       a.hot += ((it.hot ? 1 : 0) - a.hot) * Math.min(1, dt * 9);
       if (it.hot) hotShown += 1;
-      const pose = tagPose(a.age, a.hot, t + (it.id % 7) * 0.13, glow);
+      // 금빛 결정타는 늘 빛을 깔고 조금 더 크다. 방패는 흔들지 않고 숨만 쉰다.
+      const mark = it.slot === GOLD_SLOT ? 1 : 0;
+      const pose = tagPose(a.age, a.hot, t + (it.id % 7) * 0.13, Math.max(glow, mark));
+      if (mark) pose.scale *= 1.25;
       roll.setFromAxisAngle(zAxis, pose.roll);
       q.copy(camera.quaternion).multiply(roll);
       m4.compose(p3.set(it.x, it.y, it.z), q, s3.setScalar(SIZE * pose.scale));
@@ -202,6 +243,6 @@ export function createBountyTags(scene, { square }) {
   return {
     update, clear,
     /** `draws` 는 지금 그려지는 메시 수(= 딱지가 더하는 드로우콜). */
-    state: () => ({ tags: shown, hot: hotShown, halos: haloShown, draws: slots.filter((s) => s.mesh.visible).length + (halo.visible ? 1 : 0), types: slots.map((s) => (s.mesh.visible ? s.type : null)) })
+    state: () => ({ tags: shown, hot: hotShown, halos: haloShown, gold: slots[GOLD_SLOT].mesh.count, shield: slots[SHIELD_SLOT].mesh.count, draws: slots.filter((s) => s.mesh.visible).length + (halo.visible ? 1 : 0), types: slots.map((s) => (s.mesh.visible ? s.type : null)) })
   };
 }

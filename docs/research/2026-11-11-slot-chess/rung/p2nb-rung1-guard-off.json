@@ -1,0 +1,30 @@
+{
+ "at": "2026-11-12T18:29:35.017Z",
+ "rung": 1,
+ "rungName": "초급",
+ "guard": false,
+ "set": "p2nb",
+ "games": 100,
+ "seed": 11000,
+ "seconds": 14,
+ "win": 22,
+ "loss": 78,
+ "draw": 0,
+ "reasons": {
+  "contract": 99,
+  "checkmate": 1
+ },
+ "plies": {
+  "median": 16,
+  "min": 10
+ },
+ "goldUsed": {
+  "total": 0,
+  "gamesWith": 0
+ },
+ "oopsWarned": {
+  "total": 0,
+  "gamesWith": 0,
+  "perGameMax": 0
+ }
+}

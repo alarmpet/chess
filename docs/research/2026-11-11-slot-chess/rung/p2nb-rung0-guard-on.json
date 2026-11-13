@@ -1,0 +1,30 @@
+{
+ "at": "2026-11-12T18:30:26.547Z",
+ "rung": 0,
+ "rungName": "입문",
+ "guard": true,
+ "set": "p2nb",
+ "games": 100,
+ "seed": 11000,
+ "seconds": 65,
+ "win": 87,
+ "loss": 13,
+ "draw": 0,
+ "reasons": {
+  "contract": 99,
+  "checkmate": 1
+ },
+ "plies": {
+  "median": 18,
+  "min": 10
+ },
+ "goldUsed": {
+  "total": 86,
+  "gamesWith": 86
+ },
+ "oopsWarned": {
+  "total": 61,
+  "gamesWith": 32,
+  "perGameMax": 5
+ }
+}
