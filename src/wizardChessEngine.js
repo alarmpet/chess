@@ -2062,8 +2062,19 @@ let engineStarted = false;
       else camera.clearViewOffset();
     }
     shiftPortraitView();
-    function defaultCameraFor(color, aspect = camera.aspect) {
+    // 가로로 눕힌 폰(2026-11-14): 화면이 낮아 판이 높이에 묶인다. 예전 구도(37도)는 먼 줄 한 칸이 21px 이고 가까운 판 끝이 화면 밑으로 잘렸다.
+    // 더 위에서(52도) 조금 물러나 보면 먼 줄이 25px 로 커지고 판이 화면 안에 다 들어온다. 책상 화면(높이 500px 이상)은 그대로다.
+    const SHORT_VIEW_H = 500;
+    const SHORT_PITCH_DEG = 52;
+    const SHORT_DIST = 4.2;
+    let viewH = window.innerHeight;     // resize 에서 「고치기 전 모양」과 견줄 수 있게 따로 들고 있는다
+    function defaultCameraFor(color, aspect = camera.aspect, height = viewH) {
       const zSign = color === 'b' ? -1 : 1;
+      if (aspect > 1.5 && height > 0 && height < SHORT_VIEW_H) {
+        const pitch = THREE.MathUtils.degToRad(SHORT_PITCH_DEG);
+        const target = new THREE.Vector3(0, 0.35, zSign * 0.04);
+        return { target, pos: new THREE.Vector3(0, Math.sin(pitch) * SHORT_DIST, zSign * Math.cos(pitch) * SHORT_DIST).add(target) };
+      }
       // 세로 화면(플레이 화면 개편 2026-11-13): 판은 너비에 묶인다. 예전 구도는 더 가까이 가서 a·h 줄의 말이 화면 밖으로 잘렸다.
       // 여덟 줄이 다 들어오는 거리까지 물러나고, 대신 더 위에서 내려다봐 칸의 세로 길이(누를 자리)를 키운다.
       if (aspect < PORTRAIT_ASPECT) {
@@ -2093,6 +2104,39 @@ let engineStarted = false;
     }
 
     const tintedMaterialCache = new Map();
+    // 동물 말의 화면 다듬기(캐릭터 룩 A, 2026-11-14): 모델·텍스처는 그대로 두고 셰이더에 두 가지만 얹는다.
+    //  · 채도 — 구운 색이 옅고 회색기가 돌아 카드 그림과 따로 논다. 텍스처 색의 채도를 올린다.
+    //  · 테두리 빛 — 윤곽이 왕국색으로 물든다(백: 짙은 금빛, 흑: 밝은 보랏빛). 더하는 빛이 아니라 섞는 색이다 —
+    //    크림색 백 말에 빛을 더하면 하얗게 날아가 오히려 덩어리가 된다(첫 시도). 백은 윤곽이 짙어져 또렷해지고, 흑은 밝아진다. 플레이어는 자기 말의 등만 보는데,
+    //    등에는 얼굴도 표식도 없어 덩어리로 보였다. 윤곽에 빛이 돌면 한 마리씩 떨어져 보이고 어느 편인지도 뒤에서 읽힌다.
+    // 재질을 새로 만들지 않고 팩의 재질을 그 자리에서 고친다(한 번만) — 드로우콜·재질 수는 그대로다.
+    const animalLook = {
+      sat: { value: 1.28 },
+      rim: { value: 0.7 },
+      w: { value: new THREE.Color(0.78, 0.5, 0.2) },
+      b: { value: new THREE.Color(0.8, 0.64, 1.0) }
+    };
+    function applyAnimalLook(mat, color) {
+      if (!mat || !mat.isMeshStandardMaterial || mat.userData.animalLook) return mat;
+      mat.userData.animalLook = color;
+      const prev = mat.customProgramCacheKey?.bind(mat);
+      mat.customProgramCacheKey = () => `${prev ? prev() : ''}|animal-look-2`;
+      mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uLookSat = animalLook.sat;
+        shader.uniforms.uLookRim = animalLook.rim;
+        shader.uniforms.uLookRimColor = animalLook[color === 'b' ? 'b' : 'w'];
+        shader.fragmentShader = shader.fragmentShader
+          .replace('#include <common>', '#include <common>\nuniform float uLookSat;\nuniform float uLookRim;\nuniform vec3 uLookRimColor;')
+          .replace('#include <color_fragment>', `#include <color_fragment>
+          { float lookLuma = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)); diffuseColor.rgb = max(vec3(0.0), mix(vec3(lookLuma), diffuseColor.rgb, uLookSat)); }`)
+          .replace('#include <opaque_fragment>', `{ float lookFres = pow(1.0 - saturate(dot(normalize(vViewPosition), normal)), 2.6);
+            outgoingLight = mix(outgoingLight, uLookRimColor, saturate(uLookRim * lookFres)); }
+          #include <opaque_fragment>`);
+      };
+      mat.needsUpdate = true;
+      return mat;
+    }
+
     function getTintedMaterial(material, color, tintHex) {
       const key = `${material.uuid}|${color}`;
       let m = tintedMaterialCache.get(key);
@@ -2476,6 +2520,7 @@ let engineStarted = false;
               // Team readability tint: a per-side multiply on a cloned copy of the pack material.
               child.material = getTintedMaterial(child.material, color, tintHex);
             }
+            if (tpl.keepMaterials && tpl.rig !== 'statue') applyAnimalLook(child.material, color);
             child.castShadow = true;
             child.receiveShadow = true;
           }
@@ -3682,6 +3727,13 @@ let engineStarted = false;
         g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill();
         g.beginPath(); g.arc(64, 64, 38, 0, Math.PI * 2); g.fillStyle = '#19a8f0'; g.fill();
       }), 28, 0.011);
+      // 말 뒤에 가린 점(4차): 낮은 구도에서는 앞줄 말이 뒤 칸의 점을 가린다. 같은 점을 「가려진 곳에만」 한 번 더 그린다
+      // (깊이 비교를 뒤집는다) — 말 몸 위로 옅게 비쳐, 갈 수 있는 칸이 몇 개인지 세지 않아도 보인다. 드로우콜 +1.
+      const ghost = make('move-dot-ghost', BOARD_SQ_SIZE * 0.56, dot.material.map, 28, 0.011);
+      ghost.material.depthFunc = THREE.GreaterDepth;
+      ghost.material.opacity = 0.5;
+      ghost.material.polygonOffset = false;
+      ghost.renderOrder = 5;
       // 잡을 말: 칸을 붉게 물들이고 네 귀퉁이에 꺾쇠를 친다. 둥근 고리는 흑 말의 붉은 발판과 겹쳐 안 보였다(3차) —
       // 발판이 닿지 않는 칸 귀퉁이에 표시를 둔다.
       const ring = make('move-capture', BOARD_SQ_SIZE * 1.0, paint((g) => {
@@ -3711,7 +3763,7 @@ let engineStarted = false;
       arrowMat.userData = { outlineParameters: { visible: false } };
       const arrow = new THREE.Sprite(arrowMat);
       arrow.name = 'move-arrow';
-      arrow.scale.setScalar(BOARD_SQ_SIZE * 0.52);
+      arrow.scale.setScalar(BOARD_SQ_SIZE * 0.44);
       arrow.visible = false;
       arrow.renderOrder = 6;
       scene.add(arrow);
@@ -3720,7 +3772,12 @@ let engineStarted = false;
       const aim = () => {
         if (!held?.mesh) { arrow.visible = false; return; }
         const p = held.mesh.position;
-        arrow.position.set(p.x, p.y + (PIECE_HEIGHTS[held.type] || 0.4) + BOARD_SQ_SIZE * (0.34 + (reducedMotion ? 0 : 0.07 * Math.sin(age * 5))), p.z);
+        // 머리 위로 띄운 만큼 화면에서는 한 칸 앞(갈 칸의 점)으로 밀려 보인다 — 띄운 높이를 줄이고, 그만큼 카메라 쪽으로 당겨 말 머리 바로 위에 붙인다.
+        const lift = BOARD_SQ_SIZE * (0.26 + (reducedMotion ? 0 : 0.05 * Math.sin(age * 5)));
+        const dx = camera.position.x - p.x, dz = camera.position.z - p.z;
+        const flat = Math.hypot(dx, dz) || 1;
+        const pull = Math.min(lift * flat / Math.max(0.5, camera.position.y - p.y), BOARD_SQ_SIZE * 0.4);
+        arrow.position.set(p.x + dx / flat * pull, p.y + (PIECE_HEIGHTS[held.type] || 0.4) + lift, p.z + dz / flat * pull);
         arrow.visible = true;
       };
       const reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
@@ -3732,8 +3789,8 @@ let engineStarted = false;
         mesh.visible = list.length > 0;
       };
       return {
-        show(r, c, moves) { age = 0; held = boardState[r]?.[c] || null; aim(); put(tile, [{ r, c }]); put(dot, moves.filter((m) => !m.capture).slice(0, 28)); put(ring, moves.filter((m) => m.capture).slice(0, 16)); },
-        clear() { held = null; arrow.visible = false; put(tile, []); put(dot, []); put(ring, []); put(warn, []); },
+        show(r, c, moves) { age = 0; held = boardState[r]?.[c] || null; aim(); put(tile, [{ r, c }]); put(dot, moves.filter((m) => !m.capture).slice(0, 28)); put(ghost, moves.filter((m) => !m.capture).slice(0, 28)); put(ring, moves.filter((m) => m.capture).slice(0, 16)); },
+        clear() { held = null; arrow.visible = false; put(tile, []); put(dot, []); put(ghost, []); put(ring, []); put(warn, []); },
         threats(cells) { put(warn, cells.slice(0, 16)); },
         mate(r, c) { put(warn, [{ r, c }]); put(ring, [{ r, c }]); },
         // 갈 칸이 살짝 숨 쉰다 — 누를 수 있는 자리라는 뜻. 효과 줄이기(prefers-reduced-motion)에서는 멈춘다.
@@ -3745,7 +3802,7 @@ let engineStarted = false;
           dot.material.opacity = 0.82 + 0.18 * Math.sin(age * 4.2);
           ring.material.opacity = 0.8 + 0.2 * Math.sin(age * 4.2);
         },
-        state: () => ({ selected: tile.visible, dots: dot.visible ? dot.count : 0, rings: ring.visible ? ring.count : 0, threats: warn.visible ? warn.count : 0, arrow: arrow.visible, draws: [tile, dot, ring, warn, arrow].filter((x) => x.visible).length })
+        state: () => ({ selected: tile.visible, dots: dot.visible ? dot.count : 0, rings: ring.visible ? ring.count : 0, threats: warn.visible ? warn.count : 0, arrow: arrow.visible, draws: [tile, dot, ghost, ring, warn, arrow].filter((x) => x.visible).length })
       };
     })();
     function showSquareHighlights(r, c, moves) {
@@ -6938,6 +6995,8 @@ let engineStarted = false;
         rebuildAllPieces();
       },
       debugRenderCalls: () => renderer.info.render.calls,
+      // 캐릭터 룩 A 의 세기를 바꾼다(전후 비교용). 인자 없이 부르면 지금 값만 돌려준다.
+      debugAnimalLook: (v) => { if (v) { if (typeof v.sat === 'number') animalLook.sat.value = v.sat; if (typeof v.rim === 'number') animalLook.rim.value = v.rim; } return { sat: animalLook.sat.value, rim: animalLook.rim.value }; },
       // 계층 렌더 실험(①): 켜기/끄기, 프레임 통계, 모아 둔 GPU ms 표본(EXT_disjoint_timer_query_webgl2 가 있을 때만).
       setLayered: (on, hz) => layered.setEnabled(on, hz),
       debugLayered: () => layered.stats(),
@@ -7737,6 +7796,7 @@ let engineStarted = false;
       const before = camera.aspect;
       const atDefault = !activeCamTransition && ['w', 'b'].find((side) => camera.position.distanceTo(defaultCameraFor(side, before).pos) < 0.12);
       camera.aspect = window.innerWidth / window.innerHeight;
+      viewH = window.innerHeight;
       if (atDefault) setCameraForSide(atDefault, true);
       shiftPortraitView();
       camera.updateProjectionMatrix();

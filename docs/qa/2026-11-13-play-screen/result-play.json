@@ -1,5 +1,5 @@
 {
- "at": "2026-11-14T08:17:27.942Z",
+ "at": "2026-11-14T15:14:47.732Z",
  "base": "http://localhost:3000/",
  "measured": {
   "desk": {
@@ -53,14 +53,14 @@
   "land": {
    "geo": {
     "inside": 64,
-    "nearRowPx": 46,
-    "farRowPx": 19,
-    "nearColPx": 64,
-    "farColPx": 38,
-    "a1": 198,
-    "h1": 646,
-    "top": 118,
-    "bottom": 326,
+    "nearRowPx": 51,
+    "farRowPx": 25,
+    "nearColPx": 59,
+    "farColPx": 39,
+    "a1": 216,
+    "h1": 628,
+    "top": 95,
+    "bottom": 348,
     "vw": 844,
     "vh": 390
    },
@@ -100,6 +100,18 @@
   }
  },
  "rows": [
+  {
+   "item": "desk 캐릭터 룩",
+   "want": "채도 > 1 · 윤곽 > 0 · 드로우콜 ≤ 100",
+   "got": {
+    "look": {
+     "sat": 1.28,
+     "rim": 0.7
+    },
+    "calls": 52
+   },
+   "ok": true
+  },
   {
    "item": "desk 구도",
    "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
@@ -150,9 +162,9 @@
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "loose": 0,
-    "calls": 68
+    "calls": 56
    },
    "ok": true
   },
@@ -204,25 +216,25 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 69
+    "calls": 56
    },
    "ok": true
   },
   {
    "item": "desk 퀸의 갈 칸",
-   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 5 · 전체 ≤ 100",
    "got": {
     "selected": true,
     "dots": 6,
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "sel": {
      "r": 7,
      "c": 3
     },
-    "calls": 69
+    "calls": 57
    },
    "ok": true
   },
@@ -238,7 +250,35 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 68
+    "calls": 55
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 체크메이트 고리",
+   "want": "Qh4# · 왕의 칸에 주황 고리 1 + 붉은 칸 1 · 낱개 메시 0",
+   "got": {
+    "mated": true,
+    "san": "Qh4#",
+    "selected": false,
+    "dots": 0,
+    "rings": 1,
+    "threats": 1,
+    "arrow": false,
+    "draws": 2,
+    "loose": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 캐릭터 룩",
+   "want": "채도 > 1 · 윤곽 > 0 · 드로우콜 ≤ 100",
+   "got": {
+    "look": {
+     "sat": 1.28,
+     "rim": 0.7
+    },
+    "calls": 50
    },
    "ok": true
   },
@@ -300,9 +340,9 @@
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "loose": 0,
-    "calls": 66
+    "calls": 54
    },
    "ok": true
   },
@@ -360,19 +400,19 @@
   },
   {
    "item": "phone 퀸의 갈 칸",
-   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 5 · 전체 ≤ 100",
    "got": {
     "selected": true,
     "dots": 6,
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "sel": {
      "r": 7,
      "c": 3
     },
-    "calls": 67
+    "calls": 68
    },
    "ok": true
   },
@@ -393,18 +433,46 @@
    "ok": true
   },
   {
+   "item": "phone 체크메이트 고리",
+   "want": "Qh4# · 왕의 칸에 주황 고리 1 + 붉은 칸 1 · 낱개 메시 0",
+   "got": {
+    "mated": true,
+    "san": "Qh4#",
+    "selected": false,
+    "dots": 0,
+    "rings": 1,
+    "threats": 1,
+    "arrow": false,
+    "draws": 2,
+    "loose": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "land 캐릭터 룩",
+   "want": "채도 > 1 · 윤곽 > 0 · 드로우콜 ≤ 100",
+   "got": {
+    "look": {
+     "sat": 1.28,
+     "rim": 0.7
+    },
+    "calls": 53
+   },
+   "ok": true
+  },
+  {
    "item": "land 구도",
    "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
    "got": {
     "inside": 64,
-    "nearRowPx": 46,
-    "farRowPx": 19,
-    "nearColPx": 64,
-    "farColPx": 38,
-    "a1": 198,
-    "h1": 646,
-    "top": 118,
-    "bottom": 326,
+    "nearRowPx": 51,
+    "farRowPx": 25,
+    "nearColPx": 59,
+    "farColPx": 39,
+    "a1": 216,
+    "h1": 628,
+    "top": 95,
+    "bottom": 348,
     "vw": 844,
     "vh": 390
    },
@@ -450,9 +518,9 @@
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "loose": 0,
-    "calls": 71
+    "calls": 70
    },
    "ok": true
   },
@@ -489,7 +557,7 @@
    "got": {
     "text": "내 차례",
     "mine": true,
-    "calls": 69
+    "calls": 67
    },
    "ok": true
   },
@@ -504,25 +572,25 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 72
+    "calls": 57
    },
    "ok": true
   },
   {
    "item": "land 퀸의 갈 칸",
-   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 5 · 전체 ≤ 100",
    "got": {
     "selected": true,
     "dots": 6,
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "sel": {
      "r": 7,
      "c": 3
     },
-    "calls": 72
+    "calls": 58
    },
    "ok": true
   },
@@ -538,7 +606,35 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 71
+    "calls": 56
+   },
+   "ok": true
+  },
+  {
+   "item": "land 체크메이트 고리",
+   "want": "Qh4# · 왕의 칸에 주황 고리 1 + 붉은 칸 1 · 낱개 메시 0",
+   "got": {
+    "mated": true,
+    "san": "Qh4#",
+    "selected": false,
+    "dots": 0,
+    "rings": 1,
+    "threats": 1,
+    "arrow": false,
+    "draws": 2,
+    "loose": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "small 캐릭터 룩",
+   "want": "채도 > 1 · 윤곽 > 0 · 드로우콜 ≤ 100",
+   "got": {
+    "look": {
+     "sat": 1.28,
+     "rim": 0.7
+    },
+    "calls": 63
    },
    "ok": true
   },
@@ -600,9 +696,9 @@
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "loose": 0,
-    "calls": 66
+    "calls": 67
    },
    "ok": true
   },
@@ -654,25 +750,25 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 67
+    "calls": 54
    },
    "ok": true
   },
   {
    "item": "small 퀸의 갈 칸",
-   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 5 · 전체 ≤ 100",
    "got": {
     "selected": true,
     "dots": 6,
     "rings": 0,
     "threats": 0,
     "arrow": true,
-    "draws": 3,
+    "draws": 4,
     "sel": {
      "r": 7,
      "c": 3
     },
-    "calls": 67
+    "calls": 55
    },
    "ok": true
   },
@@ -688,7 +784,23 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 66
+    "calls": 53
+   },
+   "ok": true
+  },
+  {
+   "item": "small 체크메이트 고리",
+   "want": "Qh4# · 왕의 칸에 주황 고리 1 + 붉은 칸 1 · 낱개 메시 0",
+   "got": {
+    "mated": true,
+    "san": "Qh4#",
+    "selected": false,
+    "dots": 0,
+    "rings": 1,
+    "threats": 1,
+    "arrow": false,
+    "draws": 2,
+    "loose": 0
    },
    "ok": true
   }

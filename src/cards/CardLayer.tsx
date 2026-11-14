@@ -70,6 +70,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
   const [merged, setMerged] = useState<Won[] | null>(null);
   const [odds, setOdds] = useState(false);
   const [howTo, setHowTo] = useState<{ animal: string; rarity: number } | null>(null);
+  const [inspect, setInspect] = useState<{ animal: string; rarity: number } | null>(null);
   const [mission, setMission] = useState<{ m: any; state: string | null } | null>(null);
   const [ply, setPly] = useState(0);
   const [bountyWon, setBountyWon] = useState(0);
@@ -419,6 +420,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     setTimeout(() => setMerged(null), MERGE_MS + Math.min(800, made.length * 80));
   };
 
+  // 카드 보기(2026-11-14): 도감의 카드를 누르면 크게 뜬다. 가진 카드끼리 앞뒤로 넘긴다.
+  const ownedList = ANIMALS.flatMap((a: string) => RARITIES.map((_: string, r: number) => ({ animal: a, rarity: r }))).filter((c) => col.cards[cardId(c.animal, c.rarity)]);
   const merges = mergeList(col);
   const how = howTo ? howToGet(col, howTo.animal, howTo.rarity) : null;
   const album = albumProgress(col);
@@ -579,7 +582,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
                 <span>✨ {en ? 'Stardust' : '별가루'} {col.dust}</span>
                 <span>🏡 {en ? 'Village shelf' : '마을 전시'} {col.shelf.length}/{col.shelfSlots}</span>
                 {shelfPrice(col) !== null && <button type="button" onClick={onBuySlot}>{en ? 'Add slot' : '칸 늘리기'} ✨{shelfPrice(col)}</button>}
-                <small>{en ? 'Tap a card to show it in the village, an empty slot to see how to get it.' : '카드를 누르면 마을에 전시되고, 빈 칸을 누르면 얻는 길이 보여요.'}</small>
+                <small>{en ? 'Tap a card to see it up close, an empty slot to see how to get it.' : '카드를 누르면 크게 볼 수 있고, 빈 칸을 누르면 얻는 길이 보여요.'}</small>
               </section>
 
               <section className="card-gauges">
@@ -615,7 +618,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
                     key={cardId(a, r)}
                     type="button"
                     className={`card-slot${col.shelf.includes(cardId(a, r)) ? ' shelved' : ''}${!col.cards[cardId(a, r)] ? ' empty' : ''}${howTo?.animal === a && howTo?.rarity === r ? ' asked' : ''}`}
-                    onClick={() => (col.cards[cardId(a, r)] ? onShelf(cardId(a, r)) : setHowTo(howTo?.animal === a && howTo?.rarity === r ? null : { animal: a, rarity: r }))}
+                    onClick={() => (col.cards[cardId(a, r)] ? setInspect({ animal: a, rarity: r }) : setHowTo(howTo?.animal === a && howTo?.rarity === r ? null : { animal: a, rarity: r }))}
                   >
                     <CardFace animal={a} rarity={r} owned={Boolean(col.cards[cardId(a, r)])} spares={sparesOf(col, a, r)} lang={lang} size="sm" />
                   </button>
@@ -670,6 +673,32 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
               )}
             </div>
           </div>
+          {inspect && col.cards[cardId(inspect.animal, inspect.rarity)] && (() => {
+            const id = cardId(inspect.animal, inspect.rarity);
+            const at = ownedList.findIndex((c) => c.animal === inspect.animal && c.rarity === inspect.rarity);
+            const go = (d: number) => setInspect(ownedList[(at + d + ownedList.length) % ownedList.length]);
+            const shelved = col.shelf.includes(id);
+            return (
+              <div className={`card-inspect g${inspect.rarity}`} id="card-inspect" role="dialog" aria-label={`${grades[inspect.rarity]} ${names[inspect.animal]}`} onClick={(e) => { e.stopPropagation(); setInspect(null); }}>
+                <div className="card-inspect-rays" aria-hidden="true"></div>
+                <div className="card-inspect-stage" onClick={(e) => e.stopPropagation()}>
+                  <div className="card-inspect-grade" id="card-inspect-grade">{'★'.repeat(inspect.rarity + 1)} {grades[inspect.rarity]}</div>
+                  <CardFace key={id} animal={inspect.animal} rarity={inspect.rarity} lang={lang} size="lg" />
+                  <div className="card-inspect-info">
+                    <b>{names[inspect.animal]}</b>
+                    <span>{en ? `Owned ${col.cards[id]} · ${at + 1}/${ownedList.length}` : `${col.cards[id]}장 보유 · ${at + 1}/${ownedList.length}`}</span>
+                  </div>
+                  <div className="card-inspect-actions">
+                    <button type="button" id="card-inspect-prev" onClick={() => go(-1)} aria-label={en ? 'Previous card' : '앞 카드'}>◀</button>
+                    <button type="button" id="card-inspect-shelf" className={shelved ? 'on' : ''} onClick={() => onShelf(id)}>🏡 {shelved ? (en ? 'On the shelf ✓' : '전시 중 ✓') : (en ? 'Show in village' : '마을에 전시')}</button>
+                    <button type="button" id="card-inspect-next" onClick={() => go(1)} aria-label={en ? 'Next card' : '다음 카드'}>▶</button>
+                  </div>
+                  <small>{en ? 'Rub the card: the light follows.' : '카드를 문지르면 빛이 따라와요'}</small>
+                </div>
+                <button type="button" className="panel-close card-inspect-close" id="card-inspect-close" onClick={() => setInspect(null)}>✕</button>
+              </div>
+            );
+          })()}
           {merged && (
             <div className="card-merge-show" onClick={(e) => e.stopPropagation()}>
               {merged.slice(0, 8).map((c, i) => (

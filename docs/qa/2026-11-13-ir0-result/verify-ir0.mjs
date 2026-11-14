@@ -60,6 +60,8 @@ for (const [port, name, phone] of [[9494, 'mouse', false], [9495, 'touch', true]
     window.addEventListener('contractfinished', (e) => { window.__ends.contract.push(e.detail); }); return 1; })()`);
   // 저장을 깨끗이 하고(전용 기록 포함) 원하는 이어 하기 기록으로 연다
   const open = async ({ moves = null, contract = null, quick = false, query = '?lab=contract', keepStore = false } = {}) => {
+    // 앞 판의 문서가 아직 살아 있으면(AI 가 두는 중 등) 심은 이어 하기 기록을 덮어쓴다 — 다른 판이 열리면 다시 심는다(11-15).
+    for (let tries = 0; tries < 3; tries++) {
     await ev(`(() => { localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 }));
       localStorage.setItem('wildcrown.fx.v1', JSON.stringify({ shake: true, quick: ${quick}, cards: false, dive: false, quests: false, blitz: false }));
       localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null }));
@@ -68,7 +70,9 @@ for (const [port, name, phone] of [[9494, 'mouse', false], [9495, 'touch', true]
       return 1; })()`);
     await send('Page.navigate', { url: BASE + query });
     await sleep(1500);
-    await until(`${ready} && ${W}.debugHistory().length === ${moves ? moves.length : 0}`, 90000);
+    if (await until(`${ready} && ${W}.debugHistory().length === ${moves ? moves.length : 0}`, tries < 2 ? 45000 : 90000)) break;
+    console.log('⚠️ 심은 판이 안 열림 — 다시 심는다', tries + 1, JSON.stringify(await ev(`${W}?.debugHistory?.().length`)));
+    }
     await listen();
   };
   await until('Boolean(window.wizardChess)');

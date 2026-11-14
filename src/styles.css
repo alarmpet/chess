@@ -34,6 +34,15 @@ html, body, #root {
   z-index: 1;
 }
 
+/* 화면 가장자리를 살짝 어둡게(4차): 눈이 판으로 모인다. 후처리 패스 대신 CSS 한 겹 — 번들 JS 0, 드로우콜 0. */
+#canvas-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(12, 38, 72, 0.3) 100%);
+}
+
 #canvas-container canvas {
   display: block;
   width: 100% !important;
@@ -1118,7 +1127,21 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .wc-card.lg { width: 220px; }
 .wc-card > img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; }
 .wc-card-foil { position: absolute; inset: 0; pointer-events: none; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; mix-blend-mode: soft-light; opacity: 0.42; }
-.wc-card.r-rare .wc-card-foil { background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.85), transparent 46%), linear-gradient(115deg, #ff7ab8, #ffe27a 28%, #7affc8 52%, #7ac6ff 74%, #c88aff); }
+.wc-card.r-uncommon { filter: drop-shadow(0 4px 6px rgba(40, 24, 8, 0.35)) drop-shadow(0 0 5px rgba(200, 230, 255, 0.85)); }
+.wc-card.r-rare { filter: drop-shadow(0 4px 6px rgba(40, 24, 8, 0.35)) drop-shadow(0 0 9px rgba(150, 120, 255, 0.9)); }
+.wc-card.r-hero { filter: drop-shadow(0 4px 6px rgba(40, 24, 8, 0.35)) drop-shadow(0 0 14px rgba(255, 196, 60, 0.95)); }
+.wc-card.r-uncommon .wc-card-foil { background: linear-gradient(115deg, transparent 42%, #fff 50%, transparent 58%); background-size: 300% 100%; opacity: 0.7; animation: wc-glint 5s ease-in-out infinite; }
+.wc-card.r-rare .wc-card-foil { background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.85), transparent 46%), linear-gradient(115deg, #ff7ab8, #ffe27a 14%, #7affc8 28%, #7ac6ff 42%, #c88aff 56%, #ff7ab8 70%, #ffe27a 84%, #7affc8); background-size: 100% 100%, 320% 100%; opacity: 0.62; animation: wc-holo 5s linear infinite alternate; }
+@keyframes wc-glint { 0%, 62% { background-position: 150% 0; } 100% { background-position: -150% 0; } }
+@keyframes wc-holo { from { background-position: 0 0, 0 0; } to { background-position: 0 0, 100% 0; } }
+/* 가만히 둔 카드가 스스로 흔들린다(작은 카드는 빼고). :where 라 다른 연출(합치기·날아오기)이 있으면 그쪽이 이긴다. */
+:where(.wc-card.r-rare:not(.sm, .empty, :hover)) { --tilt: 5deg; animation: wc-float 5s ease-in-out infinite; }
+:where(.wc-card.r-hero:not(.sm, .empty, :hover)) { --tilt: 11deg; animation: wc-float 3.6s ease-in-out infinite; }
+@keyframes wc-float { 0%, 100% { transform: perspective(600px) rotateY(calc(var(--tilt) * -1)); } 50% { transform: perspective(600px) rotateY(var(--tilt)) translateY(-3%); } }
+/* 영웅: 카드 둘레에서 깜빡이는 별 */
+.wc-card.r-hero:not(.empty)::after { content: ''; position: absolute; inset: -7%; pointer-events: none; animation: wc-twinkle 1.8s ease-in-out infinite alternate;
+  background: radial-gradient(circle at 8% 14%, #fff 0 2px, transparent 3.5px), radial-gradient(circle at 93% 9%, #fff3b0 0 2.5px, transparent 4px), radial-gradient(circle at 96% 62%, #fff 0 1.5px, transparent 3px), radial-gradient(circle at 4% 78%, #fff3b0 0 2px, transparent 3.5px), radial-gradient(circle at 60% 2%, #fff 0 1.5px, transparent 3px), radial-gradient(circle at 34% 98%, #fff 0 2px, transparent 3.5px); }
+@keyframes wc-twinkle { from { opacity: 0.25; transform: scale(0.97); } to { opacity: 1; transform: scale(1.03); } }
 .wc-card.r-hero .wc-card-foil { background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.9), transparent 44%), linear-gradient(120deg, transparent 30%, rgba(255, 236, 170, 0.95) 50%, transparent 70%); background-size: 100% 100%, 260% 100%; animation: wc-gold 3.2s linear infinite; }
 @keyframes wc-gold { from { background-position: 0 0, 130% 0; } to { background-position: 0 0, -130% 0; } }
 .wc-card-label { position: absolute; left: 12%; right: 12%; bottom: 8%; height: 9%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 0.95rem; -webkit-text-stroke: 3px #3c2208; paint-order: stroke fill; }
@@ -1195,7 +1218,8 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
 .card-gauges > div { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
 .card-gauges span { width: 72px; }
 .card-gauges meter { flex: 1; height: 10px; }
-.card-grid { display: grid; grid-template-columns: repeat(4, 104px); gap: 6px; justify-content: center; }
+.card-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 104px)); gap: 6px; justify-content: center; }
+.card-grid .wc-card.sm { width: 100%; }
 .card-odds-toggle { display: block; margin: 12px auto 6px; border: none; background: none; color: #7a4a22; text-decoration: underline; cursor: pointer; }
 .card-odds { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .card-odds th, .card-odds td { padding: 3px 4px; text-align: right; border-bottom: 1px solid #efdfbf; }
@@ -1208,10 +1232,33 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
   85% { transform: scale(1); opacity: 1; }
   100% { transform: scale(0.9); opacity: 0; }
 }
-.card-slot { padding: 0; border: 0; background: none; border-radius: 13px; cursor: pointer; }
+.card-slot { min-width: 0; padding: 0; border: 0; background: none; border-radius: 13px; cursor: pointer; }
 .card-slot:disabled { cursor: default; }
 .card-slot.shelved { outline: 3px solid #ff9d5c; outline-offset: 2px; }
 .card-slot.empty { cursor: help; }
+/* 카드 보기: 등급이 오를수록 무대가 화려해진다 — 일반은 어두운 무대, 고급은 은빛, 희귀는 보랏빛 + 도는 빛살, 영웅은 금빛 + 빠른 빛살. */
+.card-inspect { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; overflow: hidden; color: #fff; text-align: center; background: radial-gradient(circle at 50% 42%, #34405c, #080c18 78%); animation: ci-in 0.22s ease-out; }
+.card-inspect.g1 { background: radial-gradient(circle at 50% 42%, #5b7fa8, #0a1220 78%); }
+.card-inspect.g2 { background: radial-gradient(circle at 50% 42%, #7a4fd0, #120a26 78%); }
+.card-inspect.g3 { background: radial-gradient(circle at 50% 42%, #e0a02e, #241203 78%); }
+.card-inspect-rays { position: absolute; left: 50%; top: 42%; width: 170vmax; height: 170vmax; margin: -85vmax; opacity: 0; background: repeating-conic-gradient(rgba(255, 255, 255, 0.1) 0 7deg, transparent 7deg 18deg); animation: ci-spin 44s linear infinite; }
+.g2 > .card-inspect-rays { opacity: 0.7; }
+.g3 > .card-inspect-rays { opacity: 1; animation-duration: 22s; background: repeating-conic-gradient(rgba(255, 236, 170, 0.22) 0 7deg, transparent 7deg 18deg); }
+.card-inspect-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.card-inspect .wc-card.lg { width: min(64vw, 44vh, 320px); touch-action: none; }
+.card-inspect .wc-card-label { font-size: clamp(1rem, 5vw, 1.6rem); }
+.card-inspect-grade { font-weight: 900; font-size: 1.15rem; letter-spacing: 0.12em; color: #d6dde8; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); }
+.g1 .card-inspect-grade { color: #dff1ff; }
+.g2 .card-inspect-grade { color: #e3d0ff; }
+.g3 .card-inspect-grade { color: #ffe08a; font-size: 1.35rem; }
+.card-inspect-info b { display: block; font-size: 1.3rem; }
+.card-inspect-info span, .card-inspect small { opacity: 0.8; font-size: 0.85rem; }
+.card-inspect-actions { display: flex; gap: 8px; }
+.card-inspect-actions button { min-width: 48px; min-height: 48px; padding: 0 16px; border: 2px solid #e2b469; border-radius: 999px; background: rgba(255, 248, 231, 0.95); color: #2b1d10; font-weight: 800; font-size: 1rem; cursor: pointer; }
+.card-inspect-actions button.on { background: #ffd76a; }
+.card-inspect-close { position: absolute; top: 14px; right: 14px; font-size: 26px; color: #fff; }
+@keyframes ci-in { from { opacity: 0; transform: scale(1.06); } }
+@keyframes ci-spin { to { transform: rotate(1turn); } }
 .card-slot.asked { outline: 3px dashed #7dd3fc; outline-offset: 2px; }
 .card-howto { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin: 10px 0 4px; padding: 8px 12px; border-radius: 12px; background: rgba(14, 116, 144, 0.18); font-size: 13px; }
 .card-howto b { flex-basis: 100%; }
@@ -1247,10 +1294,11 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
   .game-strip { top: auto; bottom: 64px; left: 0; right: 0; width: fit-content; margin: 0 auto; }
 }
 .card-skills { position: fixed; z-index: 26; right: 16px; bottom: 112px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
-.card-skills button { padding: 8px 14px; border: none; border-radius: 999px; background: #8a6cff; color: #fff; font-weight: 800; box-shadow: 0 4px 12px rgba(40, 24, 8, 0.3); cursor: pointer; }
+.card-skills button { padding: 9px 16px; border: 2px solid #e2b469; border-radius: 999px; background: rgba(255, 248, 231, 0.95); color: #2b1d10; font-weight: 800; box-shadow: 0 4px 12px rgba(40, 24, 8, 0.3); cursor: pointer; }
 .card-merge-show { flex-wrap: wrap; gap: 10px; padding: 24px; }
 @media (prefers-reduced-motion: reduce) {
-  .wc-card.r-hero .wc-card-foil, .card-toast.ready { animation: none; }
+  .card-toast.ready, .card-inspect, .card-inspect-rays { animation: none; }
+  .wc-card, .wc-card .wc-card-foil, .wc-card::after { animation: none !important; }
 }
 
 /* TA-6 (2026-11-04 시험 A): 판이 끝나면 결과 창 → 주머니 → 세 줄 고리 토스트 순으로 한 번에 하나만 보인다. */

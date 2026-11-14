@@ -35,6 +35,8 @@ for (const [port, name, w, h, touch] of [[9531, 'desk', 1280, 800, false], [9532
   await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: touch ? 2 : 1, mobile: touch });
   if (touch) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await sleep(1200);
+  // 느린 PC 에서는 이때 아직 about:blank 다(저장을 못 쓴다) — 게임 문서가 뜬 것을 보고 심는다.
+  await until(`location.href.startsWith(${JSON.stringify(BASE)}) && document.readyState !== 'loading'`, 60000);
   await ev(`(localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 })),
     localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null })),
     localStorage.setItem('wildcrown.fx.v1', JSON.stringify({ shake: true, quick: false, cards: false, dive: false, quests: false, blitz: false })), localStorage.removeItem('wildcrown.resume.v1'), 1)`);
@@ -72,6 +74,9 @@ for (const [port, name, w, h, touch] of [[9531, 'desk', 1280, 800, false], [9532
   const turn0 = await ev(`({ text: document.getElementById('turn-text').textContent, mine: document.body.classList.contains('my-turn') })`);
   measured[name] = { geo, hud };
   await shot(`${name}-play.jpg`);
+  // 캐릭터 룩 A(11-14): 채도·윤곽 셰이더가 걸려 있다(등 표식 B 는 넣었다가 뺐다)
+  const look = await ev(`({ look: ${W}.debugAnimalLook(), calls: ${W}.debugRenderCalls() })`);
+  check(`${name} 캐릭터 룩`, '채도 > 1 · 윤곽 > 0 · 드로우콜 ≤ 100', look, look.look.sat > 1 && look.look.rim > 0 && look.calls <= 100);
   check(`${name} 구도`, '64칸이 모두 화면 안(가장자리 12px 안쪽)', geo, geo.inside === 64);
   check(`${name} HUD 가 판을 덮지 않음`, '늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px', hud, hud.covered === 0 && hud.heads === 0 && hud.rows === 1 && hud.minBtn >= 36);
   if (touch) check(`${name} 조작법 줄`, '터치 화면에서는 마우스 안내가 없다', { hintShown: hud.hintShown }, hud.hintShown === false);
@@ -113,12 +118,27 @@ for (const [port, name, w, h, touch] of [[9531, 'desk', 1280, 800, false], [9532
   await sleep(450);
   const queen = await ev(`(() => { const st = ${W}.getState(); return { ...st.moveMarks, sel: ${W}.debugSelected(), calls: ${W}.debugRenderCalls() }; })()`);
   await shot(`${name}-queen.jpg`);
-  check(`${name} 퀸의 갈 칸`, '점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100', queen, queen.dots === 6 && queen.rings === 0 && queen.draws <= 4 && queen.calls <= 100);
+  check(`${name} 퀸의 갈 칸`, '점 6 · 고리 0 · 표시 드로우콜 ≤ 5 · 전체 ≤ 100', queen, queen.dots === 6 && queen.rings === 0 && queen.draws <= 5 && queen.calls <= 100);
   const nThreat = await ev(`${W}.showThreats()`);
   await sleep(450);
   const threat = await ev(`(() => { const st = ${W}.getState(); return { n: ${nThreat}, ...st.moveMarks, loose: st.highlightMeshCount, calls: ${W}.debugRenderCalls() }; })()`);
   await shot(`${name}-threat.jpg`);
   check(`${name} 위험 표시`, '위험한 말 2(d4 · e4) · 고른 표시는 걷힘 · 낱개 메시 0', threat, threat.n === 2 && threat.threats === 2 && threat.selected === false && threat.loose === 0 && threat.calls <= 100);
+
+  // 4차: 체크메이트 고리 — 1.f3 e5 2.g4 에서 흑으로 이어 해 Qh4# 를 실제로 눌러 둔다
+  await ev(`(localStorage.setItem('wildcrown.resume.v1', JSON.stringify({ v: 1, gameId: 78, color: 'b', rivalId: null, moves: [['f2','f3'],['e7','e5'],['g2','g4']].map(([from, to]) => ({ from, to })) })), 1)`);
+  await send('Page.navigate', { url: BASE });
+  await sleep(1500);
+  await until(`${W}?.isStarted?.() && !${W}.debugBusy() && ${W}.debugHistory().length === 3`, 90000);
+  await sleep(2500);
+  await tap(await ev(`${W}.debugSquareClient(0, 3)`));   // d8 퀸
+  await sleep(450);
+  await tap(await ev(`${W}.debugSquareClient(4, 7)`));   // h4
+  const mated = await until(`${W}.debugHistory().at(-1)?.san === 'Qh4#' && ${W}.getState().moveMarks.threats === 1`, 20000);
+  await sleep(1200);
+  const mate = await ev(`(() => { const st = ${W}.getState(); return { san: ${W}.debugHistory().at(-1)?.san, ...st.moveMarks, loose: st.highlightMeshCount }; })()`);
+  await shot(`${name}-mate.jpg`);
+  check(`${name} 체크메이트 고리`, 'Qh4# · 왕의 칸에 주황 고리 1 + 붉은 칸 1 · 낱개 메시 0', { mated, ...mate }, mated && mate.threats === 1 && mate.rings === 1 && mate.loose === 0);
 
   await ev(`(localStorage.removeItem('wildcrown.resume.v1'), localStorage.removeItem('wildcrown.cards.v1'), localStorage.removeItem('wildcrown.skill.v1'), localStorage.removeItem('wildcrown.fx.v1'), 1)`);
   ws.close(); chrome.kill();

@@ -1,6 +1,6 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-14T08:21:44.596Z",
+ "at": "2026-11-14T13:54:33.194Z",
  "pass": 24,
  "total": 24,
  "measured": {
@@ -17,7 +17,7 @@
    "doneCalls": 68
   },
   "touch": {
-   "idleCalls": 64,
+   "idleCalls": 51,
    "tagCalls": 68,
    "idleMatch": 63,
    "stageCalls": 69,
@@ -227,7 +227,7 @@
    "want": "딱지가 그리는 메시 3(종류마다 하나) · 전체 ≤ 100",
    "got": {
     "draws": 3,
-    "idle": 64,
+    "idle": 51,
     "calls": 68
    },
    "ok": true
