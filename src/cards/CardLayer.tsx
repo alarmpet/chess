@@ -190,7 +190,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
     };
     const onStarted = (e: Event) => {
       const d = (e as CustomEvent).detail;
-      if (d.resumed) say(en ? 'Picking up the last game where you left it.' : '지난 판을 이어서 둡니다.', 6000);
+      if (d.resumed && !d.puzzle) say(en ? 'Picking up the last game where you left it.' : '지난 판을 이어서 둡니다.', 6000);
       // A pouch from any other game was left unfinished: those cards are not kept.
       const held = loadPouch();
       if (held && held.gameId !== d.gameId) clearPouch();

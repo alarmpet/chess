@@ -66,7 +66,9 @@ for (const [port, name, phone] of [[9486, 'mouse', false], [9487, 'touch', true]
   await ev(`${W}.resetChessBoard(true, false), 1`);
   await sleep(1200);
   const off = await reel();
-  const idleCalls = await ev(`${W}.debugRenderCalls()`);
+  // 쉬는 값은 2초 동안 여러 번 읽어 가장 큰 값으로(11-13: 새 판 직후 한 번만 읽으면 가끔 13 낮게 잡혔다 — 스위치가 꺼진 길이라 퍼즐과는 무관)
+  let idleCalls = 0;
+  for (let k = 0; k < 10; k++) { idleCalls = Math.max(idleCalls, await ev(`${W}.debugRenderCalls()`)); await sleep(200); }
   check(`${name} 스위치 꺼짐 = 릴 없음`, '새 판을 열어도 안 돎', { lab: off.lab, plays: off.plays, active: off.active }, off.lab === false && off.plays === 0 && !off.active);
 
   // 2) 스위치를 켜고 연 판: 첫 판은 고정 세트(폰×2·나이트·비숍), 시간표대로 멈춘다

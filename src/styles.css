@@ -221,6 +221,30 @@ html, body, #root {
   display: none;
 }
 
+/* 플레이 화면 개편(2026-11-13): 판 위에 늘 떠 있는 것(왼쪽 위 · 빠른 단추 · 아래 줄)은 섬과 같은 그림책 빛깔로.
+   어두운 유리 알약은 밝은 바다 위에서 따로 놀았다. 변수만 이 자리에서 바꾼다 — 메뉴와 다른 창은 그대로. */
+#hud-left, #hud-quick, #hud-bottom {
+  --hud-bg: rgba(255, 248, 231, 0.95); --text: #2b1d10; --gold: #8a5a00; --gold-bright: #8a5a00; --muted: #6b4a1e; --hud-border: #d9912b;
+}
+#hud-left > *, #hud-quick .hud-btn, #hud-bottom > * {
+  background: var(--hud-bg); color: var(--text); border: 2px solid #e2b469; backdrop-filter: none;
+  box-shadow: 0 3px 0 rgba(120, 72, 10, 0.32), 0 8px 16px rgba(20, 40, 60, 0.18);
+}
+#hud-quick .hud-btn:hover, #hud-quick .hud-btn.active { background: #ffe9a8; border-color: #d9912b; color: #2b1d10; }
+#hud-left .mode-badge { background: #fff; color: #6b4a1e; border-color: #e2b469; }
+#hud-left .turn-dot { box-shadow: 0 0 0 2px #2b1d10; }
+#hud-left .turn-dot.black { background: #2b303c; border: 0; box-shadow: 0 0 0 2px #e2b469; }
+/* 차례 판: 내 차례면 초록 테와 뛰는 점 — 지금 둘 수 있다는 것이 색 이름보다 먼저 읽힌다 */
+#status-pill { font-size: 0.95rem; font-weight: 800; }
+body.my-turn #status-pill { border-color: #3f9a3a; background: #e9f8dc; }
+body.my-turn #status-pill .turn-dot { animation: turn-beat 1.4s ease-in-out infinite; }
+@keyframes turn-beat { 50% { transform: scale(1.3); } }
+@media (prefers-reduced-motion: reduce) { body.my-turn #status-pill .turn-dot { animation: none; } }
+/* 조작법 줄: 처음 몇 초만 보이고 물러난다(늘 떠서 내 뒷줄을 덮었다). 터치 화면에서는 마우스 안내를 아예 안 띄운다 */
+#controls-hint { animation: hint-out 0.6s 9s forwards; }
+@keyframes hint-out { to { opacity: 0; visibility: hidden; } }
+@media (pointer: coarse) { #controls-hint { display: none; } }
+
 /* Cinematic UI Hidden Mode */
 body.cinematic-ui-hidden #hud-top,
 body.cinematic-ui-hidden #hud-bottom {
@@ -565,8 +589,8 @@ body.cinematic-ui-hidden .mobile-only-restore-ui {
   pointer-events: auto;
 }
 
-/* Mobile Responsive View Optimization */
-@media (max-width: 768px) {
+/* Mobile Responsive View Optimization — 낮은 가로 화면(폰을 눕힘)도 같은 줄임 배치를 쓴다: 두 줄 단추가 상대 뒷줄을 덮었다(2026-11-13) */
+@media (max-width: 768px), (max-height: 480px) {
   .quick-label,
   .brand-pill {
     display: none;

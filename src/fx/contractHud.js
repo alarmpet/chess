@@ -37,6 +37,7 @@ body.cinematic-ui-hidden #contract-hud { display: none; }
 .contract-result .ch-gem { border-color: #d9912b; }
 .contract-result .ch-gem.full { border-color: #8a5a00; }
 .contract-result .cr-note { margin-top: 6px; font-size: 0.78rem; font-weight: 700; color: #1f5a8a; }
+.contract-result .cr-missed { margin-top: 8px; font: inherit; font-size: 0.86rem; font-weight: 800; color: #2b1d10; background: #ffd23f; border: 0; border-radius: 12px; padding: 9px 14px; min-height: 40px; cursor: pointer; pointer-events: auto; }
 #contract-hud .ch-goal { background: rgba(255, 248, 231, 0.94); border: 2px solid #d9912b; border-radius: 12px; padding: 5px 8px;
   display: grid; grid-template-columns: auto 1fr; column-gap: 6px; align-items: center; opacity: 0.25; transition: opacity 0.25s; }
 #contract-hud.tall .ch-goal { flex: 1 1 0; min-width: 0; }
@@ -191,11 +192,18 @@ export function createContractHud(doc = document) {
     });
     box.append(el('div', 'cr-line', line), score, goals);
     if (end.note) box.appendChild(el('div', 'cr-note', end.note));
+    // 놓친 왕관(IR-3): 이 판에서 실제로 지나친 결정타가 있을 때만. 누르면 그 국면이 연습으로 열린다.
+    if (end.missed) {
+      const again = el('button', 'cr-missed', '👑 놓친 왕관 다시 보기');
+      again.type = 'button';
+      again.addEventListener('click', () => end.missed());
+      box.appendChild(again);
+    }
     const banner = doc.querySelector('#checkmate-overlay .checkmate-banner');
     const actions = banner?.querySelector('.checkmate-actions');
     if (banner) banner.insertBefore(box, actions || null);
     if (end.reason !== 'checkmate') { const sub = doc.getElementById('checkmate-subtitle'); if (sub) sub.textContent = ''; }
-    ended = { line, reason: end.reason, result: end.result, note: end.note || null };
+    ended = { line, reason: end.reason, result: end.result, note: end.note || null, missed: Boolean(end.missed) };
   }
 
   /** 끝난 판이 되살아났다(되돌리기): 결과를 치우고 HUD 를 다시 편다. */

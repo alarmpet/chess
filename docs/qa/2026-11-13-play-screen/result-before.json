@@ -1,0 +1,388 @@
+{
+ "at": "2026-11-13T07:57:25.802Z",
+ "base": "http://localhost:3000/",
+ "measured": {
+  "desk": {
+   "geo": {
+    "inside": 64,
+    "nearRowPx": 93,
+    "farRowPx": 39,
+    "nearColPx": 131,
+    "farColPx": 78,
+    "a1": 181,
+    "h1": 1099,
+    "top": 242,
+    "bottom": 669,
+    "vw": 1280,
+    "vh": 800
+   },
+   "hud": {
+    "boxes": 8,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": true,
+    "rows": 1,
+    "minBtn": 40,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   }
+  },
+  "phone": {
+   "geo": {
+    "inside": 60,
+    "nearRowPx": 35,
+    "farRowPx": 24,
+    "nearColPx": 55,
+    "farColPx": 43,
+    "a1": 4,
+    "h1": 386,
+    "top": 274,
+    "bottom": 477,
+    "vw": 390,
+    "vh": 844
+   },
+   "hud": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   }
+  },
+  "land": {
+   "geo": {
+    "inside": 64,
+    "nearRowPx": 46,
+    "farRowPx": 19,
+    "nearColPx": 64,
+    "farColPx": 38,
+    "a1": 198,
+    "h1": 646,
+    "top": 118,
+    "bottom": 326,
+    "vw": 844,
+    "vh": 390
+   },
+   "hud": {
+    "boxes": 8,
+    "covered": 0,
+    "heads": 10,
+    "hintShown": true,
+    "rows": 1,
+    "minBtn": 40,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   }
+  },
+  "small": {
+   "geo": {
+    "inside": 64,
+    "nearRowPx": 27,
+    "farRowPx": 18,
+    "nearColPx": 41,
+    "farColPx": 33,
+    "a1": 35,
+    "h1": 325,
+    "top": 208,
+    "bottom": 361,
+    "vw": 360,
+    "vh": 640
+   },
+   "hud": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   }
+  }
+ },
+ "rows": [
+  {
+   "item": "desk 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 64,
+    "nearRowPx": 93,
+    "farRowPx": 39,
+    "nearColPx": 131,
+    "farColPx": 78,
+    "a1": 181,
+    "h1": 1099,
+    "top": 242,
+    "bottom": 669,
+    "vw": 1280,
+    "vh": 800
+   },
+   "ok": true
+  },
+  {
+   "item": "desk HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 8,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": true,
+    "rows": 1,
+    "minBtn": 40,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 66
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 60,
+    "nearRowPx": 35,
+    "farRowPx": 24,
+    "nearColPx": 55,
+    "farColPx": 43,
+    "a1": 4,
+    "h1": 386,
+    "top": 274,
+    "bottom": 477,
+    "vw": 390,
+    "vh": 844
+   },
+   "ok": false
+  },
+  {
+   "item": "phone HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 조작법 줄",
+   "want": "터치 화면에서는 마우스 안내가 없다",
+   "got": {
+    "hintShown": false
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 66
+   },
+   "ok": true
+  },
+  {
+   "item": "land 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 64,
+    "nearRowPx": 46,
+    "farRowPx": 19,
+    "nearColPx": 64,
+    "farColPx": 38,
+    "a1": 198,
+    "h1": 646,
+    "top": 118,
+    "bottom": 326,
+    "vw": 844,
+    "vh": 390
+   },
+   "ok": true
+  },
+  {
+   "item": "land HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 8,
+    "covered": 0,
+    "heads": 10,
+    "hintShown": true,
+    "rows": 1,
+    "minBtn": 40,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   },
+   "ok": false
+  },
+  {
+   "item": "land 조작법 줄",
+   "want": "터치 화면에서는 마우스 안내가 없다",
+   "got": {
+    "hintShown": true
+   },
+   "ok": false
+  },
+  {
+   "item": "land 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "land 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "land 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "small 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 64,
+    "nearRowPx": 27,
+    "farRowPx": 18,
+    "nearColPx": 41,
+    "farColPx": 33,
+    "a1": 35,
+    "h1": 325,
+    "top": 208,
+    "bottom": 361,
+    "vw": 360,
+    "vh": 640
+   },
+   "ok": true
+  },
+  {
+   "item": "small HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgba(12, 15, 22, 0.78)"
+   },
+   "ok": true
+  },
+  {
+   "item": "small 조작법 줄",
+   "want": "터치 화면에서는 마우스 안내가 없다",
+   "got": {
+    "hintShown": false
+   },
+   "ok": true
+  },
+  {
+   "item": "small 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "small 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "small 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 67
+   },
+   "ok": true
+  }
+ ]
+}

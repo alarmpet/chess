@@ -953,6 +953,7 @@ export function initWizardChess() {
       return `${color}_${'abcdefgh'[c]}${rank}`;
     }
     function reportGameEnd(result, extra = {}) {
+      if (puzzle) { if (result === 'win') puzzleSolved(); return; }   // 연습: 기록·사다리·정산에 닿지 않는다
       saveResume();
       if (gameReported || gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
       gameReported = true;
@@ -965,6 +966,8 @@ export function initWizardChess() {
         rungNote = contractStore.rung > rungBefore ? `다음 상대는 한 단계 위 「${RUNG_NAMES[contractStore.rung]}」이에요.` : contractStore.rung < rungBefore ? `다음 상대는 「${RUNG_NAMES[contractStore.rung]}」로 내려와요.` : '';
         try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* 저장이 막히면 기록만 잃는다 */ }
         lastContractEnd = { gameId, set: contract.id, result, reason, plies };
+        // 놓친 왕관(IR-3): 진 판에서 실제로 지나친 결정타가 있을 때만 다시 보기를 권한다.
+        try { missedOffer = result === 'loss' && puzzleLib ? puzzleLib.missedCrown(contract.id, referee.history(), playerColor) : null; } catch (e) { missedOffer = null; }
         try { window.dispatchEvent(new CustomEvent('contractfinished', { detail: { ...lastContractEnd, color: playerColor, w: contractState?.w, b: contractState?.b } })); } catch (e) {}
         return;
       }
@@ -1023,7 +1026,10 @@ export function initWizardChess() {
     let shellReel = null;
     function loadShellReel() {
       if (shellReel) return Promise.resolve(shellReel);
-      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js'), import('./fx/contractHud.js'), import('./fx/crownGems.js')]).then(([lib, tagLib, hudLib, gemsLib]) => {
+      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js'), import('./fx/contractHud.js'), import('./fx/crownGems.js'), import('./rules/crownPuzzles.js'), import('./rules/crownPuzzleData.js'), import('./fx/puzzleBar.js')]).then(([lib, tagLib, hudLib, gemsLib, pzLib, pzData, barLib]) => {
+        puzzleLib = pzLib;
+        puzzleData = pzData.CROWN_PUZZLES;
+        puzzleBar = puzzleBar || barLib.createPuzzleBar({ onStart: () => startPractice(0), onDismiss: () => setPracticeDone(), onNext: () => nextPuzzle(), onQuit: () => quitPuzzle() });
         gemLib = gemsLib;
         crownGems = crownGems || gemsLib.createCrownGems(scene, { square: BOARD_SQ_SIZE });
         reelLib = lib;
@@ -1077,6 +1083,60 @@ export function initWizardChess() {
     let oopsKey = '';                   // 한 번 경고한 수 — 같은 수를 다시 누르면 그대로 둔다
     const oopsStats = { warned: 0, played: 0, last: null, game: 0, inGame: 0 };
     const sqName = (r, c) => 'abcdefgh'[c] + (8 - r);
+    // 한 방 퍼즐(IR-3): 「한 수로 왕관 완성」 국면을 기보로 되살려 연다. 연습이라 기록·사다리·이어 하기에 닿지 않는다.
+    let puzzleLib = null;             // src/rules/crownPuzzles.js
+    let puzzleData = null;            // src/rules/crownPuzzleData.js
+    let puzzleBar = null;             // src/fx/puzzleBar.js
+    let puzzle = null;                // { kind: 'practice' | 'missed', index, total, tries, hint, solved, at, ms }
+    let missedOffer = null;           // 방금 진 판에서 지나친 결정타(missedCrown) — 결과 화면의 단추가 연다
+    let offerOn = false;
+    const puzzleStats = { started: 0, solved: 0, wrong: 0, last: null };
+    function setPracticeDone() {
+      contractStore = { ...contractStore, practice: 1 };
+      try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* 저장이 막히면 권유가 다시 뜰 뿐이다 */ }
+    }
+    async function startPuzzle(def, meta) {
+      const steps = puzzleLib?.parseMoves(def?.moves);
+      if (!steps || !contractLab || isAnimatingMove) return false;
+      const next = { ...meta, tries: 0, hint: false, solved: false, at: performance.now(), ms: null };
+      const ok = await resumeGame({ v: 1, gameId: (gameId + 1) >>> 0, color: def.color, rivalId: null, moves: steps, contract: def.set }, next);
+      if (!ok) return false;
+      playerCamSide = def.color;
+      setCameraForSide(def.color, false);
+      updateTurnUI();
+      puzzleStats.started += 1;
+      puzzleBar?.show(next);
+      return true;
+    }
+    function startPractice(index = 0) {
+      const list = puzzleLib && puzzleData ? puzzleLib.practiceSet(puzzleData) : [];
+      if (!list[index]) return Promise.resolve(false);
+      return startPuzzle(list[index], { kind: 'practice', index, total: list.length, id: list[index].id });
+    }
+    function startMissed() {
+      if (!missedOffer) return Promise.resolve(false);
+      return startPuzzle(missedOffer, { kind: 'missed', index: 0, total: 1, ply: missedOffer.ply });
+    }
+    function nextPuzzle() {
+      if (puzzle?.kind === 'practice' && puzzle.solved && puzzle.index + 1 < puzzle.total) return startPractice(puzzle.index + 1);
+      return quitPuzzle();
+    }
+    // 연습을 닫고 전체 말로 새 판을 연다.
+    function quitPuzzle() {
+      if (!puzzle || isAnimatingMove) return false;
+      resetChessBoard(true);
+      return true;
+    }
+    function puzzleSolved() {
+      if (!puzzle || puzzle.solved) return;
+      puzzle.solved = true;
+      puzzle.ms = Math.round(performance.now() - puzzle.at);
+      puzzleStats.solved += 1;
+      puzzleStats.last = { kind: puzzle.kind, index: puzzle.index, tries: puzzle.tries, ms: puzzle.ms };
+      if (puzzle.kind === 'practice' && puzzle.index + 1 >= puzzle.total) setPracticeDone();
+      puzzleBar?.solved();
+      try { window.dispatchEvent(new CustomEvent('puzzlesolved', { detail: { ...puzzleStats.last } })); } catch (e) {}
+    }
     let contractStore = (() => {
       try { return sanitizeContractStore(JSON.parse(window.localStorage.getItem(CONTRACT_STORE_KEY) || 'null')); } catch (e) { return sanitizeContractStore(null); }
     })();
@@ -1132,6 +1192,38 @@ export function initWizardChess() {
         roughness: 0.28,
         metalness: 0.18
       });
+
+      // 칸의 결(플레이 화면 개편 2차, 2026-11-13): 납작한 단색이던 칸에 도톰한 타일 느낌을 준다 — 가장자리는 어둡게, 위·왼쪽 모서리는 밝게,
+      // 안쪽에는 잔 알갱이. 색에 곱해지는 밝기 그림 하나를 두 재질이 같이 쓴다(드로우콜·메시는 그대로).
+      const tileTex = (() => {
+        const n = 128;
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = n;
+        const g = cv.getContext('2d');
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, n, n);
+        const rnd = mulberry32(64);
+        for (let i = 0; i < 520; i++) {   // 잔 알갱이
+          const v = 228 + Math.floor(rnd() * 27);
+          g.fillStyle = `rgba(${v}, ${v}, ${v}, 0.55)`;
+          g.fillRect(rnd() * n, rnd() * n, 1 + rnd() * 2.2, 1 + rnd() * 2.2);
+        }
+        const edge = 13;
+        for (const [x0, y0, x1, y1, a] of [[0, 0, 0, edge, 0.0], [0, n, 0, n - edge, 0.3], [0, 0, edge, 0, 0.0], [n, 0, n - edge, 0, 0.26]]) {   // 아래·오른쪽 가장자리 그늘
+          if (!a) continue;
+          const grad = g.createLinearGradient(x0, y0, x1, y1);
+          grad.addColorStop(0, `rgba(40, 30, 10, ${a})`); grad.addColorStop(1, 'rgba(40, 30, 10, 0)');
+          g.fillStyle = grad; g.fillRect(0, 0, n, n);
+        }
+        g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.lineWidth = 5;   // 위·왼쪽 모서리 빛
+        g.beginPath(); g.moveTo(3, n - 6); g.lineTo(3, 3); g.lineTo(n - 6, 3); g.stroke();
+        g.strokeStyle = 'rgba(40, 30, 10, 0.16)'; g.lineWidth = 2; g.strokeRect(1, 1, n - 2, n - 2);
+        const tex = new THREE.CanvasTexture(cv);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = 4;
+        return tex;
+      })();
+      lightSqMat.map = tileTex;
+      darkSqMat.map = tileTex;
 
       // 타일 64개를 밝은 칸·어두운 칸 InstancedMesh 둘로(엔진 선택 계획서 §5 2~3일차: 드로우콜 68 → 6).
       // 재질은 그대로 둘이라 화면이 같다. 피킹은 instanceId → userData.squares[instanceId] 로 칸을 찾는다.
@@ -1956,6 +2048,10 @@ let engineStarted = false;
     // White sits at +Z looking toward -Z, black at -Z looking toward +Z.
     // High enough that the near ranks do not hide the board; a narrow screen backs away until the board fits across it.
     const PORTRAIT_FIT_MAX = 2.15;
+    const PORTRAIT_ASPECT = 0.8;        // 이보다 좁으면 세로 구도
+    const PORTRAIT_PITCH_DEG = 56;      // 내려다보는 각(가로 구도는 약 37도)
+    const PORTRAIT_SIDE_ROOM = 0.42;    // 판 양옆에 남기는 칸 수(끝 줄 말의 몸이 들어올 자리)
+    const PORTRAIT_TARGET_Y = 0.25;
     // On a tall screen the picture rides up by this share of the height: the board leaves the sky and the room
     // under it holds the game strip (mission, move number). Picking still works, the offset is in the projection.
     const PORTRAIT_SHIFT = 0.07;
@@ -1968,6 +2064,15 @@ let engineStarted = false;
     shiftPortraitView();
     function defaultCameraFor(color, aspect = camera.aspect) {
       const zSign = color === 'b' ? -1 : 1;
+      // 세로 화면(플레이 화면 개편 2026-11-13): 판은 너비에 묶인다. 예전 구도는 더 가까이 가서 a·h 줄의 말이 화면 밖으로 잘렸다.
+      // 여덟 줄이 다 들어오는 거리까지 물러나고, 대신 더 위에서 내려다봐 칸의 세로 길이(누를 자리)를 키운다.
+      if (aspect < PORTRAIT_ASPECT) {
+        const pitch = THREE.MathUtils.degToRad(PORTRAIT_PITCH_DEG);
+        const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * aspect;
+        const dist = Math.min((4 + PORTRAIT_SIDE_ROOM) * BOARD_SQ_SIZE / tanH + 4 * BOARD_SQ_SIZE * Math.cos(pitch), 16);
+        const target = new THREE.Vector3(0, PORTRAIT_TARGET_Y, zSign * 0.02);
+        return { target, pos: new THREE.Vector3(0, Math.sin(pitch) * dist, zSign * Math.cos(pitch) * dist).add(target) };
+      }
       // A tall phone used to sit at the 2.35 cap, the board small under half a screen of sea. Closer there, and the
       // room under the board holds the game strip (mission round 2026-11-05, grok's cap, measured on a Z Flip5).
       const fit = THREE.MathUtils.clamp(1.25 / aspect, 1, aspect < 1 ? PORTRAIT_FIT_MAX : 2.35);
@@ -2168,8 +2273,8 @@ let engineStarted = false;
       if ((playerColor === 'w' || playerColor === 'b') && referee.turn() === playerColor && !contractState.winner && !gameOver) {
         const pieceAt = (sq) => { const { r, c } = squareRC(sq); return boardState[r]?.[c] || null; };
         try {
-          for (const m of finishersAt(referee.fen(), contract, contractState)) { const p = pieceAt(m.target); if (p) contractGold.add(p); }
-          for (const sq of dangerSquares(referee.fen(), contract, contractState)) { const p = pieceAt(sq); if (p) contractDanger.add(p); }
+          if (!puzzle || puzzle.hint) for (const m of finishersAt(referee.fen(), contract, contractState)) { const p = pieceAt(m.target); if (p) contractGold.add(p); }
+          if (!puzzle) for (const sq of dangerSquares(referee.fen(), contract, contractState)) { const p = pieceAt(sq); if (p) contractDanger.add(p); }
         } catch (e) { /* 표시만 잃는다 */ }
       }
       const stage = contractStage(contractState);
@@ -2245,7 +2350,7 @@ let engineStarted = false;
         hudEnded = ended;
         if (ended) {
           const me = playerColor === 'b' ? 'b' : 'w';
-          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, gems: contractGems });
+          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, gems: contractGems, missed: missedOffer ? () => startMissed() : null });
         } else contractHud.resume(wide);
       }
       contractHud.tick(dt);
@@ -2256,6 +2361,8 @@ let engineStarted = false;
         if (!isAnimatingMove && (contractWasAnimating || contractSig !== `${gameId}:${moveHistory.length}`)) refreshContract();
         contractWasAnimating = isAnimatingMove;
       }
+      const wantOffer = Boolean(puzzleBar && contract && !puzzle && !contractStore.practice && !moveHistory.length && !gameOver);
+      if (wantOffer !== offerOn) { offerOn = wantOffer; if (wantOffer) puzzleBar.offer(); else puzzleBar?.hideOffer(); }
       const want = contract && !gameOver && (contractStageNow === 'matchPoint' || contractStageNow === 'finalPoint') ? 1 : 0;
       if (stageMix !== want) {
         stageMix += Math.sign(want - stageMix) * Math.min(Math.abs(want - stageMix), dt / 1.2);
@@ -3177,6 +3284,9 @@ let engineStarted = false;
 
     // `announce` is false only on a start that is about to resume a saved game: no new game begins.
     function resetChessBoard(orientCamera = true, preserveScript = false, announce = true) {
+      puzzle = null;
+      missedOffer = null;
+      puzzleBar?.hide();
       rivalPaid = false;
       entranceDrops = [];
       gameReported = false;
@@ -3436,6 +3546,7 @@ let engineStarted = false;
     // Square Highlights
     // =========================================================================
     function clearSquareHighlights() {
+      moveMarks.clear();
       while (squareHighlightsGroup.children.length > 0) {
         squareHighlightsGroup.remove(squareHighlightsGroup.children[0]);
       }
@@ -3446,21 +3557,19 @@ let engineStarted = false;
       if (isAnimatingMove || gameOver || currentTurn !== playerColor) return -1;
       clearSquareHighlights();
       const squares = referee.threatened(playerColor);
-      for (const sq of squares) {
-        const geo = new THREE.RingGeometry(0.11, 0.165, 32);
-        geo.rotateX(-Math.PI / 2);
-        const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xff5a7a, side: THREE.DoubleSide }));
-        const pos = boardToWorld(8 - Number(sq[1]), sq.charCodeAt(0) - 97);
-        mesh.position.set(pos.x, BOARD_SURFACE_Y + 0.012, pos.z);
-        squareHighlightsGroup.add(mesh);
-        impactFx.label(new THREE.Vector3(pos.x, BOARD_SURFACE_Y + 0.3, pos.z), '위험!', 0.12);
+      const cells = squares.map((sq) => ({ r: 8 - Number(sq[1]), c: sq.charCodeAt(0) - 97 }));
+      moveMarks.threats(cells);
+      // 글자는 한 번만 — 말마다 띄우면 이웃한 칸에서 겹쳐 뭉개진다. 위험한 말들의 한가운데에 둔다.
+      if (cells.length) {
+        const mid = cells.map((cell) => boardToWorld(cell.r, cell.c)).reduce((a, p) => a.add(new THREE.Vector3(p.x, 0, p.z)), new THREE.Vector3()).multiplyScalar(1 / cells.length);
+        impactFx.label(new THREE.Vector3(mid.x, BOARD_SURFACE_Y + 0.3, mid.z), '위험!', 0.12);
       }
       return squares.length;
     }
 
     // Takes back the player's last move and the reply. The referee undoes the moves itself, so the game record stays whole.
     function takeBackMove() {
-      if (gameMode !== 'single' || scriptedGameActive || isAnimatingMove || gameOver || currentTurn !== playerColor) return false;
+      if (gameMode !== 'single' || scriptedGameActive || isAnimatingMove || gameOver || currentTurn !== playerColor || puzzle) return false;
       if (moveHistory.length < 2 || referee.history().length < 2) return false;
       referee.undo();
       referee.undo();
@@ -3474,6 +3583,7 @@ let engineStarted = false;
     // An unfinished single game survives a reload: the move list is kept after every move and replayed on start
     // (src/rules/resume.js). A finished, multiplayer, scripted or empty game keeps nothing.
     function saveResume() {
+      if (puzzle) return;   // 연습 국면은 이어 할 판이 아니다 — 남아 있던 기록도 그대로 둔다
       try {
         const history = referee.history();
         if (gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator' || gameOver || !history.length) {
@@ -3493,9 +3603,14 @@ let engineStarted = false;
     }
 
     // Same game id, so the cards and the island treat the rest of the game as the same game.
-    async function resumeGame(record) {
+    async function resumeGame(record, asPuzzle = null) {
       const back = record && replayResume(record);
       if (!back) return false;
+      puzzle = asPuzzle;
+      // 계약 세트를 국면보다 먼저 맞춘다 — 판을 되살리며 판정이 한 번 돌 때 앞 판의 세트로 세면 안 된다.
+      contract = contractLab && record.contract ? contractById(record.contract) : null;
+      missedOffer = null;
+      if (!asPuzzle) puzzleBar?.hide();
       gameMode = 'single';
       scriptedGameActive = false;
       playerColor = record.color;
@@ -3521,46 +3636,121 @@ let engineStarted = false;
       contractGems = null;
       crownGems?.clear();
       if (contract) revealContractNow();
-      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: record.moves.length, rivalId: activeRivalId, color: playerColor } }));
+      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: record.moves.length, rivalId: activeRivalId, color: playerColor, ...(puzzle ? { puzzle: puzzle.kind } : {}) } }));
       notifyRivalChange();
       saveResume();
       maybeScheduleAIMove();
       return true;
     }
 
+    // 고른 말 · 갈 칸 · 잡을 말(플레이 화면 개편 2차, 2026-11-13).
+    // 예전에는 칸마다 메시를 새로 만들었다(퀸을 고르면 드로우콜 +20, 고리는 말 밑에 깔려 안 보였다).
+    // 이제 인스턴스 메시 셋이다: 고른 칸을 통째로 물들이는 판 · 갈 칸의 큰 점 · 잡을 말 발밑의 굵은 고리. 드로우콜은 많아야 +3.
+    const moveMarks = (() => {
+      const paint = (draw) => {
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = 128;
+        const g = cv.getContext('2d');
+        draw(g);
+        const tex = new THREE.CanvasTexture(cv);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      };
+      const make = (name, size, tex, count, lift) => {
+        const geo = new THREE.PlaneGeometry(size, size);
+        geo.rotateX(-Math.PI / 2);
+        const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+        mat.userData = { outlineParameters: { visible: false } };
+        const mesh = new THREE.InstancedMesh(geo, mat, count);
+        mesh.name = name;
+        mesh.count = 0;
+        mesh.visible = false;
+        mesh.frustumCulled = false;
+        mesh.renderOrder = 2;
+        mesh.userData.lift = lift;
+        scene.add(mesh);
+        return mesh;
+      };
+      // 고른 칸: 금빛 판에 밝은 테
+      const tile = make('move-selected', BOARD_SQ_SIZE * 0.96, paint((g) => {
+        g.fillStyle = 'rgba(255, 210, 63, 0.62)'; g.fillRect(0, 0, 128, 128);
+        g.strokeStyle = '#fff6c8'; g.lineWidth = 12; g.strokeRect(6, 6, 116, 116);
+      }), 1, 0.008);
+      // 갈 칸: 흰 테를 두른 하늘색 큰 점 — 초록 칸과 크림 칸 어디서나 보인다
+      const dot = make('move-dot', BOARD_SQ_SIZE * 0.56, paint((g) => {
+        g.beginPath(); g.arc(64, 64, 56, 0, Math.PI * 2); g.fillStyle = 'rgba(20, 60, 90, 0.35)'; g.fill();
+        g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill();
+        g.beginPath(); g.arc(64, 64, 38, 0, Math.PI * 2); g.fillStyle = '#19a8f0'; g.fill();
+      }), 28, 0.011);
+      // 잡을 말: 칸을 붉게 물들이고 네 귀퉁이에 꺾쇠를 친다. 둥근 고리는 흑 말의 붉은 발판과 겹쳐 안 보였다(3차) —
+      // 발판이 닿지 않는 칸 귀퉁이에 표시를 둔다.
+      const ring = make('move-capture', BOARD_SQ_SIZE * 1.0, paint((g) => {
+        g.fillStyle = 'rgba(255, 59, 78, 0.42)'; g.fillRect(0, 0, 128, 128);
+        const corner = (w, color) => {
+          g.lineWidth = w; g.strokeStyle = color; g.lineCap = 'round'; g.lineJoin = 'round';
+          for (const [x, y, dx, dy] of [[12, 12, 1, 1], [116, 12, -1, 1], [12, 116, 1, -1], [116, 116, -1, -1]]) {
+            g.beginPath(); g.moveTo(x + dx * 36, y); g.lineTo(x, y); g.lineTo(x, y + dy * 36); g.stroke();
+          }
+        };
+        corner(20, '#ffffff'); corner(11, '#ff2d44');
+      }), 16, 0.009);
+      // 위험한 내 말 · 체크메이트 당한 왕: 칸을 가득 채우는 주황 톱니 고리 — 잡기 고리(빨강)와 헷갈리지 않게 색과 모양이 다르다.
+      const warn = make('move-threat', BOARD_SQ_SIZE * 1.04, paint((g) => {
+        g.fillStyle = 'rgba(255, 122, 26, 0.28)'; g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2); g.fill();
+        g.setLineDash([17, 10]);
+        g.lineWidth = 20; g.strokeStyle = '#ffffff'; g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.stroke();
+        g.lineWidth = 12; g.strokeStyle = '#ff7a1a'; g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.stroke();
+      }), 16, 0.012);
+      // 고른 말 머리 위의 금빛 화살표: 고른 칸의 빛은 말과 발판에 가려 잘 안 보인다 — 「이 말」이라는 표시는 머리 위에 둔다.
+      const arrowMat = new THREE.SpriteMaterial({ map: paint((g) => {
+        g.beginPath(); g.moveTo(14, 26); g.lineTo(114, 26); g.lineTo(64, 110); g.closePath();
+        g.lineJoin = 'round'; g.lineWidth = 16; g.strokeStyle = '#ffffff'; g.stroke();
+        g.fillStyle = '#ffc233'; g.fill();
+        g.lineWidth = 5; g.strokeStyle = '#8a5a00'; g.stroke();
+      }), transparent: true, depthTest: false, depthWrite: false });
+      arrowMat.userData = { outlineParameters: { visible: false } };
+      const arrow = new THREE.Sprite(arrowMat);
+      arrow.name = 'move-arrow';
+      arrow.scale.setScalar(BOARD_SQ_SIZE * 0.52);
+      arrow.visible = false;
+      arrow.renderOrder = 6;
+      scene.add(arrow);
+      let held = null;
+      let age = 0;
+      const aim = () => {
+        if (!held?.mesh) { arrow.visible = false; return; }
+        const p = held.mesh.position;
+        arrow.position.set(p.x, p.y + (PIECE_HEIGHTS[held.type] || 0.4) + BOARD_SQ_SIZE * (0.34 + (reducedMotion ? 0 : 0.07 * Math.sin(age * 5))), p.z);
+        arrow.visible = true;
+      };
+      const reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+      const m4 = new THREE.Matrix4();
+      const put = (mesh, list) => {
+        list.forEach((p, i) => { const v = boardToWorld(p.r, p.c); m4.makeTranslation(v.x, BOARD_SURFACE_Y + mesh.userData.lift, v.z); mesh.setMatrixAt(i, m4); });
+        mesh.count = list.length;
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.visible = list.length > 0;
+      };
+      return {
+        show(r, c, moves) { age = 0; held = boardState[r]?.[c] || null; aim(); put(tile, [{ r, c }]); put(dot, moves.filter((m) => !m.capture).slice(0, 28)); put(ring, moves.filter((m) => m.capture).slice(0, 16)); },
+        clear() { held = null; arrow.visible = false; put(tile, []); put(dot, []); put(ring, []); put(warn, []); },
+        threats(cells) { put(warn, cells.slice(0, 16)); },
+        mate(r, c) { put(warn, [{ r, c }]); put(ring, [{ r, c }]); },
+        // 갈 칸이 살짝 숨 쉰다 — 누를 수 있는 자리라는 뜻. 효과 줄이기(prefers-reduced-motion)에서는 멈춘다.
+        step(dt) {
+          if (!tile.visible) return;
+          age += dt;
+          aim();
+          if (reducedMotion) return;
+          dot.material.opacity = 0.82 + 0.18 * Math.sin(age * 4.2);
+          ring.material.opacity = 0.8 + 0.2 * Math.sin(age * 4.2);
+        },
+        state: () => ({ selected: tile.visible, dots: dot.visible ? dot.count : 0, rings: ring.visible ? ring.count : 0, threats: warn.visible ? warn.count : 0, arrow: arrow.visible, draws: [tile, dot, ring, warn, arrow].filter((x) => x.visible).length })
+      };
+    })();
     function showSquareHighlights(r, c, moves) {
       clearSquareHighlights();
-      const selGeo = new THREE.RingGeometry(0.115, 0.155, 32);
-      selGeo.rotateX(-Math.PI / 2);
-      const selMat = new THREE.MeshBasicMaterial({ color: 0xf5d76e, side: THREE.DoubleSide });
-      const selMesh = new THREE.Mesh(selGeo, selMat);
-      const selPos = boardToWorld(r, c);
-      selMesh.position.set(selPos.x, BOARD_SURFACE_Y + 0.01, selPos.z);
-      squareHighlightsGroup.add(selMesh);
-
-      for (const m of moves) {
-        const pos = boardToWorld(m.r, m.c);
-        if (m.capture) {
-          const capGeo = new THREE.RingGeometry(0.12, 0.16, 32);
-          capGeo.rotateX(-Math.PI / 2);
-          const capMat = new THREE.MeshBasicMaterial({ color: 0xe63946, side: THREE.DoubleSide });
-          const capMesh = new THREE.Mesh(capGeo, capMat);
-          capMesh.position.set(pos.x, BOARD_SURFACE_Y + 0.012, pos.z);
-          squareHighlightsGroup.add(capMesh);
-        } else {
-          const dotGeo = new THREE.CircleGeometry(0.06, 24);
-          dotGeo.rotateX(-Math.PI / 2);
-          const dotMat = new THREE.MeshBasicMaterial({
-            color: 0x4ea8de,
-            transparent: true,
-            opacity: 0.85,
-            side: THREE.DoubleSide
-          });
-          const dotMesh = new THREE.Mesh(dotGeo, dotMat);
-          dotMesh.position.set(pos.x, BOARD_SURFACE_Y + 0.01, pos.z);
-          squareHighlightsGroup.add(dotMesh);
-        }
-      }
+      moveMarks.show(r, c, moves);
     }
 
     // =========================================================================
@@ -3767,9 +3957,24 @@ let engineStarted = false;
         return false;
       }
 
+      // 한 방 퍼즐(IR-3): 왕관을 완성하는 잡기만 놓인다. 다른 수는 놓지 않고 귀띔(금빛 딱지)을 켠다.
+      if (puzzle && !puzzle.solved && contract && contractState) {
+        const from = sqName(fromR, fromC), to = sqName(toR, toC);
+        if (!finishersAt(referee.fen(), contract, contractState).some((m) => m.from === from && m.to === to)) {
+          if (!getLegalMovesForPiece(fromR, fromC).some((m) => m.r === toR && m.c === toC)) return false;
+          puzzle.tries += 1;
+          puzzle.hint = true;
+          puzzleStats.wrong += 1;
+          refreshContract(false);
+          puzzleBar?.wrong();
+          sfx.play('heartBeat', 0, 0.9);
+          return false;
+        }
+      }
+
       // 아차 방지(IR-1): 이 수 뒤에 상대가 한 수로 계약을 완성할 수 있고 그걸 막는 다른 수가 있으면, 놓기 전에 한 번 알린다.
       // 같은 수를 다시 고르면 그대로 둔다. 입문·초급 상대에서만 — 정식 상대는 스스로 본다.
-      if (contract && contractRung < RUNG_FULL && contractState && gameMode === 'single' && !scriptedGameActive && !options.fromRemote && !options.fromAi && !options.fromScript && piece.color === playerColor) {
+      if (contract && !puzzle && contractRung < RUNG_FULL && contractState && gameMode === 'single' && !scriptedGameActive && !options.fromRemote && !options.fromAi && !options.fromScript && piece.color === playerColor) {
         const key = `${gameId}:${referee.history().length}:${fromR}${fromC}:${toR}${toC}:${options.promotion || ''}`;
         if (key === oopsKey) { oopsStats.played += 1; oopsKey = ''; }
         else {
@@ -5361,7 +5566,7 @@ let engineStarted = false;
 
     let drawBannerShown = false;
     function showDrawBanner(subtitle) {
-      if (drawBannerShown) return;
+      if (drawBannerShown || puzzle) return;
       drawBannerShown = true;
       const t = getTranslations(getCurrentLang());
       document.getElementById('checkmate-crown').textContent = '🤝';
@@ -5507,19 +5712,7 @@ let engineStarted = false;
 
       // Highlight the defeated King's square with a crimson-and-gold Checkmate ring
       clearSquareHighlights();
-      const outerRingGeo = new THREE.RingGeometry(0.135, 0.175, 36);
-      outerRingGeo.rotateX(-Math.PI / 2);
-      const outerRingMat = new THREE.MeshBasicMaterial({ color: 0xe63946, side: THREE.DoubleSide });
-      const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
-      outerRing.position.set(homePos.x, BOARD_SURFACE_Y + 0.012, homePos.z);
-      squareHighlightsGroup.add(outerRing);
-
-      const innerRingGeo = new THREE.RingGeometry(0.10, 0.125, 36);
-      innerRingGeo.rotateX(-Math.PI / 2);
-      const innerRingMat = new THREE.MeshBasicMaterial({ color: 0xf5d76e, side: THREE.DoubleSide });
-      const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
-      innerRing.position.set(homePos.x, BOARD_SURFACE_Y + 0.014, homePos.z);
-      squareHighlightsGroup.add(innerRing);
+      moveMarks.mate(kingR, kingC);
 
       // Rigged animals (2026-10-30): no toppling, no brazier — the defeated king kneels (clamped Kneel clip) and
       // every piece of the winning side cheers. Mild, cartoon-like (PLAN §14.0 rating notes). Statues keep the
@@ -5691,6 +5884,7 @@ let engineStarted = false;
       const t = getTranslations(getCurrentLang());
 
       turnDot.className = 'turn-dot' + (currentTurn === 'b' ? ' black' : '');
+      document.body.classList.toggle('my-turn', !gameOver && !scriptedGameActive && currentTurn === playerColor);
 
       const legalMoves = getAllLegalMoves(currentTurn);
       const inCheck = referee.inCheck(currentTurn);
@@ -5740,7 +5934,10 @@ let engineStarted = false;
           reportGameEnd('draw', { reason: endReason });
         }
       } else {
-        const turnLabel = currentTurn === 'w' ? t.turnWhite : t.turnBlack;
+        // 차례 판(플레이 화면 개편 2026-11-13): 내가 두는 판에서는 색 이름 대신 「내 차례 / 상대 차례」.
+        const seated = !scriptedGameActive && (playerColor === 'w' || playerColor === 'b');
+        const en = getCurrentLang() === 'en';
+        const turnLabel = !seated ? (currentTurn === 'w' ? t.turnWhite : t.turnBlack) : currentTurn === playerColor ? (en ? 'Your move' : '내 차례') : (en ? 'Their move' : '상대 차례');
         const aiColor = playerColor === 'w' ? 'b' : 'w';
         const isAiTurn = !scriptedGameActive && gameMode === 'single' && currentTurn === aiColor;
         if (inCheck) {
@@ -6431,7 +6628,7 @@ let engineStarted = false;
     function quitInfo() {
       const history = referee.history();
       const myMoves = history.filter((m) => m.color === playerColor).length;
-      const active = gameMode === 'single' && !scriptedGameActive && !gameOver && playerColor !== 'spectator' && myMoves > 0;
+      const active = gameMode === 'single' && !scriptedGameActive && !gameOver && playerColor !== 'spectator' && myMoves > 0 && !puzzle;   // 연습은 그만둘지 묻지 않는다
       return { active, myMoves, keepMoves: RESIGN_KEEP_MOVES, keeps: myMoves >= RESIGN_KEEP_MOVES };
     }
 
@@ -6822,6 +7019,10 @@ let engineStarted = false;
         crown: crownGems ? crownGems.state() : null,
         ...(bountyTags ? bountyTags.state() : { tags: 0, hot: 0, halos: 0, gold: 0, shield: 0, draws: 0, types: [] })
       }),
+      // 한 방 퍼즐(IR-3, 시험): 연습 열기 · 놓친 왕관 열기 · 상태.
+      startPractice: (i = 0) => loadShellReel().then(() => startPractice(i)),
+      startMissedCrown: () => startMissed(),
+      debugPuzzle: () => ({ loaded: Boolean(puzzleLib), count: puzzleData ? puzzleData.length : 0, puzzle: puzzle && { ...puzzle }, missed: missedOffer && { ply: missedOffer.ply, answers: missedOffer.answers.slice() }, practiceDone: Boolean(contractStore.practice), stats: { ...puzzleStats }, bar: puzzleBar ? puzzleBar.state() : null, resume: (() => { try { return window.localStorage.getItem(RESUME_KEY) !== null; } catch (e) { return null; } })() }),
       debugReel: () => ({ lab: contractLab, contract: contract && contract.id, games: contractGames, hops: reelHops.length, pending: reelPendingFor !== 0, loaded: Boolean(shellReel), ...(shellReel ? shellReel.state() : { active: false, plays: 0, stopped: [], goals: [] }) }),
       // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.
       // 종류 잠금(CO-1): 부른 종류는 손이 둘 때까지 다른 종류로 못 바꾼다. 바뀌었는지 돌려준다.
@@ -7000,6 +7201,7 @@ let engineStarted = false;
         selectedSquare,
         validMovesCount: validMoves.length,
         highlightMeshCount: squareHighlightsGroup.children.length,
+        moveMarks: moveMarks.state(),
         uiHidden: document.body.classList.contains('cinematic-ui-hidden'),
         playerColor,
         currentTurn,
@@ -7271,6 +7473,7 @@ let engineStarted = false;
       }
       shellReel?.update(dt);
       stepReelHops(dt);
+      moveMarks.step(dt);
       stepContract(dt);
       const realDt = dt;
       if (hitStopLeft > 0) {

@@ -1,0 +1,630 @@
+{
+ "at": "2026-11-14T08:11:54.225Z",
+ "base": "http://localhost:3000/",
+ "practice": [
+  "cp01",
+  "cp02",
+  "cp03"
+ ],
+ "missed": "cp07",
+ "rows": [
+  {
+   "item": "mouse 연습 권유",
+   "want": "문제 12개 이상 받음 · 권유가 뜸 · 화면 안 · HUD 와 겹치지 않음 · 판의 칸을 덮지 않음",
+   "got": {
+    "count": 30,
+    "bar": {
+     "offer": true,
+     "on": false,
+     "state": null,
+     "tag": null,
+     "line": null,
+     "next": null,
+     "rect": {
+      "x": 297,
+      "y": 473,
+      "w": 349,
+      "h": 54
+     }
+    },
+    "over": {
+     "hud": false,
+     "squares": 0
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 첫 문제",
+   "want": "단추가 눌림 · 연습 1/3 · 권유 닫힘 · 금빛 0 · 방패 0 · 세트 같음 · 이어 하기 기록 없음 · 줄이 화면 안, HUD·판과 겹치지 않음 · 드로우콜 ≤ 100",
+   "got": {
+    "hit": {
+     "x": 562.703125,
+     "y": 500,
+     "w": 52,
+     "h": 40,
+     "hit": true
+    },
+    "puzzle": {
+     "kind": "practice",
+     "index": 0,
+     "total": 3,
+     "id": "cp01",
+     "tries": 0,
+     "hint": false,
+     "solved": false,
+     "at": 17350.200000047684,
+     "ms": null
+    },
+    "bar": {
+     "offer": false,
+     "on": true,
+     "state": "ask",
+     "tag": "연습 1/3",
+     "line": "한 수로 내 왕관을 완성하세요",
+     "next": null,
+     "rect": {
+      "x": 242,
+      "y": 465,
+      "w": 460,
+      "h": 62
+     }
+    },
+    "gold": 0,
+    "danger": 0,
+    "set": "p3nb",
+    "resume": false,
+    "over": {
+     "hud": false,
+     "squares": 0
+    },
+    "calls": 73
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 틀린 수",
+   "want": "수가 놓이지 않음 · 시도 1 · 귀띔 글 · 금빛 딱지 1 이상 · 상대는 두지 않음",
+   "got": {
+    "plies": 16,
+    "puzzle": {
+     "kind": "practice",
+     "index": 0,
+     "total": 3,
+     "id": "cp01",
+     "tries": 1,
+     "hint": true,
+     "solved": false,
+     "at": 17350.200000047684,
+     "ms": null
+    },
+    "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
+    "gold": 1
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 왕관 완성",
+   "want": "풀림 · 내 왕관 보석 둘 · 「다음 문제」 단추 · 종료 배너 없음 · 계약전 기록 0판 · 정산 사건 0 · 풀이 사건 1(시도 1)",
+   "got": {
+    "puzzle": {
+     "kind": "practice",
+     "index": 0,
+     "total": 3,
+     "id": "cp01",
+     "tries": 1,
+     "hint": true,
+     "solved": true,
+     "at": 17350.200000047684,
+     "ms": 5833
+    },
+    "crown": [
+     "n",
+     "p"
+    ],
+    "bar": {
+     "offer": false,
+     "on": true,
+     "state": "solved",
+     "tag": "연습 1/3",
+     "line": "왕관 완성! 보석 둘이 모였어요.",
+     "next": "다음 문제",
+     "rect": {
+      "x": 242,
+      "y": 465,
+      "w": 460,
+      "h": 62
+     }
+    },
+    "overlay": false,
+    "store": null,
+    "ends": {
+     "game": 0,
+     "contract": [],
+     "solved": [
+      {
+       "kind": "practice",
+       "index": 0,
+       "tries": 1,
+       "ms": 5833
+      }
+     ]
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 세 문제 끝",
+   "want": "둘째·셋째는 귀띔 없이 한 번에 · 「연습 3/3」 · 단추 「이제 첫 판!」 · 연습 표시 저장 · 풀이 사건 3 · 기록 0판",
+   "got": {
+    "firstTry": [
+     {
+      "i": 1,
+      "goldBefore": 0,
+      "tries": 0,
+      "tag": "연습 2/3",
+      "next": "다음 문제"
+     },
+     {
+      "i": 2,
+      "goldBefore": 0,
+      "tries": 0,
+      "tag": "연습 3/3",
+      "next": "이제 첫 판!"
+     }
+    ],
+    "practiceDone": true,
+    "store": {
+     "v": 1,
+     "games": 0,
+     "win": 0,
+     "loss": 0,
+     "draw": 0,
+     "byReason": {},
+     "last": null,
+     "rung": 0,
+     "lossRun": 0,
+     "practice": 1
+    },
+    "solved": 3
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 첫 판으로",
+   "want": "퍼즐 없음 · 줄·권유 없음 · 0수 · 계약 판 · 보석 0",
+   "got": {
+    "puzzle": null,
+    "bar": {
+     "offer": false,
+     "on": false,
+     "state": null,
+     "tag": null,
+     "line": null,
+     "next": null,
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     }
+    },
+    "set": "p2nb",
+    "gems": 0,
+    "pieces": null
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 그만 · 넘기기",
+   "want": "그만 → 새 판·권유 다시 · ✕ → 권유 닫힘·연습 표시 저장",
+   "got": {
+    "quit": {
+     "puzzle": null,
+     "offer": true,
+     "done": false
+    },
+    "skip": {
+     "offer": false,
+     "done": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 놓친 왕관 단추",
+   "want": "진 판(기권) · 지나친 차례 = 문제 국면 · 답 같음 · 결과 안에 단추(화면 안, 높이 ≥ 40)",
+   "got": {
+    "missed": {
+     "ply": 22,
+     "answers": [
+      "e4f6"
+     ]
+    },
+    "want": {
+     "ply": 22,
+     "answer": "e4f6"
+    },
+    "btn": {
+     "text": "👑 놓친 왕관 다시 보기",
+     "inView": true,
+     "h": 40
+    },
+    "end": {
+     "gameId": 4242,
+     "set": "p3nb",
+     "result": "loss",
+     "reason": "resign",
+     "plies": 24
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 놓친 왕관 풀기",
+   "want": "단추가 눌림 · 종료 배너 닫힘 · 「놓친 왕관 · 연습」 · 풀면 「새 판」 · 기록은 4판(진 판 하나만 더해짐) · 사다리 그대로",
+   "got": {
+    "hit": true,
+    "ask": {
+     "tag": "놓친 왕관 · 연습",
+     "line": "여기서 한 수로 이길 수 있었어요. 찾아보세요",
+     "on": true
+    },
+    "solved": {
+     "state": "solved",
+     "next": "새 판"
+    },
+    "overlay": false,
+    "store": {
+     "v": 1,
+     "games": 4,
+     "win": 1,
+     "loss": 3,
+     "draw": 0,
+     "byReason": {
+      "resign": 1
+     },
+     "last": {
+      "set": "p3nb",
+      "result": "loss",
+      "reason": "resign",
+      "plies": 24
+     },
+     "rung": 0,
+     "lossRun": 1,
+     "practice": 1
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 이긴 판",
+   "want": "놓친 왕관 없음 · 단추 없음",
+   "got": {
+    "missed": null,
+    "btn": false,
+    "end": "win"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 스위치 꺼짐",
+   "want": "퍼즐 모듈 없음 · 줄 없음",
+   "got": {
+    "loaded": false,
+    "bar": null,
+    "dom": false
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 연습 권유",
+   "want": "문제 12개 이상 받음 · 권유가 뜸 · 화면 안 · HUD 와 겹치지 않음 · 판의 칸을 덮지 않음",
+   "got": {
+    "count": 30,
+    "bar": {
+     "offer": true,
+     "on": false,
+     "state": null,
+     "tag": null,
+     "line": null,
+     "next": null,
+     "rect": {
+      "x": 13,
+      "y": 672,
+      "w": 349,
+      "h": 54
+     }
+    },
+    "over": {
+     "hud": false,
+     "squares": 0
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 첫 문제",
+   "want": "단추가 눌림 · 연습 1/3 · 권유 닫힘 · 금빛 0 · 방패 0 · 세트 같음 · 이어 하기 기록 없음 · 줄이 화면 안, HUD·판과 겹치지 않음 · 드로우콜 ≤ 100",
+   "got": {
+    "hit": {
+     "x": 278.203125,
+     "y": 699,
+     "w": 52,
+     "h": 40,
+     "hit": true
+    },
+    "puzzle": {
+     "kind": "practice",
+     "index": 0,
+     "total": 3,
+     "id": "cp01",
+     "tries": 0,
+     "hint": false,
+     "solved": false,
+     "at": 12293,
+     "ms": null
+    },
+    "bar": {
+     "offer": false,
+     "on": true,
+     "state": "ask",
+     "tag": "연습 1/3",
+     "line": "한 수로 내 왕관을 완성하세요",
+     "next": null,
+     "rect": {
+      "x": 11,
+      "y": 664,
+      "w": 353,
+      "h": 62
+     }
+    },
+    "gold": 0,
+    "danger": 0,
+    "set": "p3nb",
+    "resume": false,
+    "over": {
+     "hud": false,
+     "squares": 0
+    },
+    "calls": 63
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 틀린 수",
+   "want": "수가 놓이지 않음 · 시도 1 · 귀띔 글 · 금빛 딱지 1 이상 · 상대는 두지 않음",
+   "got": {
+    "plies": 16,
+    "puzzle": {
+     "kind": "practice",
+     "index": 0,
+     "total": 3,
+     "id": "cp01",
+     "tries": 1,
+     "hint": true,
+     "solved": false,
+     "at": 12293,
+     "ms": null
+    },
+    "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
+    "gold": 1
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 왕관 완성",
+   "want": "풀림 · 내 왕관 보석 둘 · 「다음 문제」 단추 · 종료 배너 없음 · 계약전 기록 0판 · 정산 사건 0 · 풀이 사건 1(시도 1)",
+   "got": {
+    "puzzle": {
+     "kind": "practice",
+     "index": 0,
+     "total": 3,
+     "id": "cp01",
+     "tries": 1,
+     "hint": true,
+     "solved": true,
+     "at": 12293,
+     "ms": 6965
+    },
+    "crown": [
+     "n",
+     "p"
+    ],
+    "bar": {
+     "offer": false,
+     "on": true,
+     "state": "solved",
+     "tag": "연습 1/3",
+     "line": "왕관 완성! 보석 둘이 모였어요.",
+     "next": "다음 문제",
+     "rect": {
+      "x": 11,
+      "y": 664,
+      "w": 353,
+      "h": 62
+     }
+    },
+    "overlay": false,
+    "store": null,
+    "ends": {
+     "game": 0,
+     "contract": [],
+     "solved": [
+      {
+       "kind": "practice",
+       "index": 0,
+       "tries": 1,
+       "ms": 6965
+      }
+     ]
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 세 문제 끝",
+   "want": "둘째·셋째는 귀띔 없이 한 번에 · 「연습 3/3」 · 단추 「이제 첫 판!」 · 연습 표시 저장 · 풀이 사건 3 · 기록 0판",
+   "got": {
+    "firstTry": [
+     {
+      "i": 1,
+      "goldBefore": 0,
+      "tries": 0,
+      "tag": "연습 2/3",
+      "next": "다음 문제"
+     },
+     {
+      "i": 2,
+      "goldBefore": 0,
+      "tries": 0,
+      "tag": "연습 3/3",
+      "next": "이제 첫 판!"
+     }
+    ],
+    "practiceDone": true,
+    "store": {
+     "v": 1,
+     "games": 0,
+     "win": 0,
+     "loss": 0,
+     "draw": 0,
+     "byReason": {},
+     "last": null,
+     "rung": 0,
+     "lossRun": 0,
+     "practice": 1
+    },
+    "solved": 3
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 첫 판으로",
+   "want": "퍼즐 없음 · 줄·권유 없음 · 0수 · 계약 판 · 보석 0",
+   "got": {
+    "puzzle": null,
+    "bar": {
+     "offer": false,
+     "on": false,
+     "state": null,
+     "tag": null,
+     "line": null,
+     "next": null,
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     }
+    },
+    "set": "p2nb",
+    "gems": 0,
+    "pieces": null
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 그만 · 넘기기",
+   "want": "그만 → 새 판·권유 다시 · ✕ → 권유 닫힘·연습 표시 저장",
+   "got": {
+    "quit": {
+     "puzzle": null,
+     "offer": true,
+     "done": false
+    },
+    "skip": {
+     "offer": false,
+     "done": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 놓친 왕관 단추",
+   "want": "진 판(기권) · 지나친 차례 = 문제 국면 · 답 같음 · 결과 안에 단추(화면 안, 높이 ≥ 40)",
+   "got": {
+    "missed": {
+     "ply": 22,
+     "answers": [
+      "e4f6"
+     ]
+    },
+    "want": {
+     "ply": 22,
+     "answer": "e4f6"
+    },
+    "btn": {
+     "text": "👑 놓친 왕관 다시 보기",
+     "inView": true,
+     "h": 40
+    },
+    "end": {
+     "gameId": 4242,
+     "set": "p3nb",
+     "result": "loss",
+     "reason": "resign",
+     "plies": 24
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 놓친 왕관 풀기",
+   "want": "단추가 눌림 · 종료 배너 닫힘 · 「놓친 왕관 · 연습」 · 풀면 「새 판」 · 기록은 4판(진 판 하나만 더해짐) · 사다리 그대로",
+   "got": {
+    "hit": true,
+    "ask": {
+     "tag": "놓친 왕관 · 연습",
+     "line": "여기서 한 수로 이길 수 있었어요. 찾아보세요",
+     "on": true
+    },
+    "solved": {
+     "state": "solved",
+     "next": "새 판"
+    },
+    "overlay": false,
+    "store": {
+     "v": 1,
+     "games": 4,
+     "win": 1,
+     "loss": 3,
+     "draw": 0,
+     "byReason": {
+      "resign": 1
+     },
+     "last": {
+      "set": "p3nb",
+      "result": "loss",
+      "reason": "resign",
+      "plies": 24
+     },
+     "rung": 0,
+     "lossRun": 1,
+     "practice": 1
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 이긴 판",
+   "want": "놓친 왕관 없음 · 단추 없음",
+   "got": {
+    "missed": null,
+    "btn": false,
+    "end": "win"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 스위치 꺼짐",
+   "want": "퍼즐 모듈 없음 · 줄 없음",
+   "got": {
+    "loaded": false,
+    "bar": null,
+    "dom": false
+   },
+   "ok": true
+  }
+ ]
+}

@@ -1,0 +1,696 @@
+{
+ "at": "2026-11-14T08:17:27.942Z",
+ "base": "http://localhost:3000/",
+ "measured": {
+  "desk": {
+   "geo": {
+    "inside": 64,
+    "nearRowPx": 93,
+    "farRowPx": 39,
+    "nearColPx": 131,
+    "farColPx": 78,
+    "a1": 181,
+    "h1": 1099,
+    "top": 242,
+    "bottom": 669,
+    "vw": 1280,
+    "vh": 800
+   },
+   "hud": {
+    "boxes": 7,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 42,
+    "bg": "rgb(233, 248, 220)"
+   }
+  },
+  "phone": {
+   "geo": {
+    "inside": 64,
+    "nearRowPx": 39,
+    "farRowPx": 30,
+    "nearColPx": 46,
+    "farColPx": 40,
+    "a1": 34,
+    "h1": 356,
+    "top": 253,
+    "bottom": 495,
+    "vw": 390,
+    "vh": 844
+   },
+   "hud": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgb(233, 248, 220)"
+   }
+  },
+  "land": {
+   "geo": {
+    "inside": 64,
+    "nearRowPx": 46,
+    "farRowPx": 19,
+    "nearColPx": 64,
+    "farColPx": 38,
+    "a1": 198,
+    "h1": 646,
+    "top": 118,
+    "bottom": 326,
+    "vw": 844,
+    "vh": 390
+   },
+   "hud": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgb(233, 248, 220)"
+   }
+  },
+  "small": {
+   "geo": {
+    "inside": 64,
+    "nearRowPx": 37,
+    "farRowPx": 27,
+    "nearColPx": 43,
+    "farColPx": 36,
+    "a1": 30,
+    "h1": 330,
+    "top": 176,
+    "bottom": 398,
+    "vw": 360,
+    "vh": 640
+   },
+   "hud": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgb(233, 248, 220)"
+   }
+  }
+ },
+ "rows": [
+  {
+   "item": "desk 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 64,
+    "nearRowPx": 93,
+    "farRowPx": 39,
+    "nearColPx": 131,
+    "farColPx": 78,
+    "a1": 181,
+    "h1": 1099,
+    "top": 242,
+    "bottom": 669,
+    "vw": 1280,
+    "vh": 800
+   },
+   "ok": true
+  },
+  {
+   "item": "desk HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 7,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 42,
+    "bg": "rgb(233, 248, 220)"
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 고른 말 표시",
+   "want": "고른 칸 · 점 2 · 화살표 · 표시 드로우콜 ≤ 4 · 낱개 메시 0 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 2,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 68
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 표시 걷힘",
+   "want": "수를 둔 뒤 표시가 남지 않는다",
+   "got": {
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 0,
+    "arrow": false,
+    "draws": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 66
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 잡기 고리",
+   "want": "e4 폰: 점 0 · 고리 1(d5) · 화살표 · 낱개 메시 0",
+   "got": {
+    "selected": true,
+    "dots": 0,
+    "rings": 1,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 퀸의 갈 칸",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 6,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "sel": {
+     "r": 7,
+     "c": 3
+    },
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 위험 표시",
+   "want": "위험한 말 2(d4 · e4) · 고른 표시는 걷힘 · 낱개 메시 0",
+   "got": {
+    "n": 2,
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 2,
+    "arrow": false,
+    "draws": 1,
+    "loose": 0,
+    "calls": 68
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 64,
+    "nearRowPx": 39,
+    "farRowPx": 30,
+    "nearColPx": 46,
+    "farColPx": 40,
+    "a1": 34,
+    "h1": 356,
+    "top": 253,
+    "bottom": 495,
+    "vw": 390,
+    "vh": 844
+   },
+   "ok": true
+  },
+  {
+   "item": "phone HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgb(233, 248, 220)"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 조작법 줄",
+   "want": "터치 화면에서는 마우스 안내가 없다",
+   "got": {
+    "hintShown": false
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 고른 말 표시",
+   "want": "고른 칸 · 점 2 · 화살표 · 표시 드로우콜 ≤ 4 · 낱개 메시 0 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 2,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 66
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 표시 걷힘",
+   "want": "수를 둔 뒤 표시가 남지 않는다",
+   "got": {
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 0,
+    "arrow": false,
+    "draws": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 64
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 잡기 고리",
+   "want": "e4 폰: 점 0 · 고리 1(d5) · 화살표 · 낱개 메시 0",
+   "got": {
+    "selected": true,
+    "dots": 0,
+    "rings": 1,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 67
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 퀸의 갈 칸",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 6,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "sel": {
+     "r": 7,
+     "c": 3
+    },
+    "calls": 67
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 위험 표시",
+   "want": "위험한 말 2(d4 · e4) · 고른 표시는 걷힘 · 낱개 메시 0",
+   "got": {
+    "n": 2,
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 2,
+    "arrow": false,
+    "draws": 1,
+    "loose": 0,
+    "calls": 66
+   },
+   "ok": true
+  },
+  {
+   "item": "land 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 64,
+    "nearRowPx": 46,
+    "farRowPx": 19,
+    "nearColPx": 64,
+    "farColPx": 38,
+    "a1": 198,
+    "h1": 646,
+    "top": 118,
+    "bottom": 326,
+    "vw": 844,
+    "vh": 390
+   },
+   "ok": true
+  },
+  {
+   "item": "land HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgb(233, 248, 220)"
+   },
+   "ok": true
+  },
+  {
+   "item": "land 조작법 줄",
+   "want": "터치 화면에서는 마우스 안내가 없다",
+   "got": {
+    "hintShown": false
+   },
+   "ok": true
+  },
+  {
+   "item": "land 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "land 고른 말 표시",
+   "want": "고른 칸 · 점 2 · 화살표 · 표시 드로우콜 ≤ 4 · 낱개 메시 0 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 2,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 71
+   },
+   "ok": true
+  },
+  {
+   "item": "land 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "land 표시 걷힘",
+   "want": "수를 둔 뒤 표시가 남지 않는다",
+   "got": {
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 0,
+    "arrow": false,
+    "draws": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "land 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "land 잡기 고리",
+   "want": "e4 폰: 점 0 · 고리 1(d5) · 화살표 · 낱개 메시 0",
+   "got": {
+    "selected": true,
+    "dots": 0,
+    "rings": 1,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 72
+   },
+   "ok": true
+  },
+  {
+   "item": "land 퀸의 갈 칸",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 6,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "sel": {
+     "r": 7,
+     "c": 3
+    },
+    "calls": 72
+   },
+   "ok": true
+  },
+  {
+   "item": "land 위험 표시",
+   "want": "위험한 말 2(d4 · e4) · 고른 표시는 걷힘 · 낱개 메시 0",
+   "got": {
+    "n": 2,
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 2,
+    "arrow": false,
+    "draws": 1,
+    "loose": 0,
+    "calls": 71
+   },
+   "ok": true
+  },
+  {
+   "item": "small 구도",
+   "want": "64칸이 모두 화면 안(가장자리 12px 안쪽)",
+   "got": {
+    "inside": 64,
+    "nearRowPx": 37,
+    "farRowPx": 27,
+    "nearColPx": 43,
+    "farColPx": 36,
+    "a1": 30,
+    "h1": 330,
+    "top": 176,
+    "bottom": 398,
+    "vw": 360,
+    "vh": 640
+   },
+   "ok": true
+  },
+  {
+   "item": "small HUD 가 판을 덮지 않음",
+   "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
+   "got": {
+    "boxes": 6,
+    "covered": 0,
+    "heads": 0,
+    "hintShown": false,
+    "rows": 1,
+    "minBtn": 38,
+    "bg": "rgb(233, 248, 220)"
+   },
+   "ok": true
+  },
+  {
+   "item": "small 조작법 줄",
+   "want": "터치 화면에서는 마우스 안내가 없다",
+   "got": {
+    "hintShown": false
+   },
+   "ok": true
+  },
+  {
+   "item": "small 차례 판",
+   "want": "「내 차례」 · 내 차례 표시",
+   "got": {
+    "text": "내 차례",
+    "mine": true
+   },
+   "ok": true
+  },
+  {
+   "item": "small 고른 말 표시",
+   "want": "고른 칸 · 점 2 · 화살표 · 표시 드로우콜 ≤ 4 · 낱개 메시 0 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 2,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 66
+   },
+   "ok": true
+  },
+  {
+   "item": "small 누르기",
+   "want": "e4 가 놓임 · 차례 판이 상대 차례로",
+   "got": {
+    "moved": true,
+    "sawTheirs": true,
+    "turn1": {
+     "text": "상대 차례 (AI 생각 중...)",
+     "mine": false,
+     "first": "e4"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "small 표시 걷힘",
+   "want": "수를 둔 뒤 표시가 남지 않는다",
+   "got": {
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 0,
+    "arrow": false,
+    "draws": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "small 돌아온 차례",
+   "want": "상대가 둔 뒤 다시 「내 차례」 · 드로우콜 ≤ 100",
+   "got": {
+    "text": "내 차례",
+    "mine": true,
+    "calls": 64
+   },
+   "ok": true
+  },
+  {
+   "item": "small 잡기 고리",
+   "want": "e4 폰: 점 0 · 고리 1(d5) · 화살표 · 낱개 메시 0",
+   "got": {
+    "selected": true,
+    "dots": 0,
+    "rings": 1,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "loose": 0,
+    "calls": 67
+   },
+   "ok": true
+  },
+  {
+   "item": "small 퀸의 갈 칸",
+   "want": "점 6 · 고리 0 · 표시 드로우콜 ≤ 4 · 전체 ≤ 100",
+   "got": {
+    "selected": true,
+    "dots": 6,
+    "rings": 0,
+    "threats": 0,
+    "arrow": true,
+    "draws": 3,
+    "sel": {
+     "r": 7,
+     "c": 3
+    },
+    "calls": 67
+   },
+   "ok": true
+  },
+  {
+   "item": "small 위험 표시",
+   "want": "위험한 말 2(d4 · e4) · 고른 표시는 걷힘 · 낱개 메시 0",
+   "got": {
+    "n": 2,
+    "selected": false,
+    "dots": 0,
+    "rings": 0,
+    "threats": 2,
+    "arrow": false,
+    "draws": 1,
+    "loose": 0,
+    "calls": 66
+   },
+   "ok": true
+  }
+ ]
+}
