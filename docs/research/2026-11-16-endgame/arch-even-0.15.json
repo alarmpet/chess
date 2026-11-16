@@ -1,0 +1,121 @@
+{
+ "runs": 10,
+ "games": 320,
+ "profile": "even",
+ "perDay": 4,
+ "plies": 131.6,
+ "winRate": 0.12,
+ "islandsAtEnd": 11,
+ "milestones": {
+  "island1": {
+   "median": 21,
+   "p90": 23,
+   "reached": 10
+  },
+  "island2": {
+   "median": 41,
+   "p90": 44,
+   "reached": 10
+  },
+  "island3": {
+   "median": 66,
+   "p90": 69,
+   "reached": 10
+  },
+  "island4": {
+   "median": 90,
+   "p90": 98,
+   "reached": 10
+  },
+  "island5": {
+   "median": 116,
+   "p90": 130,
+   "reached": 10
+  },
+  "island6": {
+   "median": 147,
+   "p90": 166,
+   "reached": 10
+  },
+  "island7": {
+   "median": 180,
+   "p90": 207,
+   "reached": 10
+  },
+  "islandMax": {
+   "median": null,
+   "p90": null,
+   "reached": 0
+  },
+  "shelf5": {
+   "median": 36,
+   "p90": 36,
+   "reached": 10
+  },
+  "decor5": {
+   "median": 67,
+   "p90": 84,
+   "reached": 10
+  },
+  "guests6": {
+   "median": 146,
+   "p90": 294,
+   "reached": 8
+  },
+  "craftAll": {
+   "median": 116,
+   "p90": 265,
+   "reached": 8
+  },
+  "starlit_king": {
+   "median": 20,
+   "p90": 26,
+   "reached": 10
+  },
+  "starlit_queen": {
+   "median": 41,
+   "p90": 53,
+   "reached": 10
+  },
+  "starlit_rook": {
+   "median": 45,
+   "p90": 61,
+   "reached": 10
+  },
+  "starlit_bishop": {
+   "median": 49,
+   "p90": 69,
+   "reached": 10
+  },
+  "starlit_knight": {
+   "median": 61,
+   "p90": 81,
+   "reached": 10
+  },
+  "starlit_pawn": {
+   "median": 41,
+   "p90": 61,
+   "reached": 10
+  },
+  "roles6": {
+   "median": 65,
+   "p90": 81,
+   "reached": 10
+  },
+  "all16": {
+   "median": 145,
+   "p90": 169,
+   "reached": 10
+  },
+  "album24": {
+   "median": 227,
+   "p90": 277,
+   "reached": 3
+  },
+  "hero6": {
+   "median": 27,
+   "p90": 32,
+   "reached": 10
+  }
+ }
+}

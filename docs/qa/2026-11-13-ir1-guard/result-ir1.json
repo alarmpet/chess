@@ -1,5 +1,5 @@
 {
- "at": "2026-11-14T16:52:34.750Z",
+ "at": "2026-11-16T10:52:22.435Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
@@ -35,7 +35,9 @@
      "set": "p2nb",
      "result": "win",
      "reason": "contract",
-     "plies": 13
+     "plies": 13,
+     "coins": 18,
+     "work": 0
     },
     "storeRung": 1,
     "note": "다음 상대는 한 단계 위 「초급」이에요.",
@@ -155,7 +157,9 @@
      "set": "p2nb",
      "result": "win",
      "reason": "contract",
-     "plies": 13
+     "plies": 13,
+     "coins": 18,
+     "work": 0
     },
     "storeRung": 1,
     "note": "다음 상대는 한 단계 위 「초급」이에요.",

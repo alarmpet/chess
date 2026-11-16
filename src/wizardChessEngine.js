@@ -13,7 +13,7 @@ import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
 import { SIGNATURE_WORD, createSignatureFx } from './fx/signatureFx.js';
 import { contractById, contractProgress, contractStage, openGoals, pickContract } from './rules/contractSets.js';
-import { CONTRACT_PLY_LIMIT, CONTRACT_STORE_KEY, RUNG_FULL, RUNG_NAMES, addContractResult, contractAiState, contractVerdict, sanitizeContractStore } from './rules/contractGame.js';
+import { CONTRACT_PLY_LIMIT, CONTRACT_STORE_KEY, RUNG_FULL, RUNG_NAMES, addContractResult, contractAiState, contractCoins, contractVerdict, sanitizeContractStore } from './rules/contractGame.js';
 import { dangerSquares, finishersAt, oopsCheck } from './rules/contractGuard.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
 import { createContactShadows } from './fx/contactShadows.js';
@@ -24,7 +24,7 @@ import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
 import { attackStyle } from './fx/attackStyle.js';
 import { ROAR_REACH, ROAR_SEC, countPawnTrades, isMirror, mirrorPose, momentumSteps, pawnComboPitch, roarSway } from './fx/captureSpecial.js';
 import { REACTION_TOTAL, REACT_SEC, reactionPose } from './fx/captureReaction.js';
-import { CAMERA_LEAN, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset } from './fx/impactTier.js';
+import { CAMERA_LEAN, EVENT_FX, GLOW_COLOR, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset, screenFlash } from './fx/impactTier.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -965,10 +965,14 @@ export function initWizardChess() {
         contractStore = addContractResult(contractStore, { set: contract.id, result, reason, plies });
         rungNote = contractStore.rung > rungBefore ? `다음 상대는 한 단계 위 「${RUNG_NAMES[contractStore.rung]}」이에요.` : contractStore.rung < rungBefore ? `다음 상대는 「${RUNG_NAMES[contractStore.rung]}」로 내려와요.` : '';
         try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* 저장이 막히면 기록만 잃는다 */ }
-        lastContractEnd = { gameId, set: contract.id, result, reason, plies };
+        lastContractEnd = { gameId, set: contract.id, result, reason, plies, coins: contractCoins(result, reason) };
+        sfx.play(result === 'win' ? 'stingWin' : result === 'loss' ? 'stingLose' : 'draw', 0.25);
         // 놓친 왕관(IR-3): 진 판에서 실제로 지나친 결정타가 있을 때만 다시 보기를 권한다.
         try { missedOffer = result === 'loss' && puzzleLib ? puzzleLib.missedCrown(contract.id, referee.history(), playerColor) : null; } catch (e) { missedOffer = null; }
-        try { window.dispatchEvent(new CustomEvent('contractfinished', { detail: { ...lastContractEnd, color: playerColor, w: contractState?.w, b: contractState?.b } })); } catch (e) {}
+        // 받는 쪽(App)이 마을을 정산하며 reply 에 공방 진도를 적어 준다(WS-1) — 결과 상자에 한 줄로 쓴다.
+        const reply = {};
+        try { window.dispatchEvent(new CustomEvent('contractfinished', { detail: { ...lastContractEnd, color: playerColor, w: contractState?.w, b: contractState?.b, reply } })); } catch (e) {}
+        lastContractEnd.work = reply.work || 0;
         return;
       }
       const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId, gameId, ...extra };
@@ -1017,6 +1021,36 @@ export function initWizardChess() {
     }
     const shatterDebris = [];
     const impactFx = createImpactFx(scene);
+    // 겹친 타격 불빛(GX-3): 늦게 받는다 — 받기 전의 잡기는 예전 효과만 난다.
+    let hitGlow = null;
+    import('./fx/hitGlow.js').then((m) => { hitGlow = m.createHitGlow(scene, { square: BOARD_SQ_SIZE }); }).catch(() => {});
+    // 화면 가장자리 번쩍임(GX-2): 사건의 색으로 한 번 물든다. CSS 한 겹이라 드로우콜이 없다. 「화면 흔들림」을 끄면 같이 꺼진다.
+    const hitFlashEl = document.createElement('div');
+    hitFlashEl.id = 'hit-flash';
+    document.getElementById('canvas-container')?.appendChild(hitFlashEl);
+    let lastFlash = null;
+    let flashCount = 0;
+    let hitFxSlow = 1;      // 확인용: 불빛·번쩍임을 느리게 돌려 캡처로 모양을 본다(debugHitFx({ slow }))
+    function flashScreen(kind, opts) {
+      const f = screenFlash(kind, opts);
+      if (!f || !shakeAllowed()) return;
+      flashCount += 1;
+      lastFlash = { kind, ...f, n: flashCount };
+      hitFlashEl.style.setProperty('--hit-rgb', f.rgb);
+      hitFlashEl.animate?.([{ opacity: f.alpha }, { opacity: 0 }], { duration: f.ms / hitFxSlow, easing: 'ease-out' });
+    }
+    // 내게 좋은 일인가: 한 사람이 AI 와 둘 때만 편이 있다(구경·둘이 두기는 null).
+    const mineOf = (sideColor) => (gameMode === 'single' && (playerColor === 'w' || playerColor === 'b') ? sideColor === playerColor : null);
+    // 사건 꾸러미(GX-1): 표(EVENT_FX) 한 줄이 별 뭉치·고리·낱말·번쩍임·겹친 불빛을 정한다.
+    function playEvent(kind, ground, sideColor) {
+      const e = EVENT_FX[kind];
+      if (!e) return;
+      if (e.burst) impactFx.burst(ground, e.burst[0], e.burst[1]);
+      if (e.ring) impactFx.ring(ground, e.ring);
+      impactFx.label(ground, e.word, e.wordSize);
+      if (e.glow) hitGlow?.hit(ground, null, e.glow, GLOW_COLOR[sideColor] || GLOW_COLOR.w);
+      flashScreen(kind, { mine: mineOf(sideColor) });
+    }
     // Signature captures (DY-1): each animal takes in its own way, alongside the impact and without changing its timing.
     const signatureFx = createSignatureFx(scene, impactFx, { surfaceY: BOARD_SURFACE_Y, square: BOARD_SQ_SIZE });
     // 소라 릴 (슬롯 체스 PP-1): 판 시작에 이번 판 계약 목표 셋을 공개한다. 시험 스위치(?lab=contract) 뒤에서만 돈다 —
@@ -1039,8 +1073,10 @@ export function initWizardChess() {
         return shellReel;
       });
     }
-    let contractLab = new URLSearchParams(window.location.search).get('lab') === 'contract';
-    if (contractLab) loadShellReel();
+    // 왕관 계약전은 메뉴에서 켜 두면(저장) 다음 판부터 열린다. 주소의 ?lab=contract 는 시험용으로 남겼다.
+    const contractSavedOn = () => { try { return JSON.parse(window.localStorage.getItem(CONTRACT_STORE_KEY) || 'null')?.on === true; } catch (e) { return false; } };
+    let contractLab = new URLSearchParams(window.location.search).get('lab') === 'contract' || contractSavedOn();
+    if (contractLab) { loadShellReel(); sfx.preload?.(); }
     let contract = null;          // 이번 판의 계약 세트(시험 중에만)
     let contractGames = 0;        // 이 접속에서 시작한 계약 판 수 — 첫 두 판은 고정 세트
     let reelPendingFor = 0;       // 릴을 틀 판 번호(0 이면 없음). 이어 하기가 수를 되살리면 틀지 않는다
@@ -2330,6 +2366,7 @@ let engineStarted = false;
       const mid = new THREE.Vector3(0, BOARD_SURFACE_Y + BOARD_SQ_SIZE * 0.6, 0);
       if (stage === 'matchPoint' && from === 'open') {
         sfx.play('heartBeat');
+        sfx.play('matchHush', 0.05);
       } else if (stage === 'finalPoint') {
         sfx.play('heartBeat', 0, 1.12);
         if (!finalPointShown) { finalPointShown = true; impactFx.label(mid, '결승점', 0.1); }
@@ -2394,7 +2431,7 @@ let engineStarted = false;
         hudEnded = ended;
         if (ended) {
           const me = playerColor === 'b' ? 'b' : 'w';
-          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, gems: contractGems, missed: missedOffer ? () => startMissed() : null });
+          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, coins: lastContractEnd.coins, work: lastContractEnd.work, gems: contractGems, missed: missedOffer ? () => startMissed() : null });
         } else contractHud.resume(wide);
       }
       contractHud.tick(dt);
@@ -2879,6 +2916,9 @@ let engineStarted = false;
           }
         }
       }
+      // 계약 표시(금빛 결정타·위험 방패·현상 딱지)는 말 객체를 기억한다 — 새 말로 다시 센다.
+      // 안 하면 외형을 바꾼 뒤(게임을 켤 때 별빛 외형을 입힐 때 포함) 금빛이 사라졌다(IR-1 회귀, 2026-11-16).
+      if (contract && contractState) refreshContract(false);
     }
 
     async function setCosmetics(next) {
@@ -3877,6 +3917,9 @@ let engineStarted = false;
       } else if (upset) impactFx.label(ground, UPSET_WORD, tier.wordSize);
       else impactFx.word(ground, tierId);
       impactFx.shake(tier.shake);
+      const hitterColor = attacker?.color || (captured.color === 'w' ? 'b' : 'w');
+      hitGlow?.hit(ground, attackerFrom ? { x: ground.x - attackerFrom.x, z: ground.z - attackerFrom.z } : null, tierId, GLOW_COLOR[hitterColor]);
+      flashScreen('capture', { tierId, mine: mineOf(hitterColor) });
       // Pawn takes pawn (CX-4): the commonest capture stays small, but each one this game lands a semitone higher.
       const comboN = attackerType === 'pawn' && captured.type === 'pawn' ? countPawnTrades(referee.history()) : 0;
       // DR-1a: the side that keeps capturing or checking climbs too; the higher of the two steps is heard.
@@ -3925,22 +3968,17 @@ let engineStarted = false;
       if (quietMove) sfx.play('place');
       if (castleRookPiece) {
         sfx.play('clap');
-        impactFx.burst(ground, 'king', 'small');
-        impactFx.label(ground, '짝!', 0.09);
+        playEvent('castle', ground, moverColor);
         if (castleRookPiece.mesh) impactFx.squash(castleRookPiece.mesh, BOARD_SQ_SIZE, 0.14, 0.24);
       }
       if (promoted) {
         sfx.play('promote');
-        impactFx.burst(ground, 'queen', 'big');
-        impactFx.ring(ground, 'big');
-        impactFx.label(ground, '승급!', 0.11);
+        playEvent('promote', ground, moverColor);
       }
       if (san.endsWith('#')) {
         const playerLost = gameMode === 'single' && playerColor !== 'spectator' && moverColor !== playerColor;
         sfx.play(playerLost ? 'lose' : 'mate', 0.15);
-        impactFx.burst(kingGround, 'king', 'big');
-        impactFx.ring(kingGround, 'big');
-        impactFx.label(kingGround, '메이트!', 0.14);
+        playEvent('mate', kingGround, moverColor);
         if (playFlourish(kingOf(moverColor), 'roar')) sfx.voice('king', 0.4);
       } else if (referee.gameOverReason()) {
         sfx.play('draw', 0.15);
@@ -3948,7 +3986,7 @@ let engineStarted = false;
         // DR-1a: a check that continues a run of captures and checks lands a semitone higher each time.
         const streak = momentumSteps(referee.history(), moverColor);
         sfx.play('check', 0.08, streak > 1 ? pawnComboPitch(streak) : 1);
-        impactFx.label(kingGround, '체크!', 0.09);
+        playEvent('check', kingGround, moverColor);
         if (enemyKing?.mesh && enemyKing.rig !== 'statue') impactFx.hop(enemyKing.mesh, 0.09, 0.34);
       }
     }
@@ -6996,6 +7034,8 @@ let engineStarted = false;
       },
       debugRenderCalls: () => renderer.info.render.calls,
       // 캐릭터 룩 A 의 세기를 바꾼다(전후 비교용). 인자 없이 부르면 지금 값만 돌려준다.
+      // 타격 1(GX-1~3): 마지막 화면 번쩍임과 겹친 불빛의 상태
+      debugHitFx: (v) => ({ slow: (v && typeof v.slow === 'number' ? (hitFxSlow = Math.min(1, Math.max(0.02, v.slow))) : hitFxSlow), flash: lastFlash, flashes: flashCount, glow: hitGlow ? hitGlow.state() : null }),
       debugAnimalLook: (v) => { if (v) { if (typeof v.sat === 'number') animalLook.sat.value = v.sat; if (typeof v.rim === 'number') animalLook.rim.value = v.rim; } return { sat: animalLook.sat.value, rim: animalLook.rim.value }; },
       // 계층 렌더 실험(①): 켜기/끄기, 프레임 통계, 모아 둔 GPU ms 표본(EXT_disjoint_timer_query_webgl2 가 있을 때만).
       setLayered: (on, hz) => layered.setEnabled(on, hz),
@@ -7059,7 +7099,15 @@ let engineStarted = false;
       // Debug: signature captures on or off, to compare a capture with and without them.
       setSignatureFx: (on) => signatureFx.setEnabled(on),
       // 소라 릴(PP-1, 시험): 스위치 · 지금 릴 돌리기 · 상태.
-      setContractLab: (on) => { contractLab = Boolean(on); if (contractLab) loadShellReel(); return contractLab; },
+      // 둘째 인자가 참이면 켜 둠을 저장한다(메뉴의 「왕관 계약전」). 다음 새 판부터 적용된다.
+      setContractLab: (on, keep = false) => {
+        contractLab = Boolean(on);
+        if (contractLab) { loadShellReel(); sfx.preload?.(); }
+        if (keep) { contractStore = { ...contractStore, on: contractLab }; try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* */ } }
+        return contractLab;
+      },
+      isContractOn: () => contractLab,
+      debugSamples: () => sfx.samples(),
       playReel: (setId) => loadShellReel().then(() => startContractReel(setId)),
       skipReel: () => Boolean(shellReel?.skip()),
       // 파도타기로 지금 가장 높이 뜬 말(칸 단위)과, 쉬는 높이에서 벗어나 있는 말의 수(움직이는 수가 없을 때 0 이어야 한다).
@@ -7523,6 +7571,7 @@ let engineStarted = false;
 
       // Effects run on real time; the game itself holds during a hit stop and slows through a big capture.
       impactFx.update(dt);
+      hitGlow?.update(dt * hitFxSlow);
       signatureFx.update(dt, camera);
       if (reelPendingFor) {
         reelPendingAge += dt;

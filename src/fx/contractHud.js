@@ -36,6 +36,7 @@ body.cinematic-ui-hidden #contract-hud { display: none; }
 @media (prefers-reduced-motion: reduce) { .ch-gem.new { animation: none; } }
 .contract-result .ch-gem { border-color: #d9912b; }
 .contract-result .ch-gem.full { border-color: #8a5a00; }
+.contract-result .cr-pay { margin-top: 6px; font-size: 0.95rem; font-weight: 900; color: #8a5a00; }
 .contract-result .cr-note { margin-top: 6px; font-size: 0.78rem; font-weight: 700; color: #1f5a8a; }
 .contract-result .cr-missed { margin-top: 8px; font: inherit; font-size: 0.86rem; font-weight: 800; color: #2b1d10; background: #ffd23f; border: 0; border-radius: 12px; padding: 9px 14px; min-height: 40px; cursor: pointer; pointer-events: auto; }
 #contract-hud .ch-goal { background: rgba(255, 248, 231, 0.94); border: 2px solid #d9912b; border-radius: 12px; padding: 5px 8px;
@@ -191,6 +192,7 @@ export function createContractHud(doc = document) {
       goals.appendChild(chip);
     });
     box.append(el('div', 'cr-line', line), score, goals);
+    if (end.coins > 0) { const pay = el('div', 'cr-pay', `🌰 도토리 +${end.coins}${end.work > 0 ? ` · 🔨 공방 진도 +${end.work}일` : ''}`); pay.id = 'contract-pay'; box.appendChild(pay); }
     if (end.note) box.appendChild(el('div', 'cr-note', end.note));
     // 놓친 왕관(IR-3): 이 판에서 실제로 지나친 결정타가 있을 때만. 누르면 그 국면이 연습으로 열린다.
     if (end.missed) {

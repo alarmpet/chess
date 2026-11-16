@@ -3,6 +3,9 @@
 import { replayGame, growVillage, emptyVillage } from './roster.js';
 import { seededRoll } from '../cards/economy.js';
 
+import { PARTS_MAX, WORK_MAX, WORK_PER_GAME, addWork, produceParts, sanitizeWorkshop } from './workshop.js';
+import { advanceArch, archCost, boostedAnimals, emptyArch, giveSpecialties, islandIndex, nextChoices, sanitizeArch } from './archipelago.js';
+
 export const VILLAGE_KEY = 'wildcrown.village.v1';
 export const COINS = { win: 30, draw: 20, loss: 15 };
 export const PET_DAILY_CAP = 10;            // Pokémon GO buddy: a daily heart cap ends the session kindly
@@ -43,6 +46,15 @@ const RAY = 3;                              // sliders stop here: a full chess l
 const ORTHO = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const DIAG = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
 const KNIGHT = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]];
+const RING2 = [];
+for (let df = -2; df <= 2; df++) for (let dr = -2; dr <= 2; dr++) if (Math.max(Math.abs(df), Math.abs(dr)) === 2) RING2.push([df, dr]);
+const BOOSTED = {
+  kangaroo: { steps: [...KNIGHT, ...KNIGHT.map(([a, b]) => [a * 2, b * 2])] },
+  panda: { rays: DIAG, reach: 7 },
+  rhino: { rays: ORTHO, reach: 7 },
+  tiger: { rays: [...ORTHO, ...DIAG], reach: 3 },
+  lion: { steps: [...ORTHO, ...DIAG, ...RING2] }
+};
 const SHAPES = {
   meerkat: { steps: [[0, 1]] },
   kangaroo: { steps: KNIGHT },
@@ -52,10 +64,14 @@ const SHAPES = {
   lion: { steps: [...ORTHO, ...DIAG] }
 };
 
-/** Squares a resident of this animal touches from `sq`: the way that chess piece moves, kept on the island. */
-export function influenceSquares(animal, sq) {
-  const shape = SHAPES[animal];
-  if (!shape) return [];
+/**
+ * Squares a resident of this animal touches from `sq`: the way that chess piece moves, kept on the island.
+ * `boosted` 는 그 동물의 섬(군도 AR-2)에서 넓어진 모양: 캥거루는 두 번 뛴 L자, 판다·코뿔소는 줄이 섬 끝까지, 호랑이는 세 칸, 사자는 둘레 두 칸.
+ */
+export function influenceSquares(animal, sq, boosted = false) {
+  const base = SHAPES[animal];
+  if (!base) return [];
+  const shape = boosted ? BOOSTED[animal] || base : base;
   const f = FILES.indexOf(sq[0]);
   const r = Number(sq[1]);
   const out = [];
@@ -77,7 +93,8 @@ export function influenceBonus(v, building) {
   let bonus = 0;
   for (const b of v.built) {
     if (b === building || !b.tenant || !b.ready) continue;
-    if (influenceSquares(tenantAnimal(b.tenant), b.sq).includes(building.sq)) bonus += tenantRarity(b.tenant) >= 1 ? 2 : 1;
+    const animal = tenantAnimal(b.tenant);
+    if (influenceSquares(animal, b.sq, boostedAnimals(v.arch).includes(animal)).includes(building.sq)) bonus += tenantRarity(b.tenant) >= 1 ? 2 : 1;
   }
   return Math.min(BONUS_MAX, bonus);
 }
@@ -112,6 +129,8 @@ const blank = () => ({
   week: { w: -1, n: 0, pick: null },
   shelf: { g: -1, n: 0, lv: 1, xp: 0, slots: [] },
   stash: {},
+  workshop: null,       // 공방(WS-1): 받기 전에는 null — src/village/workshop.js
+  arch: emptyArch(),    // 군도(AR-1): 지금 섬과 끝낸 섬들 — src/village/archipelago.js
   pending: [],          // DR-3: guests' gifts waiting on the island until 「모아 받기」
   guestBook: {}         // DR-3: guest kind → visits so far
 });
@@ -135,6 +154,8 @@ export function sanitizeVillage(raw) {
   // DR-3 fields: a save from before them, or a broken one, starts with none waiting.
   if (!Array.isArray(out.pending)) out.pending = [];
   if (!out.guestBook || typeof out.guestBook !== 'object') out.guestBook = {};
+  out.workshop = sanitizeWorkshop(out.workshop);
+  out.arch = sanitizeArch(out.arch);
   return out;
 }
 
@@ -208,6 +229,8 @@ function harvest(v, mvp, trees, dew = false) {
   const output = (b) => (b.level || 0) + influenceBonus(v, b) + lit;
   const milled = working('mill').length > 0;
   for (const b of working('field')) got.grain += add(v, 'grain', 2 + output(b) + (dew ? DEW_GRAIN : 0), GRAIN_MAX);
+  // 공방(WS-1)은 밭 바로 뒤에서 곡물을 먼저 쓴다 — 장터가 다 팔아 버리기 전에.
+  got.parts = produceParts(v);
   for (const b of working('bakery')) {
     const want = 1 + output(b) + (milled ? 1 : 0);
     const cost = milled ? 1 : 2;
@@ -295,6 +318,9 @@ export function settleGame(v, { moves, color, result, rivalId = null, gameId = n
     v.dewDay = dayKey(now);
     v.dewAt = now;
   }
+  const work = addWork(v, WORK_PER_GAME.normal);
+  // 끝낸 섬들의 특산물(AR-3)은 수확보다 먼저 온다 — 곡물·진도가 이번 판의 공방에 바로 쓰인다.
+  const gifts = giveSpecialties(v, v.arch, { mvp, limits: { grain: GRAIN_MAX, parts: PARTS_MAX, work: WORK_MAX } });
   const harvested = harvest(v, mvp, added.trees.length, dew);
   const opened = v.built.filter((b) => !b.ready).map((b) => b.kind);
   for (const b of v.built) b.ready = true;
@@ -302,24 +328,45 @@ export function settleGame(v, { moves, color, result, rivalId = null, gameId = n
   const guests = guestsVisit(v);
   const shelfUp = growShelf(v);
   stockShelf(v);
-  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest, dew, shelfUp, guests };
+  return { coins, mvp, hearts: MVP_HEARTS, added, harvest: harvested, opened, quest, dew, shelfUp, guests, work, parts: harvested.parts || 0, gifts };
 }
 
-const taken = (v, sq) => v.built.some((b) => b.sq === sq) || v.decor.some((d) => d.sq === sq);
+/** 계약전 한 판의 도토리(SC-2). 마을은 자라지 않는다 — 판 수·하트·나무는 일반 판만 올린다. 같은 판은 한 번만 준다. */
+export function settleContract(v, { gameId, coins, reason = '' }) {
+  const key = `c${gameId}`;
+  if ((v.settled || []).includes(key)) return null;
+  v.settled = [...(v.settled || []), key].slice(-20);
+  const paid = Number.isFinite(coins) && coins > 0 ? Math.floor(coins) : 0;
+  v.coins += paid;
+  // 공방 진도(WS-1): 끝까지 둔 짧은 판만 0.5일. 기권한 판은 없다. 곡물이 있으면 바로 부품이 된다.
+  const work = reason === 'resign' ? 0 : addWork(v, WORK_PER_GAME.contract);
+  const gifts = reason === 'resign' ? [] : giveSpecialties(v, v.arch, { limits: { grain: GRAIN_MAX, parts: PARTS_MAX, work: WORK_MAX } });
+  const parts = produceParts(v);
+  return { coins: paid, work, parts, gifts };
+}
+
+const taken = (v, sq) => v.built.some((b) => b.sq === sq) || v.decor.some((d) => d.sq === sq) || v.workshop?.sq === sq;
+/** 이 칸이 차 있는가(건물·소품·공방). 공방 자리를 고를 때 쓴다. */
+export const squareTaken = (v, sq) => taken(v, sq) || sq === 'g7';
+
+/** 이 섬에서 이 건물의 값(군도 AR-2: 섬마다 15% 씩 오른다). */
+export function buildingCost(v, kind) {
+  return BUILDINGS[kind] ? archCost(BUILDINGS[kind].cost, islandIndex(v.arch)) : Infinity;
+}
 
 export function buildBlocked(v, kind, sq) {
   const b = BUILDINGS[kind];
   if (!b) return 'unknown';
   if (v.built.some((x) => !x.ready)) return 'busy';
   if (v.built.some((x) => x.kind === kind)) return 'owned';
-  if (v.coins < b.cost) return 'coins';
+  if (v.coins < buildingCost(v, kind)) return 'coins';
   if (sq && taken(v, sq)) return 'taken';
   return null;
 }
 
 export function startBuild(v, kind, sq) {
   if (!sq || buildBlocked(v, kind, sq)) return false;
-  v.coins -= BUILDINGS[kind].cost;
+  v.coins -= buildingCost(v, kind);
   v.built.push({ id: v.nextId, kind, sq, tenant: null, level: 0, ready: false });
   v.nextId += 1;
   return true;
@@ -361,8 +408,11 @@ export function reconcileTenants(v, col) {
 export const islandDone = (v) => KIND_ORDER.every((k) => v.built.some((b) => b.kind === k && b.ready));
 
 /** A finished island goes into the album. Residents, hearts and acorns carry over; the land starts again. */
-export function startNewIsland(v) {
+export function startNewIsland(v, theme = nextChoices(v.arch)[0]) {
   if (!islandDone(v)) return false;
+  // 군도(AR-1 · AR-2): 지금 섬을 기록으로 남기고 고른 섬으로 간다. 고를 섬이 없으면(왕관 섬까지 끝) 새 섬은 없다.
+  if (!v.arch) v.arch = emptyArch();
+  if (advanceArch(v.arch, v, theme)) return false;
   const next = blank();
   v.island += 1;
   v.map = next.map;
@@ -507,7 +557,7 @@ export function shelfReserve(v) {
   const left = KIND_ORDER.filter((k) => !v.built.some((b) => b.kind === k));
   if (!left.length) return null;
   const kind = left.reduce((a, k) => (BUILDINGS[k].cost < BUILDINGS[a].cost ? k : a));
-  return { kind, cost: BUILDINGS[kind].cost };
+  return { kind, cost: buildingCost(v, kind) };
 }
 
 /** Buy from a slot into the stash. Null when bought, else why not: 'gone', 'empty', 'coins' or 'reserve' (it would eat the next building's acorns). */

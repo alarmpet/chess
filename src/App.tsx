@@ -1,21 +1,32 @@
-import LookPanel from './LookPanel';
-import RivalPanel from './RivalPanel';
 import RivalEntrance from './RivalEntrance';
-import SettingsPanel from './SettingsPanel';
 import CardLayer from './cards/CardLayer';
-import HandBrain from './HandBrain';
-import { HAND_BRAIN_ENABLED } from './cards/teamPlay.js';
-import Online from './Online';
+import { HAND_BRAIN_ENABLED, loadHandBrain } from './cards/teamPlay.js';
 import Blitz from './Blitz';
 import SessionLog from './SessionLog';
 import RivalLadder from './RivalLadder';
-import VillageView from './VillageView';
 import QuitDialog from './QuitDialog';
-import { loadVillage, settleFinishedGame } from './village/store';
+import { loadVillage, settleContractFinished, settleFinishedGame } from './village/store';
 import { stageForHearts } from './village/economy.js';
 import { gainText } from './village/LoopStrip';
 import { fxSettings } from './fx/settings.js';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+// 누를 때만 여는 화면은 늦게 받는다(첫 화면 JS 상한 400KB, 2026-11-16 「예산 비우기」). 한 번 연 뒤에는 닫아도 붙여 둔다 —
+// 닫을 때 정리하는 효과(마을의 판 그리기 재개 등)가 그대로 돈다.
+const VillageView = lazy(() => import('./VillageView'));
+const LookPanel = lazy(() => import('./LookPanel'));
+const RivalPanel = lazy(() => import('./RivalPanel'));
+const SettingsPanel = lazy(() => import('./SettingsPanel'));
+// 친구 대전: 닫혀 있고 방이 없으면 아무것도 그리지 않는다. 초대 링크(?room=)로 들어왔거나 👫 를 누르면 붙인다.
+const Online = lazy(() => import('./Online'));
+// 손과 뇌는 꺼져 있다(HAND_BRAIN_ENABLED) — 꺼져 있으면 빌드가 화면과 스타일을 통째로 뺀다.
+const HandBrain = loadHandBrain ? lazy(loadHandBrain) : null;
+const ROOM_IN_URL = typeof window !== 'undefined' && /[?&]room=/.test(window.location.search);
+/** 한 번 열린 적이 있는가. */
+function useOnce(open: boolean) {
+  const [ever, setEver] = useState(open);
+  if (open && !ever) setEver(true);
+  return ever || open;
+}
 import { initWizardChess } from './wizardChessEngine.js';
 import { getCurrentLang, getTranslations, setAppLanguage, subscribeLanguage, Language } from './i18n';
 
@@ -54,6 +65,11 @@ export default function App() {
   const [cardsOpen, setCardsOpen] = useState(false);
   const t = getTranslations(lang);
   const en = lang === 'en';
+  const villageMounted = useOnce(villageOpen);
+  const lookMounted = useOnce(lookOpen);
+  const rivalMounted = useOnce(rivalOpen);
+  const settingsMounted = useOnce(settingsOpen);
+  const onlineMounted = useOnce(onlineOpen || ROOM_IN_URL);
 
   useEffect(() => {
     if (!mobileSheetOpen) return;
@@ -68,16 +84,42 @@ export default function App() {
       const summary = settleFinishedGame((e as CustomEvent).detail);
       if (summary) setLastGame(summary);
     };
+    // 계약전 한 판(SC-2): 도토리만 준다. 마을 요약 카드는 띄우지 않는다 — 결과 상자에 한 줄로 적힌다.
+    const onContract = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const paid = settleContractFinished(detail);
+      if (paid && detail?.reply) detail.reply.work = paid.work || 0;
+    };
     window.addEventListener('gamefinished', onFinished);
-    return () => window.removeEventListener('gamefinished', onFinished);
+    window.addEventListener('contractfinished', onContract);
+    return () => { window.removeEventListener('gamefinished', onFinished); window.removeEventListener('contractfinished', onContract); };
   }, []);
 
+  // 왕관 계약전 켜 둠(메뉴). 엔진이 뜬 뒤에 읽는다.
+  const [contractOn, setContractOn] = useState(false);
+  useEffect(() => {
+    if (mobileSheetOpen) setContractOn(Boolean((window as any).wizardChess?.isContractOn?.()));
+  }, [mobileSheetOpen]);
+  const toggleContract = () => setContractOn(Boolean((window as any).wizardChess?.setContractLab?.(!contractOn, true)));
+
+  const appliedStages = useRef('{}');   // 엔진이 처음 가진 외형(모두 아기)
   // Coming back to the board, each piece shows the look its hearts earned.
+  // 게임을 막 켰을 때는 엔진이 아직 없어서 이 효과가 헛돌았다 — 마을을 한 번 다녀오기 전까지 별빛 말도 아기 모습이었다
+  // (끝까지 키우기 시뮬의 끝 상태를 화면에 심어 찾음, 2026-11-16). 엔진이 시작될 때까지 기다렸다가 입힌다.
   useEffect(() => {
     if (villageOpen) return;
-    const hearts = loadVillage().hearts as Record<string, number>;
-    const stages = Object.fromEntries(Object.entries(hearts).map(([slot, n]) => [slot, stageForHearts(n)]).filter(([, st]) => st !== 'baby'));
-    (window as any).wizardChess?.setSlotStages?.(stages);
+    const apply = () => {
+      const hearts = loadVillage().hearts as Record<string, number>;
+      const stages = Object.fromEntries(Object.entries(hearts).map(([slot, n]) => [slot, stageForHearts(n)]).filter(([, st]) => st !== 'baby'));
+      // 바뀐 것이 없으면 말을 다시 만들지 않는다(32마리를 다시 만드는 일이다)
+      const key = JSON.stringify(stages);
+      if (key === appliedStages.current) return;
+      appliedStages.current = key;
+      (window as any).wizardChess?.setSlotStages?.(stages);
+    };
+    if ((window as any).wizardChess?.isStarted?.()) { apply(); return; }
+    const timer = window.setInterval(() => { if ((window as any).wizardChess?.isStarted?.()) { window.clearInterval(timer); apply(); } }, 300);
+    return () => window.clearInterval(timer);
   }, [villageOpen]);
 
   useEffect(() => {
@@ -230,6 +272,10 @@ export default function App() {
             {t.playAsBlack}
           </button>
 
+          <div className="mobile-sheet-section-label">{en ? 'Game type' : '놀이 방식'}</div>
+          <button className={`hud-btn hud-btn-wide${contractOn ? ' active' : ''}`} id="btn-contract" aria-pressed={contractOn} title={en ? 'Crown Contract: first to fill two of three goals wins. Applies from the next new game.' : '왕관 계약전: 세 목표 가운데 둘을 먼저 채우면 이겨요. 다음 새 판부터 적용돼요.'} onClick={toggleContract}>
+            {en ? `👑 Crown Contract: ${contractOn ? 'On' : 'Off'}` : `👑 왕관 계약전: ${contractOn ? '켬' : '끔'}`}
+          </button>
           <div className="mobile-sheet-section-label">{en ? 'View' : '보기'}</div>
           <button className="hud-btn active" id="btn-cam-player" title={t.camPlayer}>{t.camPlayer}</button>
           <button className="hud-btn" id="btn-cam-top" title={t.camTop}>{t.camTop}</button>
@@ -283,22 +329,22 @@ export default function App() {
       </div>
 
       <QuitDialog lang={lang === 'en' ? 'en' : 'ko'} />
-      <LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
-      <RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      {lookMounted && <Suspense fallback={null}><LookPanel open={lookOpen} onClose={() => setLookOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} /></Suspense>}
+      {rivalMounted && <Suspense fallback={null}><RivalPanel open={rivalOpen} onClose={() => setRivalOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} /></Suspense>}
       <RivalEntrance lang={lang === 'en' ? 'en' : 'ko'} />
-      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
+      {settingsMounted && <Suspense fallback={null}><SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} /></Suspense>}
       <Blitz lang={lang === 'en' ? 'en' : 'ko'} />
       <SessionLog />
       <RivalLadder lang={lang === 'en' ? 'en' : 'ko'} />
-      <Online open={onlineOpen} onOpen={() => setOnlineOpen(true)} onClose={() => setOnlineOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
-      {HAND_BRAIN_ENABLED && <HandBrain open={handBrainOpen} onClose={() => setHandBrainOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />}
+      {onlineMounted && <Suspense fallback={null}><Online open={onlineOpen} onOpen={() => setOnlineOpen(true)} onClose={() => setOnlineOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} /></Suspense>}
+      {HandBrain && <Suspense fallback={null}><HandBrain open={handBrainOpen} onClose={() => setHandBrainOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} /></Suspense>}
       <CardLayer open={cardsOpen} onOpen={() => setCardsOpen(true)} onClose={() => setCardsOpen(false)} lang={lang === 'en' ? 'en' : 'ko'} />
       {lastGame && !villageOpen && (
         <button type="button" className="village-toast" id="village-toast" onClick={openVillage}>
           🌱 심기 → ♟ 한 판 ✓ → 🧺 거두기 {gainText(lastGame)} — 섬으로
         </button>
       )}
-      <VillageView open={villageOpen} onClose={closeVillage} lang={lang === 'en' ? 'en' : 'ko'} summary={lastGame} dive={diving} />
+      {villageMounted && <Suspense fallback={null}><VillageView open={villageOpen} onClose={closeVillage} lang={lang === 'en' ? 'en' : 'ko'} summary={lastGame} dive={diving} /></Suspense>}
       {veil && (
         <div className={`dive-veil ${veil}`} id="dive-veil" aria-hidden="true">
           {[8, 22, 37, 51, 64, 78, 90, 44].map((left, i) => <i key={i} style={{ left: `${left}%`, animationDelay: `${i * 0.07}s`, width: `${10 + (i % 3) * 5}px`, height: `${10 + (i % 3) * 5}px` }} />)}

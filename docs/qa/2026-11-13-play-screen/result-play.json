@@ -1,5 +1,5 @@
 {
- "at": "2026-11-14T15:14:47.732Z",
+ "at": "2026-11-16T11:05:08.689Z",
  "base": "http://localhost:3000/",
  "measured": {
   "desk": {
@@ -108,7 +108,7 @@
      "sat": 1.28,
      "rim": 0.7
     },
-    "calls": 52
+    "calls": 65
    },
    "ok": true
   },
@@ -164,7 +164,7 @@
     "arrow": true,
     "draws": 4,
     "loose": 0,
-    "calls": 56
+    "calls": 69
    },
    "ok": true
   },
@@ -216,7 +216,7 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 56
+    "calls": 69
    },
    "ok": true
   },
@@ -234,7 +234,7 @@
      "r": 7,
      "c": 3
     },
-    "calls": 57
+    "calls": 70
    },
    "ok": true
   },
@@ -250,7 +250,7 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 55
+    "calls": 68
    },
    "ok": true
   },
@@ -278,7 +278,7 @@
      "sat": 1.28,
      "rim": 0.7
     },
-    "calls": 50
+    "calls": 63
    },
    "ok": true
   },
@@ -342,7 +342,7 @@
     "arrow": true,
     "draws": 4,
     "loose": 0,
-    "calls": 54
+    "calls": 67
    },
    "ok": true
   },
@@ -456,7 +456,7 @@
      "sat": 1.28,
      "rim": 0.7
     },
-    "calls": 53
+    "calls": 66
    },
    "ok": true
   },
@@ -572,7 +572,7 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 57
+    "calls": 70
    },
    "ok": true
   },
@@ -590,7 +590,7 @@
      "r": 7,
      "c": 3
     },
-    "calls": 58
+    "calls": 71
    },
    "ok": true
   },
@@ -606,7 +606,7 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 56
+    "calls": 69
    },
    "ok": true
   },
@@ -750,7 +750,7 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 54
+    "calls": 67
    },
    "ok": true
   },
@@ -768,7 +768,7 @@
      "r": 7,
      "c": 3
     },
-    "calls": 55
+    "calls": 68
    },
    "ok": true
   },
@@ -784,7 +784,7 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 53
+    "calls": 66
    },
    "ok": true
   },

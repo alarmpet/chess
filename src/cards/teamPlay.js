@@ -6,6 +6,9 @@
  * 끄면 단추·막대가 사라지고, 저장된 모드(wildcrown.handbrain.v1)가 family 여도 보통 판으로 둔다. 코드는 남겨 둔다.
  */
 export const HAND_BRAIN_ENABLED = false;
+// 손과 뇌 화면을 받는 길. 꺼져 있으면 null 이고, 빌드가 이 파일 안에서 분기를 접어 화면·스타일을 통째로 뺀다
+// (다른 파일에서 플래그를 읽으면 접지 못했다 — 2026-11-16 예산 비우기).
+export const loadHandBrain = HAND_BRAIN_ENABLED ? () => import('../HandBrain') : null;
 
 /** 뇌가 이 초 동안 말을 부르지 않으면 손이 아무 말이나 둘 수 있게 연다(시간패 없음). grok 안. */
 export const HANDOVER_S = 20;

@@ -45,7 +45,7 @@ for (const [from, to, cap] of moves) {
       samples.push(f);
       if (!shot && f.age > 0.28) {
         const s = await send('Page.captureScreenshot', { format: 'jpeg', quality: 80 });
-        writeFileSync(new URL(`${cap}-v${f.variant}.jpg`, OUT), Buffer.from(s.result.data, 'base64'));
+        { const shotBuf = Buffer.from(s.result.data, 'base64'); for (let k = 0; ; k++) { try { writeFileSync(new URL(`${cap}-v${f.variant}.jpg`, OUT), shotBuf); break; } catch (e) { if (k >= 5) { console.log('⚠️ 캡처를 못 씀(파일이 잠김)', String(e.code || e)); break; } await sleep(500); } } }
         shot = true;
       }
       if (f.age > 0.55) break;

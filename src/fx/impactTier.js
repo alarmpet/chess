@@ -54,3 +54,39 @@ export const PIECE_SPARK = {
   queen: [0xff9fb8, 0xffd27a],
   king: [0xffd24a, 0xff8a5a]
 };
+
+// ── 사건 꾸러미 (그래픽 계획 GX-1, 2026-11-15) ─────────────────────────────────────────────
+// 사건 하나가 내는 것들을 한 줄에 적는다: 별 뭉치 · 바닥 고리 · 낱말 · 화면 번쩍임 · 겹친 불빛.
+// 엔진은 이 표를 읽어 낸다(playEvent). 소리는 사건마다 고르는 조건이 달라 엔진에 남겼다.
+export const EVENT_FX = {
+  castle: { burst: ['king', 'small'], ring: null, word: '짝!', wordSize: 0.09, flash: null, glow: null },
+  promote: { burst: ['queen', 'big'], ring: 'big', word: '승급!', wordSize: 0.11, flash: { tone: 'side', alpha: 0.26, ms: 320 }, glow: 'big' },
+  mate: { burst: ['king', 'big'], ring: 'big', word: '메이트!', wordSize: 0.14, flash: { tone: 'side', alpha: 0.42, ms: 520 }, glow: 'big' },
+  check: { burst: null, ring: null, word: '체크!', wordSize: 0.09, flash: { tone: 'orange', alpha: 0.2, ms: 260 }, glow: null }
+};
+
+/** 화면 가장자리 번쩍임의 색(r, g, b). 내가 잘되면 금빛, 내가 당하면 붉은빛, 체크는 주황. */
+export const FLASH_TONES = { gold: '255, 200, 70', red: '255, 86, 86', orange: '255, 150, 50' };
+/** 잡기의 화면 번쩍임: 작은 잡기는 없다(한 판에 여러 번 나온다). */
+export const CAPTURE_FLASH = { small: null, medium: { alpha: 0.16, ms: 200 }, big: { alpha: 0.3, ms: 320 } };
+
+/**
+ * 이 사건의 화면 번쩍임. `mine` 은 내게 좋은 일인가(true) · 나쁜 일인가(false) · 편이 없는가(null — 구경·둘이 두기).
+ * 번쩍임이 없는 사건은 null.
+ */
+export function screenFlash(kind, { tierId = 'small', mine = null } = {}) {
+  const side = mine === false ? 'red' : 'gold';
+  if (kind === 'capture') {
+    const f = CAPTURE_FLASH[tierId];
+    return f ? { tone: side, rgb: FLASH_TONES[side], alpha: f.alpha, ms: f.ms } : null;
+  }
+  const f = EVENT_FX[kind]?.flash;
+  if (!f) return null;
+  const tone = f.tone === 'side' ? side : f.tone;
+  return { tone, rgb: FLASH_TONES[tone], alpha: f.alpha, ms: f.ms };
+}
+
+/** 겹친 타격 불빛(GX-3)의 크기: 배율 · 불똥 수. 작은 잡기는 심과 별만 작게. */
+export const GLOW_TIERS = { small: { scale: 0.6, sparks: 0 }, medium: { scale: 1, sparks: 8 }, big: { scale: 1.5, sparks: 16 } };
+/** 때린 쪽 왕국의 빛(백: 금빛, 흑: 보랏빛) — 캐릭터 룩의 윤곽 색과 같은 계열. */
+export const GLOW_COLOR = { w: 0xffc24a, b: 0xb98cff };

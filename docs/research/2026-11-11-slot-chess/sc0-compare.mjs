@@ -16,7 +16,14 @@ export const CANDIDATES = {
   p3nb: [{ type: 'p', count: 3 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }],
   p2bn2: [{ type: 'p', count: 2 }, { type: 'b', count: 1 }, { type: 'n', count: 2 }],
   pnb: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }],
-  pnr: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'r', count: 1 }]
+  pnr: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'r', count: 1 }],
+  // 11-15 풀 늘리기 후보: 퀸이 든 세트와 폰×4
+  p2nq: [{ type: 'p', count: 2 }, { type: 'n', count: 1 }, { type: 'q', count: 1 }],
+  p2bq: [{ type: 'p', count: 2 }, { type: 'b', count: 1 }, { type: 'q', count: 1 }],
+  p3nq: [{ type: 'p', count: 3 }, { type: 'n', count: 1 }, { type: 'q', count: 1 }],
+  p3bq: [{ type: 'p', count: 3 }, { type: 'b', count: 1 }, { type: 'q', count: 1 }],
+  p4nb: [{ type: 'p', count: 4 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }],
+  nbq: [{ type: 'n', count: 1 }, { type: 'b', count: 1 }, { type: 'q', count: 1 }]
 };
 
 const [id = 'p2nb', rule = 'base', nArg = '60', level = 'normal', seedArg = '7000'] = process.argv.slice(2);

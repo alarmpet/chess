@@ -1,5 +1,5 @@
 // Village save (browser only for now) and the link from a finished chess game to the village.
-import { VILLAGE_KEY, rollWeek, sanitizeVillage, settleGame } from './economy.js';
+import { VILLAGE_KEY, rollWeek, sanitizeVillage, settleContract, settleGame } from './economy.js';
 
 export function loadVillage(): any {
   try {
@@ -42,6 +42,14 @@ export function villageRivals(): any[] {
 /** The pack's weekly list (garden-short G3). Empty when the pack has none: the week then simply never turns. */
 export function villageWeekly(): any[] {
   return (window as any).wizardChess?.getVillageWeekly?.() || [];
+}
+
+/** 계약전 한 판이 끝났다(SC-2): 도토리만 준다. */
+export function settleContractFinished(detail: { gameId: number; coins?: number; reason?: string }): { coins: number; work: number; parts: number } | null {
+  const v = loadVillage();
+  const paid = settleContract(v, { gameId: detail.gameId, coins: detail.coins ?? 0, reason: detail.reason ?? '' });
+  if (paid) saveVillage(v);
+  return paid;
 }
 
 export function settleFinishedGame(detail: { moves: any[]; color: 'w' | 'b'; result: string; rivalId: string | null; gameId?: number }) {

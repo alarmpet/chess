@@ -11,6 +11,10 @@ import { addIslandPhoto, loadIslandPhotos, loadVillage, saveVillage, villageRiva
 import { certificateLines, drawCertificate } from './village/certificate.js';
 import { earnedMarks } from './village/marks.js';
 import LoopStrip from './village/LoopStrip';
+import { CRAFT_COINS, CRAFT_PARTS, GRAIN_BUY_PRICE, PARTS_MAX, PARTS_PER_DAY, WORKSHOP_AFTER_GAMES, WORKSHOP_GIFT_GRAIN, WORK_MAX, buyGrain, claimWorkshop, craftCost, craftProp, workshopOffered } from './village/workshop.js';
+import { buildingCost, newVillage, squareTaken } from './village/economy.js';
+import { ISLANDS_TOTAL, LAST_THEME, MIDDLE_THEMES, THEMES, boostedAnimals, finishArch, islandIndex, nextChoices } from './village/archipelago.js';
+import './village/archipelago.css';
 import { ZONES, zoneOf, zoneSquares } from './village/zones.js';
 
 const FILES = 'abcdefgh';
@@ -56,9 +60,12 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
   const [shelfOpen, setShelfOpen] = useState(false);
   const [propAt, setPropAt] = useState<string | null>(null);
   const [cardQuiet, setCardQuiet] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);     // 공방 창(WS-1)
+  const [mapOpen, setMapOpen] = useState<null | 'look' | 'choose'>(null);   // 바다 지도(군도 AR-1): 보기 · 다음 섬 고르기
+  const [viewing, setViewing] = useState<any>(null);   // 지난 섬 보기(읽기만)
   const island = useRef<ReturnType<typeof createIsland> | null>(null);
-  const live = useRef({ picking, selected });
-  live.current = { picking, selected };
+  const live = useRef<{ picking: any; selected: any; viewing?: any }>({ picking, selected });
+  live.current = { picking, selected, viewing };
 
   const commit = (v: any) => {
     saveVillage(v);
@@ -80,6 +87,9 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
     stockShelf(v);
     v.lastSeen = t;
     setShelfOpen(false);
+    setShopOpen(false);
+    setMapOpen(null);
+    setViewing(null);
     setPropAt(null);
     saveVillage(v);
     setCol(collection);
@@ -108,6 +118,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
       if (dead || !hostRef.current) return;
       api = make(hostRef.current, {
       onTile(sq) {
+        if (live.current.viewing) return;       // 지난 섬은 보기만
         const kind = live.current.picking;
         if (!kind) {
           setSelected(null);
@@ -143,7 +154,14 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
           setNote('다음 판이 끝나면 문을 엽니다.');
         } else setNote('여기에는 지을 수 없습니다.');
       },
+      onWorkshop() {
+        if (live.current.viewing) return;
+        setPicking(null);
+        setSelected(null);
+        setShopOpen(true);
+      },
       onBuilding(id) {
+        if (live.current.viewing) return;
         setPicking(null);
         setSelected(id);
         setTrying(null);
@@ -163,6 +181,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
       }
     });
     island.current = api;
+    (window as any).wcIsland = api;     // 확인 스크립트용
     if (dive) api.enter();
     api.draw(village);
     api.drawShelf(loadCollection().shelf as string[]);
@@ -234,7 +253,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
       api.setOverlay([], [], building?.sq || null);
       return;
     }
-    const reach = influenceSquares(tenantAnimal(card), building.sq);
+    const reach = influenceSquares(tenantAnimal(card), building.sq, boostedAnimals(village.arch).includes(tenantAnimal(card)));
     const homes = village.built.filter((b: any) => reach.includes(b.sq)).map((b: any) => b.sq);
     api.setOverlay(reach, homes, building.sq);
   }, [picking, trying, building, village, sceneReady]);
@@ -337,6 +356,8 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
               🧺 모아 받기 · 🎁 {village.pending.length} · 🌰 {village.pending.reduce((n: number, g: any) => n + (g.acorns || 0), 0)}
             </button>
           )}
+          <button type="button" className={`hud-btn${village && workshopOffered(village) ? ' village-new' : ''}`} id="village-workshop" aria-label="공방" onClick={() => { setShelfOpen(false); setShopOpen(!shopOpen); }}>🔨</button>
+          <button type="button" className="hud-btn" id="village-map" aria-label="군도 지도" title={village ? `${THEMES[village.arch.current as keyof typeof THEMES].ko} — ${THEMES[village.arch.current as keyof typeof THEMES].rule}` : ''} onClick={() => setMapOpen(mapOpen ? null : 'look')}>🗺 {village ? `${Math.min(ISLANDS_TOTAL, islandIndex(village.arch))}/${ISLANDS_TOTAL}` : ''}</button>
           <button type="button" className="hud-btn" id="village-shelf" aria-label="매대" onClick={() => setShelfOpen(!shelfOpen)}>🛒</button>
           <button type="button" className="hud-btn" id="village-album" onClick={() => setPhotos(photos ? null : loadIslandPhotos())}>📷</button>
           <button type="button" className="hud-btn" id="village-marks" aria-label="표식" onClick={() => setMarks(marks ? null : currentMarks())}>🏅</button>
@@ -347,7 +368,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
 
       <LoopStrip village={village} summary={summary} hasCards={owned.length > 0} dew={dew} onPlay={onClose} />
 
-      {(summary || away.length > 0 || note || questHome || dew || newWeek || propAt) && (
+      {(summary || away.length > 0 || note || questHome || dew || newWeek || propAt || (village && workshopOffered(village))) && (
         <div className={`village-card${cardQuiet ? ' quiet' : ''}`} id="village-card">
           {cardQuiet ? (
             <button type="button" className="village-card-open" id="village-card-open" onClick={() => setCardQuiet(false)}>💬 소식</button>
@@ -366,6 +387,9 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
             </div>
           )}
           {summary?.dew && <div>💧 밤사이 이슬이 내려 밭마다 곡물 +{DEW_GRAIN}</div>}
+          {summary?.gifts?.length > 0 && <div id="village-gift-line">🗺 지난 섬의 특산물: {summary.gifts.map((g: any) => `${THEMES[g.theme as keyof typeof THEMES].icon} ${g.ko}`).join(' · ')}</div>}
+          {summary?.work > 0 && <div id="village-work-line">🔨 공방 진도 +{summary.work}일{summary.parts > 0 ? ` · 부품 +${summary.parts}` : village?.grain ? '' : ' · 곡물이 없어 부품은 아직'}</div>}
+          {village && workshopOffered(village) && !summary && <div id="village-workshop-offer">🔨 공방을 무료로 받을 수 있어요. 위의 🔨 를 눌러 보세요.</div>}
           {dew && !summary && <div>💧 밤사이 밭에 이슬이 맺혔어요. 오늘 첫 판을 끝내면 밭마다 곡물 +{DEW_GRAIN}.</div>}
           {newWeek && <div className="village-week" id="village-week">📅 새 주가 왔어요.{newWeek.guest && ` 이번 주 손님은 ${rivalName(newWeek.guest)}.`} {newWeek.line?.[lang] || newWeek.line?.ko}</div>}
           {summary?.opened?.length > 0 && <div>🎉 {summary.opened.map((k: string) => BUILDINGS[k as keyof typeof BUILDINGS].ko).join(', ')} 문을 열었어요!</div>}
@@ -390,6 +414,146 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
           </>)}
         </div>
       )}
+
+      {shopOpen && village && (() => {
+        const w = village.workshop;
+        const reserve = shelfReserve(village)?.cost ?? 0;
+        const craftable = (Object.keys(PROPS) as (keyof typeof PROPS)[]).filter((k) => craftCost(k));
+        return (
+          <div className="panel-overlay" role="dialog" aria-modal="true" onClick={() => setShopOpen(false)}>
+            <div className="panel-card shelf-panel workshop-panel" id="workshop-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="panel-header">
+                <div className="panel-title"><span>🔨</span><span>공방</span></div>
+                <button type="button" className="panel-close" onClick={() => setShopOpen(false)}>✕</button>
+              </div>
+              <div className="panel-body">
+                {!w ? (
+                  <>
+                    <p className="look-note">판이 끝날 때마다 공방 일꾼이 일해요. 곡물로 부품을 만들고, 부품과 도토리로 갖고 싶은 소품을 골라 만들어요.</p>
+                    {workshopOffered(village) ? (
+                      <button type="button" className="hud-btn workshop-claim" id="workshop-claim" onClick={() => {
+                        const v = loadVillage();
+                        if (claimWorkshop(v, (sq: string) => squareTaken(v, sq))) { setNote('공방을 놓을 빈 칸이 없어요.'); return; }
+                        commit(v);
+                        sfx.play('promote');
+                        setNote(`🔨 공방이 섰어요! 기본 일꾼 한 명과 곡물 ${WORKSHOP_GIFT_GRAIN}을 받았어요.`);
+                      }}>🎁 공방 받기 — 무료 · 일꾼 1 · 곡물 {WORKSHOP_GIFT_GRAIN}</button>
+                    ) : (
+                      <p className="shelf-reserve" id="workshop-wait">판을 {WORKSHOP_AFTER_GAMES}번 끝내면 받을 수 있어요({Math.min(village.games || 0, WORKSHOP_AFTER_GAMES)}/{WORKSHOP_AFTER_GAMES}).</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="workshop-meters" id="workshop-meters">
+                      <div><span>작업 진도</span><b id="workshop-work">{w.work}일</b><i style={{ width: `${Math.min(100, (w.work / WORK_MAX) * 100)}%` }} /></div>
+                      <div><span>곡물</span><b id="workshop-grain">{village.grain}</b><i style={{ width: `${Math.min(100, (village.grain / GRAIN_MAX) * 100)}%` }} /></div>
+                      <div><span>부품 🔩</span><b id="workshop-parts">{w.parts}/{PARTS_MAX}</b><i style={{ width: `${(w.parts / PARTS_MAX) * 100}%` }} /></div>
+                    </div>
+                    <p className="look-note">일반 판 1일 · 왕관 계약전 0.5일. 진도 1일 + 곡물 1 → 부품 {PARTS_PER_DAY}. 곡물이 없으면 진도는 쌓여서 기다려요.</p>
+                    <button type="button" className="hud-btn" id="workshop-buy-grain" disabled={village.coins - GRAIN_BUY_PRICE < reserve || village.grain >= GRAIN_MAX} onClick={() => {
+                      const v = loadVillage();
+                      if (buyGrain(v, { reserve: shelfReserve(v)?.cost ?? 0, max: GRAIN_MAX })) return;
+                      commit(v);
+                      setNote(`곡물 1을 샀어요(🌰 ${GRAIN_BUY_PRICE}). 다음 판이 끝나면 부품이 돼요.`);
+                    }}>🌾 곡물 사기 🌰 {GRAIN_BUY_PRICE}</button>
+                    {reserve > 0 && <p className="shelf-reserve">🏗️ 다음 건물 몫 🌰 {reserve}은 남겨 둬요.</p>}
+                    <b className="workshop-head">골라 만들기</b>
+                    <div className="shelf-slots workshop-crafts">
+                      {craftable.map((k) => {
+                        const p = PROPS[k];
+                        const c = craftCost(k)!;
+                        const short = w.parts < c.parts ? `부품 ${c.parts - w.parts} 모자람` : c.coins > 0 && village.coins - c.coins < reserve ? '도토리 모자람' : '';
+                        return (
+                          <div className={`shelf-slot tier-${p.tier}`} key={k} data-craft={k}>
+                            <span className="shelf-icon">{p.icon}</span>
+                            <b>{p.ko}</b>
+                            <span className={`shelf-tier tier-${p.tier}`}>{TIER_KO[p.tier]}</span>
+                            <button type="button" className="hud-btn shelf-buy" disabled={Boolean(short)} onClick={() => {
+                              const v = loadVillage();
+                              if (craftProp(v, k, { reserve: shelfReserve(v)?.cost ?? 0 })) return;
+                              commit(v);
+                              sfx.play('clap');
+                              setShopOpen(false);
+                              setSelected(null);
+                              setPicking(`prop:${k}`);
+                              setNote(`${p.ko}${josa(p.ko, '을', '를')} 만들었어요! 놓을 칸을 누르세요.`);
+                            }}>🌰{c.coins} · 🔩{c.parts}</button>
+                            <small className="shelf-stock">{short || `매대 값 🌰 ${c.shop}`}</small>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="shelf-odds">매대는 무작위로 들어오고, 공방은 골라서 만들어요. 왕관 동상은 매대에서만. 지금까지 부품 {w.made} · 만든 소품 {w.crafted}.</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {viewing && (
+        <div className="arch-viewing" id="arch-viewing">
+          <span>{THEMES[viewing.theme as keyof typeof THEMES].icon} {THEMES[viewing.theme as keyof typeof THEMES].ko} — {viewing.games}판째에 끝낸 섬(보기만)</span>
+          <button type="button" className="hud-btn" id="arch-viewing-back" onClick={() => { setViewing(null); island.current?.draw(loadVillage()); }}>지금 섬으로</button>
+        </div>
+      )}
+
+      {mapOpen && village && (() => {
+        const arch = village.arch;
+        const photos = loadIslandPhotos();
+        const choices = nextChoices(arch);
+        const order = ['kelp', ...MIDDLE_THEMES, LAST_THEME];
+        const choosing = mapOpen === 'choose' && islandDone(village) && choices.length > 0;
+        const pick = (theme: string) => {
+          const shot = island.current?.photo();
+          const v = loadVillage();
+          if (shot) addIslandPhoto({ island: v.island, games: v.games, photo: shot });
+          if (!startNewIsland(v, theme)) return;
+          commit(v);
+          setMapOpen(null);
+          sfx.play('promote');
+          setNote(`${THEMES[theme as keyof typeof THEMES].icon} ${THEMES[theme as keyof typeof THEMES].ko}에 왔어요. ${THEMES[theme as keyof typeof THEMES].rule}. 건물 값이 조금 올랐어요.`);
+        };
+        return (
+          <div className="panel-overlay" role="dialog" aria-modal="true" onClick={() => setMapOpen(null)}>
+            <div className="panel-card arch-panel" id="arch-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="panel-header">
+                <div className="panel-title"><span>🗺</span><span>{choosing ? '다음 섬 고르기' : `군도 ${arch.done.length}/${ISLANDS_TOTAL}`}</span></div>
+                <button type="button" className="panel-close" onClick={() => setMapOpen(null)}>✕</button>
+              </div>
+              <div className="panel-body">
+                <p className="arch-note">{choosing ? '끝낸 섬은 지도에 남아 판마다 특산물을 보내요. 다음 섬에서는 그 동물 주민의 영향권이 넓어져요.' : arch.finished ? '👑 일곱 섬을 모두 지었어요. 섬을 눌러 다시 볼 수 있어요.' : `지금 섬: ${THEMES[arch.current as keyof typeof THEMES].icon} ${THEMES[arch.current as keyof typeof THEMES].ko} — ${THEMES[arch.current as keyof typeof THEMES].rule}`}</p>
+                <div className="arch-sea" id="arch-sea">
+                  {order.map((theme, i) => {
+                    const t = THEMES[theme as keyof typeof THEMES];
+                    const rec = arch.done.find((d: any) => d.theme === theme);
+                    const here = arch.current === theme && !arch.finished;
+                    const can = choosing && choices.includes(theme);
+                    const photo = rec ? photos.find((p: any) => p.island === rec.island)?.photo : null;
+                    const state = rec ? 'done' : here ? 'here' : can ? 'pick' : 'fog';
+                    return (
+                      <div className={`arch-isle arch-${state}`} key={theme} data-theme={theme} data-state={state} style={{ gridArea: `i${i}` }}>
+                        <div className="arch-pic">{photo ? <img src={photo} alt="" /> : <span>{state === 'fog' ? '☁️' : t.icon}</span>}</div>
+                        <b>{t.icon} {t.ko}</b>
+                        <small>{rec ? `${rec.games}판째 · ${t.landmark}` : here ? '지금 짓는 중' : t.rule}</small>
+                        {rec && t.gift && <small className="arch-gift">판마다 {t.gift.ko}</small>}
+                        {rec && <button type="button" className="hud-btn" data-view={theme} onClick={() => {
+                          setMapOpen(null);
+                          setViewing(rec);
+                          const view = { ...newVillage(), hearts: village.hearts, names: village.names, built: rec.built.map((b: any, k: number) => ({ ...b, id: 1000 + k, ready: true })), decor: rec.decor, workshop: null, arch: village.arch };
+                          island.current?.draw(view);
+                        }}>보기</button>}
+                        {can && <button type="button" className="hud-btn arch-go" data-pick={theme} onClick={() => pick(theme)}>이 섬으로</button>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {shelfOpen && village && (
         <div className="panel-overlay" role="dialog" aria-modal="true" onClick={() => setShelfOpen(false)}>
@@ -559,25 +723,28 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
         </div>
       )}
 
-      {done && !building && (
+      {done && !building && !viewing && (
         <button
           type="button"
           className="village-toast island-done"
           id="island-done"
           onClick={() => {
-            const shot = island.current?.photo();
             const v = loadVillage();
-            if (shot) addIslandPhoto({ island: v.island, games: v.games, photo: shot });
-            startNewIsland(v);
-            commit(v);
-            setNote('새 섬이 떠올랐어요. 주민과 도토리는 그대로입니다.');
+            if (v.arch?.current === LAST_THEME) {
+              const shot = island.current?.photo();
+              if (shot && !v.arch.finished) addIslandPhoto({ island: v.island, games: v.games, photo: shot });
+              if (finishArch(v.arch, v)) { commit(v); sfx.play('mate'); setNote('👑 군도를 완성했어요! 일곱 섬이 모두 바다 지도에 남았어요.'); }
+              setMapOpen('look');
+              return;
+            }
+            setMapOpen('choose');
           }}
         >
-          📷 섬 완성! 사진을 찍고 새 섬으로
+          {village?.arch?.current === LAST_THEME ? (village.arch.finished ? '🗺 완성한 군도 보기' : '👑 왕관 섬 완성! 군도를 끝내기') : '📷 섬 완성! 지도에서 다음 섬 고르기'}
         </button>
       )}
 
-      {!building && !done && (
+      {!building && !done && !viewing && (
         <div className="village-build" id="village-build">
           {Object.entries(BUILDINGS).filter(([id]) => !village?.built.some((b: any) => b.kind === id)).map(([id, b]) => {
             const blocked = village ? buildBlocked(village, id, '') : 'busy';
@@ -593,7 +760,7 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
               >
                 <span>{b.icon}</span>
                 <span>{b.ko}</span>
-                <small>🌰 {b.cost}{b.minRarity > 0 ? ` · ${RARITY_KO[b.minRarity]}` : ''}</small>
+                <small>🌰 {village ? buildingCost(village, id) : b.cost}{b.minRarity > 0 ? ` · ${RARITY_KO[b.minRarity]}` : ''}</small>
               </button>
             );
           })}

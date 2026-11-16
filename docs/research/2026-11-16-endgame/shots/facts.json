@@ -1,0 +1,33 @@
+{
+ "village": {
+  "island": 12,
+  "games": 500,
+  "coins": 40,
+  "built": [
+   "field:3",
+   "shelter:3",
+   "mill:3",
+   "market:3",
+   "bakery:2",
+   "power:3",
+   "spring:3",
+   "stage:1"
+  ],
+  "decor": 54,
+  "guests": [
+   "turtle",
+   "reeffish",
+   "crab",
+   "butterfly",
+   "octopus",
+   "whale"
+  ],
+  "workshop": {
+   "sq": "e2",
+   "work": 0,
+   "parts": 4,
+   "made": 996,
+   "crafted": 248
+  }
+ }
+}

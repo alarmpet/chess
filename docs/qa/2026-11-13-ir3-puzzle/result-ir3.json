@@ -1,5 +1,5 @@
 {
- "at": "2026-11-14T17:22:27.415Z",
+ "at": "2026-11-16T10:58:08.428Z",
  "base": "http://localhost:3000/",
  "practice": [
   "cp01",
@@ -53,7 +53,7 @@
      "tries": 0,
      "hint": false,
      "solved": false,
-     "at": 31338,
+     "at": 15330.60000000149,
      "ms": null
     },
     "bar": {
@@ -78,7 +78,7 @@
      "hud": false,
      "squares": 0
     },
-    "calls": 54
+    "calls": 67
    },
    "ok": true
   },
@@ -95,7 +95,7 @@
      "tries": 1,
      "hint": true,
      "solved": false,
-     "at": 31338,
+     "at": 15330.60000000149,
      "ms": null
     },
     "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
@@ -115,8 +115,8 @@
      "tries": 1,
      "hint": true,
      "solved": true,
-     "at": 31338,
-     "ms": 6895
+     "at": 15330.60000000149,
+     "ms": 8061
     },
     "crown": [
      "n",
@@ -146,7 +146,7 @@
        "kind": "practice",
        "index": 0,
        "tries": 1,
-       "ms": 6895
+       "ms": 8061
       }
      ]
     }
@@ -176,6 +176,7 @@
     "practiceDone": true,
     "store": {
      "v": 1,
+     "on": false,
      "games": 0,
      "win": 0,
      "loss": 0,
@@ -255,7 +256,9 @@
      "set": "p3nb",
      "result": "loss",
      "reason": "resign",
-     "plies": 24
+     "plies": 24,
+     "coins": 0,
+     "work": 0
     }
    },
    "ok": true
@@ -277,6 +280,7 @@
     "overlay": false,
     "store": {
      "v": 1,
+     "on": false,
      "games": 4,
      "win": 1,
      "loss": 3,
@@ -362,7 +366,7 @@
      "tries": 0,
      "hint": false,
      "solved": false,
-     "at": 26123.599999904633,
+     "at": 18023.800000000745,
      "ms": null
     },
     "bar": {
@@ -404,7 +408,7 @@
      "tries": 1,
      "hint": true,
      "solved": false,
-     "at": 26123.599999904633,
+     "at": 18023.800000000745,
      "ms": null
     },
     "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
@@ -424,8 +428,8 @@
      "tries": 1,
      "hint": true,
      "solved": true,
-     "at": 26123.599999904633,
-     "ms": 6078
+     "at": 18023.800000000745,
+     "ms": 7413
     },
     "crown": [
      "n",
@@ -455,7 +459,7 @@
        "kind": "practice",
        "index": 0,
        "tries": 1,
-       "ms": 6078
+       "ms": 7413
       }
      ]
     }
@@ -485,6 +489,7 @@
     "practiceDone": true,
     "store": {
      "v": 1,
+     "on": false,
      "games": 0,
      "win": 0,
      "loss": 0,
@@ -564,7 +569,9 @@
      "set": "p3nb",
      "result": "loss",
      "reason": "resign",
-     "plies": 24
+     "plies": 24,
+     "coins": 0,
+     "work": 0
     }
    },
    "ok": true
@@ -586,6 +593,7 @@
     "overlay": false,
     "store": {
      "v": 1,
+     "on": false,
      "games": 4,
      "win": 1,
      "loss": 3,

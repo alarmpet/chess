@@ -386,6 +386,7 @@ export type IslandEvents = {
   onTile: (sq: string) => void;
   onBuilding: (id: number) => void;
   onActor: (slot: string | null, animal: string) => void;
+  onWorkshop?: () => void;
 };
 
 export function createIsland(host: HTMLElement, events: IslandEvents) {
@@ -934,6 +935,39 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     marks.add(at);
   }
 
+  // 공방(WS-1, 2026-11-16): 전용 모델이 아직 없어 집 모델을 작게 쓰고, 앞마당에 모루·작업대와 불똥을 코드로 놓는다.
+  // 부품이 쌓이면 작업대 위 상자가 그만큼 높아진다(0 ~ 4단). 누르면 공방 창이 열린다.
+  function placeWorkshop(w: any) {
+    const at = new THREE.Group();
+    const [x, z] = squareXZ(w.sq);
+    at.position.set(x, TILE_TOP, z);
+    const house = new THREE.Group();
+    house.position.set(0.08, 0, -0.12);
+    house.scale.setScalar(0.78);
+    addBuildingModel('house', house, false);
+    at.add(house);
+    // 모루: 받침 기둥 + 위가 넓은 몸통 + 뿔
+    at.add(mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.12, 8), 0x6b4a2e, -0.26, 0.06, 0.26));
+    at.add(mesh(new THREE.BoxGeometry(0.22, 0.07, 0.11), 0x55606e, -0.26, 0.155, 0.26));
+    const horn = mesh(new THREE.ConeGeometry(0.035, 0.12, 8), 0x55606e, -0.42, 0.155, 0.26);
+    horn.rotation.z = Math.PI / 2;
+    at.add(horn);
+    // 작업대와 부품 상자
+    at.add(mesh(new THREE.BoxGeometry(0.3, 0.04, 0.16), 0xb07a45, 0.26, 0.16, 0.3));
+    for (const [px, pz] of [[0.13, 0.24], [0.39, 0.24], [0.13, 0.36], [0.39, 0.36]]) at.add(mesh(new THREE.BoxGeometry(0.03, 0.16, 0.03), 0x8a5a33, px, 0.08, pz));
+    const stack = Math.min(4, Math.ceil((w.parts || 0) / 6));
+    for (let i = 0; i < stack; i++) at.add(mesh(new THREE.BoxGeometry(0.1, 0.06, 0.08), i % 2 ? 0xe8b04a : 0xd99a3a, 0.26 + (i % 2 ? 0.03 : -0.03), 0.21 + i * 0.065, 0.3));
+    addPuffs(at, -0.26, 0.22, 0.26, 0xffb44a, 4);
+    addGlow(at, 0.3, 0xff9a3a, 1.8);
+    const hit = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.9, 0.92), new THREE.MeshBasicMaterial({ visible: false }));
+    hit.position.y = 0.45;
+    hit.userData.workshop = true;
+    at.add(hit);
+    hitBoxes.push(hit);
+    at.name = 'workshop';
+    marks.add(at);
+  }
+
   // Building badges (AT follow-up, 11-05): the three models told the teal-roofed bakery, coral hut, stage and hot spring
   // apart in 11 of 24 tries. Each building gets the round icon the build menu already shows, all in one Points draw.
   // The badges keep one size on screen, so they stay readable zoomed out and small zoomed in.
@@ -1053,7 +1087,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
   function drawGround(v: any) {
     ground.clear();
     const tiles = villageTiles(v.map) as Record<string, number>;
-    const occupied = new Set([...v.built.map((b: any) => b.sq), ...v.decor.map((d: any) => d.sq)]);
+    const occupied = new Set([...v.built.map((b: any) => b.sq), ...v.decor.map((d: any) => d.sq), ...(v.workshop ? [v.workshop.sq] : [])]);
     const pebbleGeo = new THREE.SphereGeometry(1, 8, 6);
     const pebbleMat = toon(0xffffff, 0.9);
     pebbleMat.userData = NO_OUTLINE;
@@ -1220,7 +1254,7 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     hitBoxes.length = 0;
     staticSpots.length = 0;
     drawGround(v);
-    const occupied = new Set([...v.built.map((b: any) => b.sq), ...v.decor.map((d: any) => d.sq)]);
+    const occupied = new Set([...v.built.map((b: any) => b.sq), ...v.decor.map((d: any) => d.sq), ...(v.workshop ? [v.workshop.sq] : [])]);
     const LEAVES: Record<string, number> = { w: 0x7fb648, b: 0x6aa84f };
     const treeSpecs: TreeSpec[] = v.map.trees.slice(-TREE_MAX).map((tree: any) => {
       const rnd = seeded(`${tree.sq}${tree.slot}${tree.game}`);
@@ -1244,6 +1278,11 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       placeBuilding(b, v);
       const [bx, bz] = squareXZ(b.sq);
       staticSpots.push([bx, bz, 1.15]);
+    }
+    if (v.workshop) {
+      placeWorkshop(v.workshop);
+      const [wx, wz] = squareXZ(v.workshop.sq);
+      staticSpots.push([wx, wz, 1.0]);
     }
     const badges = makeBadges(v.built);
     if (badges) marks.add(badges);
@@ -1594,7 +1633,8 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
       }
       const hit = ray.intersectObjects(hitBoxes)[0];
       if (hit) {
-        events.onBuilding(hit.object.userData.buildingId);
+        if (hit.object.userData.workshop) events.onWorkshop?.();
+        else events.onBuilding(hit.object.userData.buildingId);
         return;
       }
     }
@@ -1819,6 +1859,17 @@ export function createIsland(host: HTMLElement, events: IslandEvents) {
     draw(v: any) {
       draw(v);
       syncActors(v);
+    },
+    /** 확인용: 공방이 그려졌는가, 화면 어디인가(누르기 시험에 쓴다). */
+    debugWorkshop() {
+      const w = marks.getObjectByName('workshop');
+      if (!w) return { shown: false };
+      const p = new THREE.Vector3();
+      w.getWorldPosition(p);
+      p.y += 0.35;
+      p.project(camera);
+      const r = renderer.domElement.getBoundingClientRect();
+      return { shown: true, x: Math.round(r.left + ((p.x + 1) / 2) * r.width), y: Math.round(r.top + ((1 - p.y) / 2) * r.height), children: w.children.length };
     },
     drawShelf,
     drawRivalFlags,

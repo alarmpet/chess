@@ -1,18 +1,20 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-14T17:54:18.159Z",
+ "at": "2026-11-16T10:45:35.742Z",
  "pass": 19,
  "total": 19,
  "measured": {
   "fullGame": {
-   "seconds": 44,
-   "plies": 33,
+   "seconds": 32,
+   "plies": 21,
    "end": {
-    "gameId": 3677149799,
+    "gameId": 3824219586,
     "set": "p2nb",
     "result": "win",
     "reason": "contract",
-    "plies": 33
+    "plies": 21,
+    "coins": 18,
+    "work": 0
    },
    "progress": {
     "w": {
@@ -26,13 +28,13 @@
     "b": {
      "counts": [
       0,
-      0,
-      1
+      1,
+      0
      ],
      "done": 1
     }
    },
-   "maxCalls": 81
+   "maxCalls": 79
   }
  },
  "rows": [
@@ -125,7 +127,9 @@
      "set": "p2nb",
      "result": "win",
      "reason": "contract",
-     "plies": 13
+     "plies": 13,
+     "coins": 18,
+     "work": 0
     },
     "plies": 13
    },
@@ -177,7 +181,9 @@
      "set": "p2nb",
      "result": "loss",
      "reason": "contract",
-     "plies": 12
+     "plies": 12,
+     "coins": 10,
+     "work": 0
     },
     "theirs": [
      2,
@@ -203,7 +209,7 @@
      1
     ],
     "reply": [
-     "Nf6"
+     "Nc6"
     ],
     "took": true,
     "back": [
@@ -236,13 +242,15 @@
    "want": "AI 대 AI 로 48반수 안에 종료 · 사유 기록 · 전용 기록 1판 · 배너 · 드로우콜 ≤ 100",
    "got": {
     "over": true,
-    "plies": 33,
+    "plies": 21,
     "end": {
-     "gameId": 3677149799,
+     "gameId": 3824219586,
      "set": "p2nb",
      "result": "win",
      "reason": "contract",
-     "plies": 33
+     "plies": 21,
+     "coins": 18,
+     "work": 0
     },
     "store": {
      "games": 1,
@@ -253,7 +261,7 @@
     "game": 0,
     "contract": 1,
     "bannerOn": true,
-    "maxCalls": 81
+    "maxCalls": 79
    },
    "ok": true
   },
@@ -346,7 +354,9 @@
      "set": "p2nb",
      "result": "win",
      "reason": "contract",
-     "plies": 13
+     "plies": 13,
+     "coins": 18,
+     "work": 0
     },
     "plies": 13
    },
@@ -398,7 +408,9 @@
      "set": "p2nb",
      "result": "loss",
      "reason": "contract",
-     "plies": 12
+     "plies": 12,
+     "coins": 10,
+     "work": 0
     },
     "theirs": [
      2,
@@ -424,7 +436,7 @@
      1
     ],
     "reply": [
-     "Nf6"
+     "Nc6"
     ],
     "took": true,
     "back": [

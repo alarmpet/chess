@@ -1,50 +1,50 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-14T15:39:12.210Z",
+ "at": "2026-11-16T11:29:46.604Z",
  "pass": 16,
  "total": 16,
  "measured": {
   "mouse": {
    "stops": [
     {
-     "t": 0.705,
-     "ms": 654
+     "t": 0.723,
+     "ms": 681
     },
     {
-     "t": 1.007,
-     "ms": 880
+     "t": 1.006,
+     "ms": 892
     },
     {
-     "t": 1.33,
-     "ms": 1281
+     "t": 1.316,
+     "ms": 1272
     }
    ],
-   "maxHopSquares": 0.42,
+   "maxHopSquares": 0.419,
    "callsIdle": 67,
-   "callsDuring": 65,
-   "frames": 107,
-   "skipMs": 841
+   "callsDuring": 78,
+   "frames": 126,
+   "skipMs": 863
   },
   "touch": {
    "stops": [
     {
-     "t": 0.714,
-     "ms": 679
+     "t": 0.701,
+     "ms": 638
     },
     {
-     "t": 1.013,
-     "ms": 882
+     "t": 1.018,
+     "ms": 893
     },
     {
-     "t": 1.317,
-     "ms": 1289
+     "t": 1.314,
+     "ms": 1253
     }
    ],
-   "maxHopSquares": 0.419,
+   "maxHopSquares": 0.42,
    "callsIdle": 63,
-   "callsDuring": 61,
-   "frames": 88,
-   "skipMs": 867
+   "callsDuring": 74,
+   "frames": 120,
+   "skipMs": 876
   }
  },
  "rows": [
@@ -76,9 +76,9 @@
    "item": "mouse 쿵·쿵·쾅 시간표",
    "want": "0.7 · 1.0 · 1.3초(±0.12)",
    "got": [
-    0.705,
-    1.007,
-    1.33
+    0.723,
+    1.006,
+    1.316
    ],
    "ok": true
   },
@@ -86,7 +86,7 @@
    "item": "mouse 파도타기 뒤 제자리",
    "want": "말이 뜨고(>0.1칸) 끝나면 모두 제자리 · 릴 숨김",
    "got": {
-    "maxHop": 0.42,
+    "maxHop": 0.419,
     "hopsLeft": 0,
     "active": false,
     "offBase": 0
@@ -98,8 +98,8 @@
    "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3) + 왕관 고리(1)",
    "got": {
     "idle": 67,
-    "during": 65,
-    "after": 58,
+    "during": 78,
+    "after": 71,
     "tagDraws": 3,
     "crownDraws": 1
    },
@@ -109,7 +109,7 @@
    "item": "mouse 도는 중에 수 두기",
    "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
    "got": {
-    "tBefore": 0.109,
+    "tBefore": 0.113,
     "skipped": true,
     "stopped": [
      true,
@@ -128,7 +128,7 @@
    "item": "mouse 건너뛰기",
    "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
    "got": {
-    "skipMs": 841,
+    "skipMs": 863,
     "contract": "p2nb",
     "games": 3
    },
@@ -172,9 +172,9 @@
    "item": "touch 쿵·쿵·쾅 시간표",
    "want": "0.7 · 1.0 · 1.3초(±0.12)",
    "got": [
-    0.714,
-    1.013,
-    1.317
+    0.701,
+    1.018,
+    1.314
    ],
    "ok": true
   },
@@ -182,7 +182,7 @@
    "item": "touch 파도타기 뒤 제자리",
    "want": "말이 뜨고(>0.1칸) 끝나면 모두 제자리 · 릴 숨김",
    "got": {
-    "maxHop": 0.419,
+    "maxHop": 0.42,
     "hopsLeft": 0,
     "active": false,
     "offBase": 0
@@ -194,8 +194,8 @@
    "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값 + 딱지 메시(3) + 왕관 고리(1)",
    "got": {
     "idle": 63,
-    "during": 61,
-    "after": 54,
+    "during": 74,
+    "after": 67,
     "tagDraws": 3,
     "crownDraws": 1
    },
@@ -205,7 +205,7 @@
    "item": "touch 도는 중에 수 두기",
    "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
    "got": {
-    "tBefore": 0.112,
+    "tBefore": 0.108,
     "skipped": true,
     "stopped": [
      true,
@@ -224,7 +224,7 @@
    "item": "touch 건너뛰기",
    "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
    "got": {
-    "skipMs": 867,
+    "skipMs": 876,
     "contract": "p2nb",
     "games": 3
    },

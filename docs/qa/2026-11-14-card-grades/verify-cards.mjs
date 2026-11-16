@@ -35,7 +35,7 @@ for (const [port, name, w, h, touch, reduce] of [[9541, 'desk', 1280, 800, false
   const send = (method, params = {}) => new Promise((ok) => { const i = ++id; pending.set(i, ok); ws.send(JSON.stringify({ id: i, method, params })); });
   const ev = async (expression) => (await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result?.result?.value;
   const until = async (expr, ms = 60000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await ev(expr).catch(() => false)) return true; await sleep(50); } return false; };
-  const shot = async (file) => { const s = await send('Page.captureScreenshot', { format: 'jpeg', quality: 88 }); writeFileSync(new URL(`./${SHOTS}/${file}`, OUT), Buffer.from(s.result.data, 'base64')); };
+  const shot = async (file) => { const s = await send('Page.captureScreenshot', { format: 'jpeg', quality: 88 }); { const shotBuf = Buffer.from(s.result.data, 'base64'); for (let k = 0; ; k++) { try { writeFileSync(new URL(`./${SHOTS}/${file}`, OUT), shotBuf); break; } catch (e) { if (k >= 5) { console.log('⚠️ 캡처를 못 씀(파일이 잠김)', String(e.code || e)); break; } await sleep(500); } } } };
   await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: touch ? 2 : 1, mobile: touch });
   if (reduce) await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
   await sleep(1200);

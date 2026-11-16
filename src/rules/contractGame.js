@@ -57,9 +57,15 @@ export function contractAiState(set, moves = [], limit = CONTRACT_PLY_LIMIT, run
   };
 }
 
+// ── 보상(SC-2, 계획서 §7.2): 짧은 판이라 일반 판(30/20/15)보다 적다. 기권한 판은 받지 않는다(끝까지 둔 판만).
+export const CONTRACT_COINS = { win: 18, draw: 12, loss: 10 };
+export function contractCoins(result, reason) {
+  return reason === 'resign' ? 0 : CONTRACT_COINS[result] ?? 0;
+}
+
 // ── 전용 기록(§3.1 「계약전과 일반 체스의 결과를 분리」). 일반 판의 실력 점수·카드·마을 정산과 섞지 않는다.
 export const CONTRACT_STORE_KEY = 'wildcrown.contract.v1';
-export const emptyContractStore = () => ({ v: 1, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: RUNG_NOVICE, lossRun: 0, practice: 0 });
+export const emptyContractStore = () => ({ v: 1, on: false, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: RUNG_NOVICE, lossRun: 0, practice: 0 });
 
 export function sanitizeContractStore(raw) {
   const base = emptyContractStore();
@@ -68,7 +74,7 @@ export function sanitizeContractStore(raw) {
   const byReason = {};
   for (const [k, v] of Object.entries(raw.byReason || {})) if (typeof k === 'string' && k.length < 20) byReason[k] = n(v);
   const last = raw.last && contractById(raw.last.set) ? { set: raw.last.set, result: String(raw.last.result), reason: String(raw.last.reason), plies: n(raw.last.plies) } : null;
-  return { v: 1, games: n(raw.games), win: n(raw.win), loss: n(raw.loss), draw: n(raw.draw), byReason, last, rung: Math.min(RUNG_FULL, n(raw.rung)), lossRun: Math.min(RUNG_DROP_AFTER, n(raw.lossRun)), practice: raw.practice ? 1 : 0 };
+  return { v: 1, on: raw.on === true, games: n(raw.games), win: n(raw.win), loss: n(raw.loss), draw: n(raw.draw), byReason, last, rung: Math.min(RUNG_FULL, n(raw.rung)), lossRun: Math.min(RUNG_DROP_AFTER, n(raw.lossRun)), practice: raw.practice ? 1 : 0 };
 }
 
 /** 끝난 판 하나를 기록에 더한다. `result` 는 내 쪽에서 본 'win' | 'loss' | 'draw'. */

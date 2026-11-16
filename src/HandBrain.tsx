@@ -1,3 +1,4 @@
+import './handBrain.css';
 import { useEffect, useRef, useState } from 'react';
 import { TYPE_FROM_LETTER } from './rules/referee.js';
 import { dayNumber } from './cards/quests.js';

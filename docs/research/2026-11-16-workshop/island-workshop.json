@@ -1,0 +1,60 @@
+{
+ "runs": 60,
+ "mode": "workshop",
+ "profiles": [
+  {
+   "label": "strong",
+   "done": {
+    "median": 19,
+    "p90": 21,
+    "unfinished": 0
+   },
+   "guestShare": 0.092,
+   "guestPerGame": 3.96,
+   "at20": {
+    "parts": 36,
+    "crafted": 8,
+    "score": 230,
+    "shelf": 4,
+    "props": 15,
+    "guestKinds": 3
+   }
+  },
+  {
+   "label": "even",
+   "done": {
+    "median": 21,
+    "p90": 23,
+    "unfinished": 0
+   },
+   "guestShare": 0.106,
+   "guestPerGame": 3.89,
+   "at20": {
+    "parts": 36,
+    "crafted": 8,
+    "score": 205,
+    "shelf": 4,
+    "props": 13,
+    "guestKinds": 3
+   }
+  },
+  {
+   "label": "weak",
+   "done": {
+    "median": 22,
+    "p90": 26,
+    "unfinished": 0
+   },
+   "guestShare": 0.108,
+   "guestPerGame": 3.91,
+   "at20": {
+    "parts": 36,
+    "crafted": 8,
+    "score": 200,
+    "shelf": 4,
+    "props": 13,
+    "guestKinds": 3
+   }
+  }
+ ]
+}

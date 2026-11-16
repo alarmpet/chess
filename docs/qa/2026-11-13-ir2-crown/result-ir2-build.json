@@ -1,5 +1,5 @@
 {
- "at": "2026-11-14T15:21:50.814Z",
+ "at": "2026-11-16T11:07:36.965Z",
  "base": "http://localhost:4173/",
  "rows": [
   {
@@ -58,7 +58,7 @@
      "♝",
      null
     ],
-    "calls": 57
+    "calls": 70
    },
    "ok": true
   },
@@ -71,7 +71,9 @@
      "set": "p2nb",
      "result": "win",
      "reason": "contract",
-     "plies": 13
+     "plies": 13,
+     "coins": 18,
+     "work": 0
     },
     "crown": {
      "sockets": 4,
@@ -209,7 +211,7 @@
      "♝",
      null
     ],
-    "calls": 53
+    "calls": 66
    },
    "ok": true
   },
@@ -222,7 +224,9 @@
      "set": "p2nb",
      "result": "win",
      "reason": "contract",
-     "plies": 13
+     "plies": 13,
+     "coins": 18,
+     "work": 0
     },
     "crown": {
      "sockets": 4,

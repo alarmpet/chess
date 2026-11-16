@@ -21,7 +21,8 @@
 | `public/packs/legend/cards/` 카드 그림 | 우리가 만듦(로컬 생성) | 자체 에셋 |
 | `public/packs/savanna/` 네 발 동물(시험용 대체 팩, `?pack=savanna`) | Quaternius Animated Animal Pack (poly.pizza) | **CC0** |
 | `public/packs/cathedral/` 석상(대체 팩) | 초기 프로토타입 | 출처를 다시 확인해야 한다(이 문서를 만들 때 확인하지 못했다) |
-| 소리 전부 | `src/audio/recipes.js` 의 합성 레시피 | 오디오 파일이 없다 — 라이선스 대상 없음 |
+| 소리 대부분 | `src/audio/recipes.js` 의 합성 레시피 | 오디오 파일이 아니다 — 라이선스 대상 없음 |
+| 계약전 음원 6개 | `public/audio/*.ogg`(릴 솟음·멈춤·마지막 멈춤, 매치 포인트, 승리·패배 스팅어) | ElevenLabs 웹 앱의 효과음 생성으로 직접 만든 것(2026-11-12, 프롬프트는 `audio/manifest.json`). **생성 당시 요금제의 상업 이용 조건은 확인하지 않았다** — 공개 배포 전에 계정의 요금제를 확인한다 |
 
 ## 읽고 구조만 배운 것 (코드를 가져오지 않음)
 

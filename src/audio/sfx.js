@@ -5,6 +5,9 @@ import { IMPACT_SOUNDS, SIGNATURE_SOUNDS, SOUNDS, STEPS, VOICES, pickTake, readM
 const MASTER_GAIN = 0.55;
 const PITCH_SPREAD = 0.06;
 const MOVE_VOICE_CHANCE = 0.22;
+// 고른 음원(ElevenLabs 로 만든 것 가운데 기계가 고른 후보 — audio/manifest.json, 사람 귀 확인 전). 계약전에서만 받아 온다.
+export const SAMPLE_FILES = { reelRise: 'reel-rise', reelStop: 'reel-stop', reelFinal: 'reel-stop-final', matchHush: 'matchpoint-hush', stingWin: 'sting-win', stingLose: 'sting-lose' };
+const SAMPLE_GAIN = 0.8;
 
 function noiseBuffer(ctx) {
   const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
@@ -106,6 +109,7 @@ function createSfx() {
       master.connect(limiter).connect(ctx.destination);
     }
     if (ctx.state === 'suspended') ctx.resume();
+    decodeAll();
   }
 
   function schedule(tones, delay = 0, pitch = 1) {
@@ -142,8 +146,42 @@ function createSfx() {
     voice(attackerType, 0.03);
   }
 
+  // 음원: 파일은 미리 받아 두고(preload), 소리가 풀린 뒤에 푼다(decode). 준비가 안 됐으면 합성음으로 낸다.
+  const raw = {};
+  const buffers = {};
+  let asked = false;
+  function decodeAll() {
+    if (!ctx) return;
+    for (const name of Object.keys(raw)) {
+      const bytes = raw[name];
+      delete raw[name];
+      ctx.decodeAudioData(bytes).then((b) => { buffers[name] = b; }).catch(() => {});
+    }
+  }
+  function preload() {
+    if (asked || typeof fetch !== 'function') return;
+    asked = true;
+    for (const [name, file] of Object.entries(SAMPLE_FILES)) {
+      fetch(`./audio/${file}.ogg`).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status))))).then((bytes) => { raw[name] = bytes; decodeAll(); }).catch(() => {});
+    }
+  }
+  function playSample(name, delay, pitch) {
+    const buffer = buffers[name];
+    if (!buffer || muted || !ctx || ctx.state !== 'running') return false;
+    const src = ctx.createBufferSource();
+    const amp = ctx.createGain();
+    src.buffer = buffer;
+    src.playbackRate.value = pitch;
+    amp.gain.value = SAMPLE_GAIN;
+    src.connect(amp).connect(master);
+    src.start(ctx.currentTime + delay);
+    played += 1;
+    return true;
+  }
+
   // `pitch` other than 1 is a deliberate step (the momentum ladder, DR-1a); 1 keeps the recipe as written.
   function play(name, delay = 0, pitch = 1) {
+    if (SAMPLE_FILES[name] && playSample(name, delay, pitch)) { note(`${name}~`); return true; }
     note(pitch !== 1 ? `${name}@${pitch.toFixed(3)}` : name);
     return schedule(SOUNDS[name] || [], delay, pitch);
   }
@@ -161,7 +199,7 @@ function createSfx() {
     }, { capture: true });
   }
 
-  return { voice, move, impact, play, setMuted, isMuted: () => muted, playedCount: () => played, recent: () => [...recent], state: () => ctx?.state || 'locked' };
+  return { voice, move, impact, play, preload, samples: () => ({ asked, ready: Object.keys(buffers), waiting: Object.keys(raw) }), setMuted, isMuted: () => muted, playedCount: () => played, recent: () => [...recent], state: () => ctx?.state || 'locked' };
 }
 
 export const sfx = createSfx();
