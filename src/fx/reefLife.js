@@ -152,10 +152,14 @@ export async function populateReef(group, ocean, load, rand, { palms = [], size 
   const at = new THREE.Object3D();
   const tint = new THREE.Color();
 
+  // 산호가 모이는 턱: 그 방향의 해안선에서 바다 쪽으로 떨어진 곳. 예전에는 섬 가운데에서 2.2 ~ 3.7 로 고정이었는데,
+  // 섬마다 해안선이 달라지자(절차적 섬 PI-3) 곶이 나온 쪽은 그 자리가 모래가 돼 산호가 반쯤 빠졌다(2026-11-17).
+  const shoreAt = (a) => { let lo = 0.5; let hi = 12; for (let k = 0; k < 16; k++) { const mid = (lo + hi) / 2; if (ocean.edge(Math.cos(a) * mid, Math.sin(a) * mid) < 0) lo = mid; else hi = mid; } return lo; };
+  // 예전 섬의 해안은 가운데에서 약 1.7 이었다 — 해안에서 0.5 ~ 2.0 바깥이 예전의 2.2 ~ 3.7 과 같다
   const shelf = [];
   for (let i = 0; i < 18; i++) {
     const a = rand() * Math.PI * 2;
-    const r = 2.2 + rand() * 1.5;
+    const r = shoreAt(a) + 0.5 + rand() * 1.5;
     shelf.push([Math.cos(a) * r, Math.sin(a) * r]);
   }
   for (const [name, [count, small, big]] of Object.entries(CORALS)) {
@@ -177,6 +181,7 @@ export async function populateReef(group, ocean, load, rand, { palms = [], size 
       n += 1;
     }
     mesh.count = n;
+    mesh.name = `coral-${name}`;
     group.add(mesh);
   }
 

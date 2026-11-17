@@ -103,6 +103,14 @@ export default function App() {
   const toggleContract = () => setContractOn(Boolean((window as any).wizardChess?.setContractLab?.(!contractOn, true)));
 
   const appliedStages = useRef('{}');   // 엔진이 처음 가진 외형(모두 아기)
+  // 절차적 섬(PI-3): 체스 판 둘레의 해안선이 군도의 지금 섬을 따른다 — 마을에서 섬을 옮기고 돌아오면 판 화면이 바뀐다.
+  useEffect(() => {
+    if (villageOpen) return;
+    const apply = () => { const a = loadVillage().arch; (window as any).wizardChess?.setIslandCoast?.(a?.current || 'kelp', a?.seed || 0); };
+    if ((window as any).wizardChess?.isStarted?.()) { apply(); return; }
+    const timer = window.setInterval(() => { if ((window as any).wizardChess?.isStarted?.()) { window.clearInterval(timer); apply(); } }, 300);
+    return () => window.clearInterval(timer);
+  }, [villageOpen]);
   // Coming back to the board, each piece shows the look its hearts earned.
   // 게임을 막 켰을 때는 엔진이 아직 없어서 이 효과가 헛돌았다 — 마을을 한 번 다녀오기 전까지 별빛 말도 아기 모습이었다
   // (끝까지 키우기 시뮬의 끝 상태를 화면에 심어 찾음, 2026-11-16). 엔진이 시작될 때까지 기다렸다가 입힌다.

@@ -107,6 +107,12 @@ export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand, ground = 
   }
 
   let life = null;
+  let loader = null;
+  let busy = Promise.resolve();   // 놓기와 다시 놓기를 한 줄로 세운다
+  // 바다 생물은 한 묶음에 넣는다 — 섬(해안선)이 바뀌면 걷어 내고 새 해안을 따라 다시 놓는다(절차적 섬, 2026-11-17).
+  const reef = new THREE.Group();
+  reef.name = 'reef';
+  group.add(reef);
   return {
     ocean,
     tick(t) {
@@ -114,7 +120,32 @@ export function buildSeaBiome(group, env, { halfBoard, surfaceY, rand, ground = 
       life?.(t);
     },
     async populate(load) {
-      life = await populateReef(group, ocean, load, rand, { palms, size: lifeSize });
+      loader = load;
+      busy = busy.then(async () => { life = await populateReef(reef, ocean, load, rand, { palms, size: lifeSize }); });
+      await busy;
+    },
+    /**
+     * 해안선이 바뀐 뒤: 생물을 걷어 내고 다시 놓는다. 아직 한 번도 안 놓였으면 아무것도 안 한다.
+     * 놓는 중이면 그것이 끝난 뒤에 한다 — 기다리지 않으면 두 벌이 놓였다(드로우콜 69 → 82, 2026-11-17).
+     */
+    async repopulate() {
+      if (!loader) return false;
+      busy = busy.then(async () => {
+        life = null;
+        for (const child of [...reef.children]) { reef.remove(child); child.dispose?.(); }
+        life = await populateReef(reef, ocean, loader, rand, { palms, size: lifeSize });
+      });
+      await busy;
+      return true;
+    },
+    /** 확인용: 산호 가운데 해안(모래) 위에 놓인 것의 수. */
+    reefCheck() {
+      const m = new THREE.Matrix4(); const p = new THREE.Vector3(); let total = 0; let onSand = 0; let sig = 0;
+      for (const child of reef.children) {
+        if (!child.isInstancedMesh || !child.name.startsWith('coral-')) continue;   // 야자는 원래 모래 위에 선다
+        for (let i = 0; i < child.count; i++) { child.getMatrixAt(i, m); p.setFromMatrixPosition(m); if (p.lengthSq() === 0) continue; total += 1; sig = (sig * 31 + Math.round(p.x * 100) + Math.round(p.z * 100) * 7) | 0; if (ocean.edge(p.x, p.z) < 0.15) onSand += 1; }
+      }
+      return { total, onSand, sig };
     }
   };
 }

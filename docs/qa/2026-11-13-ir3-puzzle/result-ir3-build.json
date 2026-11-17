@@ -1,5 +1,5 @@
 {
- "at": "2026-11-16T10:31:34.111Z",
+ "at": "2026-11-17T04:58:59.536Z",
  "base": "http://localhost:4173/",
  "practice": [
   "cp01",
@@ -53,7 +53,7 @@
      "tries": 0,
      "hint": false,
      "solved": false,
-     "at": 16928.099999997765,
+     "at": 24157,
      "ms": null
     },
     "bar": {
@@ -78,7 +78,7 @@
      "hud": false,
      "squares": 0
     },
-    "calls": 67
+    "calls": 55
    },
    "ok": true
   },
@@ -95,7 +95,7 @@
      "tries": 1,
      "hint": true,
      "solved": false,
-     "at": 16928.099999997765,
+     "at": 24157,
      "ms": null
     },
     "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
@@ -115,8 +115,8 @@
      "tries": 1,
      "hint": true,
      "solved": true,
-     "at": 16928.099999997765,
-     "ms": 5366
+     "at": 24157,
+     "ms": 5870
     },
     "crown": [
      "n",
@@ -146,7 +146,7 @@
        "kind": "practice",
        "index": 0,
        "tries": 1,
-       "ms": 5366
+       "ms": 5870
       }
      ]
     }
@@ -366,7 +366,7 @@
      "tries": 0,
      "hint": false,
      "solved": false,
-     "at": 18809.5,
+     "at": 9002.79999999702,
      "ms": null
     },
     "bar": {
@@ -391,7 +391,7 @@
      "hud": false,
      "squares": 0
     },
-    "calls": 69
+    "calls": 51
    },
    "ok": true
   },
@@ -408,7 +408,7 @@
      "tries": 1,
      "hint": true,
      "solved": false,
-     "at": 18809.5,
+     "at": 9002.79999999702,
      "ms": null
     },
     "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
@@ -428,8 +428,8 @@
      "tries": 1,
      "hint": true,
      "solved": true,
-     "at": 18809.5,
-     "ms": 6982
+     "at": 9002.79999999702,
+     "ms": 6792
     },
     "crown": [
      "n",
@@ -459,7 +459,7 @@
        "kind": "practice",
        "index": 0,
        "tries": 1,
-       "ms": 6982
+       "ms": 6792
       }
      ]
     }

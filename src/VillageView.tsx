@@ -15,6 +15,34 @@ import { CRAFT_COINS, CRAFT_PARTS, GRAIN_BUY_PRICE, PARTS_MAX, PARTS_PER_DAY, WO
 import { buildingCost, newVillage, squareTaken } from './village/economy.js';
 import { ISLANDS_TOTAL, LAST_THEME, MIDDLE_THEMES, THEMES, boostedAnimals, finishArch, islandIndex, nextChoices } from './village/archipelago.js';
 import './village/archipelago.css';
+import { heightColor, islandHeightmap, ISLAND_LOOKS } from './village/islandNoise.js';
+
+/** 군도 지도의 섬 그림(절차적 섬 PI-2): 그 섬의 높이 지도를 색표로 칠한다. 안 간 섬은 실루엣만. 사진이 없어도 일곱 섬이 제 모양이다. */
+function IslandPic({ theme, seed, fog, dots }: { theme: string; seed: number; fog: boolean; dots?: { sq: string }[] }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const map = islandHeightmap(theme, { size: 48, playerSeed: seed });
+    const g = c.getContext('2d');
+    if (!g) return;
+    const img = g.createImageData(map.size, map.size);
+    const pal = (ISLAND_LOOKS as any)[theme]?.palette;
+    for (let i = 0; i < map.h.length; i++) {
+      const v = map.h[i];
+      const hex = fog ? (v >= 0 ? '#5f7c8f' : v < -0.35 ? '#173b55' : '#24506c') : heightColor(v, pal);
+      const n = parseInt(hex.slice(1), 16);
+      img.data[i * 4] = n >> 16; img.data[i * 4 + 1] = (n >> 8) & 255; img.data[i * 4 + 2] = n & 255; img.data[i * 4 + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    // 끝낸 섬: 건물 자리를 작은 점으로(판의 8×8 이 섬 가운데에 있다고 보고)
+    if (!fog && dots) {
+      g.fillStyle = '#fff6d8';
+      for (const d of dots) { const f = 'abcdefgh'.indexOf(d.sq[0]); const r = Number(d.sq[1]); g.fillRect(16 + f * 2, 31 - r * 2, 2, 2); }
+    }
+  }, [theme, seed, fog, dots]);
+  return <canvas ref={ref} width={48} height={48} className="arch-canvas" data-island={theme} />;
+}
 import { ZONES, zoneOf, zoneSquares } from './village/zones.js';
 
 const FILES = 'abcdefgh';
@@ -534,7 +562,11 @@ export default function VillageView({ open, onClose, lang, summary, dive = false
                     const state = rec ? 'done' : here ? 'here' : can ? 'pick' : 'fog';
                     return (
                       <div className={`arch-isle arch-${state}`} key={theme} data-theme={theme} data-state={state} style={{ gridArea: `i${i}` }}>
-                        <div className="arch-pic">{photo ? <img src={photo} alt="" /> : <span>{state === 'fog' ? '☁️' : t.icon}</span>}</div>
+                        <div className="arch-pic">
+                          <IslandPic theme={theme} seed={arch.seed || 0} fog={state === 'fog'} dots={rec?.built} />
+                          {photo && <img className="arch-photo" src={photo} alt="" />}
+                          {state === 'fog' && <span className="arch-fogmark">☁️</span>}
+                        </div>
                         <b>{t.icon} {t.ko}</b>
                         <small>{rec ? `${rec.games}판째 · ${t.landmark}` : here ? '지금 짓는 중' : t.rule}</small>
                         {rec && t.gift && <small className="arch-gift">판마다 {t.gift.ko}</small>}

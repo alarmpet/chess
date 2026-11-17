@@ -22,11 +22,14 @@ export const ISLANDS_TOTAL = 1 + MIDDLE_THEMES.length + 1;   // 7
 /** 섬마다 건물 값이 오르는 비율(봇으로 골랐다: 0 이면 뒤 섬이 오히려 빨라지고 0.3 이면 마지막 섬 하나에 52판). */
 export const ARCH_COST_STEP = 0.15;
 
-export const emptyArch = () => ({ current: FIRST_THEME, done: [] });
+// seed: 첫 해초 섬의 모양을 플레이어마다 다르게(절차적 섬 PI-1). 동물 섬은 모두 같은 모양이다.
+const newSeed = () => 1 + Math.floor(Math.random() * 0x7ffffffe);
+export const emptyArch = () => ({ current: FIRST_THEME, done: [], seed: newSeed() });
 
 /** 저장에서 읽은 군도를 바로잡는다. 없으면 해초 섬에서 시작(옛 저장의 지난 섬들은 사진첩에만 남는다). */
 export function sanitizeArch(raw) {
   if (!raw || typeof raw !== 'object' || !THEMES[raw.current]) return emptyArch();
+  const seed = Number.isInteger(raw.seed) && raw.seed > 0 ? raw.seed : newSeed();
   const seen = new Set();
   const done = (Array.isArray(raw.done) ? raw.done : []).filter((d) => d && THEMES[d.theme] && !seen.has(d.theme) && seen.add(d.theme)).map((d) => ({
     theme: d.theme,
@@ -35,7 +38,7 @@ export function sanitizeArch(raw) {
     built: (Array.isArray(d.built) ? d.built : []).filter((b) => b && typeof b.kind === 'string' && /^[a-h][1-8]$/.test(b.sq)).map((b) => ({ kind: b.kind, sq: b.sq, level: Number(b.level) || 0, tenant: typeof b.tenant === 'string' ? b.tenant : null })),
     decor: (Array.isArray(d.decor) ? d.decor : []).filter((x) => x && typeof x.kind === 'string' && /^[a-h][1-8]$/.test(x.sq)).map((x) => ({ kind: x.kind, sq: x.sq }))
   }));
-  return { current: raw.current, done, finished: raw.finished === true };
+  return { current: raw.current, done, finished: raw.finished === true, seed };
 }
 
 /** 지금 몇 번째 섬인가(1부터). */

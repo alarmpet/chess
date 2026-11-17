@@ -1,5 +1,5 @@
 {
- "at": "2026-11-16T11:23:23.698Z",
+ "at": "2026-11-17T06:29:47.387Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
@@ -7,7 +7,7 @@
    "want": "마을·외형·라이벌·설정·친구 대전·손과 뇌 조각을 받지 않았다",
    "got": {
     "early": [],
-    "scripts": 67
+    "scripts": 69
    },
    "ok": true
   },
@@ -60,8 +60,8 @@
    "item": "desk 마을 닫은 뒤 판",
    "want": "판이 다시 그려진다(드로우콜 > 0)",
    "got": {
-    "frames": 35,
-    "calls": 65
+    "frames": 43,
+    "calls": 66
    },
    "ok": true
   },
@@ -79,7 +79,7 @@
    "want": "마을·외형·라이벌·설정·친구 대전·손과 뇌 조각을 받지 않았다",
    "got": {
     "early": [],
-    "scripts": 67
+    "scripts": 69
    },
    "ok": true
   },
@@ -132,8 +132,8 @@
    "item": "phone 마을 닫은 뒤 판",
    "want": "판이 다시 그려진다(드로우콜 > 0)",
    "got": {
-    "frames": 30,
-    "calls": 63
+    "frames": 35,
+    "calls": 64
    },
    "ok": true
   },

@@ -8,12 +8,27 @@ const BEACH = 0.26;
 const CORNER = 0.35;
 const SKY_RADIUS = 58;
 
+// 섬의 해안선(절차적 섬 PI-3, 2026-11-17): 군도의 섬마다 그 섬의 높이 지도에서 잰 윤곽(64 각도, −1 ~ 1)을 따른다.
+// 양수는 곶(모래가 바다로 나감), 음수는 만(들어감). 만은 판을 파고들지 않게 얕게, 곶은 길게.
+export const COAST_SAMPLES = 64;
+export const COAST_CAPE = 0.55;
+export const COAST_BAY = 0.12;
+/** 각도 a 에서의 윤곽 값(표 사이는 선형으로). */
+function coastAt(coast, a) {
+  const t = ((a / (Math.PI * 2)) % 1 + 1) % 1 * COAST_SAMPLES;
+  const i = Math.floor(t);
+  const f = t - i;
+  return coast[i % COAST_SAMPLES] * (1 - f) + coast[(i + 1) % COAST_SAMPLES] * f;
+}
+
 // The island's outline and the sea floor exist twice, here and in SHAPE_GLSL, and must stay the same.
-export function islandEdge(x, z, half) {
+// `coast` 가 없으면 예전의 사인파 셋(모든 섬이 같은 모양)이다.
+export function islandEdge(x, z, half, coast = null) {
   const qx = Math.abs(x) - (half - CORNER);
   const qz = Math.abs(z) - (half - CORNER);
   const box = Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - CORNER;
   const a = Math.atan2(z, x);
+  if (coast) { const c = coastAt(coast, a); return box - (c > 0 ? c * COAST_CAPE : c * COAST_BAY); }
   return box + 0.07 * Math.sin(a * 3 + 1) + 0.05 * Math.sin(a * 7 + 4) + 0.03 * Math.sin(a * 13);
 }
 
@@ -29,10 +44,18 @@ export function seaDepth(e) {
 
 const SHAPE_GLSL = `
 uniform float uHalf, uScale;
+uniform float uCoastOn;
+uniform float uCoast[${COAST_SAMPLES}];
 float islandEdge(vec2 p) {
   vec2 q = abs(p) - vec2(uHalf - ${CORNER.toFixed(2)});
   float box = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - ${CORNER.toFixed(2)};
   float a = atan(p.y, p.x);
+  if (uCoastOn > 0.5) {
+    float t = fract(a / 6.2831853) * ${COAST_SAMPLES.toFixed(1)};
+    int i = int(floor(t));
+    float c = mix(uCoast[i], uCoast[int(mod(float(i + 1), ${COAST_SAMPLES.toFixed(1)}))], fract(t));
+    return box - (c > 0.0 ? c * ${COAST_CAPE.toFixed(2)} : c * ${COAST_BAY.toFixed(2)});
+  }
   return box + 0.07 * sin(a * 3.0 + 1.0) + 0.05 * sin(a * 7.0 + 4.0) + 0.03 * sin(a * 13.0);
 }
 float seaDepth(float e) {
@@ -163,7 +186,7 @@ void main() {
 }`;
 
 // Rings packed tightly at the shoreline, where the outline has to be exact, and wide apart out at sea.
-function floorGeometry(half, spokes = 280) {
+function floorGeometry(half, coast = null, spokes = 280) {
   const radii = [];
   for (let r = half - 0.5; r < 34; r *= r < half + 1 ? 1.016 : 1.11) radii.push(r);
   const pos = [];
@@ -175,7 +198,7 @@ function floorGeometry(half, spokes = 280) {
       const reach = r / Math.max(Math.abs(Math.cos(a)), Math.abs(Math.sin(a))) ** 0.6;
       const x = Math.cos(a) * reach;
       const z = Math.sin(a) * reach;
-      pos.push(x, -seaDepth(islandEdge(x, z, half)), z);
+      pos.push(x, -seaDepth(islandEdge(x, z, half, coast)), z);
     }
   }
   for (let j = 0; j < radii.length - 1; j++) {
@@ -230,7 +253,8 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
   const sun = new THREE.Vector3(3.8, 8.5, 4.2).normalize();
   const horizon = new THREE.Color(env.background);
   const color = (hex) => new THREE.Color(hex);
-  const shared = { uTime: { value: 0 }, uHalf: { value: half }, uScale: { value: scale }, uSun: { value: sun } };
+  const shared = { uTime: { value: 0 }, uHalf: { value: half }, uScale: { value: scale }, uSun: { value: sun }, uCoastOn: { value: 0 }, uCoast: { value: new Array(COAST_SAMPLES).fill(0) } };
+  let coast = null;
 
   const floor = new THREE.Mesh(floorGeometry(half), new THREE.ShaderMaterial({
     vertexShader: WORLD_VERT,
@@ -294,8 +318,19 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
     sky: skyUniforms,
     waterY,
     /** Height of the sea floor under a point, for anything standing on it. */
-    floorY: (x, z) => waterY - seaDepth(islandEdge(x, z, half)),
-    edge: (x, z) => islandEdge(x, z, half),
+    floorY: (x, z) => waterY - seaDepth(islandEdge(x, z, half, coast)),
+    edge: (x, z) => islandEdge(x, z, half, coast),
+    /** 해안선을 이 윤곽(64 개, −1 ~ 1)으로 바꾼다. null 이면 예전 모양. 바다 바닥 메시를 다시 만든다(섬을 옮길 때 한 번). */
+    setCoast(next) {
+      coast = Array.isArray(next) && next.length === COAST_SAMPLES ? next.slice() : null;
+      shared.uCoastOn.value = coast ? 1 : 0;
+      if (coast) shared.uCoast.value = coast;
+      const old = floor.geometry;
+      floor.geometry = floorGeometry(half, coast);
+      old.dispose();
+      return Boolean(coast);
+    },
+    coastOn: () => Boolean(coast),
     tick(t) {
       shared.uTime.value = t;
       clouds.position.x = Math.sin(t * 0.03) * 0.5;

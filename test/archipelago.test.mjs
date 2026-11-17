@@ -91,7 +91,11 @@ test('끝낸 섬은 판마다 특산물을 보낸다, 상한이 있다', () => {
 });
 
 test('저장을 바로잡는다: 옛 저장은 해초 섬, 같은 섬은 한 번만', () => {
-  assert.deepEqual(sanitizeArch(null), { current: 'kelp', done: [] });
+  const fresh = sanitizeArch(null);
+  assert.equal(fresh.current, 'kelp');
+  assert.deepEqual(fresh.done, []);
+  assert.ok(Number.isInteger(fresh.seed) && fresh.seed > 0, '해초 섬 시드');
+  assert.equal(sanitizeArch({ current: 'kelp', done: [], seed: 123 }).seed, 123, '시드는 저장에 남는다');
   const a = sanitizeArch({ current: 'panda', done: [{ theme: 'kelp', built: [{ kind: 'field', sq: 'c3' }, { kind: 'x', sq: 'z9' }] }, { theme: 'kelp' }, { theme: 'nope' }] });
   assert.equal(a.current, 'panda');
   assert.equal(a.done.length, 1);

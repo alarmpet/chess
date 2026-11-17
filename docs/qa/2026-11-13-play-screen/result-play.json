@@ -1,5 +1,5 @@
 {
- "at": "2026-11-16T11:05:08.689Z",
+ "at": "2026-11-17T06:53:26.324Z",
  "base": "http://localhost:3000/",
  "measured": {
   "desk": {
@@ -17,10 +17,10 @@
     "vh": 800
    },
    "hud": {
-    "boxes": 7,
+    "boxes": 8,
     "covered": 0,
     "heads": 0,
-    "hintShown": false,
+    "hintShown": true,
     "rows": 1,
     "minBtn": 42,
     "bg": "rgb(233, 248, 220)"
@@ -108,7 +108,7 @@
      "sat": 1.28,
      "rim": 0.7
     },
-    "calls": 65
+    "calls": 66
    },
    "ok": true
   },
@@ -134,10 +134,10 @@
    "item": "desk HUD 가 판을 덮지 않음",
    "want": "늘 떠 있는 HUD 가 덮는 칸 0 · 덮는 말 머리 0 · 빠른 단추 한 줄 · 단추 한 변 ≥ 36px",
    "got": {
-    "boxes": 7,
+    "boxes": 8,
     "covered": 0,
     "heads": 0,
-    "hintShown": false,
+    "hintShown": true,
     "rows": 1,
     "minBtn": 42,
     "bg": "rgb(233, 248, 220)"
@@ -164,7 +164,7 @@
     "arrow": true,
     "draws": 4,
     "loose": 0,
-    "calls": 69
+    "calls": 70
    },
    "ok": true
   },
@@ -201,7 +201,7 @@
    "got": {
     "text": "내 차례",
     "mine": true,
-    "calls": 66
+    "calls": 67
    },
    "ok": true
   },
@@ -216,7 +216,7 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 69
+    "calls": 70
    },
    "ok": true
   },
@@ -234,7 +234,7 @@
      "r": 7,
      "c": 3
     },
-    "calls": 70
+    "calls": 71
    },
    "ok": true
   },
@@ -250,7 +250,7 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 68
+    "calls": 69
    },
    "ok": true
   },
@@ -278,7 +278,7 @@
      "sat": 1.28,
      "rim": 0.7
     },
-    "calls": 63
+    "calls": 64
    },
    "ok": true
   },
@@ -342,7 +342,7 @@
     "arrow": true,
     "draws": 4,
     "loose": 0,
-    "calls": 67
+    "calls": 68
    },
    "ok": true
   },
@@ -379,7 +379,7 @@
    "got": {
     "text": "내 차례",
     "mine": true,
-    "calls": 64
+    "calls": 65
    },
    "ok": true
   },
@@ -394,7 +394,7 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 67
+    "calls": 68
    },
    "ok": true
   },
@@ -412,7 +412,7 @@
      "r": 7,
      "c": 3
     },
-    "calls": 68
+    "calls": 69
    },
    "ok": true
   },
@@ -428,7 +428,7 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 66
+    "calls": 67
    },
    "ok": true
   },
@@ -456,7 +456,7 @@
      "sat": 1.28,
      "rim": 0.7
     },
-    "calls": 66
+    "calls": 67
    },
    "ok": true
   },
@@ -520,7 +520,7 @@
     "arrow": true,
     "draws": 4,
     "loose": 0,
-    "calls": 70
+    "calls": 71
    },
    "ok": true
   },
@@ -557,7 +557,7 @@
    "got": {
     "text": "내 차례",
     "mine": true,
-    "calls": 67
+    "calls": 68
    },
    "ok": true
   },
@@ -572,7 +572,7 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 70
+    "calls": 71
    },
    "ok": true
   },
@@ -590,7 +590,7 @@
      "r": 7,
      "c": 3
     },
-    "calls": 71
+    "calls": 72
    },
    "ok": true
   },
@@ -606,7 +606,7 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 69
+    "calls": 70
    },
    "ok": true
   },
@@ -634,7 +634,7 @@
      "sat": 1.28,
      "rim": 0.7
     },
-    "calls": 63
+    "calls": 64
    },
    "ok": true
   },
@@ -698,7 +698,7 @@
     "arrow": true,
     "draws": 4,
     "loose": 0,
-    "calls": 67
+    "calls": 68
    },
    "ok": true
   },
@@ -735,7 +735,7 @@
    "got": {
     "text": "내 차례",
     "mine": true,
-    "calls": 64
+    "calls": 65
    },
    "ok": true
   },
@@ -750,7 +750,7 @@
     "arrow": true,
     "draws": 3,
     "loose": 0,
-    "calls": 67
+    "calls": 68
    },
    "ok": true
   },
@@ -768,7 +768,7 @@
      "r": 7,
      "c": 3
     },
-    "calls": 68
+    "calls": 69
    },
    "ok": true
   },
@@ -784,7 +784,7 @@
     "arrow": false,
     "draws": 1,
     "loose": 0,
-    "calls": 66
+    "calls": 67
    },
    "ok": true
   },

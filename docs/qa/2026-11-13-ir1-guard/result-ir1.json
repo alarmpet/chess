@@ -1,5 +1,5 @@
 {
- "at": "2026-11-16T10:52:22.435Z",
+ "at": "2026-11-17T05:27:04.685Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
@@ -22,7 +22,7 @@
     "goldPieces": 2,
     "dangerPieces": 1,
     "draws": 5,
-    "calls": 58
+    "calls": 59
    },
    "ok": true
   },
@@ -144,7 +144,7 @@
     "goldPieces": 2,
     "dangerPieces": 1,
     "draws": 5,
-    "calls": 54
+    "calls": 55
    },
    "ok": true
   },

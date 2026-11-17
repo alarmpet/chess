@@ -1,0 +1,430 @@
+{
+ "at": "2026-11-17T06:43:46.713Z",
+ "base": "http://localhost:3000/",
+ "measured": {
+  "desk": {
+   "kelp": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -1206373656
+    },
+    "key": "kelp:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "3f9fe8",
+    "calls": 66
+   },
+   "kangaroo": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -1067624749
+    },
+    "key": "kangaroo:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "b89db8",
+    "calls": 66
+   },
+   "panda": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 2035222571
+    },
+    "key": "panda:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "a6ccf3",
+    "calls": 66
+   },
+   "rhino": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 1916009800
+    },
+    "key": "rhino:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "6c9ed1",
+    "calls": 66
+   },
+   "tiger": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -1578616662
+    },
+    "key": "tiger:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "3898ba",
+    "calls": 66
+   },
+   "lion": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 1450823083
+    },
+    "key": "lion:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "b8b0b5",
+    "calls": 66
+   },
+   "crown": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 977419138
+    },
+    "key": "crown:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "7c90f3",
+    "calls": 66
+   }
+  },
+  "phone": {
+   "kelp": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -1206373656
+    },
+    "key": "kelp:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "3f9fe8",
+    "calls": 64
+   },
+   "kangaroo": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -1067624749
+    },
+    "key": "kangaroo:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "b89db8",
+    "calls": 64
+   },
+   "panda": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 2035222571
+    },
+    "key": "panda:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "a6ccf3",
+    "calls": 64
+   },
+   "rhino": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 1916009800
+    },
+    "key": "rhino:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "6c9ed1",
+    "calls": 64
+   },
+   "tiger": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -1578616662
+    },
+    "key": "tiger:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "3898ba",
+    "calls": 64
+   },
+   "lion": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 1450823083
+    },
+    "key": "lion:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "b8b0b5",
+    "calls": 64
+   },
+   "crown": {
+    "reef": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 977419138
+    },
+    "key": "crown:1234",
+    "on": true,
+    "horizon": {
+     "shown": true,
+     "triangles": 4418,
+     "z": -4.7
+    },
+    "zenith": "7c90f3",
+    "calls": 64
+   }
+  }
+ },
+ "rows": [
+  {
+   "item": "desk 판 화면 해안선",
+   "want": "일곱 섬 모두 해안선이 그 섬을 따른다(on) · 열쇠 일곱이 서로 다름 · 드로우콜 ≤ 72",
+   "got": {
+    "keys": [
+     "kelp:1234",
+     "kangaroo:1234",
+     "panda:1234",
+     "rhino:1234",
+     "tiger:1234",
+     "lion:1234",
+     "crown:1234"
+    ],
+    "calls": [
+     66,
+     66,
+     66,
+     66,
+     66,
+     66,
+     66
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 섬을 옮기면 산호를 다시 놓음",
+   "want": "옮긴 뒤 산호 자리가 바뀌고(지문이 다름) 모래 위에는 0",
+   "got": {
+    "before": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 977419138
+    },
+    "after": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -842595054
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 지도 섬 그림",
+   "want": "캔버스 일곱 · 그림이 모두 다름 · 끝낸 섬(4)에는 땅 색이 있고 안개 섬은 실루엣(땅 색 0)",
+   "got": [
+    {
+     "island": "kelp",
+     "state": "done",
+     "hash": 3864498283,
+     "land": 532
+    },
+    {
+     "island": "kangaroo",
+     "state": "done",
+     "hash": 795171436,
+     "land": 559
+    },
+    {
+     "island": "panda",
+     "state": "done",
+     "hash": 2913590590,
+     "land": 552
+    },
+    {
+     "island": "rhino",
+     "state": "done",
+     "hash": 1668164966,
+     "land": 648
+    },
+    {
+     "island": "tiger",
+     "state": "here",
+     "hash": 3669721142,
+     "land": 445
+    },
+    {
+     "island": "lion",
+     "state": "fog",
+     "hash": 790743411,
+     "land": 0
+    },
+    {
+     "island": "crown",
+     "state": "fog",
+     "hash": 4146577018,
+     "land": 0
+    }
+   ],
+   "ok": true
+  },
+  {
+   "item": "desk 오류 없음",
+   "want": "셰이더·페이지 오류 0",
+   "got": [],
+   "ok": true
+  },
+  {
+   "item": "phone 판 화면 해안선",
+   "want": "일곱 섬 모두 해안선이 그 섬을 따른다(on) · 열쇠 일곱이 서로 다름 · 드로우콜 ≤ 72",
+   "got": {
+    "keys": [
+     "kelp:1234",
+     "kangaroo:1234",
+     "panda:1234",
+     "rhino:1234",
+     "tiger:1234",
+     "lion:1234",
+     "crown:1234"
+    ],
+    "calls": [
+     64,
+     64,
+     64,
+     64,
+     64,
+     64,
+     64
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 섬을 옮기면 산호를 다시 놓음",
+   "want": "옮긴 뒤 산호 자리가 바뀌고(지문이 다름) 모래 위에는 0",
+   "got": {
+    "before": {
+     "total": 82,
+     "onSand": 0,
+     "sig": 977419138
+    },
+    "after": {
+     "total": 82,
+     "onSand": 0,
+     "sig": -842595054
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 지도 섬 그림",
+   "want": "캔버스 일곱 · 그림이 모두 다름 · 끝낸 섬(4)에는 땅 색이 있고 안개 섬은 실루엣(땅 색 0)",
+   "got": [
+    {
+     "island": "kelp",
+     "state": "done",
+     "hash": 3864498283,
+     "land": 532
+    },
+    {
+     "island": "kangaroo",
+     "state": "done",
+     "hash": 795171436,
+     "land": 559
+    },
+    {
+     "island": "panda",
+     "state": "done",
+     "hash": 2913590590,
+     "land": 552
+    },
+    {
+     "island": "rhino",
+     "state": "done",
+     "hash": 1668164966,
+     "land": 648
+    },
+    {
+     "island": "tiger",
+     "state": "here",
+     "hash": 3669721142,
+     "land": 445
+    },
+    {
+     "island": "lion",
+     "state": "fog",
+     "hash": 790743411,
+     "land": 0
+    },
+    {
+     "island": "crown",
+     "state": "fog",
+     "hash": 4146577018,
+     "land": 0
+    }
+   ],
+   "ok": true
+  },
+  {
+   "item": "phone 오류 없음",
+   "want": "셰이더·페이지 오류 0",
+   "got": [],
+   "ok": true
+  }
+ ]
+}

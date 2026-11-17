@@ -16,6 +16,8 @@ import { contractById, contractProgress, contractStage, openGoals, pickContract 
 import { CONTRACT_PLY_LIMIT, CONTRACT_STORE_KEY, RUNG_FULL, RUNG_NAMES, addContractResult, contractAiState, contractCoins, contractVerdict, sanitizeContractStore } from './rules/contractGame.js';
 import { dangerSquares, finishersAt, oopsCheck } from './rules/contractGuard.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
+import { ISLAND_LOOKS, ISLAND_SKY, PALETTES, coastProfile, islandHeightmap } from './village/islandNoise.js';
+import { createHorizonIsland } from './fx/horizonIsland.js';
 import { createContactShadows } from './fx/contactShadows.js';
 import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
 import { fxSettings } from './fx/settings.js';
@@ -1020,6 +1022,43 @@ export function initWizardChess() {
       return caps;
     }
     const shatterDebris = [];
+    let islandCoastKey = '';      // 절차적 섬(PI-3): 지금 판 둘레가 따르는 섬
+    // 해안선을 그 섬으로. 같은 섬이면 아무것도 안 한다. 바다 생물이 이미 놓였으면 새 해안을 따라 다시 놓는다.
+    function publicApiCoast(theme, seed = 0) {
+      const key = `${theme}:${seed}`;
+      if (key === islandCoastKey || !seaBiome?.ocean?.setCoast) return islandCoastKey;
+      islandCoastKey = key;
+      const map = theme ? islandHeightmap(theme, { size: 48, playerSeed: seed }) : null;
+      seaBiome.ocean.setCoast(map ? coastProfile(map) : null);
+      // 모래와 얕은 바다도 그 섬의 색표 쪽으로(60%). 해안선만 바꿨을 때 플레이어 카메라에서는 섬이 구별되지 않았다
+      // (Sonnet 블라인드 짝짓기 0/7, 2026-11-17) — 판 둘레는 얇은 띠로만 보인다.
+      const f = seaBiome.ocean.floor;
+      const wv = seaBiome.ocean.water;
+      const sk = seaBiome.ocean.sky;
+      coastBaseColors ||= { sand: f.uSand.value.clone(), lagoon: f.uLagoon.value.clone(), shallow: wv.uShallow.value.clone(), deep: wv.uDeep.value.clone(), floor: f.uDeep.value.clone(), horizon: wv.uHorizon.value.clone(), zenith: sk ? sk.uZenith.value.clone() : null };
+      const pal = PALETTES[ISLAND_LOOKS[theme]?.palette];
+      const tone = (base, hex, k = 0.6) => (hex ? base.clone().lerp(new THREE.Color(hex), k) : base.clone());
+      f.uSand.value.copy(tone(coastBaseColors.sand, pal?.[2]));
+      f.uLagoon.value.copy(tone(coastBaseColors.lagoon, pal?.[1]));
+      wv.uShallow.value.copy(tone(coastBaseColors.shallow, pal?.[1]));
+      // 하늘 빛(손질 2차): 하늘 꼭대기 45%, 수평선 25% — 판 화면에서 가장 넓게 보이는 면이다. 해초 섬은 처음 모습 그대로.
+      const skyHex = ISLAND_SKY[theme] || null;
+      wv.uHorizon.value.copy(tone(coastBaseColors.horizon, skyHex, 0.25));   // 하늘 구의 수평선과 같은 색 객체다
+      // 깊은 바다도 그 빛 쪽으로 35% — 플레이어 카메라에서는 하늘이 안 보이고 화면 위쪽 띠와 양옆이 거의 다 바다다.
+      wv.uDeep.value.copy(tone(coastBaseColors.deep, skyHex, 0.35));
+      f.uDeep.value.copy(tone(coastBaseColors.floor, skyHex, 0.35));
+      if (sk && coastBaseColors.zenith) sk.uZenith.value.copy(tone(coastBaseColors.zenith, skyHex, 0.45));
+      // 수평선의 섬(손질 1차): 그 섬의 높이 지도를 판 너머 바다 건너에 세운다.
+      horizonIsland ||= createHorizonIsland(biomeGroup, { waterY: seaBiome.ocean.waterY });
+      horizonIsland.set(map, ISLAND_LOOKS[theme]?.palette);
+      stageBase = null;     // 매치 포인트 무대가 새 색에서 한 톤 낮추게(옛 색을 붙들고 있으면 섬 색을 덮어쓴다)
+      // 바다 생물이 이미 놓였으면(게임 중에 섬을 옮김) 새 해안을 따라 다시 놓는다
+      seaBiome.repopulate?.().then((did) => { if (did) { renderer.shadowMap.needsUpdate = true; layered.markDirty(); } });
+      layered.markDirty();
+      return islandCoastKey;
+    }
+    let horizonIsland = null;
+    let coastBaseColors = null;
     const impactFx = createImpactFx(scene);
     // 겹친 타격 불빛(GX-3): 늦게 받는다 — 받기 전의 잡기는 예전 효과만 난다.
     let hitGlow = null;
@@ -1357,6 +1396,11 @@ export function initWizardChess() {
         renderer.toneMapping = THREE.NeutralToneMapping;
         renderer.toneMappingExposure = env.sea.exposure ?? 1;
         seaBiome = buildSeaBiome(biomeGroup, env, { halfBoard: 4 * BOARD_SQ_SIZE, surfaceY: BOARD_SURFACE_Y, rand });
+        // 절차적 섬(PI-3): 저장된 군도의 지금 섬 해안선을 바다 생물을 놓기 전에 입힌다(산호가 해안을 따라 놓이게).
+        try {
+          const arch = JSON.parse(window.localStorage.getItem('wildcrown.village.v1') || 'null')?.arch;
+          if (arch && typeof arch.current === 'string') publicApiCoast(arch.current, Number(arch.seed) || 0);
+        } catch (e) { /* 저장이 없거나 깨졌으면 예전 해안선 */ }
         layered.markDirty();
         return;
       }
@@ -7027,6 +7071,9 @@ let engineStarted = false;
         smoothCameraTo(back.pos, back.target, seconds);
       },
       // Hearts earned in the village grow that one individual on the board; the model set already has every stage.
+      // 절차적 섬(PI-3): 체스 판 둘레의 해안선을 군도의 지금 섬 모양으로. 같은 섬이면 아무것도 안 한다.
+      setIslandCoast: (theme, seed = 0) => publicApiCoast(theme, seed),
+      debugIslandCoast: () => ({ reef: seaBiome?.reefCheck?.() || null, key: islandCoastKey, on: Boolean(seaBiome?.ocean?.coastOn?.()), horizon: horizonIsland ? horizonIsland.state() : null, zenith: seaBiome?.ocean?.sky ? seaBiome.ocean.sky.uZenith.value.getHexString() : null, calls: renderer.info.render.calls }),
       setSlotStages: async (map) => {
         slotStages = map || {};
         await ensureCosmeticAssets();
@@ -7837,6 +7884,7 @@ let engineStarted = false;
       if (renderPaused) return;
       seaTime += dt * (1 - 0.6 * stageMix);
       seaBiome?.tick(seaTime);
+      horizonIsland?.face(camera.position.z);
       stepScene(dt || 0.016, true);
     }
 
