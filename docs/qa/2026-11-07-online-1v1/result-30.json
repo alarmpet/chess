@@ -1,0 +1,25 @@
+{
+ "code": "V2WECF",
+ "e4": true,
+ "firstVisit": {
+  "loadMs": 22473,
+  "ply": 1,
+  "color": "b",
+  "online": true,
+  "bar": "👫 V2WECF\n🟢 친구 연결됨\n내 차례 (흑)\n기권\n나가기",
+  "rival": false,
+  "strip": "block",
+  "totalMs": 25090
+ },
+ "reload": {
+  "loadMs": 22414,
+  "ply": 1,
+  "color": "b",
+  "online": true,
+  "bar": "👫 V2WECF\n🟢 친구 연결됨\n내 차례 (흑)\n기권\n나가기",
+  "rival": false,
+  "strip": "block"
+ },
+ "e5": true,
+ "hostPly": 2
+}

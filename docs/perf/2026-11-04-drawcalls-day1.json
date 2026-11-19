@@ -1,0 +1,84 @@
+{
+ "gpu": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "total": 222,
+ "pixelRatio": 1,
+ "size": [
+  1920,
+  921
+ ],
+ "rows": [
+  {
+   "group": "piece",
+   "objects": 32,
+   "meshes": 128,
+   "skinned": 32,
+   "tris": 695808,
+   "calls": 128
+  },
+  {
+   "group": "board",
+   "objects": 1,
+   "meshes": 68,
+   "skinned": 0,
+   "tris": 19248,
+   "calls": 68
+  },
+  {
+   "group": "biome",
+   "objects": 1,
+   "meshes": 134,
+   "skinned": 0,
+   "tris": 135971,
+   "calls": 25
+  },
+  {
+   "group": "Mesh",
+   "objects": 2,
+   "meshes": 2,
+   "skinned": 0,
+   "tris": 38,
+   "calls": 1
+  },
+  {
+   "group": "light",
+   "objects": 13,
+   "meshes": 0,
+   "skinned": 0,
+   "tris": 0,
+   "calls": 0
+  },
+  {
+   "group": "sprite",
+   "objects": 4,
+   "meshes": 4,
+   "skinned": 0,
+   "tris": 8,
+   "calls": 0
+  },
+  {
+   "group": "highlights",
+   "objects": 1,
+   "meshes": 0,
+   "skinned": 0,
+   "tris": 0,
+   "calls": 0
+  }
+ ],
+ "frame": {
+  "full": {
+   "median": 34.8,
+   "p95": 48.5,
+   "n": 112
+  },
+  "half": {
+   "median": 34.7,
+   "p95": 48.6,
+   "n": 114
+  },
+  "full2": {
+   "median": 34.8,
+   "p95": 48.6,
+   "n": 111
+  }
+ }
+}

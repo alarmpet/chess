@@ -1,0 +1,50 @@
+// 느린 회선 손님: 방장(p1, 배포본)이 백으로 방을 만들고 e4 를 둔 뒤, 손님(p2)이 캐시 없이 느린 회선(지연 300ms · 1.5MB/s)으로
+// 초대 주소를 열고 새로고침한다. 두 번 모두 엔진 판이 규칙 층과 같은 1수인지 본다(폰에서 0수로 어긋났던 결함).
+const fs = await import('node:fs/promises');
+const DIR = 'C:/Users/petbl/ego/online-1v1-20261107/';
+const task = await taskSpace('online slow guest');
+console.log('space', task.spaceId);
+const host = task.page('p1');
+const out = {};
+const loaded = (pg) => pg.waitForFunction(() => window.wizardChess?.isStarted?.(), undefined, { timeout: 300000 });
+await host.goto('https://wildcrown.yonghane.workers.dev/', { timeout: 90000 }).catch(() => null);
+await loaded(host);
+await host.waitForTimeout(1500);
+await host.evaluate(() => document.querySelectorAll('.panel-overlay .panel-close').forEach((b) => b.click()));
+await host.click('#btn-online', { label: 'Open play a friend' });
+await host.click('#online-pick-w', { label: 'Pick white' });
+await host.click('#online-create', { label: 'Make room' });
+await host.waitForSelector('#online-bigcode', { timeout: 15000 });
+await host.waitForTimeout(2500);
+const code = await host.evaluate(() => document.querySelector('#online-bigcode')?.textContent);
+out.code = code;
+await host.evaluate(() => document.querySelector('.online-panel .panel-close')?.click());
+out.e4 = await host.evaluate(() => window.wizardChess.executeChessMove(6, 4, 4, 4));
+await host.waitForTimeout(3000);
+const guest = await task.newPage();
+await guest.cdp('Network.enable');
+await guest.cdp('Network.setCacheDisabled', { cacheDisabled: true });
+await guest.cdp('Network.emulateNetworkConditions', { offline: false, latency: 300, downloadThroughput: 1.5 * 1024 * 1024, uploadThroughput: 256 * 1024 });
+const check = async (label) => {
+  const t0 = Date.now();
+  await loaded(guest);
+  await guest.waitForTimeout(4000);
+  const st = await guest.evaluate(() => { const s = window.wizardChess.getHandBrainState(); return { ply: s.history.length, color: s.playerColor, online: window.wizardChess.isOnline(), bar: document.querySelector('#online-bar')?.innerText, rival: document.body.innerText.includes('첫 판이라'), strip: getComputedStyle(document.querySelector('#game-strip') || document.body).display }; });
+  out[label] = { loadMs: Date.now() - t0, ...st };
+};
+const t1 = Date.now();
+await guest.goto(`https://wildcrown.yonghane.workers.dev/?room=${code}`, { timeout: 300000 }).catch(() => null);
+await check('firstVisit');
+out.firstVisit.totalMs = Date.now() - t1;
+await guest.screenshot({ path: DIR + 'h1-slow-guest.png' });
+await guest.reload({ timeout: 300000 }).catch(() => null);
+await check('reload');
+// 손님 e5 → 방장이 받는지
+out.e5 = await guest.evaluate(() => window.wizardChess.executeChessMove(1, 4, 3, 4));
+await guest.waitForTimeout(2000);
+out.hostPly = await host.evaluate(() => window.wizardChess.getHandBrainState().history.length);
+await guest.evaluate(() => { document.querySelector('#online-leave')?.click(); localStorage.clear(); sessionStorage.clear(); });
+await host.evaluate(() => { document.querySelector('#online-leave')?.click(); localStorage.clear(); sessionStorage.clear(); });
+console.log(JSON.stringify(out, null, 1));
+await fs.writeFile(DIR + 'result-30.json', JSON.stringify(out, null, 1));
+await task.finish({ keep: [] });

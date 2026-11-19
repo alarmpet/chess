@@ -1,0 +1,25 @@
+50 판 372s
+{
+ "games": 60,
+ "player": "normal",
+ "ai": "normal",
+ "gamesWithGoal": 0.42,
+ "firstGoalPlyMedian": 66,
+ "doneRate": {
+  "retake": "9/25 = 0.36",
+  "check": "2/8 = 0.25",
+  "pawn_far": "1/2 = 0.50"
+ },
+ "playerMovesToDoneMedian": 27,
+ "acornsPerGoalGame": 2.4,
+ "result": {
+  "win": 27,
+  "draw": 4,
+  "loss": 29
+ },
+ "resultInGoalGames": {
+  "win": 1,
+  "draw": 1,
+  "loss": 23
+ }
+}

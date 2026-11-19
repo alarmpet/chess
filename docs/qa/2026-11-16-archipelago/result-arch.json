@@ -1,0 +1,206 @@
+{
+ "at": "2026-11-18T14:50:20.134Z",
+ "base": "http://localhost:3000/",
+ "rows": [
+  {
+   "item": "desk 다음 섬 고르기",
+   "want": "단추 「지도에서 다음 섬 고르기」 · 🗺 1/7 · 고를 수 있는 섬 다섯(동물) · 해초 섬은 지금 · 왕관 섬은 안개",
+   "got": {
+    "doneBtn": "📷 섬 완성! 지도에서 다음 섬 고르기",
+    "mapBtn0": "🗺 1/7",
+    "choose": {
+     "title": "🗺다음 섬 고르기",
+     "picks": [
+      "kangaroo",
+      "panda",
+      "rhino",
+      "tiger",
+      "lion"
+     ],
+     "states": {
+      "kelp": "here",
+      "kangaroo": "pick",
+      "panda": "pick",
+      "rhino": "pick",
+      "tiger": "pick",
+      "lion": "pick",
+      "crown": "fog"
+     }
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 판다 섬으로",
+   "want": "지금 섬 panda · 기록 kelp(건물 8) · 새 섬 빈 땅 · 밭 값 🌰23(20×1.15) · 🗺 2/7 · 사진 1장",
+   "got": {
+    "current": "panda",
+    "done": [
+     [
+      "kelp",
+      8
+     ]
+    ],
+    "built": 0,
+    "fieldCost": "🌰 23",
+    "mapBtn1": "🗺 2/7",
+    "photos": 1
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 지난 섬 보기",
+   "want": "지도: 해초 done(사진·특산물 곡물 1) · 판다 here · 보기 막대 「해초 섬 — 21판째」 · 돌아오면 막대 없음 · 저장은 그대로",
+   "got": {
+    "look": {
+     "states": {
+      "kelp": "done",
+      "kangaroo": "fog",
+      "panda": "here",
+      "rhino": "fog",
+      "tiger": "fog",
+      "lion": "fog",
+      "crown": "fog"
+     },
+     "img": true,
+     "gift": "판마다 곡물 1"
+    },
+    "banner": "🌿 해초 섬 — 21판째에 끝낸 섬(보기만)지금 섬으로",
+    "back": {
+     "banner": false,
+     "built": 0
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 특산물",
+   "want": "판 끝에 곡물 +1 · 소식 줄 「지난 섬의 특산물: 🌿 곡물 1」",
+   "got": {
+    "grain": [
+     0,
+     1
+    ],
+    "giftLine": "🗺 지난 섬의 특산물: 🌿 곡물 1"
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 군도 완성",
+   "want": "단추 「왕관 섬 완성! 군도를 끝내기」 → 7/7 · 일곱 섬 done · 고를 섬 없음 · 저장 finished · 다음 판에도 섬 그대로",
+   "got": {
+    "crownBtn": "👑 왕관 섬 완성! 군도를 끝내기",
+    "end": {
+     "title": "🗺군도 7/7",
+     "done": 7,
+     "picks": 0,
+     "note": "👑 일곱 섬을 모두 지었어요. 섬을 눌러 다시 볼 수 있어요."
+    },
+    "finished": true,
+    "done": 7,
+    "built": 8
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 다음 섬 고르기",
+   "want": "단추 「지도에서 다음 섬 고르기」 · 🗺 1/7 · 고를 수 있는 섬 다섯(동물) · 해초 섬은 지금 · 왕관 섬은 안개",
+   "got": {
+    "doneBtn": "📷 섬 완성! 지도에서 다음 섬 고르기",
+    "mapBtn0": "🗺 1/7",
+    "choose": {
+     "title": "🗺다음 섬 고르기",
+     "picks": [
+      "kangaroo",
+      "panda",
+      "rhino",
+      "tiger",
+      "lion"
+     ],
+     "states": {
+      "kelp": "here",
+      "kangaroo": "pick",
+      "panda": "pick",
+      "rhino": "pick",
+      "tiger": "pick",
+      "lion": "pick",
+      "crown": "fog"
+     }
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 판다 섬으로",
+   "want": "지금 섬 panda · 기록 kelp(건물 8) · 새 섬 빈 땅 · 밭 값 🌰23(20×1.15) · 🗺 2/7 · 사진 1장",
+   "got": {
+    "current": "panda",
+    "done": [
+     [
+      "kelp",
+      8
+     ]
+    ],
+    "built": 0,
+    "fieldCost": "🌰 23",
+    "mapBtn1": "🗺 2/7",
+    "photos": 1
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 지난 섬 보기",
+   "want": "지도: 해초 done(사진·특산물 곡물 1) · 판다 here · 보기 막대 「해초 섬 — 21판째」 · 돌아오면 막대 없음 · 저장은 그대로",
+   "got": {
+    "look": {
+     "states": {
+      "kelp": "done",
+      "kangaroo": "fog",
+      "panda": "here",
+      "rhino": "fog",
+      "tiger": "fog",
+      "lion": "fog",
+      "crown": "fog"
+     },
+     "img": true,
+     "gift": "판마다 곡물 1"
+    },
+    "banner": "🌿 해초 섬 — 21판째에 끝낸 섬(보기만)지금 섬으로",
+    "back": {
+     "banner": false,
+     "built": 0
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 특산물",
+   "want": "판 끝에 곡물 +1 · 소식 줄 「지난 섬의 특산물: 🌿 곡물 1」",
+   "got": {
+    "grain": [
+     0,
+     1
+    ],
+    "giftLine": "🗺 지난 섬의 특산물: 🌿 곡물 1"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 군도 완성",
+   "want": "단추 「왕관 섬 완성! 군도를 끝내기」 → 7/7 · 일곱 섬 done · 고를 섬 없음 · 저장 finished · 다음 판에도 섬 그대로",
+   "got": {
+    "crownBtn": "👑 왕관 섬 완성! 군도를 끝내기",
+    "end": {
+     "title": "🗺군도 7/7",
+     "done": 7,
+     "picks": 0,
+     "note": "👑 일곱 섬을 모두 지었어요. 섬을 눌러 다시 볼 수 있어요."
+    },
+    "finished": true,
+    "done": 7,
+    "built": 8
+   },
+   "ok": true
+  }
+ ]
+}

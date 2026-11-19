@@ -1,0 +1,31 @@
+{
+ "note": "도구 점검: 「blitz」=봇 쉬움, 「normal」=봇 어려움(백만 잰다)",
+ "by": {
+  "blitz": {
+   "games": 20,
+   "moves": 642,
+   "blunders": 45,
+   "byThink": {
+    "?": {
+     "moves": 642,
+     "blunders": 45
+    }
+   },
+   "rate": 0.07
+  },
+  "normal": {
+   "games": 20,
+   "moves": 722,
+   "blunders": 8,
+   "byThink": {
+    "?": {
+     "moves": 722,
+     "blunders": 8
+    }
+   },
+   "rate": 0.011
+  }
+ },
+ "blitzOverNormal": 6.36,
+ "verdict": "번개 10초 → 15초로"
+}

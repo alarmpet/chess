@@ -1,0 +1,137 @@
+{
+ "n": 16,
+ "steps": [
+  {
+   "step": 1,
+   "search": "easy",
+   "slip": 0.3,
+   "blind": 0.6,
+   "icon": "🐣",
+   "ko": "아기 미어캣",
+   "en": "Baby meerkat"
+  },
+  {
+   "step": 2,
+   "search": "easy",
+   "slip": 0.2,
+   "blind": 0.3,
+   "icon": "🐿️",
+   "ko": "다람쥐",
+   "en": "Squirrel"
+  },
+  {
+   "step": 3,
+   "search": "easy",
+   "slip": 0.1,
+   "blind": 0.1,
+   "icon": "🦊",
+   "ko": "여우",
+   "en": "Fox"
+  },
+  {
+   "step": 4,
+   "search": "easy",
+   "slip": 0,
+   "blind": 0,
+   "icon": "🐼",
+   "ko": "판다",
+   "en": "Panda"
+  },
+  {
+   "step": 5,
+   "search": "normal",
+   "slip": 0.15,
+   "blind": 0.2,
+   "icon": "🦏",
+   "ko": "코뿔소",
+   "en": "Rhino"
+  },
+  {
+   "step": 6,
+   "search": "normal",
+   "slip": 0.05,
+   "blind": 0,
+   "icon": "🐯",
+   "ko": "호랑이",
+   "en": "Tiger"
+  },
+  {
+   "step": 7,
+   "search": "hard",
+   "slip": 0,
+   "blind": 0,
+   "icon": "🦁",
+   "ko": "사자 왕",
+   "en": "Lion king"
+  }
+ ],
+ "pairs": [
+  {
+   "lo": 1,
+   "hi": 2,
+   "win": 1,
+   "draw": 12,
+   "loss": 3,
+   "score": 0.44,
+   "eloGap": 44,
+   "meanPlies": 112,
+   "seconds": 11
+  },
+  {
+   "lo": 2,
+   "hi": 3,
+   "win": 2,
+   "draw": 10,
+   "loss": 4,
+   "score": 0.44,
+   "eloGap": 44,
+   "meanPlies": 128,
+   "seconds": 15
+  },
+  {
+   "lo": 3,
+   "hi": 4,
+   "win": 0,
+   "draw": 6,
+   "loss": 10,
+   "score": 0.19,
+   "eloGap": 255,
+   "meanPlies": 118,
+   "seconds": 17
+  },
+  {
+   "lo": 4,
+   "hi": 5,
+   "win": 8,
+   "draw": 0,
+   "loss": 8,
+   "score": 0.5,
+   "eloGap": 0,
+   "meanPlies": 88,
+   "seconds": 56
+  },
+  {
+   "lo": 5,
+   "hi": 6,
+   "win": 2,
+   "draw": 1,
+   "loss": 13,
+   "score": 0.16,
+   "eloGap": 293,
+   "meanPlies": 93,
+   "seconds": 83
+  },
+  {
+   "lo": 6,
+   "hi": 7,
+   "win": 3,
+   "draw": 2,
+   "loss": 11,
+   "score": 0.25,
+   "eloGap": 191,
+   "meanPlies": 114,
+   "seconds": 472
+  }
+ ],
+ "seconds": 654
+}

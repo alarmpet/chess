@@ -1,0 +1,51 @@
+{
+  "at": "2026-11-09T17:01:35.937Z",
+  "phase": 1,
+  "shiftMs": 0,
+  "pass": 7,
+  "total": 7,
+  "rows": [
+    {
+      "item": "무대 판 9개",
+      "want": "counted ×9",
+      "got": "counted,counted,counted,counted,counted,counted,counted,counted,counted",
+      "ok": true
+    },
+    {
+      "item": "H 성체 이상",
+      "want": "≥ 300",
+      "got": 433,
+      "ok": true
+    },
+    {
+      "item": "U 가 H 를 이김 → 위 등급 첫 승",
+      "want": "ladder.feat 'upset-win'",
+      "got": "\"upset-win\"",
+      "ok": true
+    },
+    {
+      "item": "U 와 H 무승부 → 위 등급 첫 무승부",
+      "want": "ladder.feat 'upset-draw'",
+      "got": "{\"status\":\"counted\",\"feat\":\"upset-draw\"}",
+      "ok": true
+    },
+    {
+      "item": "두 번째 승리",
+      "want": "도장 다시 안 줌(feat null)",
+      "got": "null",
+      "ok": true
+    },
+    {
+      "item": "U /player firsts",
+      "want": "upset-win · upset-draw",
+      "got": "[\"upset-draw\",\"upset-win\"]",
+      "ok": true
+    },
+    {
+      "item": "시즌 1 무대 판 수",
+      "want": "P 6 · K 6 · F 6 · 상 아직 없음",
+      "got": "{\"P\":{\"points\":170,\"games\":6,\"peak\":170,\"awards\":[]},\"K\":{\"points\":82,\"games\":6,\"peak\":82,\"awards\":[]},\"F\":{\"points\":0,\"games\":6,\"peak\":0,\"awards\":[]}}",
+      "ok": true
+    }
+  ]
+}

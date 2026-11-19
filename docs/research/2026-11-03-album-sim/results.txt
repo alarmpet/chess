@@ -1,0 +1,45 @@
+
+## games-beginner.jsonl [before]: 80 games, player wins 0, gave check in 40, 2.9 captures per game
+merging — 12/24: median 16 (p10 9, p90 23) · 18/24: median 75 (p10 53, p90 99) · 23/24: median 454 (p10 235, p90 813) · 24/24: median 1538 (p10 1052, p90 Infinity)
+last slot: lion_rare 100%
+no merges — 12/24: median 18 (p10 11, p90 26) · 18/24: median 75 (p10 55, p90 102) · 23/24: median Infinity (p10 Infinity, p90 Infinity) · 24/24: median Infinity (p10 Infinity, p90 Infinity)
+
+## games-even.jsonl [before]: 80 games, player wins 44, gave check in 73, 11.2 captures per game
+merging — 12/24: median 2 (p10 2, p90 3) · 18/24: median 7 (p10 5, p90 10) · 23/24: median 30 (p10 24, p90 39) · 24/24: median Infinity (p10 Infinity, p90 Infinity)
+last slot: lion_common 100%
+no merges — 12/24: median 3 (p10 2, p90 4) · 18/24: median 8 (p10 5, p90 11) · 23/24: median 29 (p10 23, p90 38) · 24/24: median Infinity (p10 Infinity, p90 Infinity)
+
+## games-strong.jsonl [before]: 80 games, player wins 78, gave check in 79, 10.8 captures per game
+merging — 12/24: median 2 (p10 2, p90 3) · 18/24: median 6 (p10 5, p90 10) · 23/24: median 31 (p10 24, p90 43) · 24/24: median Infinity (p10 Infinity, p90 Infinity)
+last slot: lion_common 100%
+no merges — 12/24: median 3 (p10 2, p90 4) · 18/24: median 8 (p10 5, p90 11) · 23/24: median 32 (p10 24, p90 43) · 24/24: median Infinity (p10 Infinity, p90 Infinity)
+
+## games-beginner.jsonl [now]: 80 games, player wins 0, gave check in 40, 2.9 captures per game
+merging — 12/24: median 10 (p10 6, p90 16) · 18/24: median 36 (p10 26, p90 52) · 23/24: median 107 (p10 82, p90 170) · 24/24: median 172 (p10 101, p90 321)
+last slot: rhino_rare 49%, rhino_uncommon 18%, rhino_common 9%, lion_hero 9%
+no merges — 12/24: median 14 (p10 8, p90 20) · 18/24: median 62 (p10 44, p90 81) · 23/24: median Infinity (p10 Infinity, p90 Infinity) · 24/24: median Infinity (p10 Infinity, p90 Infinity)
+
+## games-even.jsonl [now]: 80 games, player wins 44, gave check in 73, 11.2 captures per game
+merging — 12/24: median 2 (p10 2, p90 3) · 18/24: median 5 (p10 4, p90 7) · 23/24: median 22 (p10 16, p90 28) · 24/24: median 28 (p10 21, p90 36)
+last slot: panda_hero 24%, kangaroo_hero 22%, rhino_hero 20%, lion_hero 11%
+no merges — 12/24: median 2 (p10 2, p90 3) · 18/24: median 6 (p10 4, p90 8) · 23/24: median 22 (p10 16, p90 28) · 24/24: median 27 (p10 22, p90 35)
+
+## games-strong.jsonl [now]: 80 games, player wins 78, gave check in 79, 10.8 captures per game
+merging — 12/24: median 2 (p10 2, p90 3) · 18/24: median 5 (p10 4, p90 7) · 23/24: median 23 (p10 17, p90 31) · 24/24: median 29 (p10 22, p90 39)
+last slot: panda_hero 29%, kangaroo_hero 24%, rhino_hero 20%, tiger_hero 15%
+no merges — 12/24: median 2 (p10 2, p90 3) · 18/24: median 6 (p10 4, p90 8) · 23/24: median 23 (p10 17, p90 30) · 24/24: median 29 (p10 22, p90 39)
+
+## games-beginner.jsonl [win-lion]: 80 games, player wins 0, gave check in 40, 2.9 captures per game
+merging — 12/24: median 16 (p10 10, p90 23) · 18/24: median 75 (p10 54, p90 102) · 23/24: median 446 (p10 237, p90 793) · 24/24: median 1525 (p10 1054, p90 Infinity)
+last slot: lion_rare 100%
+no merges — 12/24: median 18 (p10 11, p90 25) · 18/24: median 76 (p10 56, p90 102) · 23/24: median Infinity (p10 Infinity, p90 Infinity) · 24/24: median Infinity (p10 Infinity, p90 Infinity)
+
+## games-even.jsonl [win-lion]: 80 games, player wins 44, gave check in 73, 11.2 captures per game
+merging — 12/24: median 2 (p10 2, p90 3) · 18/24: median 5 (p10 4, p90 7) · 23/24: median 23 (p10 17, p90 29) · 24/24: median 29 (p10 22, p90 37)
+last slot: panda_hero 27%, kangaroo_hero 25%, rhino_hero 18%, tiger_hero 11%
+no merges — 12/24: median 2 (p10 2, p90 3) · 18/24: median 6 (p10 4, p90 9) · 23/24: median 23 (p10 17, p90 29) · 24/24: median 29 (p10 22, p90 37)
+
+## games-strong.jsonl [win-lion]: 80 games, player wins 78, gave check in 79, 10.8 captures per game
+merging — 12/24: median 2 (p10 2, p90 3) · 18/24: median 5 (p10 4, p90 7) · 23/24: median 22 (p10 17, p90 30) · 24/24: median 29 (p10 21, p90 38)
+last slot: kangaroo_hero 26%, panda_hero 24%, rhino_hero 20%, tiger_hero 15%
+no merges — 12/24: median 2 (p10 2, p90 3) · 18/24: median 6 (p10 4, p90 8) · 23/24: median 23 (p10 16, p90 31) · 24/24: median 29 (p10 22, p90 39)

@@ -1,0 +1,2 @@
+const task=await taskSpace(77); const page=task.page('p1');
+console.log(await page.evaluate(()=>({text:document.querySelector('main').innerText.slice(0,6500),controls:[...document.querySelectorAll('main button,main input,main select')].map(e=>({tag:e.tagName,text:e.innerText,label:e.getAttribute('aria-label'),type:e.type,value:e.value,options:e.options?[...e.options].map(o=>({text:o.text,value:o.value})):undefined}))})));

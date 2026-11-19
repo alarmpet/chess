@@ -1,0 +1,7499 @@
+{
+ "method": "120 deterministic standard-chess self-play trajectories (same seeds as mission-audit); AI does not know the contract; stop at 2-of-3 contract, mate/standard end, or 48 plies; post-hoc only",
+ "summary": {
+  "easy": {
+   "pnr_x1": {
+    "games": 60,
+    "endedBy": {
+     "contract": 60,
+     "mate": 0,
+     "cap": 0,
+     "standardEnd": 0
+    },
+    "whiteContractWins": 34,
+    "stopPly": {
+     "median": 16,
+     "p90": 31
+    },
+    "captures": {
+     "median": 4,
+     "p90": 6,
+     "min": 2
+    },
+    "checks": {
+     "median": 0,
+     "p90": 1
+    },
+    "firstCapturePly": {
+     "median": 11
+    },
+    "pliesBetweenCaptures": {
+     "median": 2,
+     "p90": 13
+    },
+    "matchPointPlies": {
+     "median": 5,
+     "p90": 13
+    },
+    "gamesWithLeadChange": 16
+   },
+   "pnb_x1": {
+    "games": 60,
+    "endedBy": {
+     "contract": 60,
+     "mate": 0,
+     "cap": 0,
+     "standardEnd": 0
+    },
+    "whiteContractWins": 33,
+    "stopPly": {
+     "median": 16,
+     "p90": 23
+    },
+    "captures": {
+     "median": 3,
+     "p90": 5,
+     "min": 2
+    },
+    "checks": {
+     "median": 0,
+     "p90": 1
+    },
+    "firstCapturePly": {
+     "median": 11
+    },
+    "pliesBetweenCaptures": {
+     "median": 2,
+     "p90": 13
+    },
+    "matchPointPlies": {
+     "median": 4,
+     "p90": 11
+    },
+    "gamesWithLeadChange": 14
+   },
+   "p2nb": {
+    "games": 60,
+    "endedBy": {
+     "contract": 59,
+     "mate": 1,
+     "cap": 0,
+     "standardEnd": 0
+    },
+    "whiteContractWins": 28,
+    "stopPly": {
+     "median": 21,
+     "p90": 31
+    },
+    "captures": {
+     "median": 5,
+     "p90": 7,
+     "min": 3
+    },
+    "checks": {
+     "median": 0,
+     "p90": 1
+    },
+    "firstCapturePly": {
+     "median": 11
+    },
+    "pliesBetweenCaptures": {
+     "median": 1,
+     "p90": 12
+    },
+    "matchPointPlies": {
+     "median": 5,
+     "p90": 16
+    },
+    "gamesWithLeadChange": 18
+   }
+  },
+  "normal": {
+   "pnr_x1": {
+    "games": 60,
+    "endedBy": {
+     "contract": 58,
+     "mate": 0,
+     "cap": 2,
+     "standardEnd": 0
+    },
+    "whiteContractWins": 35,
+    "stopPly": {
+     "median": 20,
+     "p90": 40
+    },
+    "captures": {
+     "median": 5,
+     "p90": 8,
+     "min": 2
+    },
+    "checks": {
+     "median": 0,
+     "p90": 2
+    },
+    "firstCapturePly": {
+     "median": 11
+    },
+    "pliesBetweenCaptures": {
+     "median": 1,
+     "p90": 12
+    },
+    "matchPointPlies": {
+     "median": 8,
+     "p90": 28
+    },
+    "gamesWithLeadChange": 18
+   },
+   "pnb_x1": {
+    "games": 60,
+    "endedBy": {
+     "contract": 60,
+     "mate": 0,
+     "cap": 0,
+     "standardEnd": 0
+    },
+    "whiteContractWins": 38,
+    "stopPly": {
+     "median": 16,
+     "p90": 26
+    },
+    "captures": {
+     "median": 3,
+     "p90": 4,
+     "min": 2
+    },
+    "checks": {
+     "median": 0,
+     "p90": 1
+    },
+    "firstCapturePly": {
+     "median": 11
+    },
+    "pliesBetweenCaptures": {
+     "median": 3,
+     "p90": 13
+    },
+    "matchPointPlies": {
+     "median": 4,
+     "p90": 12
+    },
+    "gamesWithLeadChange": 15
+   },
+   "p2nb": {
+    "games": 60,
+    "endedBy": {
+     "contract": 57,
+     "mate": 0,
+     "cap": 3,
+     "standardEnd": 0
+    },
+    "whiteContractWins": 27,
+    "stopPly": {
+     "median": 21,
+     "p90": 41
+    },
+    "captures": {
+     "median": 5,
+     "p90": 7,
+     "min": 3
+    },
+    "checks": {
+     "median": 1,
+     "p90": 2
+    },
+    "firstCapturePly": {
+     "median": 11
+    },
+    "pliesBetweenCaptures": {
+     "median": 1,
+     "p90": 12
+    },
+    "matchPointPlies": {
+     "median": 9,
+     "p90": 24
+    },
+    "gamesWithLeadChange": 25
+   }
+  }
+ },
+ "rows": [
+  {
+   "level": "easy",
+   "g": 0,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      2,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      2,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 1,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 2,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      2,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      2,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      2,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 0
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 3,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 33,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 20,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1,
+      1,
+      14,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 4,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 40,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 32,
+     "gaps": [
+      32,
+      2,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 40,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 32,
+     "gaps": [
+      32,
+      2,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 40,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 32,
+     "gaps": [
+      32,
+      2,
+      1,
+      5
+     ],
+     "doneW": 0,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 5,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 2,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 6,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 31,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 16,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1,
+      1,
+      12,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 31,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 14,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1,
+      1,
+      12,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 7,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      1,
+      3,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 8,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 9,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      1,
+      8,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      1,
+      8
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      1,
+      8,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 10,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 33,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 31,
+     "gaps": [
+      31,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 33,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 31,
+     "gaps": [
+      31,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 34,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 31,
+     "gaps": [
+      31,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 11,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1,
+      1,
+      11
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 12,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 17,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1,
+      14,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 13,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 29,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      2,
+      1,
+      1,
+      1,
+      1,
+      6
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      2,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 14,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1,
+      1,
+      7
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 15,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 0
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 16,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      3,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      3,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 27,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 16,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      3,
+      1,
+      1,
+      12,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 17,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      6
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      6
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      6,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 18,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      2,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      2,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      2,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 19,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      4
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      4
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      4
+     ],
+     "doneW": 0,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 20,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1,
+      1,
+      4,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 21,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      5,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      5,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 14,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      5,
+      1,
+      1,
+      13
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 22,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 21,
+     "gaps": [
+      21,
+      1,
+      3,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 25,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 21,
+     "gaps": [
+      21,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 31,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 1,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 21,
+     "gaps": [
+      21,
+      1,
+      3,
+      3,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 23,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 42,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 29,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1,
+      11,
+      4,
+      1,
+      11
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 24,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 25,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 20,
+     "gaps": [
+      20,
+      2
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 20,
+     "gaps": [
+      20,
+      2
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 20,
+     "gaps": [
+      20,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 26,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 27,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      7,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 27,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      7,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 28,
+     "reason": "mate",
+     "winner": "b",
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      7,
+      1,
+      3,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 27,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      2,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      2,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "p2nb": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      2,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 0
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 28,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 35,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 18,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      4,
+      1,
+      10,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      4,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 35,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 17,
+     "leadChanges": 1,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      4,
+      1,
+      10,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 29,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 30,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      2,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      2,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      2,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 0
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 31,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1,
+      1,
+      7,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 32,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      4,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      4,
+      3,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 33,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 31,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 18,
+     "gaps": [
+      18,
+      1,
+      1,
+      1,
+      9,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 18,
+     "gaps": [
+      18,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 18,
+     "gaps": [
+      18,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 34,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      3,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      3,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      3,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 35,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 31,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 24,
+     "gaps": [
+      24,
+      1,
+      3,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 24,
+     "gaps": [
+      24,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 24,
+     "gaps": [
+      24,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 36,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1,
+      4,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 37,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 16,
+     "gaps": [
+      16,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 16,
+     "gaps": [
+      16,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 16,
+     "gaps": [
+      16,
+      1,
+      1,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 38,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 3,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1,
+      1,
+      9,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 3,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 26,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 3,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1,
+      1,
+      9,
+      1,
+      6
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 39,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      5,
+      1,
+      3,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      5,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      5,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 40,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      6,
+      1,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      6
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      6
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 41,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 1,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      2,
+      1,
+      1,
+      1,
+      7
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 42,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      5,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      5,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      5,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 43,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 15,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      14
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 15,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      14
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      14,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 44,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      8
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      8
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 1,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      8,
+      1,
+      2,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 45,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      1,
+      9,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 46,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "p2nb": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2,
+      1,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 47,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      4,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 48,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      4,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      4,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      4,
+      1,
+      4,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 49,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1,
+      2,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 50,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 30,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 23,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      6,
+      1,
+      5,
+      1,
+      10
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      6,
+      1,
+      5,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 30,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 17,
+     "leadChanges": 1,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      6,
+      1,
+      5,
+      1,
+      10
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 51,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      2
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      2
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      2,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 52,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      1,
+      3,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      2,
+      1,
+      3
+     ],
+     "doneW": 0,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 53,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      4,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      4,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      4,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 54,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      3,
+      1,
+      8
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 55,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      5,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      5,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      5,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 56,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      4,
+      3,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      4,
+      3,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      4,
+      3,
+      2,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 57,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 58,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "easy",
+   "g": 59,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 16,
+     "gaps": [
+      16,
+      1,
+      1,
+      3,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 16,
+     "gaps": [
+      16,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 16,
+     "gaps": [
+      16,
+      1,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 0,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      7,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      7,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      7,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 1,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      7,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      7
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 48,
+     "reason": "cap",
+     "winner": null,
+     "captures": 8,
+     "checks": 2,
+     "matchPointPlies": 32,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      7,
+      1,
+      10,
+      1,
+      10,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 2,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 34,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 20,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      7,
+      1,
+      4,
+      1,
+      6
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      7,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      7,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 3,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 25,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      7,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      7,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      7,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 4,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      3,
+      2,
+      1,
+      2,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 5,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 32,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 15,
+     "leadChanges": 1,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      9,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 27,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 27,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 6,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 7,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 8,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      3,
+      1,
+      2,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      3,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      3,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 9,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 44,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 33,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      11,
+      1,
+      8,
+      1,
+      11
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 32,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 21,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      11,
+      1,
+      8
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 32,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 21,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      11,
+      1,
+      8
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 10,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 11,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 37,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 9,
+     "checks": 0,
+     "matchPointPlies": 20,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1,
+      1,
+      4,
+      1,
+      6,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 12,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 2,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 2,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      5,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 13,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 8,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 8,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 1,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1,
+      1,
+      5,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 14,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 48,
+     "reason": "cap",
+     "winner": null,
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 39,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      4,
+      1,
+      10,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 15,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      4,
+      3,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 2,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      4,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 16,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      9,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      9
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 17,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 27,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      3,
+      1,
+      4,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 18,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      1,
+      1,
+      11
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 19,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 8,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 8,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 4,
+     "matchPointPlies": 14,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1,
+      1,
+      6,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 20,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 40,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 9,
+     "checks": 1,
+     "matchPointPlies": 28,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1,
+      1,
+      8,
+      1,
+      12,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 21,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 8,
+     "checks": 2,
+     "matchPointPlies": 22,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1,
+      1,
+      13,
+      1,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 22,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      5,
+      1,
+      5,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 23,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 48,
+     "reason": "cap",
+     "winner": null,
+     "captures": 10,
+     "checks": 1,
+     "matchPointPlies": 38,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      11,
+      1,
+      5,
+      1,
+      7,
+      1,
+      9,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      11,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      11,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 24,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 3,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1,
+      1,
+      10
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 25,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1,
+      3,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 26,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 29,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 18,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      17
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 29,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 18,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      17
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 48,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 9,
+     "checks": 0,
+     "matchPointPlies": 37,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      17,
+      1,
+      1,
+      1,
+      13,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 27,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 48,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 2,
+     "matchPointPlies": 36,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1,
+      1,
+      14,
+      1,
+      18
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 28,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 35,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 23,
+     "gaps": [
+      23,
+      1,
+      11
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 35,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 23,
+     "gaps": [
+      23,
+      1,
+      11
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 47,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 23,
+     "gaps": [
+      23,
+      1,
+      11,
+      1,
+      9,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 29,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 38,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 15,
+     "leadChanges": 1,
+     "firstCapturePly": 22,
+     "gaps": [
+      22,
+      1,
+      3,
+      1,
+      6,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 26,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 22,
+     "gaps": [
+      22,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 26,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 22,
+     "gaps": [
+      22,
+      1,
+      3
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 30,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 9,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      2,
+      1,
+      8
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 31,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 8,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 8,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 26,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 8,
+     "checks": 3,
+     "matchPointPlies": 18,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      1,
+      1,
+      1,
+      8,
+      1,
+      1,
+      7
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 32,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 29,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 15,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      5,
+      1,
+      2,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      5,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      5,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 33,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 28,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 15,
+     "gaps": [
+      15,
+      1,
+      3,
+      1,
+      8
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 34,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 25,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 8,
+     "checks": 2,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1,
+      1,
+      5,
+      1,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 35,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "p2nb": {
+     "stopPly": 33,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 1,
+     "matchPointPlies": 22,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2,
+      1,
+      11,
+      1,
+      7
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 36,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      4,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 10,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      4
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      4,
+      1,
+      2,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 37,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 37,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 13,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      12,
+      1,
+      9,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 14,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      12,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 34,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 24,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      12,
+      1,
+      9,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 38,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 34,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 1,
+     "matchPointPlies": 21,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      10,
+      1,
+      2,
+      1,
+      6
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      10
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 24,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 11,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      10
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 39,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 29,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 16,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1,
+      1,
+      10,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 40,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 26,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 16,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5,
+      1,
+      8,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 41,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 10,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 10,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 31,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 6,
+     "checks": 2,
+     "matchPointPlies": 22,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      1,
+      1,
+      14,
+      6
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 42,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 9,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 14,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      1,
+      1,
+      12
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 43,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 44,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 29,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 15,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      4,
+      1,
+      10
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 45,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 46,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 36,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      15,
+      1,
+      19
+     ],
+     "doneW": 0,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 46,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 36,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      15,
+      1,
+      19
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 48,
+     "reason": "cap",
+     "winner": null,
+     "captures": 6,
+     "checks": 0,
+     "matchPointPlies": 39,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      15,
+      1,
+      19,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 46,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 41,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 2,
+     "matchPointPlies": 31,
+     "leadChanges": 1,
+     "firstCapturePly": 10,
+     "gaps": [
+      10,
+      1,
+      5,
+      1,
+      1,
+      3,
+      20
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 47,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 26,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 20,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1,
+      1,
+      18
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 48,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 18,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 14,
+     "gaps": [
+      14,
+      1,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 49,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      3,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 10,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      3,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 12,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 0,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 6,
+     "gaps": [
+      6,
+      3,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 50,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 7,
+     "checks": 3,
+     "matchPointPlies": 12,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1,
+      1,
+      8,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 51,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      4,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "p2nb": {
+     "stopPly": 16,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 52,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 4,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      3
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 8,
+     "checks": 2,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 7,
+     "gaps": [
+      7,
+      1,
+      3,
+      1,
+      1,
+      1,
+      4,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 53,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 20,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 8,
+     "leadChanges": 0,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      4,
+      1,
+      2
+     ],
+     "doneW": 1,
+     "doneB": 2
+    },
+    "pnb_x1": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 17,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 12,
+     "gaps": [
+      12,
+      1,
+      4
+     ],
+     "doneW": 2,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 54,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 25,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 8,
+     "checks": 2,
+     "matchPointPlies": 17,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      2,
+      1,
+      1,
+      1,
+      10,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 11,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 3,
+     "leadChanges": 1,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 14,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 6,
+     "checks": 2,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 8,
+     "gaps": [
+      8,
+      1,
+      2,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 55,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 7,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 2,
+     "matchPointPlies": 16,
+     "leadChanges": 0,
+     "firstCapturePly": 5,
+     "gaps": [
+      5,
+      1,
+      1,
+      1,
+      6,
+      1,
+      7
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 56,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      6,
+      1,
+      2,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 5,
+     "checks": 2,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      6,
+      1,
+      2,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 48,
+     "reason": "cap",
+     "winner": null,
+     "captures": 7,
+     "checks": 3,
+     "matchPointPlies": 27,
+     "leadChanges": 0,
+     "firstCapturePly": 13,
+     "gaps": [
+      13,
+      6,
+      1,
+      2,
+      1,
+      1,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 1
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 57,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 19,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 1,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 5,
+     "checks": 1,
+     "matchPointPlies": 5,
+     "leadChanges": 1,
+     "firstCapturePly": 17,
+     "gaps": [
+      17,
+      1,
+      1,
+      2,
+      1
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 58,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "pnb_x1": {
+     "stopPly": 13,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 2,
+     "checks": 0,
+     "matchPointPlies": 2,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2
+     ],
+     "doneW": 2,
+     "doneB": 0
+    },
+    "p2nb": {
+     "stopPly": 21,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 4,
+     "checks": 0,
+     "matchPointPlies": 10,
+     "leadChanges": 0,
+     "firstCapturePly": 11,
+     "gaps": [
+      11,
+      2,
+      1,
+      7
+     ],
+     "doneW": 2,
+     "doneB": 0
+    }
+   }
+  },
+  {
+   "level": "normal",
+   "g": 59,
+   "per": {
+    "pnr_x1": {
+     "stopPly": 23,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 8,
+     "checks": 0,
+     "matchPointPlies": 14,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      5,
+      1,
+      1,
+      1,
+      4,
+      1
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "pnb_x1": {
+     "stopPly": 15,
+     "reason": "contract",
+     "winner": "w",
+     "captures": 3,
+     "checks": 0,
+     "matchPointPlies": 6,
+     "leadChanges": 0,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      5
+     ],
+     "doneW": 2,
+     "doneB": 1
+    },
+    "p2nb": {
+     "stopPly": 22,
+     "reason": "contract",
+     "winner": "b",
+     "captures": 7,
+     "checks": 0,
+     "matchPointPlies": 7,
+     "leadChanges": 1,
+     "firstCapturePly": 9,
+     "gaps": [
+      9,
+      1,
+      5,
+      1,
+      1,
+      1,
+      4
+     ],
+     "doneW": 1,
+     "doneB": 2
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,225 @@
+{
+ "at": "2026-11-12T13:11:15.457Z",
+ "n": 60,
+ "note": "계약을 아는 AI(src/rules/ai.js contract), 판정 src/rules/contractGame.js, 고정 시드",
+ "aware": {
+  "easy:p2nb": {
+   "games": 60,
+   "reasons": {
+    "contract": 58,
+    "limit": 1,
+    "checkmate": 1
+   },
+   "white": 26,
+   "black": 33,
+   "draw": 1,
+   "whiteShareOfDecided": 0.441,
+   "plies": {
+    "median": 20,
+    "p90": 34
+   },
+   "captures": {
+    "median": 5,
+    "p90": 8,
+    "min": 3
+   },
+   "firstCapture": 9,
+   "matchPointPlies": {
+    "median": 5,
+    "p90": 22
+   },
+   "winGoals": {
+    "p+n": 37,
+    "p+b": 13,
+    "n+b": 8,
+    "-": 2
+   }
+  },
+  "easy:pnb": {
+   "games": 30,
+   "reasons": {
+    "contract": 26,
+    "checkmate": 1,
+    "limit": 3
+   },
+   "white": 13,
+   "black": 14,
+   "draw": 3,
+   "whiteShareOfDecided": 0.481,
+   "plies": {
+    "median": 20,
+    "p90": 48
+   },
+   "captures": {
+    "median": 5,
+    "p90": 9,
+    "min": 3
+   },
+   "firstCapture": 12,
+   "matchPointPlies": {
+    "median": 5,
+    "p90": 39
+   },
+   "winGoals": {
+    "p+n": 12,
+    "p+b": 12,
+    "-": 4,
+    "n+b": 2
+   }
+  },
+  "easy:pnr": {
+   "games": 30,
+   "reasons": {
+    "contract": 27,
+    "checkmate": 2,
+    "limit": 1
+   },
+   "white": 13,
+   "black": 16,
+   "draw": 1,
+   "whiteShareOfDecided": 0.448,
+   "plies": {
+    "median": 23,
+    "p90": 40
+   },
+   "captures": {
+    "median": 7,
+    "p90": 9,
+    "min": 3
+   },
+   "firstCapture": 10,
+   "matchPointPlies": {
+    "median": 13,
+    "p90": 35
+   },
+   "winGoals": {
+    "p+n": 24,
+    "-": 3,
+    "p+r": 3
+   }
+  },
+  "normal:p2nb": {
+   "games": 60,
+   "reasons": {
+    "contract": 60
+   },
+   "white": 40,
+   "black": 20,
+   "draw": 0,
+   "whiteShareOfDecided": 0.667,
+   "plies": {
+    "median": 19,
+    "p90": 25
+   },
+   "captures": {
+    "median": 5,
+    "p90": 7,
+    "min": 2
+   },
+   "firstCapture": 11,
+   "matchPointPlies": {
+    "median": 5,
+    "p90": 15
+   },
+   "winGoals": {
+    "p+n": 31,
+    "n+b": 20,
+    "p+b": 9
+   }
+  },
+  "normal:pnb": {
+   "games": 30,
+   "reasons": {
+    "contract": 30
+   },
+   "white": 18,
+   "black": 12,
+   "draw": 0,
+   "whiteShareOfDecided": 0.6,
+   "plies": {
+    "median": 13,
+    "p90": 24
+   },
+   "captures": {
+    "median": 3,
+    "p90": 5,
+    "min": 2
+   },
+   "firstCapture": 9,
+   "matchPointPlies": {
+    "median": 3,
+    "p90": 8
+   },
+   "winGoals": {
+    "p+b": 6,
+    "p+n": 22,
+    "n+b": 2
+   }
+  },
+  "normal:pnr": {
+   "games": 30,
+   "reasons": {
+    "contract": 29,
+    "limit": 1
+   },
+   "white": 20,
+   "black": 9,
+   "draw": 1,
+   "whiteShareOfDecided": 0.69,
+   "plies": {
+    "median": 13,
+    "p90": 23
+   },
+   "captures": {
+    "median": 4,
+    "p90": 6,
+    "min": 2
+   },
+   "firstCapture": 7,
+   "matchPointPlies": {
+    "median": 7,
+    "p90": 15
+   },
+   "winGoals": {
+    "p+n": 24,
+    "p+r": 5,
+    "-": 1
+   }
+  }
+ },
+ "awareVsPlain": {
+  "normal:p2nb": {
+   "games": 60,
+   "awareWin": 58,
+   "plainWin": 2,
+   "draws": 0,
+   "reasons": {
+    "contract": 60
+   },
+   "white": 30,
+   "black": 30,
+   "draw": 0,
+   "whiteShareOfDecided": 0.5,
+   "plies": {
+    "median": 16,
+    "p90": 25
+   },
+   "captures": {
+    "median": 5,
+    "p90": 6,
+    "min": 3
+   },
+   "firstCapture": 11,
+   "matchPointPlies": {
+    "median": 3,
+    "p90": 9
+   },
+   "winGoals": {
+    "n+b": 24,
+    "p+n": 32,
+    "p+b": 4
+   }
+  }
+ },
+ "seconds": 157
+}

@@ -1,0 +1,28 @@
+// 방장: 지금 상태를 보고 Nf3 → 손님 Nc6 을 기다렸다가 기권 → 손님의 「한 판 더」를 받아들인다.
+const fs = await import('node:fs/promises');
+const DIR = 'C:/Users/petbl/ego/online-1v1-20261107/';
+const task = await taskSpace('online 1v1 check');
+const page = task.page('p1');
+const ply = (n, t = 180000) => page.waitForFunction((n) => window.wizardChess.getHandBrainState().history.length >= n, n, { timeout: t });
+const out = {};
+out.state0 = await page.evaluate(() => ({ bar: document.querySelector('#online-bar')?.innerText, ply: window.wizardChess.getHandBrainState().history.length, panel: Boolean(document.querySelector('.online-panel')) }));
+await page.screenshot({ path: DIR + 'd1-host-after-guest-reload.png' });
+await page.waitForTimeout(1500);
+out.nf3 = await page.evaluate(() => window.wizardChess.executeChessMove(7, 6, 5, 5));
+out.sentNf3 = Date.now();
+await ply(4);
+out.gotNc6 = Date.now();
+await page.waitForTimeout(2500);
+await page.click('#online-resign', { label: 'Resign' });
+await page.click('#online-resign-yes', { label: 'Confirm resign' });
+await page.waitForTimeout(1500);
+out.endHost = await page.evaluate(() => document.querySelector('#online-end')?.innerText);
+await page.screenshot({ path: DIR + 'd2-host-resigned.png' });
+await page.waitForFunction(() => /한 판 더! 두기/.test(document.querySelector('#online-rematch')?.innerText || ''), undefined, { timeout: 180000 });
+await page.screenshot({ path: DIR + 'd3-host-rematch-ask.png' });
+await page.click('#online-rematch', { label: 'Accept rematch' });
+await page.waitForTimeout(3000);
+out.game2 = await page.evaluate(() => ({ bar: document.querySelector('#online-bar')?.innerText, color: window.wizardChess.getHandBrainState().playerColor, ply: window.wizardChess.getHandBrainState().history.length }));
+await page.screenshot({ path: DIR + 'd4-host-game2.png' });
+console.log(JSON.stringify(out));
+await fs.writeFile(DIR + 'result-07.json', JSON.stringify(out, null, 1));

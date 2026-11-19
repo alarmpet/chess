@@ -1,0 +1,91 @@
+{
+ "code": "BJ8GK3",
+ "rule": "랭크 판: AI 수·되감기 없음, 끝나기 전엔 새 판 없음. 점수 기록은 곧 열려요.",
+ "keysDiffer": true,
+ "before": {
+  "host": {
+   "ranked": "🏆 랭크",
+   "peer": "🟢 친구 연결됨",
+   "aiShown": null,
+   "sideShown": false,
+   "resetDisabled": true,
+   "bodyRanked": true,
+   "plies": 0,
+   "hasKey": true,
+   "end": null
+  },
+  "guest": {
+   "ranked": "🏆 랭크",
+   "peer": "🟢 친구 연결됨",
+   "aiShown": null,
+   "sideShown": false,
+   "resetDisabled": true,
+   "bodyRanked": true,
+   "plies": 0,
+   "hasKey": true,
+   "end": null
+  }
+ },
+ "afterClicks": {
+  "host": {
+   "ranked": "🏆 랭크",
+   "peer": "🟢 친구 연결됨",
+   "aiShown": null,
+   "sideShown": false,
+   "resetDisabled": true,
+   "bodyRanked": true,
+   "plies": 0,
+   "hasKey": true,
+   "end": null
+  },
+  "panelOpen": false
+ },
+ "mid": {
+  "host": {
+   "ranked": "🏆 랭크",
+   "peer": "🟢 친구 연결됨",
+   "aiShown": null,
+   "sideShown": false,
+   "resetDisabled": true,
+   "bodyRanked": true,
+   "plies": 1,
+   "hasKey": true,
+   "end": null
+  },
+  "guest": {
+   "ranked": "🏆 랭크",
+   "peer": "🟢 친구 연결됨",
+   "aiShown": null,
+   "sideShown": false,
+   "resetDisabled": true,
+   "bodyRanked": true,
+   "plies": 1,
+   "hasKey": true,
+   "end": null
+  }
+ },
+ "ended": {
+  "host": {
+   "ranked": "🏆 랭크",
+   "peer": "🟢 친구 연결됨",
+   "aiShown": null,
+   "sideShown": false,
+   "resetDisabled": false,
+   "bodyRanked": false,
+   "plies": 1,
+   "hasKey": true,
+   "end": "이겼어요 · 기권"
+  },
+  "guest": {
+   "ranked": "🏆 랭크",
+   "peer": "🟢 친구 연결됨",
+   "aiShown": null,
+   "sideShown": false,
+   "resetDisabled": false,
+   "bodyRanked": false,
+   "plies": 1,
+   "hasKey": true,
+   "end": "졌어요 · 기권"
+  }
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "state0": {
+  "bar": "👫 FXEHAT\n🟢 친구 연결됨\n졌어요 · 체크메이트\n🔁 한 판 더 (색 바꿔)\n나가기",
+  "panel": false,
+  "ply": 0
+ },
+ "after": {
+  "bar": "👫 FXEHAT\n🟢 친구 연결됨\n졌어요 · 체크메이트\n물어봤어요…\n나가기",
+  "color": "w",
+  "ply": 0
+ }
+}

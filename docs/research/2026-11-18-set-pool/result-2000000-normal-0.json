@@ -1,0 +1,86 @@
+{
+ "seed": 2000000,
+ "level": "normal",
+ "games": 100,
+ "rows": [
+  {
+   "id": "pn2b",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 1
+    },
+    {
+     "type": "n",
+     "count": 2
+    },
+    {
+     "type": "b",
+     "count": 1
+    }
+   ],
+   "games": 100,
+   "white": 58,
+   "black": 42,
+   "draw": 0,
+   "whiteShare": 0.58,
+   "reasons": {
+    "contract": 98,
+    "checkmate": 2
+   },
+   "contractShare": 0.98,
+   "plies": {
+    "median": 18,
+    "p90": 30
+   },
+   "captures": 5,
+   "use": [
+    0.98,
+    0.67,
+    0.35
+   ],
+   "sec": 182
+  },
+  {
+   "id": "j-p2",
+   "jackpot": true,
+   "goals": [
+    {
+     "type": "p",
+     "count": 2
+    },
+    {
+     "type": "p",
+     "count": 2
+    },
+    {
+     "type": "p",
+     "count": 2
+    }
+   ],
+   "games": 100,
+   "white": 42,
+   "black": 48,
+   "draw": 10,
+   "whiteShare": 0.467,
+   "reasons": {
+    "contract": 84,
+    "limit": 14,
+    "checkmate": 2
+   },
+   "contractShare": 0.84,
+   "plies": {
+    "median": 32,
+    "p90": 48
+   },
+   "captures": 11,
+   "use": [
+    1,
+    1,
+    0
+   ],
+   "sec": 241
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+const task=await taskSpace(77); const page=task.page('p1'); const fs=await import('node:fs/promises');
+await page.click('loc=role:button[name="고정 목록"]');
+await page.click('loc=role:button[name="처음부터"]');
+await page.click('loc=role:button[name="8배"]');
+await page.click('loc=role:button[name="밤 11시"]');
+const fixed=await page.evaluate(()=>document.querySelector('main').innerText.split('이걸 AI로')[0]);
+await page.click('loc=role:button[name="월드 스테이트"]');
+await page.click('loc=role:button[name="처음부터"]');
+await page.click('loc=role:button[name="수동"]');
+await page.click('loc=role:button[name="밤 11시"]');
+await page.click('loc=role:button[name="닫기"]');
+console.log(await page.screenshot({path:'D:/chess/docs/research/2026-11-11-slot-chess/quest-world.png'}));
+const world=await page.evaluate(()=>document.querySelector('main').innerText.split('이걸 AI로')[0]);
+await fs.writeFile('D:/chess/docs/research/2026-11-11-slot-chess/quest-test.json',JSON.stringify({fixed,world},null,2));
+console.log({fixed,world});
+await page.goto('https://game.bobthief.com/smart-object/play');
+console.log((await page.snapshot({scope:'full_page'})).split('heading').slice(1,7).join('heading'));

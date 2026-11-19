@@ -1,0 +1,246 @@
+{
+ "at": "2026-11-18T14:42:24.793Z",
+ "base": "http://localhost:3000/",
+ "rows": [
+  {
+   "item": "desk 아직 못 받음",
+   "want": "「판을 2번 끝내면」 (1/2) · 받기 단추 없음 · 🔨 깜빡이지 않음",
+   "got": {
+    "wait": "판을 2번 끝내면 받을 수 있어요(1/2).",
+    "claim": false,
+    "glow": false
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 공방 받기",
+   "want": "🔨 빛남 · 안내 줄 · 받으면 공방(빈 칸) · 곡물 3 · 도토리 그대로 · 섬에 그려짐",
+   "got": {
+    "offer": {
+     "glow": true,
+     "line": "🔨 공방을 무료로 받을 수 있어요. 위의 🔨 를 눌러 보세요."
+    },
+    "workshop": {
+     "sq": "e2",
+     "work": 0,
+     "parts": 0,
+     "made": 0,
+     "crafted": 0
+    },
+    "grain": 3,
+    "coins": 40,
+    "drawn": {
+     "shown": true,
+     "x": 516,
+     "y": 447,
+     "children": 15
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 공방을 눌러 열기",
+   "want": "섬의 공방을 누르면 공방 창",
+   "got": {
+    "spot": {
+     "shown": true,
+     "x": 516,
+     "y": 447,
+     "children": 15
+    },
+    "tapped": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 판 끝 진도·부품",
+   "want": "진도 +1일 → 곡물 1 로 부품 2 · 소식 줄 「공방 진도 +1일 · 부품 +2」 · 창의 막대가 같은 값",
+   "got": {
+    "workshop": {
+     "sq": "e2",
+     "work": 0,
+     "parts": 2,
+     "made": 2,
+     "crafted": 0
+    },
+    "line": "🔨 공방 진도 +1일 · 부품 +2",
+    "meters": {
+     "work": "0일",
+     "grain": "2",
+     "parts": "2/24"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 곡물 사기",
+   "want": "도토리 −3 · 곡물 +1",
+   "got": {
+    "grain": [
+     2,
+     3
+    ],
+    "coins": [
+     70,
+     67
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 골라 만들기",
+   "want": "분수(부품 12)는 꺼짐 · 등불(부품 8)은 켜짐 · 왕관 동상은 목록에 없음 · 만들면 도토리 −10 · 부품 −8 · 보관함 등불 1 · 놓을 칸 안내",
+   "got": {
+    "states": {
+     "fountain": true,
+     "lantern": false,
+     "statue": false,
+     "why": "부품 4 모자람"
+    },
+    "coins": 190,
+    "parts": 0,
+    "stash": {
+     "lantern": 1
+    },
+    "note": "등불을 만들었어요! 놓을 칸을 누르세요.그만두기"
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 계약전 결과 줄",
+   "want": "「🌰 도토리 +18 · 🔨 공방 진도 +0.5일」 · 진도 0.5 → 1 → 곡물 1 로 부품 2",
+   "got": {
+    "pay": "🌰 도토리 +18 · 🔨 공방 진도 +0.5일",
+    "workshop": {
+     "sq": "e2",
+     "work": 0,
+     "parts": 2,
+     "made": 2,
+     "crafted": 0
+    },
+    "grain": 1
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 아직 못 받음",
+   "want": "「판을 2번 끝내면」 (1/2) · 받기 단추 없음 · 🔨 깜빡이지 않음",
+   "got": {
+    "wait": "판을 2번 끝내면 받을 수 있어요(1/2).",
+    "claim": false,
+    "glow": false
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 공방 받기",
+   "want": "🔨 빛남 · 안내 줄 · 받으면 공방(빈 칸) · 곡물 3 · 도토리 그대로 · 섬에 그려짐",
+   "got": {
+    "offer": {
+     "glow": true,
+     "line": "🔨 공방을 무료로 받을 수 있어요. 위의 🔨 를 눌러 보세요."
+    },
+    "workshop": {
+     "sq": "e2",
+     "work": 0,
+     "parts": 0,
+     "made": 0,
+     "crafted": 0
+    },
+    "grain": 3,
+    "coins": 40,
+    "drawn": {
+     "shown": true,
+     "x": 148,
+     "y": 552,
+     "children": 15
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 공방을 눌러 열기",
+   "want": "섬의 공방을 누르면 공방 창",
+   "got": {
+    "spot": {
+     "shown": true,
+     "x": 148,
+     "y": 552,
+     "children": 15
+    },
+    "tapped": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 판 끝 진도·부품",
+   "want": "진도 +1일 → 곡물 1 로 부품 2 · 소식 줄 「공방 진도 +1일 · 부품 +2」 · 창의 막대가 같은 값",
+   "got": {
+    "workshop": {
+     "sq": "e2",
+     "work": 0,
+     "parts": 2,
+     "made": 2,
+     "crafted": 0
+    },
+    "line": "🔨 공방 진도 +1일 · 부품 +2",
+    "meters": {
+     "work": "0일",
+     "grain": "2",
+     "parts": "2/24"
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 곡물 사기",
+   "want": "도토리 −3 · 곡물 +1",
+   "got": {
+    "grain": [
+     2,
+     3
+    ],
+    "coins": [
+     70,
+     67
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 골라 만들기",
+   "want": "분수(부품 12)는 꺼짐 · 등불(부품 8)은 켜짐 · 왕관 동상은 목록에 없음 · 만들면 도토리 −10 · 부품 −8 · 보관함 등불 1 · 놓을 칸 안내",
+   "got": {
+    "states": {
+     "fountain": true,
+     "lantern": false,
+     "statue": false,
+     "why": "부품 4 모자람"
+    },
+    "coins": 190,
+    "parts": 0,
+    "stash": {
+     "lantern": 1
+    },
+    "note": "등불을 만들었어요! 놓을 칸을 누르세요.그만두기"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 계약전 결과 줄",
+   "want": "「🌰 도토리 +18 · 🔨 공방 진도 +0.5일」 · 진도 0.5 → 1 → 곡물 1 로 부품 2",
+   "got": {
+    "pay": "🌰 도토리 +18 · 🔨 공방 진도 +0.5일",
+    "workshop": {
+     "sq": "e2",
+     "work": 0,
+     "parts": 2,
+     "made": 2,
+     "crafted": 0
+    },
+    "grain": 1
+   },
+   "ok": true
+  }
+ ]
+}

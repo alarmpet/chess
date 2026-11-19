@@ -1,0 +1,10 @@
+const task=await taskSpace(77); const page=task.page('p1');const fs=await import('node:fs/promises');
+await page.evaluate(()=>[...document.querySelectorAll('main button')].find(b=>b.innerText.trim()==='전부 끄기').click());
+await page.waitForFunction(()=>document.querySelector('main')?.innerText.includes('켠 효과 0 / 11'));
+await fs.writeFile('D:/chess/docs/research/2026-11-11-slot-chess/juice-off.txt',await page.evaluate(()=>document.querySelector('main').innerText.split('이걸 AI로')[0]));
+await page.evaluate(()=>[...document.querySelectorAll('main button')].find(b=>b.innerText.trim()==='전부 켜기').click());
+await page.waitForFunction(()=>document.querySelector('main')?.innerText.includes('켠 효과 11 / 11'));
+await page.click('button[aria-label="닫기"]');
+console.log(await page.screenshot({path:'D:/chess/docs/research/2026-11-11-slot-chess/juice-on.png'}));
+await page.goto('https://game.bobthief.com/win-chance/play');
+console.log(await page.evaluate(()=>({text:document.querySelector('main').innerText.split('이걸 AI로')[0],controls:[...document.querySelectorAll('main button,main input')].map(b=>({tag:b.tagName,text:b.innerText,label:b.getAttribute('aria-label'),role:b.getAttribute('role'),value:b.value}))})));

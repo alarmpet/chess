@@ -1,0 +1,60 @@
+{
+ "runs": 60,
+ "mode": "decor",
+ "profiles": [
+  {
+   "label": "strong",
+   "done": {
+    "median": 19,
+    "p90": 21,
+    "unfinished": 0
+   },
+   "guestShare": 0.088,
+   "guestPerGame": 4,
+   "at20": {
+    "parts": 0,
+    "crafted": 0,
+    "score": 190,
+    "shelf": 4,
+    "props": 8,
+    "guestKinds": 3
+   }
+  },
+  {
+   "label": "even",
+   "done": {
+    "median": 21,
+    "p90": 22,
+    "unfinished": 0
+   },
+   "guestShare": 0.099,
+   "guestPerGame": 3.93,
+   "at20": {
+    "parts": 0,
+    "crafted": 0,
+    "score": 170,
+    "shelf": 4,
+    "props": 5,
+    "guestKinds": 3
+   }
+  },
+  {
+   "label": "weak",
+   "done": {
+    "median": 22,
+    "p90": 24,
+    "unfinished": 0
+   },
+   "guestShare": 0.101,
+   "guestPerGame": 3.84,
+   "at20": {
+    "parts": 0,
+    "crafted": 0,
+    "score": 155,
+    "shelf": 3,
+    "props": 5,
+    "guestKinds": 3
+   }
+  }
+ ]
+}

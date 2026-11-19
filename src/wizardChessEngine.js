@@ -2,21 +2,33 @@ import * as THREE_NS from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getCurrentLang, getTranslations, subscribeLanguage } from './i18n';
-import { SanctuaryGarden3D } from './farm3D';
-import {
-  createBeastMesh,
-  updateBeastTokens,
-  getBeastInfo,
-  getRuneTexture,
-  createHighEndBeastMaterials,
-  setupBeastPiece,
-  attachBeastGuardianTotem
-} from './beastModels';
+import { fetchPackManifest, resolveClipName, toAttackProfile, normalizePromotion, modelNameFor, REQUIRED_CLIP_ROLES, OPTIONAL_CLIP_ROLES, ITEM_SLOTS, stageIds, stageModelFor, slotsFor, sanitizeCosmetics, capStage, sanitizeRivalProgress, nextRivalReward, trophyRole, rivalShowcase, rivalWearer } from './packs/packManifest.js';
+import { Referee, TYPE_FROM_LETTER, squareRC } from './rules/referee.js';
+import { chooseMove, positionKey } from './rules/ai.js';
+import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry } from './rules/resume.js';
+import { sfx } from './audio/sfx.js';
+import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
+import { SIGNATURE_WORD, createSignatureFx } from './fx/signatureFx.js';
+import { contractById, contractProgress, contractStage, isJackpot, openGoals, pickContract } from './rules/contractSets.js';
+import { CONTRACT_PLY_LIMIT, CONTRACT_STORE_KEY, RUNG_FULL, RUNG_NAMES, addContractResult, contractAiState, contractCoins, contractVerdict, sanitizeContractStore } from './rules/contractGame.js';
+import { dangerSquares, finishersAt, oopsCheck } from './rules/contractGuard.js';
+import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
+import { ISLAND_LOOKS, ISLAND_SKY, PALETTES, coastProfile, islandHeightmap } from './village/islandNoise.js';
+import { createHorizonIsland } from './fx/horizonIsland.js';
+import { createContactShadows } from './fx/contactShadows.js';
+import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
+import { createPostFx } from './fx/postFx.js';
+import { approach, dayLook, dayPhase, tideLevel } from './fx/dayCycle.js';
+import { fxSettings } from './fx/settings.js';
+import { kindAllows, lockKind } from './cards/teamPlay.js';
+import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
+import { attackStyle } from './fx/attackStyle.js';
+import { ROAR_REACH, ROAR_SEC, countPawnTrades, isMirror, mirrorPose, momentumSteps, pawnComboPitch, roarSway } from './fx/captureSpecial.js';
+import { REACTION_TOTAL, REACT_SEC, reactionPose } from './fx/captureReaction.js';
+import { CAMERA_LEAN, EVENT_FX, GLOW_COLOR, IMPACT_TIERS, SLOW_FACTOR, UPSET_WORD, impactTier, isUpset, screenFlash } from './fx/impactTier.js';
 
 /** @type {any} */
 const THREE = THREE_NS;
@@ -72,7 +84,6 @@ export function initWizardChess() {
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const sanctuaryGarden = new SanctuaryGarden3D(scene);
     scene.background = new THREE.Color(0x070a12);
     scene.fog = new THREE.FogExp2(0x080b14, 0.015);
 
@@ -113,7 +124,7 @@ export function initWizardChess() {
     }
 
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.22, 65);
-    camera.position.set(0, 2.22, 2.72);
+    camera.position.set(0, 3.0, 3.1);
 
     const orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
@@ -125,28 +136,22 @@ export function initWizardChess() {
     orbitControls.target.set(0, 0.85, -0.15);
     orbitControls.update();
 
-    // =========================================================================
-    // Cinematic Post-Processing: UnrealBloomPass + OutputPass
-    // =========================================================================
-    let composer = null;
-    try {
-      if (typeof window !== 'undefined' && !isAutomatedTest) {
-        const renderPass = new RenderPass(scene, camera);
-        const bloomPass = new UnrealBloomPass(
-          new THREE.Vector2(window.innerWidth, window.innerHeight),
-          0.58, // ethereal bloom strength
-          0.35, // bloom radius
-          0.82  // threshold for emissive runes and gold highlights
-        );
-        const outputPass = new OutputPass();
-        composer = new EffectComposer(renderer);
-        composer.addPass(renderPass);
-        composer.addPass(bloomPass);
-        composer.addPass(outputPass);
-      }
-    } catch (e) {
-      console.warn('Post-processing EffectComposer not available, using standard renderer:', e);
-      composer = null;
+    // 계층 렌더 실험(①)과 GPU 시간 탐침 — src/fx/layeredRender.js. 기본은 꺼짐, `?layers=1&hz=12` 또는 wizardChess.setLayered 로 켠다.
+    const layered = createLayeredRender(renderer, scene, camera, { staticRoots: () => [biomeGroup, boardGroup, scene.getObjectByName('cathedral')] });
+    const gpuTimer = createGpuTimer(renderer);
+    // 화면 보정 한 장(WG-P1, 11-19) — src/fx/postFx.js. 설정 「화면 보정」(기본 켬). 시험: ?post=0|1 · ?postaa=4(FXAA 대신 MSAA 4배).
+    // 계단 지우기는 FXAA 가 기본이다: 내장 그래픽(Intel UHD)에서 MSAA 렌더 타깃은 데스크 GPU 21.7 → 38.0ms, FXAA 는 20.3ms(docs/qa/2026-11-19-post-fx).
+    const postFx = createPostFx(renderer, scene, camera, { msaa: 0 });
+    {
+      const q = new URLSearchParams(window.location.search);
+      if (q.get('layers') === '1') layered.setEnabled(true, Number(q.get('hz') ?? 12));
+      postFx.setEnabled(q.get('post') === '0' ? false : q.get('post') === '1' ? true : fxSettings().post !== false);
+      if (q.get('postaa')) postFx.setSamples(Number(q.get('postaa')));
+    }
+    /** 한 프레임을 화면에 그린다. 계층 렌더 실험이 켜져 있으면 그쪽(보정 없음), 아니면 화면 보정을 거친다. */
+    function drawFrame(time = clock.elapsedTime) {
+      if (layered.isEnabled()) layered.render();
+      else postFx.render(time);
     }
 
     // =========================================================================
@@ -869,35 +874,407 @@ export function initWizardChess() {
     scene.add(impactFlashLight);
 
     // =========================================================================
-    // High-End PBR Materials for White & Black Sculpted 3D Pieces
+    // Materials for White & Black Sculpted Stone Chess Pieces
     // =========================================================================
-    const {
-      whitePieceMat,
-      goldTrimMat,
-      forgedSteelMat,
-      blackPieceMat,
-      blackGoldTrimMat,
-      blackSteelMat
-    } = createHighEndBeastMaterials();
+    const whitePieceMat = new THREE.MeshStandardMaterial({
+      color: 0xe6dfd0,
+      roughness: 0.34,
+      metalness: 0.06
+    });
+
+    const blackPieceMat = new THREE.MeshStandardMaterial({
+      color: 0x222630,
+      roughness: 0.28,
+      metalness: 0.24
+    });
+
+    const goldTrimMat = new THREE.MeshStandardMaterial({
+      color: 0xd4af37,
+      roughness: 0.26,
+      metalness: 0.86
+    });
+
+    const forgedSteelMat = new THREE.MeshStandardMaterial({
+      color: 0xdce4ee,
+      roughness: 0.20,
+      metalness: 0.88,
+      emissive: 0x222832,
+      emissiveIntensity: 0.25
+    });
 
     // =========================================================================
     // Asset Loading (Cathedral GLB + 12 Rigged Piece GLBs)
     // =========================================================================
     const gltfLoader = new GLTFLoader();
     const pieceTemplates = {};
+    // Active pack manifest (PLAN §4.3). Loaded in loadAllAssets(); `?pack=<id>` selects one.
+    let activePack = null;
+    // Default pack. The cathedral statues stay available via `?pack=cathedral`.
+    const DEFAULT_PACK_ID = 'legend';
+    const FALLBACK_PACK_ID = 'cathedral';
+    function resolvePackId() {
+      try {
+        const q = new URLSearchParams(window.location.search).get('pack');
+        if (q && /^[a-z0-9_-]+$/i.test(q)) return q;
+      } catch (e) {}
+      return DEFAULT_PACK_ID;
+    }
     const activeMixers = [];
+    // Appearance (PLAN §14.2 · §14.3, 2026-10-29): a stage per side and role, plus non-weapon trinkets on bone
+    // sockets. Looks only — the referee never sees any of it. Saved per browser; loaded lazily per stage.
+    const COSMETICS_KEY = 'wildcrown.cosmetics.v1';
+    let cosmetics = { w: {}, b: {} };
+    let assetApi = null;            // { buildTemplate, loadGltfModel, base } — set once the pack has loaded
+    const itemTemplates = {};
+    function loadSavedCosmetics() {
+      try { return JSON.parse(window.localStorage.getItem(COSMETICS_KEY) || 'null'); } catch (e) { return null; }
+    }
+    function saveCosmetics() {
+      try { window.localStorage.setItem(COSMETICS_KEY, JSON.stringify(cosmetics)); } catch (e) {}
+    }
+
+    // Rivals (prototype, 2026-10-30): AI opponents dressed in trinkets. A checkmate over one earns its next trinket and
+    // nobody loses anything. Progress is local only — it proves the loop, it is not a ranked reward (PLAN §12.6).
+    const RIVALS_KEY = 'wildcrown.rivals.v1';
+    let rivalProgress = { unlocked: [], wins: {} };
+    let activeRivalId = null;
+    let rivalPaid = false;          // one reward per game
+    let entranceDrops = [];         // pieces still falling in a rival's entrance (desire plan D4)
+    let entranceT = 0;
+    let lastTrophy = null;
+    let lastMoverType = null;
+    let gameReported = false;       // the village is paid once per finished game
+    let gameId = Date.now() >>> 0;  // changes with every new game; cards use it to seed their rolls
+    let renderPaused = false;       // the village screen draws its own scene on top
+    let divePose = null;            // where the camera was before the dive to the village
+    let slotStages = {};            // start square → look stage earned in the village, e.g. { w_e2: 'grown' }
+    function slotRole(id) {
+      if (id[3] === '2' || id[3] === '7') return 'pawn';
+      return { a: 'rook', b: 'knight', c: 'bishop', d: 'queen', e: 'king', f: 'bishop', g: 'knight', h: 'rook' }[id[2]];
+    }
+    function loadRivalProgress() {
+      try { return JSON.parse(window.localStorage.getItem(RIVALS_KEY) || 'null'); } catch (e) { return null; }
+    }
+    function saveRivalProgress() {
+      try { window.localStorage.setItem(RIVALS_KEY, JSON.stringify(rivalProgress)); } catch (e) {}
+    }
+    // A piece standing on its own start square at set-up is that individual. Promotions never land on one of these
+    // for their own side, so a promoted piece keeps the role look.
+    function slotAt(color, type, r, c) {
+      const rank = 8 - r;
+      if (color === 'w' ? rank > 2 : rank < 7) return null;
+      if ((rank === 2 || rank === 7) !== (type === 'pawn')) return null;
+      return `${color}_${'abcdefgh'[c]}${rank}`;
+    }
+    function reportGameEnd(result, extra = {}) {
+      if (puzzle) { if (result === 'win') puzzleSolved(); return; }   // 연습: 기록·사다리·정산에 닿지 않는다
+      saveResume();
+      if (gameReported || gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
+      gameReported = true;
+      if (contract) {
+        // 계약전(SC-1): 결과를 전용 기록에만 남긴다. 일반 판의 실력 점수·마을 정산(gamefinished)에는 섞지 않는다(§3.1).
+        // 카드 주머니는 준다(11-18): 카드 층이 contractfinished 를 듣고 도감에 넣는다. 판 수는 올리지 않는다.
+        const reason = extra.reason || (extra.resigned ? 'resign' : 'other');
+        const plies = referee.history().length;
+        const rungBefore = contractStore.rung;
+        contractStore = addContractResult(contractStore, { set: contract.id, result, reason, plies });
+        rungNote = contractStore.rung > rungBefore ? `다음 상대는 한 단계 위 「${RUNG_NAMES[contractStore.rung]}」이에요.` : contractStore.rung < rungBefore ? `다음 상대는 「${RUNG_NAMES[contractStore.rung]}」로 내려와요.` : '';
+        try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* 저장이 막히면 기록만 잃는다 */ }
+        lastContractEnd = { gameId, set: contract.id, result, reason, plies, coins: contractCoins(result, reason, contract.id), jackpot: isJackpot(contract) };
+        sfx.play(result === 'win' ? 'stingWin' : result === 'loss' ? 'stingLose' : 'draw', 0.25);
+        // 놓친 왕관(IR-3): 진 판에서 실제로 지나친 결정타가 있을 때만 다시 보기를 권한다.
+        try { missedOffer = result === 'loss' && puzzleLib ? puzzleLib.missedCrown(contract.id, referee.history(), playerColor) : null; } catch (e) { missedOffer = null; }
+        // 받는 쪽(App)이 마을을 정산하며 reply 에 공방 진도를 적어 준다(WS-1) — 결과 상자에 한 줄로 쓴다.
+        const reply = {};
+        try { window.dispatchEvent(new CustomEvent('contractfinished', { detail: { ...lastContractEnd, color: playerColor, w: contractState?.w, b: contractState?.b, reply } })); } catch (e) {}
+        lastContractEnd.work = reply.work || 0;
+        return;
+      }
+      const detail = { moves: referee.history(), color: playerColor, result, rivalId: activeRivalId, gameId, ...extra };
+      try { window.dispatchEvent(new CustomEvent('gamefinished', { detail })); } catch (e) {}
+    }
+    // 자유 대국(라이벌 없음)의 AI 세기. 화면 쪽(RivalLadder.tsx)이 판 수에 따라 정한다 — 판 중에는 바뀌지 않는다.
+    // DR-M1: 7단계(src/rules/strength.js) — 탐색 깊이 · 실수 · 사람 같은 못 보기(blind).
+    let freePlay = { search: 'normal', mistake: undefined, stage: 'normal', blind: 0, step: null };
+    function setFreePlay(next) {
+      if (!next || !['easy', 'normal', 'hard'].includes(next.search)) return false;
+      freePlay = {
+        search: next.search, mistake: typeof next.mistake === 'number' ? next.mistake : undefined, stage: next.stage || next.search,
+        blind: typeof next.blind === 'number' ? Math.max(0, Math.min(1, next.blind)) : 0, step: Number.isFinite(next.step) ? next.step : null
+      };
+      return true;
+    }
+    function activeRival() {
+      return activeRivalId ? (activePack?.rivals || []).find((r) => r.id === activeRivalId) || null : null;
+    }
+    function rivalColor() {
+      return playerColor === 'b' ? 'w' : 'b';
+    }
+    // Packs without rivals keep every item open.
+    function unlockedItems() {
+      return activePack?.rivals?.length ? rivalProgress.unlocked : null;
+    }
+    // What a piece wears right now: the rival's outfit on its side, the player's saved look otherwise.
+    function lookFor(color, type) {
+      const rival = activeRival();
+      if (rival && color === rivalColor()) {
+        return { stage: stageIds(activePack)[0], ...(rival.wear?.[type] || {}) };
+      }
+      const look = cosmetics?.[color]?.[type];
+      return look && { ...look, stage: capStage(stageIds(activePack), look.stage, stageCaps()[color]?.[type]) };
+    }
+    // How far the appearance panel opens for each side and role: the most grown piece of that role (desire plan D1).
+    function stageCaps() {
+      const ids = stageIds(activePack);
+      const caps = { w: {}, b: {} };
+      for (const [slot, stage] of Object.entries(slotStages)) {
+        const role = slotRole(slot);
+        if (!caps[slot[0]] || !role) continue;
+        if (ids.indexOf(stage) > ids.indexOf(caps[slot[0]][role])) caps[slot[0]][role] = stage;
+      }
+      return caps;
+    }
     const shatterDebris = [];
+    let islandCoastKey = '';      // 절차적 섬(PI-3): 지금 판 둘레가 따르는 섬
+    // 해안선을 그 섬으로. 같은 섬이면 아무것도 안 한다. 바다 생물이 이미 놓였으면 새 해안을 따라 다시 놓는다.
+    function publicApiCoast(theme, seed = 0) {
+      const key = `${theme}:${seed}`;
+      if (key === islandCoastKey || !seaBiome?.ocean?.setCoast) return islandCoastKey;
+      islandCoastKey = key;
+      const map = theme ? islandHeightmap(theme, { size: 48, playerSeed: seed }) : null;
+      seaBiome.ocean.setCoast(map ? coastProfile(map) : null);
+      // 모래와 얕은 바다도 그 섬의 색표 쪽으로(60%). 해안선만 바꿨을 때 플레이어 카메라에서는 섬이 구별되지 않았다
+      // (Sonnet 블라인드 짝짓기 0/7, 2026-11-17) — 판 둘레는 얇은 띠로만 보인다.
+      const f = seaBiome.ocean.floor;
+      const wv = seaBiome.ocean.water;
+      const sk = seaBiome.ocean.sky;
+      coastBaseColors ||= { sand: f.uSand.value.clone(), lagoon: f.uLagoon.value.clone(), shallow: wv.uShallow.value.clone(), deep: wv.uDeep.value.clone(), floor: f.uDeep.value.clone(), horizon: wv.uHorizon.value.clone(), zenith: sk ? sk.uZenith.value.clone() : null };
+      const pal = PALETTES[ISLAND_LOOKS[theme]?.palette];
+      const tone = (base, hex, k = 0.6) => (hex ? base.clone().lerp(new THREE.Color(hex), k) : base.clone());
+      f.uSand.value.copy(tone(coastBaseColors.sand, pal?.[2]));
+      f.uLagoon.value.copy(tone(coastBaseColors.lagoon, pal?.[1]));
+      wv.uShallow.value.copy(tone(coastBaseColors.shallow, pal?.[1]));
+      // 하늘 빛(손질 2차): 하늘 꼭대기 45%, 수평선 25% — 판 화면에서 가장 넓게 보이는 면이다. 해초 섬은 처음 모습 그대로.
+      const skyHex = ISLAND_SKY[theme] || null;
+      wv.uHorizon.value.copy(tone(coastBaseColors.horizon, skyHex, 0.25));   // 하늘 구의 수평선과 같은 색 객체다
+      // 깊은 바다도 그 빛 쪽으로 35% — 플레이어 카메라에서는 하늘이 안 보이고 화면 위쪽 띠와 양옆이 거의 다 바다다.
+      wv.uDeep.value.copy(tone(coastBaseColors.deep, skyHex, 0.35));
+      f.uDeep.value.copy(tone(coastBaseColors.floor, skyHex, 0.35));
+      if (sk && coastBaseColors.zenith) sk.uZenith.value.copy(tone(coastBaseColors.zenith, skyHex, 0.45));
+      // 수평선의 섬(손질 1차): 그 섬의 높이 지도를 판 너머 바다 건너에 세운다.
+      horizonIsland ||= createHorizonIsland(biomeGroup, { waterY: seaBiome.ocean.waterY });
+      horizonIsland.set(map, ISLAND_LOOKS[theme]?.palette);
+      stageBase = null;     // 매치 포인트 무대가 새 색에서 한 톤 낮추게(옛 색을 붙들고 있으면 섬 색을 덮어쓴다)
+      // 바다 생물이 이미 놓였으면(게임 중에 섬을 옮김) 새 해안을 따라 다시 놓는다
+      seaBiome.repopulate?.().then((did) => { if (did) { renderer.shadowMap.needsUpdate = true; layered.markDirty(); } });
+      layered.markDirty();
+      return islandCoastKey;
+    }
+    let horizonIsland = null;
+    let coastBaseColors = null;
+    const impactFx = createImpactFx(scene);
+    // 겹친 타격 불빛(GX-3): 늦게 받는다 — 받기 전의 잡기는 예전 효과만 난다.
+    let hitGlow = null;
+    import('./fx/hitGlow.js').then((m) => { hitGlow = m.createHitGlow(scene, { square: BOARD_SQ_SIZE }); }).catch(() => {});
+    // 화면 가장자리 번쩍임(GX-2): 사건의 색으로 한 번 물든다. CSS 한 겹이라 드로우콜이 없다. 「화면 흔들림」을 끄면 같이 꺼진다.
+    const hitFlashEl = document.createElement('div');
+    hitFlashEl.id = 'hit-flash';
+    document.getElementById('canvas-container')?.appendChild(hitFlashEl);
+    let lastFlash = null;
+    let flashCount = 0;
+    let hitFxSlow = 1;      // 확인용: 불빛·번쩍임을 느리게 돌려 캡처로 모양을 본다(debugHitFx({ slow }))
+    function flashScreen(kind, opts) {
+      const f = screenFlash(kind, opts);
+      if (!f || !shakeAllowed()) return;
+      flashCount += 1;
+      lastFlash = { kind, ...f, n: flashCount };
+      hitFlashEl.style.setProperty('--hit-rgb', f.rgb);
+      hitFlashEl.animate?.([{ opacity: f.alpha }, { opacity: 0 }], { duration: f.ms / hitFxSlow, easing: 'ease-out' });
+    }
+    // 내게 좋은 일인가: 한 사람이 AI 와 둘 때만 편이 있다(구경·둘이 두기는 null).
+    const mineOf = (sideColor) => (gameMode === 'single' && (playerColor === 'w' || playerColor === 'b') ? sideColor === playerColor : null);
+    // 사건 꾸러미(GX-1): 표(EVENT_FX) 한 줄이 별 뭉치·고리·낱말·번쩍임·겹친 불빛을 정한다.
+    function playEvent(kind, ground, sideColor) {
+      const e = EVENT_FX[kind];
+      if (!e) return;
+      if (e.burst) impactFx.burst(ground, e.burst[0], e.burst[1]);
+      if (e.ring) impactFx.ring(ground, e.ring);
+      impactFx.label(ground, e.word, e.wordSize);
+      if (e.glow) hitGlow?.hit(ground, null, e.glow, GLOW_COLOR[sideColor] || GLOW_COLOR.w);
+      flashScreen(kind, { mine: mineOf(sideColor) });
+    }
+    // Signature captures (DY-1): each animal takes in its own way, alongside the impact and without changing its timing.
+    const signatureFx = createSignatureFx(scene, impactFx, { surfaceY: BOARD_SURFACE_Y, square: BOARD_SQ_SIZE });
+    // 소라 릴 (슬롯 체스 PP-1): 판 시작에 이번 판 계약 목표 셋을 공개한다. 시험 스위치(?lab=contract) 뒤에서만 돈다 —
+    // 계약으로 판을 끝내는 규칙과 계약을 아는 AI 가 아직 없다(SC-1).
+    // 릴 모듈은 첫 화면 묶음에 넣지 않는다(번들 상한) — 시험 스위치가 켜질 때 받아 온다.
+    let reelLib = null;           // src/fx/shellReel.js — 파도타기 곡선만 쓴다
+    let shellReel = null;         // 왕관 슬롯머신(src/fx/slotMachine.js, 11-18). 이름은 예전 소라 릴에서 왔다
+    let aiHeldBySlot = false;     // 슬롯머신이 떠 있어 미뤄 둔 AI 의 첫 수
+    function loadShellReel() {
+      if (shellReel) return Promise.resolve(shellReel);
+      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js'), import('./fx/contractHud.js'), import('./fx/crownGems.js'), import('./rules/crownPuzzles.js'), import('./rules/crownPuzzleData.js'), import('./fx/puzzleBar.js'), import('./fx/slotMachine.js')]).then(([lib, tagLib, hudLib, gemsLib, pzLib, pzData, barLib, slotLib]) => {
+        puzzleLib = pzLib;
+        puzzleData = pzData.CROWN_PUZZLES;
+        puzzleBar = puzzleBar || barLib.createPuzzleBar({ onStart: () => startPractice(0), onDismiss: () => setPracticeDone(), onNext: () => nextPuzzle(), onQuit: () => quitPuzzle() });
+        gemLib = gemsLib;
+        crownGems = crownGems || gemsLib.createCrownGems(scene, { square: BOARD_SQ_SIZE });
+        reelLib = lib;
+        shellReel = shellReel || slotLib.createSlotMachine({ sound: (name, pitch = 1) => sfx.play(name, 0, pitch) });
+        bountyTags = bountyTags || tagLib.createBountyTags(scene, { square: BOARD_SQ_SIZE });
+        contractHud = contractHud || hudLib.createContractHud();
+        return shellReel;
+      });
+    }
+    // 왕관 계약전이 기본이다(HK-2, 2026-11-18). 메뉴에서 끄면(저장 on=false) 보통 체스. 주소의 ?lab=contract 는 늘 켜고 ?lab=classic 은 이 접속만 끈다(시험용).
+    const contractSavedOn = () => { try { return JSON.parse(window.localStorage.getItem(CONTRACT_STORE_KEY) || 'null')?.on !== false; } catch (e) { return true; } };
+    const labSwitch = new URLSearchParams(window.location.search).get('lab');
+    let contractLab = labSwitch === 'contract' || (labSwitch !== 'classic' && contractSavedOn());
+    if (contractLab) { loadShellReel(); sfx.preload?.(); }
+    let contract = null;          // 이번 판의 계약 세트(시험 중에만)
+    let contractGames = 0;        // 이 접속에서 시작한 계약 판 수 — 첫 두 판은 고정 세트
+    let reelPendingFor = 0;       // 릴을 틀 판 번호(0 이면 없음). 이어 하기가 수를 되살리면 틀지 않는다
+    let reelPendingAge = 0;
+    // 현상 딱지 · 매치 포인트 무대(PP-1 ②·⑤). 진도는 늘 기보에서 다시 센다(되돌리기에도 맞는다).
+    let bountyTags = null;            // src/fx/bountyTags.js
+    // 왕관 보석(IR-2): 채운 목표가 보석이 되어 왕 머리 위 자리에 박힌다. 목록은 늘 기보에서 다시 센다.
+    let gemLib = null;                // src/fx/crownGems.js
+    let crownGems = null;
+    let contractGems = null;          // crownGemList(contract, 기보) — 모듈을 받기 전이면 null
+    const crownKings = { w: null, b: null };
+    const crownSpot = { w: { x: 0, y: 0, z: 0 }, b: { x: 0, y: 0, z: 0 } };
+    let contractState = null;         // contractProgress(contract, 기보)
+    let contractStageNow = 'open';    // 'open' | 'matchPoint' | 'finalPoint' | 'done'
+    let contractRevealed = [false, false, false];   // 릴이 공개한 목표에만 딱지가 붙는다
+    const contractHot = new Set();    // 내 말이 지금 실제로 공격하고 있는 상대 말
+    let contractSig = '';
+    let contractWasAnimating = false;
+    let finalPointShown = false;      // 「결승점」 글자는 한 판에 한 번
+    let stageMix = 0;                 // 매치 포인트 무대 0~1
+    let stageBase = null;             // 무대가 손대기 전의 하늘·바다 색
+    let seaTime = 0;                  // 바다 시계 — 매치 포인트에서는 느리게 간다(잔잔해진다)
+    const tagItems = [];
+    let crownWas = false;
+    // 계약 규칙(SC-1): 판정 · HUD · 전용 기록
+    let contractHud = null;           // src/fx/contractHud.js
+    let hudGame = 0;                  // HUD 가 지금 보여 주는 판(0 이면 숨김)
+    let hudSet = null;
+    let hudShown = [false, false, false];
+    let hudDirty = false;
+    let contractPliesLeft = CONTRACT_PLY_LIMIT;
+    let lastContractEnd = null;
+    let hudWide = null;
+    let hudEnded = false;
+    // IR-1 「지기 전에 보인다」: 상대가 계약을 아는 정도(사다리), 금빛 결정타·위험 방패가 붙을 말, 아차 방지의 마지막 경고.
+    let contractRung = RUNG_FULL;
+    let rungNote = '';
+    const contractGold = new Set();     // 지금 내가 잡으면 계약이 완성되는 상대 말
+    const contractDanger = new Set();   // 상대가 한 수로 계약을 완성할 수 있는 내 말
+    let oopsKey = '';                   // 한 번 경고한 수 — 같은 수를 다시 누르면 그대로 둔다
+    const oopsStats = { warned: 0, played: 0, last: null, game: 0, inGame: 0 };
+    const sqName = (r, c) => 'abcdefgh'[c] + (8 - r);
+    // 한 방 퍼즐(IR-3): 「한 수로 왕관 완성」 국면을 기보로 되살려 연다. 연습이라 기록·사다리·이어 하기에 닿지 않는다.
+    let puzzleLib = null;             // src/rules/crownPuzzles.js
+    let puzzleData = null;            // src/rules/crownPuzzleData.js
+    let puzzleBar = null;             // src/fx/puzzleBar.js
+    let puzzle = null;                // { kind: 'practice' | 'missed', index, total, tries, hint, solved, at, ms }
+    let missedOffer = null;           // 방금 진 판에서 지나친 결정타(missedCrown) — 결과 화면의 단추가 연다
+    let offerOn = false;
+    let autoPracticeTries = 0;
+    let autoPractice = false;         // 이 접속에서 첫 연습을 스스로 열었는가(HK-2) — 한 번만
+    const puzzleStats = { started: 0, solved: 0, wrong: 0, last: null };
+    function setPracticeDone() {
+      contractStore = { ...contractStore, practice: 1 };
+      try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* 저장이 막히면 권유가 다시 뜰 뿐이다 */ }
+    }
+    async function startPuzzle(def, meta) {
+      const steps = puzzleLib?.parseMoves(def?.moves);
+      if (!steps || !contractLab || isAnimatingMove) return false;
+      const next = { ...meta, tries: 0, hint: false, solved: false, at: performance.now(), ms: null };
+      const ok = await resumeGame({ v: 1, gameId: (gameId + 1) >>> 0, color: def.color, rivalId: null, moves: steps, contract: def.set }, next);
+      if (!ok) return false;
+      playerCamSide = def.color;
+      setCameraForSide(def.color, false);
+      updateTurnUI();
+      puzzleStats.started += 1;
+      puzzleBar?.show(next);
+      return true;
+    }
+    function startPractice(index = 0, auto = false) {
+      const list = puzzleLib && puzzleData ? puzzleLib.practiceSet(puzzleData) : [];
+      if (!list[index]) return Promise.resolve(false);
+      return startPuzzle(list[index], { kind: 'practice', index, total: list.length, id: list[index].id, auto: auto || Boolean(puzzle?.auto) });
+    }
+    function startMissed() {
+      if (!missedOffer) return Promise.resolve(false);
+      return startPuzzle(missedOffer, { kind: 'missed', index: 0, total: 1, ply: missedOffer.ply });
+    }
+    function nextPuzzle() {
+      if (puzzle?.kind === 'practice' && puzzle.solved && puzzle.index + 1 < puzzle.total) return startPractice(puzzle.index + 1);
+      return quitPuzzle();
+    }
+    // 연습을 닫고 전체 말로 새 판을 연다.
+    function quitPuzzle() {
+      if (!puzzle || isAnimatingMove) return false;
+      if (puzzle.auto) setPracticeDone();   // 스스로 열린 연습을 닫았으면 다시 권하지 않는다
+      resetChessBoard(true);
+      return true;
+    }
+    function puzzleSolved() {
+      if (!puzzle || puzzle.solved) return;
+      puzzle.solved = true;
+      puzzle.ms = Math.round(performance.now() - puzzle.at);
+      puzzleStats.solved += 1;
+      puzzleStats.last = { kind: puzzle.kind, index: puzzle.index, tries: puzzle.tries, ms: puzzle.ms };
+      if (puzzle.kind === 'practice' && puzzle.index + 1 >= puzzle.total) setPracticeDone();
+      puzzleBar?.solved();
+      try { window.dispatchEvent(new CustomEvent('puzzlesolved', { detail: { ...puzzleStats.last } })); } catch (e) {}
+    }
+    let contractStore = (() => {
+      try { return sanitizeContractStore(JSON.parse(window.localStorage.getItem(CONTRACT_STORE_KEY) || 'null')); } catch (e) { return sanitizeContractStore(null); }
+    })();
     const clock = new THREE.Clock();
 
-    const boardGroup = new THREE.Group();
+    const boardGroup = new THREE.Group(); boardGroup.name = 'board';
     scene.add(boardGroup);
-    const squareHighlightsGroup = new THREE.Group();
+    const squareHighlightsGroup = new THREE.Group(); squareHighlightsGroup.name = 'highlights';
     scene.add(squareHighlightsGroup);
+    // DR-2a 미리 두기: AI 차례·연출 중에 고른 말과 다음 수는 보라색으로, 수가 시작될 때 지워지는 선택 표시와 따로 둔다.
+    const premoveGroup = new THREE.Group(); premoveGroup.name = 'premove';
+    scene.add(premoveGroup);
+    // FN-3 직전 수 표시: 방금 둔 수의 출발·도착 칸을 옅은 노란 칸으로(인스턴스 2개 = 그리기 1번). 첫 국면에는 숨어 있어
+    // 드로우콜 게이트(초기 국면)는 그대로다. 되감기·이어 하기·새 판에서 심판 기록의 마지막 수로 다시 맞춘다.
+    const lastMoveMark = (() => {
+      const geo = new THREE.PlaneGeometry(BOARD_SQ_SIZE * 0.94, BOARD_SQ_SIZE * 0.94);
+      geo.rotateX(-Math.PI / 2);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.42, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      mat.userData = { outlineParameters: { visible: false } };
+      const mesh = new THREE.InstancedMesh(geo, mat, 2);
+      mesh.name = 'last-move';
+      mesh.visible = false;
+      mesh.renderOrder = 1;
+      scene.add(mesh);
+      return mesh;
+    })();
+    let lastMoveMarksOn = true;
+    function syncLastMoveMark() {
+      const last = gameMode === 'single' && lastMoveMarksOn ? referee.history().at(-1) : null;
+      if (!last) { lastMoveMark.visible = false; return; }
+      const m = new THREE.Matrix4();
+      [last.from, last.to].forEach((sq, i) => {
+        const p = boardToWorld(8 - Number(sq[1]), sq.charCodeAt(0) - 97);
+        m.makeTranslation(p.x, BOARD_SURFACE_Y + 0.006, p.z);
+        lastMoveMark.setMatrixAt(i, m);
+      });
+      lastMoveMark.instanceMatrix.needsUpdate = true;
+      lastMoveMark.visible = true;
+    }
+    function setLastMoveMarks(on) { lastMoveMarksOn = Boolean(on); syncLastMoveMark(); return lastMoveMarksOn; }
     const boardSquareMeshes = [];
 
     function buildChessBoardGrid() {
-      const tileH = 0.036;
-      const sqGeo = new THREE.BoxGeometry(BOARD_SQ_SIZE * 0.985, tileH, BOARD_SQ_SIZE * 0.985);
+      const tileH = 0.05;
+      const sqGeo = new RoundedBoxGeometry(BOARD_SQ_SIZE * 0.985, tileH, BOARD_SQ_SIZE * 0.985, 2, 0.012);
       const lightSqMat = new THREE.MeshStandardMaterial({
         color: 0xdcd3c2,
         roughness: 0.38,
@@ -909,17 +1286,60 @@ export function initWizardChess() {
         metalness: 0.18
       });
 
+      // 칸의 결(플레이 화면 개편 2차, 2026-11-13): 납작한 단색이던 칸에 도톰한 타일 느낌을 준다 — 가장자리는 어둡게, 위·왼쪽 모서리는 밝게,
+      // 안쪽에는 잔 알갱이. 색에 곱해지는 밝기 그림 하나를 두 재질이 같이 쓴다(드로우콜·메시는 그대로).
+      const tileTex = (() => {
+        const n = 128;
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = n;
+        const g = cv.getContext('2d');
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, n, n);
+        const rnd = mulberry32(64);
+        for (let i = 0; i < 520; i++) {   // 잔 알갱이
+          const v = 228 + Math.floor(rnd() * 27);
+          g.fillStyle = `rgba(${v}, ${v}, ${v}, 0.55)`;
+          g.fillRect(rnd() * n, rnd() * n, 1 + rnd() * 2.2, 1 + rnd() * 2.2);
+        }
+        const edge = 13;
+        for (const [x0, y0, x1, y1, a] of [[0, 0, 0, edge, 0.0], [0, n, 0, n - edge, 0.3], [0, 0, edge, 0, 0.0], [n, 0, n - edge, 0, 0.26]]) {   // 아래·오른쪽 가장자리 그늘
+          if (!a) continue;
+          const grad = g.createLinearGradient(x0, y0, x1, y1);
+          grad.addColorStop(0, `rgba(40, 30, 10, ${a})`); grad.addColorStop(1, 'rgba(40, 30, 10, 0)');
+          g.fillStyle = grad; g.fillRect(0, 0, n, n);
+        }
+        g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.lineWidth = 5;   // 위·왼쪽 모서리 빛
+        g.beginPath(); g.moveTo(3, n - 6); g.lineTo(3, 3); g.lineTo(n - 6, 3); g.stroke();
+        g.strokeStyle = 'rgba(40, 30, 10, 0.16)'; g.lineWidth = 2; g.strokeRect(1, 1, n - 2, n - 2);
+        const tex = new THREE.CanvasTexture(cv);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = 4;
+        return tex;
+      })();
+      lightSqMat.map = tileTex;
+      darkSqMat.map = tileTex;
+
+      // 타일 64개를 밝은 칸·어두운 칸 InstancedMesh 둘로(엔진 선택 계획서 §5 2~3일차: 드로우콜 68 → 6).
+      // 재질은 그대로 둘이라 화면이 같다. 피킹은 instanceId → userData.squares[instanceId] 로 칸을 찾는다.
+      const lightSq = new THREE.InstancedMesh(sqGeo, lightSqMat, 32);
+      const darkSq = new THREE.InstancedMesh(sqGeo, darkSqMat, 32);
+      lightSq.userData = { isSquare: true, squares: [] };
+      darkSq.userData = { isSquare: true, squares: [] };
+      const tileMatrix = new THREE.Matrix4();
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-          const isLight = (r + c) % 2 === 0;
-          const sqMesh = new THREE.Mesh(sqGeo, isLight ? lightSqMat : darkSqMat);
+          const im = (r + c) % 2 === 0 ? lightSq : darkSq;
           const pos = boardToWorld(r, c);
-          sqMesh.position.set(pos.x, BOARD_SURFACE_Y - tileH * 0.5, pos.z);
-          sqMesh.receiveShadow = true;
-          sqMesh.userData = { r, c, isSquare: true };
-          boardGroup.add(sqMesh);
-          boardSquareMeshes.push(sqMesh);
+          tileMatrix.makeTranslation(pos.x, BOARD_SURFACE_Y - tileH * 0.5, pos.z);
+          im.setMatrixAt(im.userData.squares.length, tileMatrix);
+          im.userData.squares.push({ r, c });
         }
+      }
+      for (const im of [lightSq, darkSq]) {
+        im.instanceMatrix.needsUpdate = true;
+        im.receiveShadow = true;
+        im.computeBoundingSphere();
+        boardGroup.add(im);
+        boardSquareMeshes.push(im);
       }
 
       // Sculpted Golden Border Frame around the 8x8 tiles on top of the Obsidian Altar
@@ -943,128 +1363,144 @@ export function initWizardChess() {
 
     buildChessBoardGrid();
 
-    // =========================================================================
-    // Feature: In-Grid Hazard & Obstacle Tiles (Into the Breach Tactical Mechanics)
-    // =========================================================================
-    const hazardTilesGroup = new THREE.Group();
-    scene.add(hazardTilesGroup);
-    let hazardTiles = Array.from({ length: 8 }, () => Array(8).fill(null));
-    const activeBrazierTileMeshes = [];
-
-    function setupHazardTiles() {
-      while (hazardTilesGroup.children.length > 0) {
-        const obj = hazardTilesGroup.children[0];
-        hazardTilesGroup.remove(obj);
-        if (obj.geometry) obj.geometry.dispose();
+    // Pack-driven board palette (PLAN §4.3 `board`): recolours the shared square/rim materials.
+    function applyBoardPalette(board) {
+      if (!board) return;
+      layered.markDirty();
+      for (const sq of boardSquareMeshes) {
+        const first = sq.userData.squares?.[0];
+        const hex = first && ((first.r + first.c) % 2 === 0) ? board.light : board.dark;
+        if (hex) sq.material.color.set(hex);
       }
-      activeBrazierTileMeshes.length = 0;
-      hazardTiles = Array.from({ length: 8 }, () => Array(8).fill(null));
-
-      // Neutral Battlefield Setup (Point-Symmetric between Black and White in rows 2..5)
-      // Brazier Tiles at (3, 1) and (4, 6)
-      // Pillar Obstacles at (2, 4) and (5, 3)
-      const hazardConfigs = [
-        { r: 3, c: 1, type: 'brazier' },
-        { r: 4, c: 6, type: 'brazier' },
-        { r: 2, c: 4, type: 'pillar' },
-        { r: 5, c: 3, type: 'pillar' }
-      ];
-
-      const pillarStoneMat = new THREE.MeshStandardMaterial({
-        color: 0x948e84,
-        roughness: 0.88,
-        metalness: 0.06
-      });
-
-      const brazierPlateMat = new THREE.MeshStandardMaterial({
-        color: 0x241208,
-        emissive: 0xff3b00,
-        emissiveIntensity: 0.65,
-        roughness: 0.45,
-        metalness: 0.35
-      });
-
-      for (const cfg of hazardConfigs) {
-        const worldPos = boardToWorld(cfg.r, cfg.c);
-        if (cfg.type === 'brazier') {
-          // Runic glowing brazier tile plate on board surface
-          const plateGeo = new THREE.BoxGeometry(BOARD_SQ_SIZE * 0.94, 0.006, BOARD_SQ_SIZE * 0.94);
-          const plate = new THREE.Mesh(plateGeo, brazierPlateMat);
-          plate.position.set(worldPos.x, BOARD_SURFACE_Y + 0.003, worldPos.z);
-          plate.receiveShadow = true;
-          plate.userData = { r: cfg.r, c: cfg.c, isBrazierTile: true };
-          hazardTilesGroup.add(plate);
-
-          // Runic flame ring inner
-          const ringGeo = new THREE.RingGeometry(0.045, 0.095, 24);
-          ringGeo.rotateX(-Math.PI / 2);
-          const ringMat = new THREE.MeshBasicMaterial({ color: 0xffa500, side: THREE.DoubleSide });
-          const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-          ringMesh.position.set(worldPos.x, BOARD_SURFACE_Y + 0.007, worldPos.z);
-          hazardTilesGroup.add(ringMesh);
-
-          // 4 tiny corner braziers
-          const cornerHalf = BOARD_SQ_SIZE * 0.38;
-          const cornerGeo = new THREE.BoxGeometry(0.024, 0.028, 0.024);
-          const cornerMat = new THREE.MeshStandardMaterial({ color: 0x1c1917, metalness: 0.85, roughness: 0.25 });
-          for (const sx of [-1, 1]) {
-            for (const sz of [-1, 1]) {
-              const cMesh = new THREE.Mesh(cornerGeo, cornerMat);
-              cMesh.position.set(worldPos.x + sx * cornerHalf, BOARD_SURFACE_Y + 0.014, worldPos.z + sz * cornerHalf);
-              hazardTilesGroup.add(cMesh);
-            }
-          }
-
-          activeBrazierTileMeshes.push(plate);
-          hazardTiles[cfg.r][cfg.c] = {
-            type: 'brazier',
-            r: cfg.r,
-            c: cfg.c,
-            mesh: plate
-          };
-        } else if (cfg.type === 'pillar') {
-          // Authentic 3D Gothic Pillar Obstacle
-          const pillarGroup = new THREE.Group();
-          pillarGroup.position.set(worldPos.x, BOARD_SURFACE_Y, worldPos.z);
-
-          // Pedestal Base
-          const baseGeo = new THREE.BoxGeometry(0.20, 0.04, 0.20);
-          const baseMesh = new THREE.Mesh(baseGeo, pillarStoneMat);
-          baseMesh.position.y = 0.02;
-          baseMesh.castShadow = true;
-          baseMesh.receiveShadow = true;
-          pillarGroup.add(baseMesh);
-
-          // Column Shaft
-          const shaftGeo = new THREE.CylinderGeometry(0.07, 0.08, 0.24, 12);
-          const shaftMesh = new THREE.Mesh(shaftGeo, pillarStoneMat);
-          shaftMesh.position.y = 0.16;
-          shaftMesh.castShadow = true;
-          shaftMesh.receiveShadow = true;
-          pillarGroup.add(shaftMesh);
-
-          // Capital
-          const capGeo = new THREE.BoxGeometry(0.18, 0.035, 0.18);
-          const capMesh = new THREE.Mesh(capGeo, pillarStoneMat);
-          capMesh.position.y = 0.295;
-          capMesh.castShadow = true;
-          capMesh.receiveShadow = true;
-          pillarGroup.add(capMesh);
-
-          pillarGroup.userData = { r: cfg.r, c: cfg.c, isPillarObstacle: true };
-          hazardTilesGroup.add(pillarGroup);
-
-          hazardTiles[cfg.r][cfg.c] = {
-            type: 'pillar',
-            r: cfg.r,
-            c: cfg.c,
-            mesh: pillarGroup
-          };
+      if (board.rim) goldTrimMat.color.set(board.rim);
+      if (board.matte) {
+        for (const sq of boardSquareMeshes) {
+          sq.material.roughness = 0.72;
+          sq.material.metalness = 0;
         }
       }
     }
 
-    setupHazardTiles();
+    // Procedural biome (PLAN §4.3 `environment.type = "procedural"`): sky, fog, ground, low-poly trees and rocks.
+    // Used by animal packs until a modelled biome exists; the cathedral GLB is skipped entirely.
+    const biomeGroup = new THREE.Group(); biomeGroup.name = 'biome';
+    scene.add(biomeGroup);
+    let seaBiome = null;
+    function buildProceduralEnvironment(env) {
+      if (env.background) scene.background = new THREE.Color(env.background);
+      if (env.fog) scene.fog = new THREE.FogExp2(new THREE.Color(env.fog.color).getHex(), env.fog.density);
+      if (env.hemi) {
+        hemiLight.color.set(env.hemi.sky);
+        hemiLight.groundColor.set(env.hemi.ground);
+        if (typeof env.hemi.intensity === 'number') hemiLight.intensity = env.hemi.intensity;
+      }
+      if (env.sun) {
+        keyLight.color.set(env.sun.color);
+        if (typeof env.sun.intensity === 'number') keyLight.intensity = env.sun.intensity;
+      }
+      // Cathedral-only light rigs off (window/brazier point lights, flame halos).
+      scene.traverse((o) => {
+        if (o.isPointLight && o !== impactFlashLight) o.visible = false;
+      });
+      brazierLights.length = 0;
+      for (const sp of brazierGlowSprites) sp.visible = false;
+
+      const rand = mulberry32(1234);
+      if (env.sea) {
+        const cathedral = scene.environment;
+        scene.environment = daylightEnvironment(renderer, env);
+        cathedral?.dispose();
+        scene.environmentIntensity = env.sea.ambient ?? 0.6;
+        renderer.toneMapping = THREE.NeutralToneMapping;
+        renderer.toneMappingExposure = env.sea.exposure ?? 1;
+        seaBiome = buildSeaBiome(biomeGroup, env, { halfBoard: 4 * BOARD_SQ_SIZE, surfaceY: BOARD_SURFACE_Y, rand });
+        // 절차적 섬(PI-3): 저장된 군도의 지금 섬 해안선을 바다 생물을 놓기 전에 입힌다(산호가 해안을 따라 놓이게).
+        try {
+          const arch = JSON.parse(window.localStorage.getItem('wildcrown.village.v1') || 'null')?.arch;
+          if (arch && typeof arch.current === 'string') publicApiCoast(arch.current, Number(arch.seed) || 0);
+        } catch (e) { /* 저장이 없거나 깨졌으면 예전 해안선 */ }
+        layered.markDirty();
+        return;
+      }
+      const groundR = env.ground?.radius || 40;
+      const ground = new THREE.Mesh(
+        new THREE.CircleGeometry(groundR, 48),
+        new THREE.MeshStandardMaterial({ color: env.ground?.color || '#4f7a3a', roughness: 0.95, metalness: 0 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = BOARD_SURFACE_Y - 0.06;
+      ground.receiveShadow = true;
+      biomeGroup.add(ground);
+
+      // Raised earth plinth under the board so it reads as a clearing, not a floating slab.
+      const plinth = new THREE.Mesh(
+        new THREE.CylinderGeometry(BOARD_SQ_SIZE * 4.9, BOARD_SQ_SIZE * 5.4, 0.08, 40),
+        new THREE.MeshStandardMaterial({ color: '#6b5236', roughness: 1.0 })
+      );
+      plinth.position.y = BOARD_SURFACE_Y - 0.045;
+      plinth.receiveShadow = true;
+      biomeGroup.add(plinth);
+
+      const trees = env.trees || {};
+      const canopyColors = (trees.canopy || ['#2f7a3a', '#3f8f45']).map((c) => new THREE.Color(c));
+      const trunkMat = new THREE.MeshStandardMaterial({ color: trees.trunk || '#5a3b23', roughness: 0.9 });
+      const canopyMats = canopyColors.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, flatShading: true }));
+      const trunkGeo = new THREE.CylinderGeometry(0.06, 0.09, 1, 7);
+      const coneGeo = new THREE.ConeGeometry(0.5, 1, 7);
+      const blobGeo = new THREE.IcosahedronGeometry(0.5, 1);
+      const nTrees = trees.count || 60;
+      const rIn = trees.innerRadius || 3.4;
+      const rOut = trees.outerRadius || 16;
+      for (let i = 0; i < nTrees; i++) {
+        const a = rand() * Math.PI * 2;
+        const rr = rIn + Math.sqrt(rand()) * (rOut - rIn);
+        const x = Math.cos(a) * rr;
+        const z = Math.sin(a) * rr;
+        const h = 1.2 + rand() * 2.6;
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.scale.set(1 + rand() * 0.8, h * 0.45, 1 + rand() * 0.8);
+        trunk.position.y = h * 0.225;
+        trunk.castShadow = true;
+        tree.add(trunk);
+        const layers = 1 + Math.floor(rand() * 3);
+        for (let l = 0; l < layers; l++) {
+          const canopy = new THREE.Mesh(rand() < 0.6 ? blobGeo : coneGeo, canopyMats[Math.floor(rand() * canopyMats.length)]);
+          const w = (0.9 + rand() * 1.4) * (1 - l * 0.22);
+          canopy.scale.set(w, (0.8 + rand() * 1.1) * (1 - l * 0.15), w);
+          canopy.position.set((rand() - 0.5) * 0.3, h * 0.45 + l * 0.55 + 0.3, (rand() - 0.5) * 0.3);
+          canopy.castShadow = true;
+          tree.add(canopy);
+        }
+        tree.position.set(x, BOARD_SURFACE_Y - 0.06, z);
+        tree.rotation.y = rand() * Math.PI * 2;
+        biomeGroup.add(tree);
+      }
+      const rocks = env.rocks || {};
+      const rockMat = new THREE.MeshStandardMaterial({ color: rocks.color || '#8a8578', roughness: 0.95, flatShading: true });
+      const rockGeo = new THREE.DodecahedronGeometry(0.25, 0);
+      for (let i = 0; i < (rocks.count || 20); i++) {
+        const a = rand() * Math.PI * 2;
+        const rr = rIn * 0.8 + rand() * (rOut - rIn * 0.8);
+        const rock = new THREE.Mesh(rockGeo, rockMat);
+        rock.scale.set(0.5 + rand() * 1.6, 0.35 + rand() * 0.9, 0.5 + rand() * 1.6);
+        rock.position.set(Math.cos(a) * rr, BOARD_SURFACE_Y - 0.08, Math.sin(a) * rr);
+        rock.rotation.set(rand(), rand() * Math.PI, rand());
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        biomeGroup.add(rock);
+      }
+    }
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return () => {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
 
     // =========================================================================
     // Native Baked Wall/Column Stone (Original Ashlar) & Floor Stone (Abbey Flagstone)
@@ -1306,10 +1742,33 @@ export function initWizardChess() {
       const loaderText = document.getElementById('loader-text');
       const totalItems = PIECE_TYPES.length + 1;
 
-      async function loadGltfModel(baseName) {
+      // 0. Pack manifest — which models/clips/timings to use. Falls back to the cathedral pack.
+      const packId = resolvePackId();
+      try {
+        activePack = await fetchPackManifest(packId);
+      } catch (err) {
+        console.error(`Pack "${packId}" unavailable, falling back to "${FALLBACK_PACK_ID}":`, err);
+        activePack = packId === FALLBACK_PACK_ID ? null : await fetchPackManifest(FALLBACK_PACK_ID).catch((e2) => {
+          console.error('Fallback pack unavailable too:', e2);
+          return null;
+        });
+      }
+      if (activePack) {
+        for (const type of PIECE_TYPES) {
+          ATTACK_SYNC_PROFILES[type] = toAttackProfile(activePack.pieces[type].attackSync);
+        }
+      }
+      const packAssetBase = activePack?.assetBase || './assets/glb/';
+      const envDef = activePack?.environment || { model: 'option8_cathedral' };
+      const envModelName = envDef.model || 'option8_cathedral';
+      const isProceduralEnv = envDef.type === 'procedural';
+      if (isProceduralEnv) buildProceduralEnvironment(envDef);
+      applyBoardPalette(activePack?.board);
+
+      async function loadGltfModel(baseName, base = './assets/glb/') {
         let arrayBuffer = null;
         try {
-          const resB64 = await fetch(`./assets/glb/${baseName}.glb.gz.b64`);
+          const resB64 = await fetch(`${base}${baseName}.glb.gz.b64`);
           if (resB64.ok) {
             const b64Text = (await resB64.text()).trim();
             if (b64Text.length > 64) {
@@ -1326,13 +1785,13 @@ export function initWizardChess() {
         } catch (e) {}
 
         if (!arrayBuffer) {
-          const resGlb = await fetch(`./assets/glb/${baseName}.glb`);
+          const resGlb = await fetch(`${base}${baseName}.glb`);
           if (!resGlb.ok) throw new Error(`Failed to fetch ${baseName}`);
           arrayBuffer = await resGlb.arrayBuffer();
         }
 
         return new Promise((resolve, reject) => {
-          gltfLoader.parse(arrayBuffer, './assets/glb/', (gltf) => resolve(gltf), (err) => reject(err));
+          gltfLoader.parse(arrayBuffer, base, (gltf) => resolve(gltf), (err) => reject(err));
         });
       }
       let loadedCount = 0;
@@ -1380,9 +1839,14 @@ export function initWizardChess() {
       // 1. Load Native Full-Height Cathedral Environment (shifted by z = -0.65 so the Obsidian Altar is centered at 0, 0.7215, 0)
       const maxAniso = renderer.capabilities.getMaxAnisotropy() || 8;
       await new Promise((resolve) => {
-        loadGltfModel('option8_cathedral').then(
+        if (isProceduralEnv) {
+          bumpProgress('Biome grown...');
+          resolve();
+          return;
+        }
+        loadGltfModel(envModelName, packAssetBase).then(
           (gltf) => {
-            const cathedralRoot = gltf.scene;
+            const cathedralRoot = gltf.scene; cathedralRoot.name = 'cathedral';
             cathedralRoot.position.set(0, 0, -0.65);
 
             cathedralRoot.traverse((child) => {
@@ -1524,6 +1988,7 @@ export function initWizardChess() {
             setWallStoneLook(0);
             setFloorStoneLook(0);
             scene.add(cathedralRoot);
+            layered.markDirty();
 
             bumpProgress('Cathedral Architecture Loaded...');
             resolve();
@@ -1536,40 +2001,63 @@ export function initWizardChess() {
         );
       });
 
-      // 2. Load 6 Sculpted & Rigged Chess Piece Models (shared between White & Black with PBR materials)
-      for (const type of PIECE_TYPES) {
-        await new Promise((resolve) => {
-          loadGltfModel(`${type}_white`).then(
-            (gltf) => {
-              const toRemove = [];
-              gltf.scene.traverse((child) => {
-                const nm = child.name || '';
-                if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
-                  child.visible = false;
-                  toRemove.push(child);
-                }
-              });
-              for (const rem of toRemove) {
-                if (rem.parent) rem.parent.remove(rem);
-              }
-
-              const tpl = {
-                scene: gltf.scene,
-                animations: gltf.animations || []
-              };
-              pieceTemplates[`${type}_w`] = tpl;
-              pieceTemplates[`${type}_b`] = tpl;
-              bumpProgress(`Summoned ${type.toUpperCase()} Statue...`);
-              resolve();
-            },
-            (err) => {
-              console.warn(`Piece load warning (${type}):`, err);
-              bumpProgress(`Loaded ${type}`);
-              resolve();
-            }
-          );
+      // 2. Load the piece models the pack declares (one per role, or one per role and colour)
+      const templateCache = {};
+      async function buildTemplate(type, pieceDef, modelName) {
+        if (templateCache[modelName]) return templateCache[modelName];
+        const gltf = await loadGltfModel(modelName, packAssetBase);
+        const toRemove = [];
+        gltf.scene.traverse((child) => {
+          const nm = child.name || '';
+          if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
+            child.visible = false;
+            toRemove.push(child);
+          }
         });
+        for (const rem of toRemove) {
+          if (rem.parent) rem.parent.remove(rem);
+        }
+        const animations = gltf.animations || [];
+        // Role→clip adapter: resolve each clip role once per template (PLAN §4.3).
+        const clipNames = animations.map((a) => a.name);
+        const clipMap = {};
+        for (const role of [...REQUIRED_CLIP_ROLES, ...OPTIONAL_CLIP_ROLES]) {
+          const resolved = resolveClipName(pieceDef || { clips: {} }, role, clipNames);
+          if (resolved) clipMap[role] = resolved;
+        }
+        // Fit box (model units) so animal packs can be normalised to a height in board squares.
+        const bbox = new THREE.Box3().setFromObject(gltf.scene);
+        const tpl = {
+          scene: gltf.scene,
+          animations,
+          clipMap,
+          rig: pieceDef?.rig || 'statue',
+          keepMaterials: Boolean(pieceDef?.keepMaterials),
+          fitHeight: typeof pieceDef?.fitHeight === 'number' ? pieceDef.fitHeight : null,
+          yawOffset: typeof pieceDef?.yawOffset === 'number' ? pieceDef.yawOffset : 0,
+          bbox
+        };
+        templateCache[modelName] = tpl;
+        return tpl;
       }
+      for (const type of PIECE_TYPES) {
+        const pieceDef = activePack?.pieces?.[type] || null;
+        for (const color of ['w', 'b']) {
+          const modelName = (pieceDef && modelNameFor(pieceDef, color)) || `${type}_white`;
+          try {
+            pieceTemplates[`${type}_${color}`] = await buildTemplate(type, pieceDef, modelName);
+          } catch (err) {
+            console.warn(`Piece load warning (${type}/${color}):`, err);
+          }
+        }
+        bumpProgress(getTranslations(getCurrentLang()).loadingPiece(type));
+      }
+      assetApi = { buildTemplate, loadGltfModel, base: packAssetBase };
+      // Scenery only, so the game does not wait for it.
+      seaBiome?.populate((name) => loadGltfModel(name, `${packAssetBase}sea/`)).then(() => { renderer.shadowMap.needsUpdate = true; layered.markDirty(); });
+      rivalProgress = sanitizeRivalProgress(activePack, loadRivalProgress());
+      cosmetics = sanitizeCosmetics(activePack, loadSavedCosmetics(), unlockedItems());
+      await ensureCosmeticAssets();
 
       document.getElementById('loading-overlay')?.classList.add('hidden');
     }
@@ -1579,8 +2067,18 @@ export function initWizardChess() {
     // =========================================================================
     let boardState = Array.from({ length: 8 }, () => Array(8).fill(null));
     let currentTurn = 'w';
+    // Rules authority (chess.js, PLAN §4.5 Phase 0b). boardState is the picture; the referee is the truth.
+    const referee = new Referee();
+    function syncRefereeFromBoard(turn) {
+      referee.loadCells(boardState, turn, { fullmove: Math.floor(moveHistory.length / 2) + 1 });
+    }
     let selectedSquare = null;
-    let hoveredSquare = null;
+// Hand and brain: null = off; '' = waiting for the brain; else the piece type ('knight') the hand may pick up.
+let handBrainKind = null;
+// 둘이 한 왕국(CO-1): 둘이 한 편인 판이면 잡기 연출을 짧게(fxSettings().quick 와 같은 효과).
+let teamGame = false;
+// 시작 단계가 끝났는가(isStarted). 그 전에 세운 판은 시작 단계의 resetChessBoard 가 덮어쓴다.
+let engineStarted = false;
     let validMoves = [];
     let isAnimatingMove = false;
     let gameOver = false;
@@ -1592,6 +2090,13 @@ export function initWizardChess() {
     let playerColor = 'w';   // 'w' | 'b' | 'spectator'
     let aiAutoPlay = true;
     let aiTimer = null;
+    // DR-1c (2026-11-10): the AI's pause before it moves. Its search takes about 10 ms; the old fixed 540 ms was a fifth of
+    // all the time the board was locked (tools/tempo_probe.mjs, docs/qa/2026-11-10-dr0.md). Long enough to see whose turn it is.
+    const AI_DELAY_MS = 250;
+    // DR-1c: a tap on the board while a move is playing fast-forwards that move (time runs SKIP_SPEED times faster until it
+    // lands) instead of jumping to the end, so the choreography's order — contact, fall, landing — stays the same.
+    const SKIP_SPEED = 4;
+    let skipFast = false;
 
     // Multiplayer State
     let roomCode = null;
@@ -1638,12 +2143,54 @@ export function initWizardChess() {
       };
     }
 
-    function setCameraForSide(color, immediate = false) {
-      // White sits at +Z looking toward -Z (across the Obsidian Altar down the Cathedral Nave & Rose Window)
-      // Black sits at -Z looking toward +Z (across the Obsidian Altar toward the South Narthex Royal Amber Triptych)
+    // White sits at +Z looking toward -Z, black at -Z looking toward +Z.
+    // High enough that the near ranks do not hide the board; a narrow screen backs away until the board fits across it.
+    const PORTRAIT_FIT_MAX = 2.15;
+    const PORTRAIT_ASPECT = 0.8;        // 이보다 좁으면 세로 구도
+    const PORTRAIT_PITCH_DEG = 56;      // 내려다보는 각(가로 구도는 약 37도)
+    const PORTRAIT_SIDE_ROOM = 0.42;    // 판 양옆에 남기는 칸 수(끝 줄 말의 몸이 들어올 자리)
+    const PORTRAIT_TARGET_Y = 0.25;
+    // On a tall screen the picture rides up by this share of the height: the board leaves the sky and the room
+    // under it holds the game strip (mission, move number). Picking still works, the offset is in the projection.
+    const PORTRAIT_SHIFT = 0.07;
+    function shiftPortraitView() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (w / h < 1) camera.setViewOffset(w, h, 0, h * PORTRAIT_SHIFT, w, h);
+      else camera.clearViewOffset();
+    }
+    shiftPortraitView();
+    // 가로로 눕힌 폰(2026-11-14): 화면이 낮아 판이 높이에 묶인다. 예전 구도(37도)는 먼 줄 한 칸이 21px 이고 가까운 판 끝이 화면 밑으로 잘렸다.
+    // 더 위에서(52도) 조금 물러나 보면 먼 줄이 25px 로 커지고 판이 화면 안에 다 들어온다. 책상 화면(높이 500px 이상)은 그대로다.
+    const SHORT_VIEW_H = 500;
+    const SHORT_PITCH_DEG = 52;
+    const SHORT_DIST = 4.2;
+    let viewH = window.innerHeight;     // resize 에서 「고치기 전 모양」과 견줄 수 있게 따로 들고 있는다
+    function defaultCameraFor(color, aspect = camera.aspect, height = viewH) {
       const zSign = color === 'b' ? -1 : 1;
-      const desiredPos = new THREE.Vector3(0, 2.22, zSign * 2.72);
-      const desiredTarget = new THREE.Vector3(0, 0.85, zSign * -0.15);
+      if (aspect > 1.5 && height > 0 && height < SHORT_VIEW_H) {
+        const pitch = THREE.MathUtils.degToRad(SHORT_PITCH_DEG);
+        const target = new THREE.Vector3(0, 0.35, zSign * 0.04);
+        return { target, pos: new THREE.Vector3(0, Math.sin(pitch) * SHORT_DIST, zSign * Math.cos(pitch) * SHORT_DIST).add(target) };
+      }
+      // 세로 화면(플레이 화면 개편 2026-11-13): 판은 너비에 묶인다. 예전 구도는 더 가까이 가서 a·h 줄의 말이 화면 밖으로 잘렸다.
+      // 여덟 줄이 다 들어오는 거리까지 물러나고, 대신 더 위에서 내려다봐 칸의 세로 길이(누를 자리)를 키운다.
+      if (aspect < PORTRAIT_ASPECT) {
+        const pitch = THREE.MathUtils.degToRad(PORTRAIT_PITCH_DEG);
+        const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * aspect;
+        const dist = Math.min((4 + PORTRAIT_SIDE_ROOM) * BOARD_SQ_SIZE / tanH + 4 * BOARD_SQ_SIZE * Math.cos(pitch), 16);
+        const target = new THREE.Vector3(0, PORTRAIT_TARGET_Y, zSign * 0.02);
+        return { target, pos: new THREE.Vector3(0, Math.sin(pitch) * dist, zSign * Math.cos(pitch) * dist).add(target) };
+      }
+      // A tall phone used to sit at the 2.35 cap, the board small under half a screen of sea. Closer there, and the
+      // room under the board holds the game strip (mission round 2026-11-05, grok's cap, measured on a Z Flip5).
+      const fit = THREE.MathUtils.clamp(1.25 / aspect, 1, aspect < 1 ? PORTRAIT_FIT_MAX : 2.35);
+      const target = new THREE.Vector3(0, 0.72, zSign * 0.06);
+      return { target, pos: new THREE.Vector3(0, 2.28 * fit, zSign * 3.04 * fit).add(target) };
+    }
+
+    function setCameraForSide(color, immediate = false) {
+      const { target: desiredTarget, pos: desiredPos } = defaultCameraFor(color);
       if (immediate) {
         activeCamTransition = null;
         camera.position.copy(desiredPos);
@@ -1654,27 +2201,480 @@ export function initWizardChess() {
       }
     }
 
+    const tintedMaterialCache = new Map();
+    // 동물 말의 화면 다듬기(캐릭터 룩 A, 2026-11-14): 모델·텍스처는 그대로 두고 셰이더에 두 가지만 얹는다.
+    //  · 채도 — 구운 색이 옅고 회색기가 돌아 카드 그림과 따로 논다. 텍스처 색의 채도를 올린다.
+    //  · 테두리 빛 — 윤곽이 왕국색으로 물든다(백: 짙은 금빛, 흑: 밝은 보랏빛). 더하는 빛이 아니라 섞는 색이다 —
+    //    크림색 백 말에 빛을 더하면 하얗게 날아가 오히려 덩어리가 된다(첫 시도). 백은 윤곽이 짙어져 또렷해지고, 흑은 밝아진다. 플레이어는 자기 말의 등만 보는데,
+    //    등에는 얼굴도 표식도 없어 덩어리로 보였다. 윤곽에 빛이 돌면 한 마리씩 떨어져 보이고 어느 편인지도 뒤에서 읽힌다.
+    // 재질을 새로 만들지 않고 팩의 재질을 그 자리에서 고친다(한 번만) — 드로우콜·재질 수는 그대로다.
+    const animalLook = {
+      sat: { value: 1.28 },
+      rim: { value: 0.7 },
+      w: { value: new THREE.Color(0.78, 0.5, 0.2) },
+      b: { value: new THREE.Color(0.8, 0.64, 1.0) }
+    };
+    function applyAnimalLook(mat, color) {
+      if (!mat || !mat.isMeshStandardMaterial || mat.userData.animalLook) return mat;
+      mat.userData.animalLook = color;
+      const prev = mat.customProgramCacheKey?.bind(mat);
+      mat.customProgramCacheKey = () => `${prev ? prev() : ''}|animal-look-2`;
+      mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uLookSat = animalLook.sat;
+        shader.uniforms.uLookRim = animalLook.rim;
+        shader.uniforms.uLookRimColor = animalLook[color === 'b' ? 'b' : 'w'];
+        shader.fragmentShader = shader.fragmentShader
+          .replace('#include <common>', '#include <common>\nuniform float uLookSat;\nuniform float uLookRim;\nuniform vec3 uLookRimColor;')
+          .replace('#include <color_fragment>', `#include <color_fragment>
+          { float lookLuma = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)); diffuseColor.rgb = max(vec3(0.0), mix(vec3(lookLuma), diffuseColor.rgb, uLookSat)); }`)
+          .replace('#include <opaque_fragment>', `{ float lookFres = pow(1.0 - saturate(dot(normalize(vViewPosition), normal)), 2.6);
+            outgoingLight = mix(outgoingLight, uLookRimColor, saturate(uLookRim * lookFres)); }
+          #include <opaque_fragment>`);
+      };
+      mat.needsUpdate = true;
+      return mat;
+    }
+
+    function getTintedMaterial(material, color, tintHex) {
+      const key = `${material.uuid}|${color}`;
+      let m = tintedMaterialCache.get(key);
+      if (!m) {
+        m = material.clone();
+        if (m.color) m.color.multiply(new THREE.Color(tintHex));
+        tintedMaterialCache.set(key, m);
+      }
+      return m;
+    }
+
+    // Captured animals play their death clip and sink away instead of shattering into stone.
+    const fadingPieces = [];
+    // A captured animal is bonked off the board, not killed: it wobbles, then bounces away to the side.
+    // A taken animal reacts in its own way (meerkat spins away, kangaroo hops and sits, panda rolls, rhino topples,
+    // tiger somersaults: src/fx/captureReaction.js, capture-matchup plan CX-2), then bounces off to its own side.
+    // `dir` is the way the blow came (attacker -> taken piece); same 1.25 s as the old exit, so a game is no longer.
+    const reactAxisTilt = new THREE.Vector3();
+    const reactAxisRoll = new THREE.Vector3();
+    const reactQ = new THREE.Quaternion();
+    const reactQ2 = new THREE.Quaternion();
+    const UP_AXIS = new THREE.Vector3(0, 1, 0);
+    function retireAnimalPiece(piece, dir = null) {
+      if (!piece || !piece.mesh) return;
+      const start = piece.mesh.position.clone();
+      const side = start.x <= 0 ? -1 : 1;
+      let dx = dir?.x || 0;
+      let dz = dir?.z || 0;
+      const len = Math.hypot(dx, dz);
+      if (len < 1e-6) { dx = side; dz = 0; } else { dx /= len; dz /= len; }
+      // A meerkat is taken in about half of all captures, so each one this game reacts a little differently (CX-6).
+      const variant = piece.type === 'pawn' ? referee.history().slice(0, -1).filter((m) => m.captured === 'p').length : 0;
+      fadingPieces.push({
+        piece, age: 0, start, endX: side * BOARD_SQ_SIZE * 5.4, spin: side * 7,
+        dx, dz, baseQ: piece.mesh.quaternion.clone(), type: piece.type, variant
+      });
+    }
+    const contactShadows = createContactShadows(scene, { surfaceY: BOARD_SURFACE_Y, size: BOARD_SQ_SIZE * 0.92, opacity: 0.3 });
+    const shadowedMeshes = [];
+    function stepContactShadows() {
+      shadowedMeshes.length = 0;
+      for (const row of boardState) {
+        for (const p of row) {
+          if (p?.mesh && p.rig !== 'statue') shadowedMeshes.push(p.mesh);
+        }
+      }
+      // A piece bounced off the board is over the water by then, where a spot on the board's plane would hang in the air.
+      for (const f of fadingPieces) {
+        const { x, z } = f.piece.mesh.position;
+        if (Math.max(Math.abs(x), Math.abs(z)) < BOARD_SQ_SIZE * 4) shadowedMeshes.push(f.piece.mesh);
+      }
+      contactShadows.update(shadowedMeshes, BOARD_SQ_SIZE);
+    }
+    // Lion roar (capture-matchup CX-4): pieces around the taken square sway outward, then settle back exactly.
+    const roarSways = [];
+    const roarAxis = new THREE.Vector3();
+    const roarQ = new THREE.Quaternion();
+    function settleRoarSways() {
+      for (const w of roarSways) w.mesh.quaternion.copy(w.baseQ);
+      roarSways.length = 0;
+    }
+    function startRoar(origin, skip) {
+      settleRoarSways();
+      for (const row of boardState) {
+        for (const p of row) {
+          if (!p?.mesh || p.rig === 'statue' || skip.includes(p)) continue;
+          const ox = p.mesh.position.x - origin.x;
+          const oz = p.mesh.position.z - origin.z;
+          const dist = Math.round(Math.max(Math.abs(ox), Math.abs(oz)) / BOARD_SQ_SIZE);
+          if (dist < 1 || dist > ROAR_REACH) continue;
+          const len = Math.hypot(ox, oz) || 1;
+          roarSways.push({ mesh: p.mesh, dist, age: 0, dx: ox / len, dz: oz / len, baseQ: p.mesh.quaternion.clone() });
+        }
+      }
+      return roarSways.length;
+    }
+    function stepRoarSways(dt) {
+      for (let i = roarSways.length - 1; i >= 0; i--) {
+        const w = roarSways[i];
+        w.age += dt;
+        if (w.age >= ROAR_SEC) {
+          w.mesh.quaternion.copy(w.baseQ);
+          roarSways.splice(i, 1);
+          continue;
+        }
+        // Same axis as a reaction's backward fall: positive leans away from the lion.
+        roarAxis.set(w.dz, 0, -w.dx);
+        roarQ.setFromAxisAngle(roarAxis, roarSway(w.dist, w.age));
+        w.mesh.quaternion.copy(roarQ).multiply(w.baseQ);
+      }
+    }
+    // 소라 릴의 파도타기(PP-1): 소라가 멈출 때마다 판 위 말들이 그쪽에서부터 차례로 폴짝 뛴다. 표적이 된 종류는 더 높이
+    // 뛴다(뜨끔). 높이만 잠깐 더하고 정확히 제자리로 돌아온다 — 수가 움직이기 시작하면 바로 내려놓는다.
+    const reelHops = [];   // { mesh, baseY, delay, age, amp }
+    function settleReelHops() {
+      for (const h of reelHops) h.mesh.position.y = h.baseY;
+      reelHops.length = 0;
+    }
+    function startReelWave(origin, targetType) {
+      let n = 0;
+      for (const row of boardState) {
+        for (const p of row) {
+          if (!p?.mesh || p.rig === 'statue') continue;
+          const riding = reelHops.find((h) => h.mesh === p.mesh);
+          const baseY = riding ? riding.baseY : p.mesh.position.y;
+          if (riding) reelHops.splice(reelHops.indexOf(riding), 1);
+          p.mesh.position.y = baseY;
+          const squares = Math.hypot(p.mesh.position.x - origin.x, p.mesh.position.z - origin.z) / BOARD_SQ_SIZE;
+          reelHops.push({ mesh: p.mesh, baseY, delay: reelLib.waveDelay(squares), age: 0, amp: BOARD_SQ_SIZE * (p.type === targetType ? 0.42 : 0.16) });
+          n += 1;
+        }
+      }
+      return n;
+    }
+    function stepReelHops(dt) {
+      if (!reelHops.length) return;
+      if (isAnimatingMove) { settleReelHops(); return; }
+      for (let i = reelHops.length - 1; i >= 0; i--) {
+        const h = reelHops[i];
+        h.age += dt;
+        const u = (h.age - h.delay) / reelLib.WAVE_HOP_SEC;
+        if (u >= 1) {
+          h.mesh.position.y = h.baseY;
+          reelHops.splice(i, 1);
+          continue;
+        }
+        h.mesh.position.y = h.baseY + h.amp * reelLib.hopHeight(u);
+      }
+    }
+    const REEL_TYPE = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen' };
+    /** 이번 판의 계약을 정하고 릴을 돌린다. `setId` 를 주면 그 세트(시험용). */
+    function startContractReel(setId = null) {
+      if (!shellReel) return null;   // 모듈을 아직 못 받았다
+      // 계약은 판을 열 때 이미 정해져 있다(resetChessBoard). 릴은 공개만 한다. `setId` 는 시험용.
+      if (setId && contractById(setId)) contract = contractById(setId);
+      if (!contract) { contract = pickContract(Math.random(), contractStore.games); contractGames += 1; }
+      settleReelHops();
+      contractRevealed = [false, false, false];
+      contractState = null;
+      contractStageNow = 'open';
+      sfx.play('reelRise');
+      // 기계가 내려와 레버를 기다린다. 릴이 멈출 때마다: 소리, 판 너머에서 번지는 파도타기, 그 종류의 상대 말에 딱지.
+      const far = (playerCamSide === 'b' ? 1 : -1) * BOARD_SQ_SIZE * 4.5;
+      shellReel.play(contract, (i, goal) => {
+        sfx.play(i === 2 ? 'reelFinal' : 'reelStop', 0, 1 + i * 0.06);
+        startReelWave(new THREE.Vector3((i - 1) * BOARD_SQ_SIZE * 2.3, BOARD_SURFACE_Y, far), REEL_TYPE[goal.type]);
+        contractRevealed[i] = true;     // 이 릴이 멈춘 순간부터 그 종류의 상대 말에 딱지가 붙는다
+        refreshContract(false);
+      });
+      window.dispatchEvent(new CustomEvent('contractrevealed', { detail: { gameId, setId: contract.id, goals: contract.goals } }));
+      return contract.id;
+    }
+    // 계약 진도를 기보에서 다시 세고, 내 말이 노리는 상대 말을 다시 찾고, 막이 바뀌었으면 알린다.
+    // 수가 판에 놓였을 때와 되돌렸을 때 부른다. `announce` 가 false 면 소리·글자 없이 상태만 맞춘다.
+    function refreshContract(announce = true) {
+      contractSig = `${gameId}:${moveHistory.length}`;
+      contractHot.clear();
+      contractGold.clear();
+      contractDanger.clear();
+      if (!contract) { contractState = null; contractStageNow = 'open'; contractGems = null; crownGems?.clear(); return; }
+      const played = referee.history();
+      contractState = contractProgress(contract, played);
+      if (gemLib && crownGems) {
+        contractGems = gemLib.crownGemList(contract, played);
+        crownGems.set(contractGems, {
+          fly: announce, plies: played.length,
+          pos: (sq) => { const { r, c } = squareRC(sq); const v = boardToWorld(r, c); v.y += BOARD_SQ_SIZE * 0.45; return v; },
+          land: () => sfx.play('reelStop', 0, 1.25)
+        });
+      }
+      contractPliesLeft = Math.max(0, CONTRACT_PLY_LIMIT - played.length);
+      hudDirty = true;
+      if (playerColor === 'w' || playerColor === 'b') {
+        for (const sq of referee.threatened(playerColor === 'w' ? 'b' : 'w')) {
+          const { r, c } = squareRC(sq);
+          if (boardState[r]?.[c]) contractHot.add(boardState[r][c]);
+        }
+      }
+      // 금빛 결정타 · 위험 방패: 내 차례에만, 심판이 센 합법 수로만.
+      if ((playerColor === 'w' || playerColor === 'b') && referee.turn() === playerColor && !contractState.winner && !gameOver) {
+        const pieceAt = (sq) => { const { r, c } = squareRC(sq); return boardState[r]?.[c] || null; };
+        try {
+          if (!puzzle || puzzle.hint) for (const m of finishersAt(referee.fen(), contract, contractState)) { const p = pieceAt(m.target); if (p) contractGold.add(p); }
+          if (!puzzle) for (const sq of dangerSquares(referee.fen(), contract, contractState)) { const p = pieceAt(sq); if (p) contractDanger.add(p); }
+        } catch (e) { /* 표시만 잃는다 */ }
+      }
+      const stage = contractStage(contractState);
+      if (stage === contractStageNow) return;
+      const from = contractStageNow;
+      contractStageNow = stage;
+      window.dispatchEvent(new CustomEvent('contractstage', { detail: { gameId, stage, from, w: contractState.w, b: contractState.b, winner: contractState.winner } }));
+      if (!announce) return;
+      const mid = new THREE.Vector3(0, BOARD_SURFACE_Y + BOARD_SQ_SIZE * 0.6, 0);
+      if (stage === 'matchPoint' && from === 'open') {
+        sfx.play('heartBeat');
+        sfx.play('matchHush', 0.05);
+      } else if (stage === 'finalPoint') {
+        sfx.play('heartBeat', 0, 1.12);
+        if (!finalPointShown) { finalPointShown = true; impactFx.label(mid, '결승점', 0.1); }
+      } else if (stage === 'done') {
+        impactFx.label(mid, '왕관 완성!', 0.1);
+      }
+    }
+    // 매치 포인트 무대(⑤): 하늘과 바다 빛을 한 톤 낮춘다. 덜어 내는 연출 — 번쩍임도 되풀이 경고음도 없다.
+    function applyStage() {
+      const ocean = seaBiome?.ocean;
+      if (!ocean) return;
+      if (!stageBase || stageBase.ocean !== ocean) {
+        stageBase = { ocean, horizon: ocean.water.uHorizon.value.clone(), sky: ocean.water.uSky.value.clone(), deep: ocean.water.uDeep.value.clone(), shallow: ocean.water.uShallow.value.clone(), zenith: ocean.sky ? ocean.sky.uZenith.value.clone() : null };
+      }
+      const k = stageMix * stageMix * (3 - 2 * stageMix);
+      // 색은 선형 공간 값이다 — 0.4 를 덜면 화면(sRGB)에서는 약 20% 어둡다.
+      ocean.water.uHorizon.value.copy(stageBase.horizon).multiplyScalar(1 - 0.3 * k);
+      ocean.water.uSky.value.copy(stageBase.sky).multiplyScalar(1 - 0.3 * k);
+      ocean.water.uDeep.value.copy(stageBase.deep).multiplyScalar(1 - 0.3 * k);
+      ocean.water.uShallow.value.copy(stageBase.shallow).multiplyScalar(1 - 0.22 * k);
+      if (stageBase.zenith) ocean.sky.uZenith.value.copy(stageBase.zenith).multiplyScalar(1 - 0.4 * k);
+    }
+    // 릴 없이 목표를 다 공개한다(릴이 돌기 전에 수를 뒀거나, 이어 하기로 판 중간에 돌아왔을 때).
+    function revealContractNow() {
+      if (!contract) return;
+      contractRevealed = [true, true, true];
+      refreshContract(false);
+    }
+    // HUD 를 지금 판에 맞춘다: 계약이 없으면 숨기고, 공개된 목표 칸을 드러내고, 진도가 바뀌었으면 다시 그린다.
+    function syncContractHud(dt) {
+      if (!contractHud) return;
+      if (!contract) {
+        if (hudGame) { contractHud.hide(); hudGame = 0; hudSet = null; }
+        return;
+      }
+      const wide = camera.aspect > 1.05;
+      if (hudGame !== gameId || hudSet !== contract) {
+        contractHud.show(contract, playerColor, wide, RUNG_NAMES[contractRung]);
+        hudGame = gameId;
+        hudSet = contract;
+        hudWide = wide;
+        hudEnded = false;
+        hudShown = [false, false, false];
+        hudDirty = true;
+      }
+      for (let i = 0; i < 3; i++) {
+        if (contractRevealed[i] && !hudShown[i]) {
+          hudShown[i] = true;
+          contractHud.reveal(i);
+          // 셋이 다 드러난 순간 규칙 한 줄을 잠깐 — 처음 몇 판만(§4-2: 「한 번 나온다」)
+          if (hudShown.every(Boolean) && !moveHistory.length) {
+            // 잭팟 판(세 칸이 다 같은 말)은 규칙이 달라 보이므로 늘 한 줄로 알린다. 보통 판은 첫 세 판만.
+            if (isJackpot(contract)) contractHud.hint(undefined, `🎰 잭팟 판! ${reelLib?.REEL_NAMES?.[contract.goals[0].type] || ''} ${contract.joker ? contract.goals[1].count : contract.goals[0].count + contract.goals[1].count}마리를 먼저 잡으면 승리${contract.joker ? '(조커 보석 ★ 하나는 받고 시작)' : ''} · 보상 2배`);
+            else if (contractStore.games < 3) contractHud.hint();
+          }
+        }
+      }
+      if (hudWide !== wide) { hudWide = wide; contractHud.layout(wide); }
+      if (hudDirty && contractState) {
+        contractHud.update(contractState, contractPliesLeft, currentTurn, contractGems);
+        hudDirty = false;
+      }
+      // 판이 끝나면 HUD 를 접고 종료 배너 안에 까닭과 최종 진도를 넣는다(IR-0). 되돌리면 다시 편다.
+      const ended = Boolean(gameOver && lastContractEnd && lastContractEnd.gameId === gameId && contractState);
+      if (ended !== hudEnded) {
+        hudEnded = ended;
+        if (ended) {
+          const me = playerColor === 'b' ? 'b' : 'w';
+          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, coins: lastContractEnd.coins, jackpot: lastContractEnd.jackpot, work: lastContractEnd.work, gems: contractGems, missed: missedOffer ? () => startMissed() : null });
+        } else contractHud.resume(wide);
+      }
+      contractHud.tick(dt);
+    }
+    function stepContract(dt) {
+      syncContractHud(dt);
+      if (contract) {
+        if (!isAnimatingMove && (contractWasAnimating || contractSig !== `${gameId}:${moveHistory.length}`)) refreshContract();
+        contractWasAnimating = isAnimatingMove;
+      }
+      const wantOffer = Boolean(puzzleBar && contract && !puzzle && !contractStore.practice && !moveHistory.length && !gameOver && !reelPendingFor && !shellReel?.busy());   // 슬롯머신이 떠 있는 동안은 권하지 않는다
+      // 계약전을 처음 여는 사람은 릴이 표적을 뽑은 뒤 연습 1번(한 수로 왕관 완성)으로 바로 들어간다 — 첫 보석을 30초 안에 본다(HK-2). 시험 스위치(?lab=contract)로 열면 예전처럼 권유만 뜬다.
+      if (wantOffer && !autoPractice && labSwitch !== 'contract' && !contractStore.games && reelPendingFor === 0 && shellReel && !shellReel.busy() && !isAnimatingMove && !aiThinking && engineStarted) {
+        autoPractice = true;
+        // 판을 여는 길이 아직 바쁘면 실패한다(실제 브라우저에서 봄) — 잠깐 뒤에 다시, 여덟 번까지
+        Promise.resolve(startPractice(0, true)).then((ok) => { if (!ok && (autoPracticeTries += 1) < 8) setTimeout(() => { autoPractice = false; }, 600); });
+      }
+      if (wantOffer !== offerOn) { offerOn = wantOffer; if (wantOffer) puzzleBar.offer(); else puzzleBar?.hideOffer(); }
+      const want = contract && !gameOver && (contractStageNow === 'matchPoint' || contractStageNow === 'finalPoint') ? 1 : 0;
+      if (stageMix !== want) {
+        stageMix += Math.sign(want - stageMix) * Math.min(Math.abs(want - stageMix), dt / 1.2);
+        applyStage();
+      }
+      const had = tagItems.length;
+      tagItems.length = 0;
+      const enemy = playerColor === 'w' ? 'b' : playerColor === 'b' ? 'w' : null;
+      if (contract && contractState && enemy && !gameOver) {
+        const open = openGoals(contract, contractState, playerColor).filter((g) => contractRevealed[g.index]);
+        if (open.length) {
+          for (const row of boardState) {
+            for (const p of row) {
+              if (!p?.mesh || p.color !== enemy || p.rig === 'statue') continue;
+              const g = open.find((o) => REEL_TYPE[o.type] === p.type);
+              if (!g) continue;
+              const gold = contractGold.has(p);
+              tagItems.push({ id: p.mesh.id, slot: gold ? 3 : g.index, type: gold ? 'gold' : g.type, x: p.mesh.position.x, y: p.mesh.position.y + (PIECE_HEIGHTS[p.type] || 0.45) + BOARD_SQ_SIZE * 0.1, z: p.mesh.position.z, hot: gold || contractHot.has(p) });
+            }
+          }
+        }
+      }
+      if (contract && !gameOver) {
+        for (const p of contractDanger) {
+          if (!p?.mesh || p.rig === 'statue') continue;
+          tagItems.push({ id: p.mesh.id, slot: 4, type: 'shield', x: p.mesh.position.x, y: p.mesh.position.y + (PIECE_HEIGHTS[p.type] || 0.45) + BOARD_SQ_SIZE * 0.1, z: p.mesh.position.z, hot: false });
+        }
+      }
+      if (crownGems) {
+        // 모듈을 늦게 받았으면 지금 센다
+        if (contract && contractState && !contractGems) refreshContract(false);
+        const showCrowns = Boolean(contract && contractState && contractRevealed.every(Boolean));
+        for (const side of ['w', 'b']) {
+          const k = showCrowns ? kingOf(side) : null;
+          if (k?.mesh && k.rig !== 'statue') {
+            const spot = crownSpot[side];
+            spot.x = k.mesh.position.x; spot.y = k.mesh.position.y + PIECE_HEIGHTS.king; spot.z = k.mesh.position.z;
+            crownKings[side] = spot;
+          } else crownKings[side] = null;
+        }
+        if (showCrowns || crownWas) crownGems.update(dt, camera, crownKings);
+        crownWas = showCrowns;
+      }
+      if (!bountyTags) return;
+      if (tagItems.length) bountyTags.update(dt, camera, tagItems, stageMix);
+      else if (had) bountyTags.clear();
+    }
+    function stepFadingPieces(dt) {
+      for (let i = fadingPieces.length - 1; i >= 0; i--) {
+        const f = fadingPieces[i];
+        f.age += dt;
+        const pose = reactionPose(f.type, f.age, f.variant);
+        const mesh = f.piece.mesh;
+        const px = f.start.x + f.dx * pose.back * BOARD_SQ_SIZE;
+        const pz = f.start.z + f.dz * pose.back * BOARD_SQ_SIZE;
+        mesh.position.set(
+          px + (f.endX - px) * pose.toStorage,
+          f.start.y + pose.up * BOARD_SQ_SIZE,
+          pz
+        );
+        // Tilt falls backward, away from the blow (axis = up x dir); roll topples sideways (axis = dir).
+        reactAxisTilt.set(f.dz, 0, -f.dx);
+        reactAxisRoll.set(f.dx, 0, f.dz);
+        const exitSpin = f.spin * Math.max(0, f.age - REACT_SEC);
+        reactQ.setFromAxisAngle(reactAxisTilt, pose.tilt);
+        reactQ2.setFromAxisAngle(reactAxisRoll, pose.roll);
+        reactQ.multiply(reactQ2);
+        reactQ2.setFromAxisAngle(UP_AXIS, pose.spin + exitSpin);
+        reactQ.multiply(reactQ2);
+        mesh.quaternion.copy(reactQ).multiply(f.baseQ);
+        // The hit squash (impactFx.squash) owns the scale for its first 0.32 s; the shrink only starts near the end.
+        if (pose.scale < 1) mesh.scale.setScalar(BOARD_SQ_SIZE * Math.max(0, pose.scale));
+        if (f.age >= REACTION_TOTAL) {
+          scene.remove(mesh);
+          fadingPieces.splice(i, 1);
+        }
+      }
+    }
+
     function instantiatePiece(type, color, r, c) {
+      let look = lookFor(color, type);
+      const slot = slotAt(color, type, r, c);
+      if (slot && slotStages[slot] && look) look = { ...look, stage: slotStages[slot] };
+      const tpl = (look && pieceTemplates[`${type}_${color}_${look.stage}`]) || pieceTemplates[`${type}_${color}`];
       let root;
       let mixer = null;
       const actions = {};
 
-      const tpl = pieceTemplates[`${type}_${color}`];
       if (tpl && tpl.scene) {
-        root = new THREE.Group();
         const model = SkeletonUtils.clone(tpl.scene);
-        root.add(model);
-
-        // Setup complete 3D animal sculpture, luxury pedestal plinth, PBR materials & royal regalia
-        setupBeastPiece(root, model, type, color);
-
+        const primaryMat = color === 'w' ? whitePieceMat : blackPieceMat;
+        const tintHex = activePack?.teamTint?.[color];
+        model.traverse((child) => {
+          const nm = child.name || '';
+          if (nm.includes('Icosphere') || nm.includes('glTF_not_exported')) {
+            child.visible = false;
+            return;
+          }
+          if (child.isMesh) {
+            // keepMaterials (PLAN §4.3): animal packs ship their own PBR materials — never recolour them.
+            if (!tpl.keepMaterials) {
+              const mName = child.material?.name || '';
+              if (mName.includes('Gold') || mName.includes('Trim') || mName.includes('Bronze') || mName.includes('Glow')) {
+                child.material = goldTrimMat;
+              } else if (mName.includes('Steel')) {
+                child.material = forgedSteelMat;
+              } else {
+                child.material = primaryMat;
+              }
+            } else if (tintHex && child.material) {
+              // Team readability tint: a per-side multiply on a cloned copy of the pack material.
+              child.material = getTintedMaterial(child.material, color, tintHex);
+            }
+            if (tpl.keepMaterials && tpl.rig !== 'statue') applyAnimalLook(child.material, color);
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
         mixer = new THREE.AnimationMixer(model);
+        if (tpl.rig === 'statue') {
+          root = model;
+        } else {
+          // Animal rigs: wrap so the engine's rotation.y (facing) and scale stay on the group while the
+          // model inside is normalised (feet at y=0, centred, height = fitHeight squares, native yaw fixed).
+          root = new THREE.Group();
+          const size = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          tpl.bbox.getSize(size);
+          tpl.bbox.getCenter(center);
+          const s = tpl.fitHeight && size.y > 1e-6 ? tpl.fitHeight / size.y : 1;
+          model.scale.setScalar(s);
+          model.rotation.y = tpl.yawOffset;
+          model.position.set(-center.x * s, -tpl.bbox.min.y * s, -center.z * s);
+          // Staunton-style turned pedestal under the animal (2026-10-30, PLAN §2.2.4): reads as "a chess piece" at
+          // a glance and carries the side colour (ivory / ebony). The animal stands on top of it.
+          const ped = activePack?.pedestal;
+          if (ped) {
+            const base = makePedestal(ped, color);
+            root.add(base);
+            model.position.y += base.userData.height;
+            const sr = base.userData.sideRing;
+            if (sr) sideRings.slots.push({ root, mesh: sideRingMesh(sr.color, sr.R, sr.hex) });
+            pedestals.slots.push({ root, base, mesh: pedestalInstanced(base.userData.geometryKey) });
+          }
+          root.add(model);
+          root.userData.animalModel = model;
+          if (look) attachTrinkets(model, tpl, look);
+        }
         for (const clip of tpl.animations) {
           actions[clip.name] = mixer.clipAction(clip);
         }
         activeMixers.push(mixer);
       } else {
-        root = createBeastMesh(type, color);
+        root = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.14, 0.42, 16),
+          color === 'w' ? whitePieceMat : blackPieceMat
+        );
       }
 
       const worldPos = boardToWorld(r, c);
@@ -1683,7 +2683,7 @@ export function initWizardChess() {
       root.scale.set(scale, scale, scale);
       // White (at +Z, r=6,7) faces -Z (Math.PI); Black (at -Z, r=0,1) faces +Z (0)
       root.rotation.y = color === 'w' ? Math.PI : 0;
-      scene.add(root);
+      root.name = 'piece'; scene.add(root);
 
       const pieceObj = {
         type,
@@ -1693,6 +2693,8 @@ export function initWizardChess() {
         mesh: root,
         mixer,
         actions,
+        clipMap: (tpl && tpl.clipMap) || {},
+        rig: (tpl && tpl.rig) || 'statue',
         currentAction: null,
         hasMoved: false
       };
@@ -1705,21 +2707,516 @@ export function initWizardChess() {
       return pieceObj;
     }
 
-    function switchChessSkin(newSkin) {
-      if (typeof window !== 'undefined') {
-        window.__chessSkin = newSkin;
+
+    // ---- Pedestal (Staunton base) -------------------------------------------------------------------------------
+    const pedestalCache = {};
+    // 받침(엔진 선택 계획서 §5 4~6일차): 선반 + 띠를 정점색 한 지오메트리·한 재질로 합쳐 기물당 2콜 → 1콜.
+    // 바닥 링은 투명 재질이라 합칠 수 없어 진영별 InstancedMesh 하나로(32콜 → 2콜). 행렬은 매 프레임 기물 root 에서 받는다.
+    const pedestalMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, metalness: 0 });
+    const sideRings = { meshes: {}, slots: [] };
+    const SIDE_RING_CAP = 64;
+    function sideRingMesh(color, R, hex) {
+      const key = `${color}_${R}`;
+      if (!sideRings.meshes[key]) {
+        pedestalCache[`ring_${R}`] ||= new THREE.RingGeometry(R * 1.04, R * 1.24, 48).rotateX(-Math.PI / 2);
+        const mat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(hex), transparent: true, opacity: 0.9, depthWrite: false, toneMapped: false,
+          polygonOffset: true, polygonOffsetFactor: -2
+        });
+        const im = new THREE.InstancedMesh(pedestalCache[`ring_${R}`], mat, SIDE_RING_CAP);
+        im.count = 0;
+        im.renderOrder = 1;
+        im.frustumCulled = false;
+        im.name = 'side-rings';
+        scene.add(im);
+        sideRings.meshes[key] = im;
       }
+      return sideRings.meshes[key];
+    }
+    const ringLift = new THREE.Matrix4().makeTranslation(0, 0.004, 0);
+    const ringTmp = new THREE.Matrix4();
+    const ringZero = new THREE.Matrix4().makeScale(0, 0, 0);
+    // 받침도 진영(모양)별 InstancedMesh 하나로 그린다(잡기 드로우콜 11-09: 32콜 → 2콜). 기물 아래의 받침 메시는 높이·행렬만
+    // 주고 보이지 않는다. 그림자도 InstancedMesh 가 드리운다.
+    const pedestals = { meshes: {}, slots: [] };
+    function pedestalInstanced(key) {
+      if (!pedestals.meshes[key]) {
+        const im = new THREE.InstancedMesh(pedestalCache[key], pedestalMat, SIDE_RING_CAP);
+        im.count = 0;
+        im.frustumCulled = false;
+        im.castShadow = true;
+        im.receiveShadow = true;
+        im.name = 'pedestals';
+        scene.add(im);
+        pedestals.meshes[key] = im;
+      }
+      return pedestals.meshes[key];
+    }
+    function syncPedestals() {
+      for (const im of Object.values(pedestals.meshes)) im.count = 0;
+      for (let i = pedestals.slots.length - 1; i >= 0; i--) {
+        const slot = pedestals.slots[i];
+        if (slot.root.parent !== scene || slot.base.parent !== slot.root) { pedestals.slots.splice(i, 1); continue; }
+        const im = slot.mesh;
+        if (im.count >= SIDE_RING_CAP) continue;
+        slot.root.updateMatrixWorld();
+        im.setMatrixAt(im.count++, slot.root.visible ? slot.base.matrixWorld : ringZero);
+      }
+      for (const im of Object.values(pedestals.meshes)) im.instanceMatrix.needsUpdate = true;
+    }
+    function syncSideRings() {
+      syncPedestals();
+      for (const im of Object.values(sideRings.meshes)) im.count = 0;
+      for (let i = sideRings.slots.length - 1; i >= 0; i--) {
+        const slot = sideRings.slots[i];
+        if (slot.root.parent !== scene) { sideRings.slots.splice(i, 1); continue; }
+        const im = slot.mesh;
+        if (im.count >= SIDE_RING_CAP) continue;
+        slot.root.updateMatrixWorld();
+        ringTmp.multiplyMatrices(slot.root.matrixWorld, ringLift);
+        im.setMatrixAt(im.count++, slot.root.visible ? ringTmp : ringZero);
+      }
+      for (const im of Object.values(sideRings.meshes)) im.instanceMatrix.needsUpdate = true;
+    }
+    function makePedestal(ped, color) {
+      const R = typeof ped.radius === 'number' ? ped.radius : 0.36;
+      const H = typeof ped.height === 'number' ? ped.height : 0.09;
+      const hex = (color === 'w' ? ped.w : ped.b) || (color === 'w' ? '#efe4cf' : '#2a2420');
+      const bandHex = color === 'w' ? ped.bandW : ped.bandB;
+      const key = `merged_${R}_${H}_${hex}_${bandHex || ''}`;
+      if (!pedestalCache[key]) {
+        // profile (x = radius, y = height): wide foot, bead, cove, narrow top collar
+        const pts = [
+          [0, 0], [R, 0], [R, H * 0.18], [R * 0.96, H * 0.3], [R * 0.9, H * 0.36], [R * 0.93, H * 0.48],
+          [R * 0.86, H * 0.6], [R * 0.74, H * 0.74], [R * 0.7, H * 0.86], [R * 0.74, H * 0.94], [R * 0.72, H], [0, H]
+        ].map(([x, y]) => new THREE.Vector2(x, y));
+        const paint = (geo, h) => {
+          const col = new THREE.Color(h);
+          const n = geo.attributes.position.count;
+          const arr = new Float32Array(n * 3);
+          for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
+          geo.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+          return geo;
+        };
+        const parts = [paint(new THREE.LatheGeometry(pts, 40), hex)];
+        if (bandHex) {
+          // The side colour as a painted band, so a piece's team reads against either square.
+          parts.push(paint(new THREE.TorusGeometry(R * 0.98, R * 0.09, 8, 48).rotateX(Math.PI / 2).translate(0, H * 0.24, 0), bandHex));
+        }
+        const merged = mergeGeometries(parts.map((g) => g.toNonIndexed()), false);
+        parts.forEach((g) => g.dispose());
+        pedestalCache[key] = merged;
+      }
+      const m = new THREE.Mesh(pedestalCache[key], pedestalMat);
+      // Drawn by the per-shape InstancedMesh (pedestalInstanced); this one only carries the height and the matrix.
+      m.visible = false;
+      m.name = 'pedestal';
+      m.userData.geometryKey = key;
+      m.userData.height = H;
+      // A flat ring of the side colour on the square: from the high default view the bases hide behind the
+      // animals, but the ring still shows whose piece it is. Registered on the root by the caller (needs root).
+      m.userData.sideRing = bandHex ? { color, R, hex: bandHex } : null;
+      return m;
+    }
+
+    // ---- Appearance: stage templates, trinket templates, bone sockets -------------------------------------------
+    async function ensureCosmeticAssets() {
+      if (!activePack || !assetApi) return;
+      const jobs = [];
+      for (const color of ['w', 'b']) {
+        for (const type of PIECE_TYPES) {
+          const def = activePack.pieces?.[type];
+          const look = lookFor(color, type);
+          if (!def || !look) continue;
+          for (const stage of new Set(Object.entries(slotStages).filter(([id]) => id[0] === color && slotRole(id) === type).map(([, st]) => st))) {
+            const key = `${type}_${color}_${stage}`;
+            if (!pieceTemplates[key]) {
+              jobs.push(assetApi.buildTemplate(type, def, stageModelFor(def, stage, color))
+                .then((t) => { pieceTemplates[key] = t; })
+                .catch((e) => console.warn(`Look load warning (${key}):`, e)));
+            }
+          }
+          const key = `${type}_${color}_${look.stage}`;
+          if (!pieceTemplates[key]) {
+            const name = stageModelFor(def, look.stage, color);
+            jobs.push(assetApi.buildTemplate(type, def, name)
+              .then((t) => { pieceTemplates[key] = t; })
+              .catch((e) => console.warn(`Look load warning (${key}):`, e)));
+          }
+          for (const slot of ITEM_SLOTS) {
+            const id = look[slot];
+            if (id && itemTemplates[id] === undefined) jobs.push(loadItemTemplate(id));
+          }
+        }
+      }
+      await Promise.all(jobs);
+    }
+
+    const itemLoads = {};
+    function loadItemTemplate(id) {
+      if (itemLoads[id]) return itemLoads[id];
+      const def = activePack?.items?.[id];
+      if (!def || !assetApi) return Promise.resolve(null);
+      itemLoads[id] = assetApi.loadGltfModel(def.model, assetApi.base).then((gltf) => {
+        gltf.scene.updateMatrixWorld(true);
+        itemTemplates[id] = { scene: gltf.scene, bbox: new THREE.Box3().setFromObject(gltf.scene), def };
+        return itemTemplates[id];
+      }).catch((e) => {
+        console.warn(`Item load warning (${id}):`, e);
+        itemTemplates[id] = null;
+        return null;
+      });
+      return itemLoads[id];
+    }
+
+    // Sockets from the bind pose: vertices skinned mostly to Head give the head top and width; vertices skinned
+    // mostly to Chest give the neck line. Computed once per template, in the template's model space.
+    function computeSockets(tpl) {
+      if (tpl.sockets !== undefined) return tpl.sockets;
+      tpl.sockets = null;
+      let skinned = null;
+      tpl.scene.traverse((o) => { if (!skinned && o.isSkinnedMesh) skinned = o; });
+      if (!skinned) return null;
+      tpl.scene.updateMatrixWorld(true);
+      const bones = skinned.skeleton.bones;
+      const idx = (n) => bones.findIndex((b) => b.name === n);
+      const iHead = idx('Head');
+      const iChest = idx('Chest');
+      if (iHead < 0 || iChest < 0) return null;
+      const g = skinned.geometry;
+      const pos = g.attributes.position;
+      const si = g.attributes.skinIndex;
+      const sw = g.attributes.skinWeight;
+      const v = new THREE.Vector3();
+      const headBox = new THREE.Box3();
+      const chestPts = [];
+      const weightOf = (i, bi) => {
+        let w = 0;
+        for (let k = 0; k < 4; k++) if (si.getComponent(i, k) === bi) w += sw.getComponent(i, k);
+        return w;
+      };
+      for (let i = 0; i < pos.count; i++) {
+        const wh = weightOf(i, iHead);
+        const wc = weightOf(i, iChest);
+        if (wh < 0.6 && wc < 0.5) continue;
+        v.fromBufferAttribute(pos, i);
+        skinned.applyBoneTransform(i, v);          // rest pose as the bones see it (bind matrices are not identity)
+        v.applyMatrix4(skinned.matrixWorld);
+        if (wh >= 0.6) headBox.expandByPoint(v);
+        else chestPts.push(v.clone());
+      }
+      if (headBox.isEmpty() || chestPts.length < 8) return null;
+      let chestTop = -Infinity;
+      let chestLow = Infinity;
+      for (const p of chestPts) { chestTop = Math.max(chestTop, p.y); chestLow = Math.min(chestLow, p.y); }
+      const ring = chestPts.filter((p) => p.y > chestTop - 0.25 * (chestTop - chestLow));
+      const ringBox = new THREE.Box3().setFromPoints(ring);
+      const hc = headBox.getCenter(new THREE.Vector3());
+      const rc = ringBox.getCenter(new THREE.Vector3());
+      // Chibi heads overhang the neck, so the neck trinket hangs on the front of the upper chest instead: the
+      // frontmost (+Z = model forward) chest point in a band 10–35 % below the chest top.
+      const span = chestTop - chestLow;
+      const hangY = chestTop - 0.15 * span;
+      const band = chestPts.filter((p) => Math.abs(p.y - hangY) < 0.06 * span);
+      const frontZ = band.length ? Math.max(...band.map((p) => p.z)) : ringBox.max.z;
+      const front = new THREE.Vector3(rc.x, hangY, frontZ);
+      tpl.sockets = {
+        dbg: { chestTop, chestLow, headMinY: headBox.min.y, headMaxY: headBox.max.y, n: chestPts.length },
+        head: { bone: bones[iHead], at: new THREE.Vector3(hc.x, headBox.max.y, hc.z), width: headBox.max.x - headBox.min.x },
+        // width = the chest band's x extent (the very top ring can be a handful of points); never under half a head
+        neck: {
+          bone: bones[iChest],
+          at: new THREE.Vector3(rc.x, front.y, front.z),
+          width: Math.max(
+            band.length ? Math.max(...band.map((p) => p.x)) - Math.min(...band.map((p) => p.x)) : 0,
+            ringBox.max.x - ringBox.min.x,
+            0.5 * (headBox.max.x - headBox.min.x)
+          )
+        }
+      };
+      return tpl.sockets;
+    }
+
+    function attachTrinkets(model, tpl, look) {
+      const sockets = computeSockets(tpl);
+      if (!sockets) return;
+      for (const slot of ITEM_SLOTS) {
+        const id = look[slot];
+        const item = id && itemTemplates[id];
+        const sock = sockets[slot];
+        if (!item || !sock) continue;
+        let bone = null;
+        model.traverse((o) => { if (!bone && o.isBone && o.name === sock.bone.name) bone = o; });
+        if (!bone) continue;
+        // head shape changes with the stage, so a face item can override its fit per stage
+        const fit = { ...item.def.fit, ...item.def.fit?.byStage?.[look.stage] };
+        const size = item.bbox.getSize(new THREE.Vector3());
+        const center = item.bbox.getCenter(new THREE.Vector3());
+        const inner = SkeletonUtils.clone(item.scene);   // safe for skinned trinkets too
+        // origin: 'bottom' (hats, bows) sits on the anchor; 'center' (collars) is centred on it
+        inner.position.set(-center.x, fit.origin === 'center' ? -center.y : -item.bbox.min.y, -center.z);
+        // no shadow pass for trinkets: they are small and each one would add a draw call to the shadow map (§14.0)
+        inner.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });
+        const holder = new THREE.Group();
+        holder.name = `trinket_${slot}_${id}`;
+        holder.add(inner);
+        const w = sock.width;
+        const at = fit.at || [0, 0, 0];
+        const P = sock.at.clone().add(new THREE.Vector3(at[0] * w, at[1] * w, at[2] * w));
+        const t = (fit.tilt || [0, 0, 0]).map((d) => THREE.MathUtils.degToRad(d));
+        const Q = new THREE.Quaternion().setFromEuler(new THREE.Euler(t[0], t[1], t[2]));
+        const S = ((fit.size || 0.5) * w) / Math.max(size.x, size.z, 1e-6);
+        const want = new THREE.Matrix4().compose(P, Q, new THREE.Vector3(S, S, S));
+        // bone-local = (bind-pose bone world)^-1 · wanted model-space transform
+        const local = sock.bone.matrixWorld.clone().invert().multiply(want);
+        local.decompose(holder.position, holder.quaternion, holder.scale);
+        bone.add(holder);
+      }
+    }
+
+    function rebuildAllPieces() {
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           const p = boardState[r][c];
           if (p && p.mesh) {
             scene.remove(p.mesh);
+            if (p.mixer) {
+              const i = activeMixers.indexOf(p.mixer);
+              if (i >= 0) activeMixers.splice(i, 1);
+            }
             const newInst = instantiatePiece(p.type, p.color, r, c);
             newInst.hasMoved = p.hasMoved;
             boardState[r][c] = newInst;
           }
         }
       }
+      // 계약 표시(금빛 결정타·위험 방패·현상 딱지)는 말 객체를 기억한다 — 새 말로 다시 센다.
+      // 안 하면 외형을 바꾼 뒤(게임을 켤 때 별빛 외형을 입힐 때 포함) 금빛이 사라졌다(IR-1 회귀, 2026-11-16).
+      if (contract && contractState) refreshContract(false);
+    }
+
+    async function setCosmetics(next) {
+      cosmetics = sanitizeCosmetics(activePack, next, unlockedItems(), stageCaps());
+      saveCosmetics();
+      await ensureCosmeticAssets();
+      rebuildAllPieces();
+      try { window.dispatchEvent(new CustomEvent('cosmeticschange', { detail: getCosmetics() })); } catch (e) {}
+      return getCosmetics();
+    }
+
+    function getCosmetics() {
+      return JSON.parse(JSON.stringify(cosmetics));
+    }
+
+    function getRivalCatalog() {
+      const rivals = activePack?.rivals;
+      if (!rivals?.length) return null;
+      return {
+        active: activeRivalId,
+        unlocked: rivalProgress.unlocked.slice(),
+        wins: { ...rivalProgress.wins },
+        items: activePack.items,
+        rivals: rivals.map(({ id, name, blurb, rewards, stage, style }) => ({ id, name, blurb, rewards, stage: stage || null, style: style || null })),
+        freePlay: { ...freePlay }
+      };
+    }
+
+    function notifyRivalChange() {
+      try { window.dispatchEvent(new CustomEvent('rivalchange', { detail: getRivalCatalog() })); } catch (e) {}
+    }
+
+    async function startRival(id) {
+      if (id && !(activePack?.rivals || []).some((r) => r.id === id)) return false;
+      if (gameMode !== 'single') return false;
+      activeRivalId = id || null;
+      await ensureCosmeticAssets();
+      resetChessBoard(true);
+      if (activeRivalId) playRivalEntrance();
+      notifyRivalChange();
+      return true;
+    }
+
+    // Desire plan D4: a rival walks on. Its pieces drop onto their squares, then yours, all inside two seconds, and the
+    // card (RivalEntrance) says what it wears that you have not got. A move or the skip button lands everything at once.
+    const ENTRANCE_DROP = 1.4;      // height the pieces fall from
+    const ENTRANCE_FALL = 0.3;      // seconds one piece takes to land
+    const ENTRANCE_STEP = 0.045;    // seconds between pieces: 32 pieces land in about 1.7 s
+    function playRivalEntrance() {
+      const show = rivalShowcase(activePack, activeRivalId, rivalProgress.unlocked, rivalProgress.wins, stageCaps()[playerColor] || {});
+      try { window.dispatchEvent(new CustomEvent('rivalentrance', { detail: show })); } catch (e) {}
+      entranceDrops = [];
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+      const them = rivalColor();
+      // The rival comes first, back rank before pawns; then the player's side the same way.
+      const rows = them === 'b' ? [0, 1, 7, 6] : [7, 6, 0, 1];
+      for (const r of rows) {
+        for (let c = 0; c < 8; c++) {
+          const mesh = boardState[r][c]?.mesh;
+          if (!mesh) continue;
+          entranceDrops.push({ mesh, y: mesh.position.y, delay: entranceDrops.length * ENTRANCE_STEP });
+          mesh.position.y += ENTRANCE_DROP;
+          mesh.visible = false;
+        }
+      }
+      entranceT = 0;
+    }
+    function stepEntrance(dt) {
+      if (isAnimatingMove) return landEntrance();
+      entranceT += dt;
+      let falling = false;
+      for (const d of entranceDrops) {
+        const k = Math.min(1, Math.max(0, (entranceT - d.delay) / ENTRANCE_FALL));
+        d.mesh.visible = entranceT >= d.delay;
+        d.mesh.position.y = d.y + ENTRANCE_DROP * (1 - k * k);
+        if (k < 1) falling = true;
+      }
+      renderer.shadowMap.needsUpdate = true;
+      if (!falling) entranceDrops = [];
+    }
+    function landEntrance() {
+      for (const d of entranceDrops) {
+        d.mesh.visible = true;
+        d.mesh.position.y = d.y;
+      }
+      entranceDrops = [];
+      renderer.shadowMap.needsUpdate = true;
+    }
+
+    // The won trinket comes off the rival piece that wore it and lands on the banner line (desire plan D4).
+    function flyTrophy(target, itemId, label) {
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || typeof target.animate !== 'function') return;
+      const role = rivalWearer(activePack, activeRivalId, itemId);
+      let from = null;
+      for (const type of [role, 'king']) {
+        for (let r = 0; r < 8 && !from; r++) {
+          for (let c = 0; c < 8 && !from; c++) {
+            const p = boardState[r][c];
+            if (p?.mesh && p.color === rivalColor() && p.type === type) from = p.mesh.position.clone();
+          }
+        }
+        if (from) break;
+      }
+      let sx = window.innerWidth / 2;
+      let sy = window.innerHeight * 0.15;
+      if (from) {
+        from.y += 0.45;
+        const at = from.project(camera);
+        sx = ((at.x + 1) / 2) * window.innerWidth;
+        sy = ((1 - at.y) / 2) * window.innerHeight;
+      }
+      const chip = document.createElement('div');
+      chip.className = 'trophy-fly';
+      chip.textContent = `🎁 ${label}`;
+      document.body.appendChild(chip);
+      target.style.visibility = 'hidden';
+      requestAnimationFrame(() => {
+        const box = target.getBoundingClientRect();
+        const tx = box.left + box.width / 2;
+        const ty = box.top + box.height / 2;
+        const at = (x, y, s) => `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${s})`;
+        const anim = chip.animate([
+          { transform: at(sx, sy, 0.5), opacity: 0 },
+          { transform: at(sx, sy - 70, 1.2), opacity: 1, offset: 0.3 },
+          { transform: at(tx, ty, 1), opacity: 1 }
+        ], { duration: 1100, easing: 'cubic-bezier(.3,.7,.3,1)' });
+        anim.onfinish = () => {
+          chip.remove();
+          target.style.visibility = '';
+          target.classList.add('landed');
+        };
+      });
+    }
+
+    // Paid at mate, worn from the next game: rebuilding now would cut the kneel and cheer short.
+    function awardRivalWin(winnerColor) {
+      const rival = activeRival();
+      if (!rival || rivalPaid || scriptedGameActive || gameMode !== 'single' || winnerColor !== playerColor) return;
+      rivalPaid = true;
+      rivalProgress.wins[rival.id] = (rivalProgress.wins[rival.id] || 0) + 1;
+      const itemId = nextRivalReward(activePack, rival.id, rivalProgress.unlocked);
+      lastTrophy = null;
+      if (itemId) {
+        rivalProgress.unlocked.push(itemId);
+        const role = trophyRole(activePack, cosmetics[playerColor], itemId, lastMoverType);
+        if (role) {
+          cosmetics[playerColor][role][activePack.items[itemId].slot] = itemId;
+          saveCosmetics();
+          ensureCosmeticAssets();
+        }
+        lastTrophy = { item: itemId, role, name: activePack.items[itemId].name };
+      }
+      saveRivalProgress();
+      notifyRivalChange();
+    }
+
+    function getLookCatalog() {
+      if (!activePack) return null;
+      const open = unlockedItems();
+      const roles = {};
+      const ids = stageIds(activePack);
+      for (const type of PIECE_TYPES) {
+        const def = activePack.pieces?.[type];
+        roles[type] = { slots: slotsFor(def), stages: ids.filter((id, i) => i === 0 || def?.stages?.[id]) };
+      }
+      return { stages: activePack.looks?.stages || [], note: activePack.looks?.note || null, items: Object.fromEntries(Object.entries(activePack.items || {}).filter(([id]) => !open || open.includes(id))), roles };
+    }
+
+
+    // ---- Promotion chooser (PLAN §14.0 (a): auto-queen by default, under-promotion in one tap) -------------------
+    let promotionPickerOpen = false;
+    const PROMO_SPECIES_KO = { lion: '사자', tiger: '호랑이', rhino: '코뿔소', panda: '판다', kangaroo: '캥거루', meerkat: '미어캣', fox: '여우' };
+    function showPromotionPicker(color, onPick) {
+      const roles = [['queen', '♛', '퀸', 'Q'], ['rook', '♜', '룩', 'R'], ['bishop', '♝', '비숍', 'B'], ['knight', '♞', '나이트', 'N']];
+      const AUTO_MS = 2500;
+      promotionPickerOpen = true;
+      const wrap = document.createElement('div');
+      wrap.className = 'promo-picker';
+      wrap.id = 'promo-picker';
+      wrap.setAttribute('role', 'dialog');
+      wrap.setAttribute('aria-label', '승급할 기물 고르기');
+      const title = document.createElement('div');
+      title.className = 'promo-title';
+      title.textContent = '승급 — 고르지 않으면 퀸';
+      wrap.appendChild(title);
+      const row = document.createElement('div');
+      row.className = 'promo-row';
+      wrap.appendChild(row);
+      const bar = document.createElement('div');
+      bar.className = 'promo-bar';
+      const fill = document.createElement('div');
+      fill.className = 'promo-bar-fill';
+      fill.style.animationDuration = `${AUTO_MS}ms`;
+      bar.appendChild(fill);
+      wrap.appendChild(bar);
+      let done = false;
+      const finish = (role) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        window.removeEventListener('keydown', onKey, true);
+        wrap.remove();
+        promotionPickerOpen = false;
+        onPick(role);
+      };
+      for (const [role, glyph, ko, key] of roles) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = `promo-btn${role === 'queen' ? ' default' : ''}`;
+        b.dataset.role = role;
+        const model = activePack?.pieces?.[role] ? modelNameFor(activePack.pieces[role], color) : '';
+        const species = PROMO_SPECIES_KO[(model || '').replace(/_[wb]$/, '').replace(/_s\d.*$/, '')] || '';
+        b.innerHTML = `<span class="promo-glyph">${glyph}</span><span>${ko}</span>${species ? `<small>${species}</small>` : ''}<kbd>${key}</kbd>`;
+        b.addEventListener('click', (e) => { e.stopPropagation(); finish(role); });
+        row.appendChild(b);
+      }
+      const onKey = (e) => {
+        const k = e.key.toLowerCase();
+        const hit = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight', enter: 'queen' }[k];
+        if (hit) { e.preventDefault(); e.stopPropagation(); finish(hit); }
+      };
+      window.addEventListener('keydown', onKey, true);
+      const timer = setTimeout(() => finish('queen'), AUTO_MS);
+      document.body.appendChild(wrap);
     }
 
     // Exact per-piece Attack keyframe synchronization (24 fps Blender clips, zero overhead suspension freeze):
@@ -1737,7 +3234,9 @@ export function initWizardChess() {
     function playPieceClip(piece, clipKeyword, loop = true, fadeSeconds = 0.18) {
       if (!piece || !piece.actions) return;
       const lowerKw = clipKeyword.toLowerCase();
-      const key = Object.keys(piece.actions).find((k) =>
+      // Pack adapter first (clip role → actual clip name), then the legacy substring match.
+      const mapped = piece.clipMap && piece.clipMap[lowerKw];
+      const key = (mapped && piece.actions[mapped]) ? mapped : Object.keys(piece.actions).find((k) =>
         k.toLowerCase().includes(lowerKw)
       );
       if (!key) return;
@@ -1769,7 +3268,48 @@ export function initWizardChess() {
       renderer.shadowMap.needsUpdate = true;
     }
 
+    // Short one-off acts that play over the board and never hold up a move.
+    const IDLE_FLOURISH_MIN = 9;
+    const IDLE_FLOURISH_SPREAD = 8;
+    const PAWN_LOOKOUT_CHANCE = 0.3;
+    const flourishes = [];
+    let idleFlourishIn = IDLE_FLOURISH_MIN;
+
+    function playFlourish(piece, role) {
+      const name = piece?.clipMap?.[role];
+      const action = name && piece.actions?.[name];
+      if (!action) return false;
+      clearFlourish(piece);
+      playPieceClip(piece, role, false, 0.16);
+      flourishes.push({ piece, left: action.getClip().duration / action.timeScale });
+      return true;
+    }
+
+    function clearFlourish(piece) {
+      const i = flourishes.findIndex((f) => f.piece === piece);
+      if (i >= 0) flourishes.splice(i, 1);
+    }
+
+    function stepFlourishes(dt) {
+      for (let i = flourishes.length - 1; i >= 0; i--) {
+        const f = flourishes[i];
+        f.left -= dt;
+        if (f.left <= 0) {
+          flourishes.splice(i, 1);
+          playPieceClip(f.piece, 'Idle', true, 0.2);
+        }
+      }
+      if (isAnimatingMove || gameOver || flourishes.length) return;
+      idleFlourishIn -= dt;
+      if (idleFlourishIn > 0) return;
+      idleFlourishIn = IDLE_FLOURISH_MIN + Math.random() * IDLE_FLOURISH_SPREAD;
+      const pieces = boardState.flat().filter((p) => p && p.rig !== 'statue');
+      const piece = pieces[Math.floor(Math.random() * pieces.length)];
+      if (piece) playFlourish(piece, piece.type === 'pawn' && Math.random() < 0.5 ? 'lookout' : 'yawn');
+    }
+
     function clearAllPieces() {
+      flourishes.length = 0;
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           if (boardState[r][c] && boardState[r][c].mesh) {
@@ -1805,20 +3345,16 @@ export function initWizardChess() {
       checkmateState.winnerColor = null;
       checkmateState.kingFallAngleDeg = 0;
       checkmateState.phase = 'none';
+      drawBannerShown = false;
       const overlay = document.getElementById('checkmate-overlay');
       if (overlay) {
         overlay.classList.remove('visible');
-      }
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          const p = boardState[r]?.[c];
-          if (p && p.mesh) p.mesh.visible = true;
-        }
       }
     }
 
     function captureBoardSnapshot() {
       return {
+        fen: referee.fen(),
         currentTurn,
         gameOver,
         capturedByWhite,
@@ -1832,11 +3368,13 @@ export function initWizardChess() {
       };
     }
 
-    function restoreBoardSnapshot(snap) {
+    function restoreBoardSnapshot(snap, { keepReferee = false } = {}) {
       if (!snap) return false;
+      clearPremove();   // DR-2a: a premove belongs to the position it was made in
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
       preMoveHighlightTask = null;
       activeMoveTweens.length = 0;
@@ -1884,17 +3422,41 @@ export function initWizardChess() {
           }
         }
       }
+      if (keepReferee) {
+        // The referee already stepped back with its history intact; loading a position would wipe the moves.
+      } else if (snap.fen) {
+        try {
+          referee.load(snap.fen);
+        } catch (e) {
+          syncRefereeFromBoard(currentTurn);
+        }
+      } else {
+        syncRefereeFromBoard(currentTurn);
+      }
 
+      syncLastMoveMark();
       renderer.shadowMap.needsUpdate = true;
       updateTurnUI();
       if (typeof updateScriptBarUI === 'function') updateScriptBarUI();
       return true;
     }
 
-    function resetChessBoard(orientCamera = true, preserveScript = false) {
+    // `announce` is false only on a start that is about to resume a saved game: no new game begins.
+    function resetChessBoard(orientCamera = true, preserveScript = false, announce = true) {
+      puzzle = null;
+      missedOffer = null;
+      puzzleBar?.hide();
+      rivalPaid = false;
+      entranceDrops = [];
+      gameReported = false;
+      lastMoveMark.visible = false;
+      gameId = (gameId + 1) >>> 0;
+      clearPremove();   // DR-2a: a new game starts with no premove (the AI may be thinking with no timer pending)
+      if (announce) window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, rivalId: activeRivalId, color: playerColor, online: gameMode === 'multi' } }));
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
       preMoveHighlightTask = null;
       activeMoveTweens.length = 0;
@@ -1907,7 +3469,6 @@ export function initWizardChess() {
       orbitControls.enabled = true;
       clearAllPieces();
       clearSquareHighlights();
-      setupHazardTiles();
       selectedSquare = null;
       validMoves = [];
       currentTurn = 'w';
@@ -1928,6 +3489,8 @@ export function initWizardChess() {
         boardState[1][c] = instantiatePiece('pawn', 'b', 1, c);
         boardState[0][c] = instantiatePiece(backRow[c], 'b', 0, c);
       }
+      referee.reset();
+      saveResume();
 
       if (orientCamera) {
         const viewSide = playerColor === 'b' ? 'b' : 'w';
@@ -1940,6 +3503,27 @@ export function initWizardChess() {
       updateTurnUI();
       if (typeof updateScriptBarUI === 'function') updateScriptBarUI();
       maybeScheduleAIMove();
+      // 소라 릴(PP-1): 새 판이면 잠시 뒤에 튼다. 그 사이 이어 하기가 수를 되살리면(판 중간) 틀지 않는다.
+      settleReelHops();
+      // 계약은 판을 여는 순간 정해진다(릴은 공개만 한다) — 릴이 돌기 전에 둔 수에도 같은 규칙이 걸린다.
+      const contractGame = contractLab && announce && gameMode === 'single' && !scriptedGameActive && (playerColor === 'w' || playerColor === 'b');
+      contract = contractGame ? pickContract(Math.random(), contractStore.games) : null;
+      if (contract) contractGames += 1;
+      contractRung = contractStore.rung;
+      rungNote = '';
+      oopsKey = '';
+      contractState = null;
+      contractGems = null;
+      crownGems?.clear();
+      contractStageNow = 'open';
+      contractRevealed = [false, false, false];
+      contractHot.clear();
+      finalPointShown = false;
+      contractPliesLeft = CONTRACT_PLY_LIMIT;
+      lastContractEnd = null;
+      reelPendingFor = contract ? gameId : 0;
+      reelPendingAge = 0;
+      shellReel?.cancel();          // 앞 판의 슬롯머신이 떠 있으면 치운다
     }
 
     // =========================================================================
@@ -1947,7 +3531,7 @@ export function initWizardChess() {
     // =========================================================================
     function getPseudoMovesForPiece(r, c, board = boardState) {
       const piece = board[r][c];
-      if (!piece || piece.isPetrified) return [];
+      if (!piece) return [];
       const moves = [];
       const { type, color } = piece;
       const dir = color === 'w' ? -1 : 1;
@@ -1955,7 +3539,6 @@ export function initWizardChess() {
       const inBounds = (nr, nc) => nr >= 0 && nr < 8 && nc >= 0 && nc < 8;
       const addMove = (nr, nc) => {
         if (!inBounds(nr, nc)) return false;
-        if (hazardTiles[nr]?.[nc]?.type === 'pillar') return false; // Impassable pillar obstacle
         const target = board[nr][nc];
         if (!target) {
           moves.push({ r: nr, c: nc, capture: false });
@@ -1968,15 +3551,15 @@ export function initWizardChess() {
       };
 
       if (type === 'pawn') {
-        if (inBounds(r + dir, c) && !board[r + dir][c] && hazardTiles[r + dir]?.[c]?.type !== 'pillar') {
+        if (inBounds(r + dir, c) && !board[r + dir][c]) {
           moves.push({ r: r + dir, c, capture: false });
           const startRow = color === 'w' ? 6 : 1;
-          if (r === startRow && !board[r + dir * 2][c] && hazardTiles[r + dir * 2]?.[c]?.type !== 'pillar') {
+          if (r === startRow && !board[r + dir * 2][c]) {
             moves.push({ r: r + dir * 2, c, capture: false });
           }
         }
         for (const dc of [-1, 1]) {
-          if (inBounds(r + dir, c + dc) && hazardTiles[r + dir]?.[c + dc]?.type !== 'pillar') {
+          if (inBounds(r + dir, c + dc)) {
             const target = board[r + dir][c + dc];
             if (target && target.color !== color) {
               moves.push({ r: r + dir, c: c + dc, capture: true });
@@ -2035,8 +3618,15 @@ export function initWizardChess() {
     }
 
     function getLegalMovesForPiece(r, c) {
+      // chess.js is the authority (en passant, castling-through-check, pins all included).
+      if (boardState[r][c]) return referee.legalMovesFor(r, c);
+      return [];
+    }
+
+    // Legacy generator kept only as a reference for the PGN parser's virtual boards (loadNotation).
+    function getLegalMovesForPieceLegacy(r, c) {
       const piece = boardState[r][c];
-      if (!piece || piece.isPetrified) return [];
+      if (!piece) return [];
       const pseudo = getPseudoMovesForPiece(r, c, boardState);
       const legal = [];
       for (const m of pseudo) {
@@ -2109,64 +3699,231 @@ export function initWizardChess() {
     }
 
     function getAllLegalMoves(color) {
-      const all = [];
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          const p = boardState[r][c];
-          if (p && p.color === color) {
-            if (p.isPetrified) continue;
-            const moves = getLegalMovesForPiece(r, c);
-            for (const m of moves) {
-              all.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, capture: m.capture });
-            }
-          }
-        }
-      }
-      return all;
+      return referee.allLegalMoves(color);
     }
 
     // =========================================================================
     // Square Highlights
     // =========================================================================
     function clearSquareHighlights() {
+      moveMarks.clear();
       while (squareHighlightsGroup.children.length > 0) {
         squareHighlightsGroup.remove(squareHighlightsGroup.children[0]);
       }
     }
 
+    // Marks the player's pieces under attack. Purely a reading aid: the marks clear with the next selection.
+    function showThreats() {
+      if (isAnimatingMove || gameOver || currentTurn !== playerColor) return -1;
+      clearSquareHighlights();
+      const squares = referee.threatened(playerColor);
+      const cells = squares.map((sq) => ({ r: 8 - Number(sq[1]), c: sq.charCodeAt(0) - 97 }));
+      moveMarks.threats(cells);
+      // 글자는 한 번만 — 말마다 띄우면 이웃한 칸에서 겹쳐 뭉개진다. 위험한 말들의 한가운데에 둔다.
+      if (cells.length) {
+        const mid = cells.map((cell) => boardToWorld(cell.r, cell.c)).reduce((a, p) => a.add(new THREE.Vector3(p.x, 0, p.z)), new THREE.Vector3()).multiplyScalar(1 / cells.length);
+        impactFx.label(new THREE.Vector3(mid.x, BOARD_SURFACE_Y + 0.3, mid.z), '위험!', 0.12);
+      }
+      return squares.length;
+    }
+
+    // Takes back the player's last move and the reply. The referee undoes the moves itself, so the game record stays whole.
+    function takeBackMove() {
+      if (gameMode !== 'single' || scriptedGameActive || isAnimatingMove || gameOver || currentTurn !== playerColor || puzzle) return false;
+      if (moveHistory.length < 2 || referee.history().length < 2) return false;
+      referee.undo();
+      referee.undo();
+      moveHistory.pop();
+      const entry = moveHistory.pop();
+      restoreBoardSnapshot(entry.snapshot, { keepReferee: true });
+      saveResume();
+      return true;
+    }
+
+    // An unfinished single game survives a reload: the move list is kept after every move and replayed on start
+    // (src/rules/resume.js). A finished, multiplayer, scripted or empty game keeps nothing.
+    function saveResume() {
+      if (puzzle) return;   // 연습 국면은 이어 할 판이 아니다 — 남아 있던 기록도 그대로 둔다
+      try {
+        const history = referee.history();
+        if (gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator' || gameOver || !history.length) {
+          window.localStorage.removeItem(RESUME_KEY);
+          return;
+        }
+        window.localStorage.setItem(RESUME_KEY, JSON.stringify(resumeRecord({ gameId, color: playerColor, rivalId: activeRivalId, history, contract: contract ? contract.id : null })));
+      } catch (e) { /* a blocked store only loses the resume */ }
+    }
+
+    function readResume() {
+      try {
+        return sanitizeResume(JSON.parse(window.localStorage.getItem(RESUME_KEY) || 'null'));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Same game id, so the cards and the island treat the rest of the game as the same game.
+    async function resumeGame(record, asPuzzle = null) {
+      const back = record && replayResume(record);
+      if (!back) return false;
+      puzzle = asPuzzle;
+      // 계약 세트를 국면보다 먼저 맞춘다 — 판을 되살리며 판정이 한 번 돌 때 앞 판의 세트로 세면 안 된다.
+      contract = contractLab && record.contract ? contractById(record.contract) : null;
+      missedOffer = null;
+      if (!asPuzzle) puzzleBar?.hide();
+      gameMode = 'single';
+      scriptedGameActive = false;
+      playerColor = record.color;
+      activeRivalId = (activePack?.rivals || []).some((r) => r.id === record.rivalId) ? record.rivalId : null;
+      if (activeRivalId) await ensureCosmeticAssets();
+      rivalPaid = false;
+      gameReported = false;
+      gameId = record.gameId;
+      referee.adopt(back.chess);
+      restoreBoardSnapshot({
+        fen: back.chess.fen(), currentTurn: back.turn, gameOver: false, capturedByWhite: back.capturedByWhite,
+        capturedByBlack: back.capturedByBlack, scriptCursor: 0, scriptedGameActive: false, scriptDeviated: false, cells: back.cells
+      }, { keepReferee: true });
+      moveHistory = back.before.map(takebackEntry);
+      // 계약전을 이어 한다: 같은 세트, 진도는 수에서 다시 센다. 릴은 다시 돌지 않고 목표는 바로 다 보인다.
+      contract = contractLab && record.contract ? contractById(record.contract) : null;
+      contractRung = contractStore.rung;
+      oopsKey = '';
+      reelPendingFor = 0;
+      shellReel?.cancel();
+      finalPointShown = false;
+      lastContractEnd = null;
+      contractStageNow = 'open';
+      contractGems = null;
+      crownGems?.clear();
+      if (contract) revealContractNow();
+      window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: record.moves.length, rivalId: activeRivalId, color: playerColor, ...(puzzle ? { puzzle: puzzle.kind } : {}) } }));
+      notifyRivalChange();
+      saveResume();
+      maybeScheduleAIMove();
+      return true;
+    }
+
+    // 고른 말 · 갈 칸 · 잡을 말(플레이 화면 개편 2차, 2026-11-13).
+    // 예전에는 칸마다 메시를 새로 만들었다(퀸을 고르면 드로우콜 +20, 고리는 말 밑에 깔려 안 보였다).
+    // 이제 인스턴스 메시 셋이다: 고른 칸을 통째로 물들이는 판 · 갈 칸의 큰 점 · 잡을 말 발밑의 굵은 고리. 드로우콜은 많아야 +3.
+    const moveMarks = (() => {
+      const paint = (draw) => {
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = 128;
+        const g = cv.getContext('2d');
+        draw(g);
+        const tex = new THREE.CanvasTexture(cv);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      };
+      const make = (name, size, tex, count, lift) => {
+        const geo = new THREE.PlaneGeometry(size, size);
+        geo.rotateX(-Math.PI / 2);
+        const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+        mat.userData = { outlineParameters: { visible: false } };
+        const mesh = new THREE.InstancedMesh(geo, mat, count);
+        mesh.name = name;
+        mesh.count = 0;
+        mesh.visible = false;
+        mesh.frustumCulled = false;
+        mesh.renderOrder = 2;
+        mesh.userData.lift = lift;
+        scene.add(mesh);
+        return mesh;
+      };
+      // 고른 칸: 금빛 판에 밝은 테
+      const tile = make('move-selected', BOARD_SQ_SIZE * 0.96, paint((g) => {
+        g.fillStyle = 'rgba(255, 210, 63, 0.62)'; g.fillRect(0, 0, 128, 128);
+        g.strokeStyle = '#fff6c8'; g.lineWidth = 12; g.strokeRect(6, 6, 116, 116);
+      }), 1, 0.008);
+      // 갈 칸: 흰 테를 두른 하늘색 큰 점 — 초록 칸과 크림 칸 어디서나 보인다
+      const dot = make('move-dot', BOARD_SQ_SIZE * 0.56, paint((g) => {
+        g.beginPath(); g.arc(64, 64, 56, 0, Math.PI * 2); g.fillStyle = 'rgba(20, 60, 90, 0.35)'; g.fill();
+        g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill();
+        g.beginPath(); g.arc(64, 64, 38, 0, Math.PI * 2); g.fillStyle = '#19a8f0'; g.fill();
+      }), 28, 0.011);
+      // 말 뒤에 가린 점(4차): 낮은 구도에서는 앞줄 말이 뒤 칸의 점을 가린다. 같은 점을 「가려진 곳에만」 한 번 더 그린다
+      // (깊이 비교를 뒤집는다) — 말 몸 위로 옅게 비쳐, 갈 수 있는 칸이 몇 개인지 세지 않아도 보인다. 드로우콜 +1.
+      const ghost = make('move-dot-ghost', BOARD_SQ_SIZE * 0.56, dot.material.map, 28, 0.011);
+      ghost.material.depthFunc = THREE.GreaterDepth;
+      ghost.material.opacity = 0.5;
+      ghost.material.polygonOffset = false;
+      ghost.renderOrder = 5;
+      // 잡을 말: 칸을 붉게 물들이고 네 귀퉁이에 꺾쇠를 친다. 둥근 고리는 흑 말의 붉은 발판과 겹쳐 안 보였다(3차) —
+      // 발판이 닿지 않는 칸 귀퉁이에 표시를 둔다.
+      const ring = make('move-capture', BOARD_SQ_SIZE * 1.0, paint((g) => {
+        g.fillStyle = 'rgba(255, 59, 78, 0.42)'; g.fillRect(0, 0, 128, 128);
+        const corner = (w, color) => {
+          g.lineWidth = w; g.strokeStyle = color; g.lineCap = 'round'; g.lineJoin = 'round';
+          for (const [x, y, dx, dy] of [[12, 12, 1, 1], [116, 12, -1, 1], [12, 116, 1, -1], [116, 116, -1, -1]]) {
+            g.beginPath(); g.moveTo(x + dx * 36, y); g.lineTo(x, y); g.lineTo(x, y + dy * 36); g.stroke();
+          }
+        };
+        corner(20, '#ffffff'); corner(11, '#ff2d44');
+      }), 16, 0.009);
+      // 위험한 내 말 · 체크메이트 당한 왕: 칸을 가득 채우는 주황 톱니 고리 — 잡기 고리(빨강)와 헷갈리지 않게 색과 모양이 다르다.
+      const warn = make('move-threat', BOARD_SQ_SIZE * 1.04, paint((g) => {
+        g.fillStyle = 'rgba(255, 122, 26, 0.28)'; g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2); g.fill();
+        g.setLineDash([17, 10]);
+        g.lineWidth = 20; g.strokeStyle = '#ffffff'; g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.stroke();
+        g.lineWidth = 12; g.strokeStyle = '#ff7a1a'; g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.stroke();
+      }), 16, 0.012);
+      // 고른 말 머리 위의 금빛 화살표: 고른 칸의 빛은 말과 발판에 가려 잘 안 보인다 — 「이 말」이라는 표시는 머리 위에 둔다.
+      const arrowMat = new THREE.SpriteMaterial({ map: paint((g) => {
+        g.beginPath(); g.moveTo(14, 26); g.lineTo(114, 26); g.lineTo(64, 110); g.closePath();
+        g.lineJoin = 'round'; g.lineWidth = 16; g.strokeStyle = '#ffffff'; g.stroke();
+        g.fillStyle = '#ffc233'; g.fill();
+        g.lineWidth = 5; g.strokeStyle = '#8a5a00'; g.stroke();
+      }), transparent: true, depthTest: false, depthWrite: false });
+      arrowMat.userData = { outlineParameters: { visible: false } };
+      const arrow = new THREE.Sprite(arrowMat);
+      arrow.name = 'move-arrow';
+      arrow.scale.setScalar(BOARD_SQ_SIZE * 0.44);
+      arrow.visible = false;
+      arrow.renderOrder = 6;
+      scene.add(arrow);
+      let held = null;
+      let age = 0;
+      const aim = () => {
+        if (!held?.mesh) { arrow.visible = false; return; }
+        const p = held.mesh.position;
+        // 머리 위로 띄운 만큼 화면에서는 한 칸 앞(갈 칸의 점)으로 밀려 보인다 — 띄운 높이를 줄이고, 그만큼 카메라 쪽으로 당겨 말 머리 바로 위에 붙인다.
+        const lift = BOARD_SQ_SIZE * (0.26 + (reducedMotion ? 0 : 0.05 * Math.sin(age * 5)));
+        const dx = camera.position.x - p.x, dz = camera.position.z - p.z;
+        const flat = Math.hypot(dx, dz) || 1;
+        const pull = Math.min(lift * flat / Math.max(0.5, camera.position.y - p.y), BOARD_SQ_SIZE * 0.4);
+        arrow.position.set(p.x + dx / flat * pull, p.y + (PIECE_HEIGHTS[held.type] || 0.4) + lift, p.z + dz / flat * pull);
+        arrow.visible = true;
+      };
+      const reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+      const m4 = new THREE.Matrix4();
+      const put = (mesh, list) => {
+        list.forEach((p, i) => { const v = boardToWorld(p.r, p.c); m4.makeTranslation(v.x, BOARD_SURFACE_Y + mesh.userData.lift, v.z); mesh.setMatrixAt(i, m4); });
+        mesh.count = list.length;
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.visible = list.length > 0;
+      };
+      return {
+        show(r, c, moves) { age = 0; held = boardState[r]?.[c] || null; aim(); put(tile, [{ r, c }]); put(dot, moves.filter((m) => !m.capture).slice(0, 28)); put(ghost, moves.filter((m) => !m.capture).slice(0, 28)); put(ring, moves.filter((m) => m.capture).slice(0, 16)); },
+        clear() { held = null; arrow.visible = false; put(tile, []); put(dot, []); put(ghost, []); put(ring, []); put(warn, []); },
+        threats(cells) { put(warn, cells.slice(0, 16)); },
+        mate(r, c) { put(warn, [{ r, c }]); put(ring, [{ r, c }]); },
+        // 갈 칸이 살짝 숨 쉰다 — 누를 수 있는 자리라는 뜻. 효과 줄이기(prefers-reduced-motion)에서는 멈춘다.
+        step(dt) {
+          if (!tile.visible) return;
+          age += dt;
+          aim();
+          if (reducedMotion) return;
+          dot.material.opacity = 0.82 + 0.18 * Math.sin(age * 4.2);
+          ring.material.opacity = 0.8 + 0.2 * Math.sin(age * 4.2);
+        },
+        state: () => ({ selected: tile.visible, dots: dot.visible ? dot.count : 0, rings: ring.visible ? ring.count : 0, threats: warn.visible ? warn.count : 0, arrow: arrow.visible, draws: [tile, dot, ghost, ring, warn, arrow].filter((x) => x.visible).length })
+      };
+    })();
     function showSquareHighlights(r, c, moves) {
       clearSquareHighlights();
-      const selGeo = new THREE.RingGeometry(0.115, 0.155, 32);
-      selGeo.rotateX(-Math.PI / 2);
-      const selMat = new THREE.MeshBasicMaterial({ color: 0xf5d76e, side: THREE.DoubleSide });
-      const selMesh = new THREE.Mesh(selGeo, selMat);
-      const selPos = boardToWorld(r, c);
-      selMesh.position.set(selPos.x, BOARD_SURFACE_Y + 0.01, selPos.z);
-      squareHighlightsGroup.add(selMesh);
-
-      for (const m of moves) {
-        const pos = boardToWorld(m.r, m.c);
-        if (m.capture) {
-          const capGeo = new THREE.RingGeometry(0.12, 0.16, 32);
-          capGeo.rotateX(-Math.PI / 2);
-          const capMat = new THREE.MeshBasicMaterial({ color: 0xe63946, side: THREE.DoubleSide });
-          const capMesh = new THREE.Mesh(capGeo, capMat);
-          capMesh.position.set(pos.x, BOARD_SURFACE_Y + 0.012, pos.z);
-          squareHighlightsGroup.add(capMesh);
-        } else {
-          const dotGeo = new THREE.CircleGeometry(0.06, 24);
-          dotGeo.rotateX(-Math.PI / 2);
-          const dotMat = new THREE.MeshBasicMaterial({
-            color: 0x4ea8de,
-            transparent: true,
-            opacity: 0.85,
-            side: THREE.DoubleSide
-          });
-          const dotMesh = new THREE.Mesh(dotGeo, dotMat);
-          dotMesh.position.set(pos.x, BOARD_SURFACE_Y + 0.01, pos.z);
-          squareHighlightsGroup.add(dotMesh);
-        }
-      }
+      moveMarks.show(r, c, moves);
     }
 
     // =========================================================================
@@ -2207,6 +3964,141 @@ export function initWizardChess() {
       impactFlashLight.intensity = 7.5;
     }
 
+    const dustMat = new THREE.MeshStandardMaterial({ color: 0xc9b58a, roughness: 1.0, metalness: 0.0 });
+    // The moment of the hit: freeze both pieces briefly so the blow registers, while the effects keep flying.
+    let impactCount = 0;
+    let lastUpset = false;
+    let lastAttackPose = null;
+    let lastSpecial = null;
+    let lastMirrorPose = null;
+    let hitStopLeft = 0;
+    let slowLeft = 0;
+    function landImpact(captured, origin, attackerType, attackerFrom = null, attacker = null) {
+      const last = referee.history().at(-1);
+      const san = last?.san || '';
+      const tierId = impactTier(captured.type, san);
+      const tier = IMPACT_TIERS[tierId];
+      const ground = new THREE.Vector3(origin.x, BOARD_SURFACE_Y, origin.z);
+      impactCount += 1;
+      clearFlourish(captured);
+      hitStopLeft = tier.stopSec;
+      slowLeft = tier.slowSec;
+      impactFx.burst(ground, captured.type, tierId);
+      impactFx.ring(ground, tierId);
+      const upset = isUpset(captured.type, san);
+      lastUpset = upset;
+      if (signatureFx.play(ground, attackerType, tierId, attackerFrom) && SIGNATURE_WORD[attackerType]) {
+        // An upset (a small animal taking a much bigger one) says so instead of the attacker's own word.
+        impactFx.label(ground, upset ? UPSET_WORD : SIGNATURE_WORD[attackerType], tier.wordSize);
+      } else if (upset) impactFx.label(ground, UPSET_WORD, tier.wordSize);
+      else impactFx.word(ground, tierId);
+      impactFx.shake(tier.shake);
+      const hitterColor = attacker?.color || (captured.color === 'w' ? 'b' : 'w');
+      hitGlow?.hit(ground, attackerFrom ? { x: ground.x - attackerFrom.x, z: ground.z - attackerFrom.z } : null, tierId, GLOW_COLOR[hitterColor]);
+      flashScreen('capture', { tierId, mine: mineOf(hitterColor) });
+      // Pawn takes pawn (CX-4): the commonest capture stays small, but each one this game lands a semitone higher.
+      const comboN = attackerType === 'pawn' && captured.type === 'pawn' ? countPawnTrades(referee.history()) : 0;
+      // DR-1a: the side that keeps capturing or checking climbs too; the higher of the two steps is heard.
+      const streak = momentumSteps(referee.history(), attacker?.color || (captured.color === 'w' ? 'b' : 'w'));
+      const pitch = Math.max(comboN ? pawnComboPitch(comboN) : 1, streak ? pawnComboPitch(streak) : 1);
+      sfx.impact(tierId, attackerType, pitch);
+      const swayed = attackerType === 'king' ? startRoar(ground, [captured, attacker]) : 0;
+      lastSpecial = { mirror: isMirror(attackerType, captured.type), comboN, streak, pitch, swayed };
+      reportCapture(captured, ground, attackerType);
+      if (captured.rig !== 'statue' && captured.mesh) {
+        impactFx.flash(captured.mesh);
+        impactFx.squash(captured.mesh, BOARD_SQ_SIZE, 0.42, 0.32);
+        impactFx.dizzy(captured.mesh, 1.1);
+      }
+    }
+
+    function kingOf(color) {
+      for (const row of boardState) {
+        for (const p of row) {
+          if (p && p.type === 'king' && p.color === color) return p;
+        }
+      }
+      return null;
+    }
+
+    // The move is already on the referee when a piece lands, so its notation says what the landing meant.
+    // Everything here plays over the next turn instead of delaying it.
+    function playMoveOutcome(moverColor, quietMove, promoted, landing, castleRookPiece) {
+      const san = referee.history().at(-1)?.san || '';
+      if (gameMode === 'single' && !scriptedGameActive) {
+        // `check` lets the cards pay the lion common for a game with a check in it (desire plan D7).
+        // `move` is chess.js's verbose move: the shared race missions read it (cards/missions.js `raceStep`).
+        const detail = { gameId, ply: referee.history().length, byPlayer: moverColor === playerColor, check: /[+#]$/.test(san), move: referee.history().at(-1) || null };
+        window.dispatchEvent(new CustomEvent('movelanded', { detail }));
+      }
+      if (contract) {
+        // 매치 포인트 동안에는 수가 놓일 때마다 심장 박자 한 번(막이 방금 바뀐 수는 refreshContract 가 친다).
+        const before = contractStageNow;
+        refreshContract();
+        if (before === contractStageNow && (before === 'matchPoint' || before === 'finalPoint')) sfx.play('heartBeat', 0.1);
+      }
+      saveResume();
+      const ground = new THREE.Vector3(landing.x, BOARD_SURFACE_Y, landing.z);
+      const enemyKing = kingOf(moverColor === 'w' ? 'b' : 'w');
+      const kingGround = enemyKing?.mesh ? new THREE.Vector3(enemyKing.mesh.position.x, BOARD_SURFACE_Y, enemyKing.mesh.position.z) : ground;
+      if (quietMove) sfx.play('place');
+      if (castleRookPiece) {
+        sfx.play('clap');
+        playEvent('castle', ground, moverColor);
+        if (castleRookPiece.mesh) impactFx.squash(castleRookPiece.mesh, BOARD_SQ_SIZE, 0.14, 0.24);
+      }
+      if (promoted) {
+        sfx.play('promote');
+        playEvent('promote', ground, moverColor);
+      }
+      if (san.endsWith('#')) {
+        const playerLost = gameMode === 'single' && playerColor !== 'spectator' && moverColor !== playerColor;
+        sfx.play(playerLost ? 'lose' : 'mate', 0.15);
+        playEvent('mate', kingGround, moverColor);
+        if (playFlourish(kingOf(moverColor), 'roar')) sfx.voice('king', 0.4);
+      } else if (referee.gameOverReason()) {
+        sfx.play('draw', 0.15);
+      } else if (san.endsWith('+')) {
+        // DR-1a: a check that continues a run of captures and checks lands a semitone higher each time.
+        const streak = momentumSteps(referee.history(), moverColor);
+        sfx.play('check', 0.08, streak > 1 ? pawnComboPitch(streak) : 1);
+        playEvent('check', kingGround, moverColor);
+        if (enemyKing?.mesh && enemyKing.rig !== 'statue') impactFx.hop(enemyKing.mesh, 0.09, 0.34);
+      }
+    }
+
+    // Only what happened on the board goes out; cards are decided elsewhere and cannot touch the game.
+    function reportCapture(captured, ground, attackerType) {
+      if (gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
+      const at = ground.clone().project(camera);
+      const byPlayer = captured.color !== playerColor;
+      const detail = { gameId, ply: referee.history().length, type: captured.type, attackerType, byPlayer, x: (at.x + 1) * 50, y: (1 - at.y) * 50 };
+      window.dispatchEvent(new CustomEvent('piececaptured', { detail }));
+    }
+
+    function spawnDustPuff(worldPos) {
+      for (let i = 0; i < 18; i++) {
+        const sz = 0.02 + Math.random() * 0.035;
+        const puff = new THREE.Mesh(sharedShardGeo, dustMat);
+        puff.scale.setScalar(sz);
+        puff.position.set(
+          worldPos.x + (Math.random() - 0.5) * 0.2,
+          worldPos.y + 0.04 + Math.random() * 0.12,
+          worldPos.z + (Math.random() - 0.5) * 0.2
+        );
+        scene.add(puff);
+        shatterDebris.push({
+          mesh: puff,
+          baseScale: sz,
+          vel: new THREE.Vector3((Math.random() - 0.5) * 1.4, 0.5 + Math.random() * 0.9, (Math.random() - 0.5) * 1.4),
+          rotVel: new THREE.Vector3(Math.random() * 4, Math.random() * 4, Math.random() * 4),
+          life: 1.1
+        });
+      }
+      impactFlashLight.position.set(worldPos.x, worldPos.y + 0.3, worldPos.z);
+      impactFlashLight.intensity = 3.0;
+    }
+
     // =========================================================================
     // Concrete 3D Piece Dimensions & Anti-Clipping Collision Constants
     // =========================================================================
@@ -2228,10 +4120,64 @@ export function initWizardChess() {
       const piece = boardState[fromR]?.[fromC];
       if (!piece || isAnimatingMove || gameOver) return false;
       if (piece.color !== currentTurn) return false;
+      lastMoverType = piece.type;
 
       const targetOnDest = boardState[toR]?.[toC];
       // Strictly forbid friendly fire (a piece can never move onto or attack a piece of the same color)
       if (targetOnDest && targetOnDest.color === piece.color) {
+        return false;
+      }
+
+      // 한 방 퍼즐(IR-3): 왕관을 완성하는 잡기만 놓인다. 다른 수는 놓지 않고 귀띔(금빛 딱지)을 켠다.
+      if (puzzle && !puzzle.solved && contract && contractState) {
+        const from = sqName(fromR, fromC), to = sqName(toR, toC);
+        if (!finishersAt(referee.fen(), contract, contractState).some((m) => m.from === from && m.to === to)) {
+          if (!getLegalMovesForPiece(fromR, fromC).some((m) => m.r === toR && m.c === toC)) return false;
+          puzzle.tries += 1;
+          puzzle.hint = true;
+          puzzleStats.wrong += 1;
+          refreshContract(false);
+          puzzleBar?.wrong();
+          sfx.play('heartBeat', 0, 0.9);
+          return false;
+        }
+      }
+
+      // 아차 방지(IR-1): 이 수 뒤에 상대가 한 수로 계약을 완성할 수 있고 그걸 막는 다른 수가 있으면, 놓기 전에 한 번 알린다.
+      // 같은 수를 다시 고르면 그대로 둔다. 입문·초급 상대에서만 — 정식 상대는 스스로 본다.
+      if (contract && !puzzle && contractRung < RUNG_FULL && contractState && gameMode === 'single' && !scriptedGameActive && !options.fromRemote && !options.fromAi && !options.fromScript && piece.color === playerColor) {
+        const key = `${gameId}:${referee.history().length}:${fromR}${fromC}:${toR}${toC}:${options.promotion || ''}`;
+        if (key === oopsKey) { oopsStats.played += 1; oopsKey = ''; }
+        else {
+          let check = null;
+          try {
+            const played = referee.history();
+            const promo = options.promotion ? { queen: 'q', rook: 'r', bishop: 'b', knight: 'n' }[options.promotion] : (piece.type === 'pawn' && (toR === 0 || toR === 7) ? 'q' : undefined);
+            check = oopsCheck(referee.fen(), contract, { from: sqName(fromR, fromC), to: sqName(toR, toC), promotion: promo }, (m) => contractProgress(contract, [...played, m]));
+          } catch (e) { check = null; }
+          if (check?.oops && check.avoidable && oopsStats.game === gameId && oopsStats.inGame >= 3) check = null;   // 한 판에 세 번까지만 — 잔소리가 되지 않게
+          if (check?.oops && check.avoidable) {
+            if (oopsStats.game !== gameId) { oopsStats.game = gameId; oopsStats.inGame = 0; }
+            oopsStats.inGame += 1;
+            oopsKey = key;
+            oopsStats.warned += 1;
+            oopsStats.last = { from: sqName(fromR, fromC), to: sqName(toR, toC), threats: check.threats.map((t) => t.san) };
+            contractDanger.clear();
+            for (const t of check.threats) {
+              const at = t.target === sqName(toR, toC) ? piece : (() => { const { r, c } = squareRC(t.target); return boardState[r]?.[c]; })();
+              if (at && at.color === playerColor) contractDanger.add(at);
+            }
+            sfx.play('heartBeat', 0, 0.9);
+            window.dispatchEvent(new CustomEvent('gamenote', { detail: { ko: '이렇게 두면 상대가 다음 수에 목표를 다 채워요. 그래도 두려면 한 번 더.', en: 'This lets your opponent finish next move. Tap again to play it anyway.', ms: 4200 } }));
+            return false;
+          }
+          oopsKey = '';
+        }
+      }
+
+      // 손과 뇌: 클릭 말고 다른 길(디버그 API·승급 고르기 뒤 호출)로도 부르지 않은 종류는 둘 수 없다(CO-1).
+      if (!options.fromRemote && gameMode === 'single' && !scriptedGameActive && piece.color === playerColor && !kindAllows(handBrainKind, piece.type)) {
+        window.dispatchEvent(new CustomEvent('handbrainblocked', { detail: { type: piece.type, want: handBrainKind } }));
         return false;
       }
 
@@ -2242,51 +4188,28 @@ export function initWizardChess() {
         }
       }
 
+      // Promotion piece for this move (null when not a promotion). Was hard-coded to queen in
+      // three places before Phase 0a; UI/PGN/network may now request an under-promotion.
+      const promotionType =
+        piece.type === 'pawn' && (toR === 0 || toR === 7) ? normalizePromotion(options.promotion) : null;
+
       if (preMoveHighlightTask) {
         preMoveHighlightTask = null;
       }
-      if (typeof window !== 'undefined' && window.__onBeastSelect) {
-        window.__onBeastSelect(null, null);
+
+      // Commit to the referee first: it is the only legality check for remote moves and the source of
+      // en-passant / castling facts for the choreography below.
+      const refMove = referee.move({ fromR, fromC, toR, toC, promotion: promotionType });
+      if (!refMove) {
+        console.warn('Referee rejected move', { fromR, fromC, toR, toC, promotionType, fen: referee.fen() });
+        return false;
       }
-
-      if (targetOnDest && piece.color === playerColor) {
-        const isBrazierTile = hazardTiles[toR]?.[toC]?.type === 'brazier';
-        const isAdjacentToPillar = [
-          [-1, 0], [1, 0], [0, -1], [0, 1]
-        ].some(([dr, dc]) => hazardTiles[toR + dr]?.[toC + dc]?.type === 'pillar');
-
-        if (typeof window !== 'undefined' && window.__farmEngine) {
-          if (isBrazierTile) {
-            window.__farmEngine.awardHazardKill('brazier', targetOnDest.type);
-          } else if (isAdjacentToPillar) {
-            window.__farmEngine.awardHazardKill('pillar', targetOnDest.type);
-          }
-          window.__farmEngine.awardChessPieceCapture(targetOnDest.type);
-        }
-
-        if (typeof window !== 'undefined' && window.__juiceEngine) {
-          if (isBrazierTile) {
-            window.__juiceEngine.progressQuest('q_brazier');
-            window.__juiceEngine.registerCapture('brazier_kill');
-            window.__juiceEngine.spawnFloatingAtTile('+2🔥 성회', toC, toR, 'ash');
-            window.__juiceEngine.bounceCurrency('ash');
-            window.__juiceEngine.awardXP(25);
-          } else if (isAdjacentToPillar) {
-            window.__juiceEngine.progressQuest('q_pillar');
-            window.__juiceEngine.registerCapture('pillar_stun');
-            window.__juiceEngine.spawnFloatingAtTile('+2🏛️ 대리석', toC, toR, 'marble');
-            window.__juiceEngine.bounceCurrency('marble');
-            window.__juiceEngine.awardXP(20);
-          } else {
-            window.__juiceEngine.progressQuest('q_capture');
-            window.__juiceEngine.registerCapture(targetOnDest.type);
-            const pieceName = targetOnDest.type.toUpperCase();
-            window.__juiceEngine.spawnFloatingAtTile(`⚔️ ${pieceName} 포획!`, toC, toR, targetOnDest.type === 'queen' ? 'critical' : 'damage');
-            window.__juiceEngine.awardXP(targetOnDest.type === 'queen' ? 30 : 15);
-          }
-          window.__juiceEngine.bounceCurrency('gold');
-        }
+      syncLastMoveMark();
+      // The moment a move is made (before its walk): the lightning board times the player's thinking from here.
+      if (gameMode === 'single' && !scriptedGameActive) {
+        window.dispatchEvent(new CustomEvent('movestarted', { detail: { gameId, byPlayer: piece.color === playerColor, ply: referee.history().length - 1 } }));   // ply: this move's index in the game
       }
+      const enPassantVictim = refMove.enPassantVictim ? boardState[refMove.enPassantVictim.r]?.[refMove.enPassantVictim.c] : null;
 
       // Save board state snapshot (including pre-move scriptCursor & scriptDeviated) so Left Arrow / [ can step backward & re-record
       moveHistory.push({
@@ -2299,7 +4222,7 @@ export function initWizardChess() {
           toR,
           toC,
           capture: Boolean(targetOnDest),
-          promotion: options.promotion || 'queen'
+          promotion: promotionType || 'queen'
         }
       });
 
@@ -2329,21 +4252,18 @@ export function initWizardChess() {
 
       const captured = targetOnDest;
       const isCapture = Boolean(captured);
+      settleRoarSways();
+      lastMirrorPose = null;
       isAnimatingMove = true;
       activeCamTransition = null;
       clearSquareHighlights();
       selectedSquare = null;
       validMoves = [];
 
-      // Broadcast to multiplayer room (cloud API + static BroadcastChannel/localStorage fallback)
-      if (gameMode === 'multi' && roomCode && !options.fromRemote) {
-        sendMultiplayerMove({
-          playerToken,
-          color: piece.color,
-          from: { r: fromR, c: fromC },
-          to: { r: toR, c: toC },
-          promotion: 'queen'
-        });
+      // 친구 초대 대전(src/net): 내 수를 화면 층(Online.tsx)에 알린다 — 그쪽이 검증·전송한다.
+      if (gameMode === 'multi' && !options.fromRemote) {
+        const last = referee.history().at(-1);
+        if (last) window.dispatchEvent(new CustomEvent('onlinemove', { detail: { from: last.from, to: last.to, promotion: last.promotion } }));
       }
 
       const startPos = boardToWorld(fromR, fromC);
@@ -2355,6 +4275,7 @@ export function initWizardChess() {
       const dirZ = dz / dist;
       const moveHeading = Math.atan2(dx, dz);
       piece.mesh.rotation.y = moveHeading;
+      clearFlourish(piece);
       playPieceClip(piece, 'Move', true, 0.10);
 
       // Detect Castling (King moves 2 files horizontally: e1->g1/c1 or e8->g8/c8) and animate the Rook simultaneously
@@ -2375,9 +4296,13 @@ export function initWizardChess() {
       if (isCapture && captured && captured.mesh) {
         captured.mesh.rotation.y = Math.atan2(-dx, -dz);
       }
+      const mirrorMatch = isCapture && captured?.mesh && captured.rig !== 'statue' && piece.rig !== 'statue' && isMirror(piece.type, captured.type);
+      if (mirrorMatch) captured.mesh.rotation.order = 'YXZ';
+      const mirrorRest = mirrorMatch ? captured.mesh.scale.y : 1;
 
       // Full Concrete Standoff Distance for Melee Strike (0.36m for multi-square captures, scaled to 0.76*dist for 1-square captures so attacker always steps forward)
-      const stopOffset = isCapture ? Math.min(MELEE_STANDOFF, dist * 0.76) : 0;
+      const standoffForPiece = ATTACK_SYNC_PROFILES[piece.type]?.standoff ?? MELEE_STANDOFF;
+      const stopOffset = isCapture ? Math.min(standoffForPiece, dist * 0.76) : 0;
       const strikePos = new THREE.Vector3(
         endPos.x - dirX * stopOffset,
         BOARD_SURFACE_Y,
@@ -2449,8 +4374,20 @@ export function initWizardChess() {
         Math.abs(toR - fromR) >= 1 &&
         piece.type !== 'knight';
 
+      // Each animal crosses the board its own way. The solver below still keeps it clear of bystanders.
+      const styled = piece.rig !== 'statue';
+      const restScale = piece.mesh.scale.y;
+      if (styled) piece.mesh.rotation.order = 'YXZ';
+      function applyStylePose(style) {
+        const side = restScale * (1 - (style.stretch - 1) * 0.5);
+        piece.mesh.rotation.set(style.pitch, moveHeading + style.yaw, style.roll);
+        piece.mesh.scale.set(side, restScale * style.stretch, side);
+      }
+
       function applyConcreteTrajectory(u, fromVec, toVec) {
-        const ease = isCapture ? (0.28 * u + 0.72 * easeInOutCubic(u)) : easeInOutCubic(u);
+        const style = styled ? moveStyle(piece.type, u, squaresMoved) : null;
+        const shaped = style ? style.progress : easeInOutCubic(u);
+        const ease = isCapture ? (0.28 * u + 0.72 * shaped) : shaped;
         let bx = fromVec.x + (toVec.x - fromVec.x) * ease;
         let bz = fromVec.z + (toVec.z - fromVec.z) * ease;
         let by = BOARD_SURFACE_Y;
@@ -2521,6 +4458,13 @@ export function initWizardChess() {
           }
         }
 
+        if (style) {
+          // Added after the solver: a tumble's height must not read as having cleared the pieces beside it.
+          if (knightVaultPeak === 0) by += style.lift;
+          bx += dirX * style.forward;
+          bz += dirZ * style.forward;
+          applyStylePose(style);
+        }
         piece.mesh.position.set(bx, by, bz);
       }
 
@@ -2576,28 +4520,17 @@ export function initWizardChess() {
       const chosenPerp =
         scoreDuelPerpOcclusion(prefPerp) > scoreDuelPerpOcclusion(altPerp) + 0.25 ? altPerp : prefPerp;
 
-      // Continuous Quadratic Bezier 3/4 orbit-and-dolly arc (savedCamPos -> duelCamMid -> duelCamClose)
-      // so the attack camera glides in a single unbroken C-infinity sweep across approach + strike without ever stalling at tApproach
-      const duelCamMid = new THREE.Vector3(
-        midPoint.x + chosenPerp.x * 1.34 - dirX * 0.44,
-        BOARD_SURFACE_Y + 0.96,
-        midPoint.z + chosenPerp.z * 1.34 - dirZ * 0.44
-      );
-      const duelCamClose = new THREE.Vector3(
-        midPoint.x + chosenPerp.x * 0.92 + dirX * 0.18,
-        BOARD_SURFACE_Y + 0.74,
-        midPoint.z + chosenPerp.z * 0.92 + dirZ * 0.18
-      );
-      const duelTargetStart = new THREE.Vector3(
-        strikePos.x + dirX * 0.10,
-        BOARD_SURFACE_Y + 0.34,
-        strikePos.z + dirZ * 0.10
-      );
-      const duelTargetEnd = new THREE.Vector3(
-        endPos.x - dirX * 0.05,
-        BOARD_SURFACE_Y + 0.30,
-        endPos.z - dirZ * 0.05
-      );
+      // The camera leans in from where the player already is, so both pieces stay in frame and nothing ends up in front
+      // of the blow. Only the biggest moments swing round to the less crowded side.
+      const hitTier = isCapture ? impactTier(captured.type, referee.history().at(-1)?.san || '') : 'small';
+      const cameraLean = CAMERA_LEAN[hitTier];
+      const duelCamClose = savedCamPos.clone().lerp(midPoint, cameraLean);
+      duelCamClose.y = Math.max(duelCamClose.y, midPoint.y + 1.0);
+      if (hitTier === 'big') duelCamClose.addScaledVector(chosenPerp, 0.45);
+      const duelCamMid = savedCamPos.clone().lerp(duelCamClose, 0.5);
+      duelCamMid.y += 0.06;
+      const duelTargetStart = savedTarget.clone().lerp(midPoint, 0.35);
+      const duelTargetEnd = savedTarget.clone().lerp(midPoint, 0.75);
 
       function evalQuadraticBezier(outVec, p0, p1, p2, t) {
         const inv = 1 - t;
@@ -2642,7 +4575,11 @@ export function initWizardChess() {
       const tStrikeDone = isCapture ? (tImpact + 0.48) : stdMoveDuration;
       // Slower, distance-aware post-attack camera return (~1.30s - 1.60s instead of 0.64s)
       const camReturnDist = savedCamPos.distanceTo(duelCamClose);
-      const returnDuration = isCapture ? Number((1.18 + Math.min(0.42, camReturnDist * 0.10)).toFixed(3)) : 0;
+      const quickMove = fxSettings().quick || teamGame;
+      const camMoves = !quickMove && cameraLean > 0;
+      const fullReturn = 0.4 + Math.min(0.3, camReturnDist * 0.35);
+      // A zero-size window (innerWidth 0) makes the camera NaN, and a NaN length never ends the move (11-09, ego 창 0×0).
+      const returnDuration = isCapture ? Number((camMoves && Number.isFinite(fullReturn) ? fullReturn : 0.22).toFixed(3)) : 0;
       const totalDuration = isCapture ? (tStrikeDone + returnDuration) : stdMoveDuration;
 
       if (!isCapture) {
@@ -2663,16 +4600,24 @@ export function initWizardChess() {
 
       let elapsed = 0;
       let attackAnimStarted = false;
+      moveClock = { total: totalDuration, strikeDone: tStrikeDone, isCapture, elapsed: () => elapsed };
       let defenderFlinchTriggered = false;
       let shatterTriggered = false;
       let impactActualTime = tImpact;
       const postShatterPiecePos = strikePos.clone();
+      const attackPoseOffset = new THREE.Vector3();
       const postStrikePiecePos = strikePos.clone();
       let prevCamPos = camera.position.clone();
       let prevPiecePos = piece.mesh.position.clone();
 
       function finishMove() {
         resetBystandersToHome();
+        if (styled) {
+          applyStylePose(moveStyle(piece.type, 1, squaresMoved));
+          if (!isCapture && !promotionType && LANDING_SQUASH[piece.type]) {
+            impactFx.squash(piece.mesh, restScale, LANDING_SQUASH[piece.type], 0.24);
+          }
+        }
         boardState[fromR][fromC] = null;
         boardState[toR][toC] = piece;
         piece.r = toR;
@@ -2692,10 +4637,10 @@ export function initWizardChess() {
           playPieceClip(castleRook, 'Idle', true, 0.18);
         }
 
-        // Pawn Promotion to Queen
-        if (piece.type === 'pawn' && (toR === 0 || toR === 7)) {
+        // Pawn Promotion (queen by default; rook/bishop/knight when requested)
+        if (promotionType) {
           scene.remove(piece.mesh);
-          const promoted = instantiatePiece('queen', piece.color, toR, toC);
+          const promoted = instantiatePiece(promotionType, piece.color, toR, toC);
           promoted.hasMoved = true;
           boardState[toR][toC] = promoted;
         } else {
@@ -2714,11 +4659,38 @@ export function initWizardChess() {
           orbitControls.update();
         }
 
+        // En passant: the taken pawn sits beside the destination, not on it.
+        if (enPassantVictim && boardState[enPassantVictim.r]?.[enPassantVictim.c] === enPassantVictim) {
+          boardState[enPassantVictim.r][enPassantVictim.c] = null;
+          const origin = enPassantVictim.mesh ? enPassantVictim.mesh.position.clone() : boardToWorld(enPassantVictim.r, enPassantVictim.c);
+          if (enPassantVictim.rig === 'statue') {
+            if (enPassantVictim.mesh) scene.remove(enPassantVictim.mesh);
+            spawnStoneShatter(origin, enPassantVictim.color);
+          } else {
+            playPieceClip(enPassantVictim, 'Shatter', false, 0.1);
+            retireAnimalPiece(enPassantVictim, { x: dirX, z: dirZ });
+            spawnDustPuff(origin);
+          }
+          landImpact(enPassantVictim, origin, piece.type, startPos, piece);
+          if (piece.color === 'w') capturedByWhite += 1;
+          else capturedByBlack += 1;
+        }
+
+        const quietMove = !isCapture && !enPassantVictim;
+        playMoveOutcome(piece.color, quietMove, Boolean(promotionType), endPos, isCastling ? castleRook : null);
+        if (quietMove && piece.type === 'pawn' && !promotionType && Math.random() < PAWN_LOOKOUT_CHANCE && playFlourish(piece, 'lookout')) {
+          sfx.voice('pawn', 0.5);
+        }
+
         currentTurn = currentTurn === 'w' ? 'b' : 'w';
         isAnimatingMove = false;
         updateTurnUI();
         maybeScheduleAIMove();
+        // DR-2a: the player's premove goes the moment the turn is theirs (after this frame's bookkeeping).
+        if (premove && currentTurn === playerColor) setTimeout(runPremove, 0);
       }
+
+      sfx.move(piece.type, isCapture ? tApproach : stdMoveDuration);
 
       function stepMove(dt) {
         elapsed += dt;
@@ -2759,8 +4731,10 @@ export function initWizardChess() {
           // Single unbroken C-infinity camera arc across both approach and strike (never stops at tApproach!)
           const uActive = Math.min(1, elapsed / tStrikeDone);
           const sActive = 0.38 * uActive + 0.62 * easeInOutCubic(uActive);
-          evalQuadraticBezier(camera.position, savedCamPos, duelCamMid, duelCamClose, sActive);
-          evalQuadraticBezier(orbitControls.target, savedTarget, duelTargetStart, duelTargetEnd, sActive);
+          if (camMoves) {
+            evalQuadraticBezier(camera.position, savedCamPos, duelCamMid, duelCamClose, sActive);
+            evalQuadraticBezier(orbitControls.target, savedTarget, duelTargetStart, duelTargetEnd, sActive);
+          }
 
           if (elapsed <= tApproach) {
             // Phase 1: Smooth Glide-In to Concrete Standoff Position
@@ -2772,6 +4746,8 @@ export function initWizardChess() {
             phaseName = 'strike';
             if (!attackAnimStarted) {
               attackAnimStarted = true;
+              if (styled) applyStylePose(moveStyle(piece.type, 1, squaresMoved));
+              // The old 14% squash here was the wind-up; each animal's own wind-up (attackStyle) now plays instead.
               playPieceClip(piece, 'Attack', false, 0.08);
             }
 
@@ -2830,6 +4806,17 @@ export function initWizardChess() {
                 );
               }
 
+              // Mirror match (CX-4): the same animal copies half of the attacker's wind-up, then lets go before the blow.
+              if (mirrorMatch) {
+                const strikeSpan = Math.max(0.05, tStrikeDone - tApproach);
+                const m = mirrorPose(captured.type, (elapsed - tApproach) / strikeSpan, (tImpact - tApproach) / strikeSpan);
+                captured.mesh.rotation.set(m.pitch, Math.atan2(-dx, -dz) + m.yaw, m.roll);
+                captured.mesh.position.y += m.lift;
+                const mSide = mirrorRest * (1 - (m.stretch - 1) * 0.5);
+                captured.mesh.scale.set(mSide, mirrorRest * m.stretch, mSide);
+                lastMirrorPose = { type: captured.type, ...m };
+              }
+
               const curSep = piece.mesh.position.distanceTo(captured.mesh.position);
               if (curSep < (cameraTelemetry.minCombatSeparation ?? Infinity)) {
                 cameraTelemetry.minCombatSeparation = Number(curSep.toFixed(3));
@@ -2843,7 +4830,8 @@ export function initWizardChess() {
             ) {
               defenderFlinchTriggered = true;
               if (captured) {
-                playPieceClip(captured, 'Shatter', false, 0.04);
+                // Statues crack at contact; rigs with a hit clip flinch first and collapse at the blow.
+                playPieceClip(captured, captured.clipMap?.hit ? 'Hit' : 'Shatter', false, 0.04);
                 impactFlashLight.position.set(
                   endPos.x - dirX * 0.08,
                   BOARD_SURFACE_Y + 0.28,
@@ -2857,26 +4845,17 @@ export function initWizardChess() {
             if (!shatterTriggered && (atkClipTime >= BLOW_CLIP_TIME || elapsed >= tImpact + 0.06)) {
               shatterTriggered = true;
               impactActualTime = elapsed;
-              postShatterPiecePos.copy(piece.mesh.position);
+              // The follow-through starts from where the body is, without this frame's attack pose on top.
+              postShatterPiecePos.copy(piece.mesh.position).sub(attackPoseOffset);
               if (captured && captured.mesh) {
-                if (captured.hasShield) {
-                  captured.hasShield = false;
-                  if (captured.shieldMesh) {
-                    captured.mesh.remove(captured.shieldMesh);
-                    captured.shieldMesh = null;
-                  }
-                  impactFlashLight.position.copy(captured.mesh.position);
-                  impactFlashLight.color.setHex(0xffd700);
-                  impactFlashLight.intensity = 14.0;
-                } else {
-                  const shatterOrigin = captured.mesh.position.clone();
+                const shatterOrigin = captured.mesh.position.clone();
+                if (captured.rig === 'statue') {
                   scene.remove(captured.mesh);
-                  if (hazardTiles[toR]?.[toC]?.type === 'brazier') {
-                    spawnBrazierIncineration(shatterOrigin);
-                  } else {
-                    spawnStoneShatter(shatterOrigin, captured.color);
-                  }
+                  spawnStoneShatter(shatterOrigin, captured.color);
+                } else {
+                  retireAnimalPiece(captured, { x: dirX, z: dirZ });
                 }
+                landImpact(captured, shatterOrigin, piece.type, startPos, piece);
               }
             }
 
@@ -2888,8 +4867,20 @@ export function initWizardChess() {
               postStrikePiecePos.copy(piece.mesh.position);
             }
 
+            // Each attacker's own strike (capture-matchup CX-3): meerkat headbutt, kangaroo double kick, panda roll,
+            // rhino scrape-and-ram, tiger rear-and-swipe, lion roar. Whole-body pose only; the timing is unchanged.
+            attackPoseOffset.set(0, 0, 0);
+            if (styled) {
+              const strikeSpan = Math.max(0.05, tStrikeDone - tApproach);
+              const atk = attackStyle(piece.type, (elapsed - tApproach) / strikeSpan, (tImpact - tApproach) / strikeSpan);
+              applyStylePose(atk);
+              attackPoseOffset.set(dirX * atk.forward, atk.lift, dirZ * atk.forward);
+              piece.mesh.position.add(attackPoseOffset);
+              lastAttackPose = { type: piece.type, u: (elapsed - tApproach) / strikeSpan, ...atk, mesh: piece.mesh };
+            }
+
             // Subtle damped perpendicular impact vibration right when the blow shatters the defender
-            if (shatterTriggered && elapsed >= impactActualTime && elapsed <= impactActualTime + 0.26) {
+            if (camMoves && shakeAllowed() && shatterTriggered && elapsed >= impactActualTime && elapsed <= impactActualTime + 0.26) {
               const shakeProgress = (elapsed - impactActualTime) / 0.26;
               const decay = (1 - shakeProgress) * (1 - shakeProgress);
               const amp = 0.024 * decay;
@@ -2904,8 +4895,10 @@ export function initWizardChess() {
           const pieceAdvanceBlend = 0.35 * uReturn + 0.65 * easeRet;
 
           piece.mesh.position.lerpVectors(postStrikePiecePos, endPos, pieceAdvanceBlend);
-          camera.position.lerpVectors(duelCamClose, savedCamPos, easeRet);
-          orbitControls.target.lerpVectors(duelTargetEnd, savedTarget, easeRet);
+          if (camMoves) {
+            camera.position.lerpVectors(duelCamClose, savedCamPos, easeRet);
+            orbitControls.target.lerpVectors(duelTargetEnd, savedTarget, easeRet);
+          }
         }
 
         camera.lookAt(orbitControls.target);
@@ -2952,90 +4945,223 @@ export function initWizardChess() {
     }
 
     const activeMoveTweens = [];
+    // Debug only: the running move's clock (debugMoveState).
+    let moveClock = null;
 
     // =========================================================================
     // Single-Player Tactical AI (Auto-Plays Opponent Turn + Manual AI Button)
     // =========================================================================
+    // A short search (src/rules/ai.js): the AI guards its own pieces and finishes won games instead of shuffling.
+    // The one-ply scorer it replaced drew 14 of 20 games against itself (island economy round, 2026-11-02).
+    // A rival plays at its own level: a careless one searches less and slips more.
+    // What the AI is asked for this turn: the position and how this opponent plays.
+    function aiAskFor(color) {
+      const rival = color === rivalColor() ? activeRival() : null;
+      // FN-2: 라이벌의 탐색 단계는 팩의 `search`(없으면 옛 규칙: 실수 0.3 이상이면 쉬움). 라이벌 없는 자유 대국은 freePlay(첫 판들은 쉬움).
+      const level = rival ? rival.search || (rival.mistake >= 0.3 ? 'easy' : 'normal') : freePlay.search;
+      const history = referee.history().map((m) => positionKey(m.after));
+      // 계약전(SC-1): AI 도 같은 게임을 안다 — 양쪽 진도와 남은 차례를 함께 넘긴다.
+      // IR-1: 상대는 사다리 칸만큼만 계약을 안다 — 입문은 모르고, 초급은 제 목표만 노린다.
+      const contractOpt = contract ? contractAiState(contract, referee.history(), undefined, contractRung, color) : undefined;
+      return { fen: referee.fen(), opts: { level, history, slip: rival ? rival.mistake : freePlay.mistake, blind: rival ? 0 : freePlay.blind, contract: contractOpt } };
+    }
+    function engineMoveOf(pick) {
+      if (!pick) return null;
+      const from = squareRC(pick.from);
+      const to = squareRC(pick.to);
+      return { fromR: from.r, fromC: from.c, toR: to.r, toC: to.c, promotion: pick.promotion ? TYPE_FROM_LETTER[pick.promotion] : undefined };
+    }
     function chooseSmartAIMove(color) {
-      const legalMoves = getAllLegalMoves(color);
-      if (legalMoves.length === 0) return null;
+      if (referee.turn() !== color) return null;
+      const ask = aiAskFor(color);
+      return engineMoveOf(chooseMove(ask.fen, ask.opts));
+    }
 
-      let bestScore = -Infinity;
-      let bestCandidates = [];
-
-      for (const m of legalMoves) {
-        const piece = boardState[m.fromR][m.fromC];
-        const target = boardState[m.toR][m.toC];
-        let score = 0;
-
-        // Material gain on capture
-        if (target) {
-          score += PIECE_VALUES[target.type] * 1.15 - PIECE_VALUES[piece.type] * 0.08;
-          if (hazardTiles[m.toR]?.[m.toC]?.type === 'brazier') {
-            score += 48; // Heavy tactical incentive to incinerate enemies on fire tiles!
+    // FN-5 (2026-11-11): the AI thinks in a worker so the scene keeps moving. A 3-ply search (step 7, the lion king) took
+    // 1-2 s on the page's own thread and froze the board (docs/qa/2026-11-10-dr-m1.md). A reply counts only if the game,
+    // the position and the side to move are still the ones it was asked about; anything that resets the board bumps
+    // `aiAsk` and drops it. Without workers (or with ?aisync=1, for comparison) the AI thinks in place as before.
+    let aiWorker = null;          // null: not made yet · false: not available · Worker
+    let aiAsk = 0;
+    let aiThinking = false;
+    let aiPending = null;
+    function dropAiThought() {
+      aiAsk += 1;
+      aiThinking = false;
+      aiPending = null;
+      clearPremove();
+    }
+    function aiWorkerOrNull() {
+      if (aiWorker === false) return null;
+      if (aiWorker) return aiWorker;
+      try {
+        if (typeof Worker === 'undefined' || new URLSearchParams(window.location.search).get('aisync') === '1') {
+          aiWorker = false;
+          return null;
+        }
+        aiWorker = new Worker(new URL('./rules/aiWorker.js', import.meta.url), { type: 'module' });
+        aiWorker.onmessage = (e) => onAiReply(e.data || {});
+        aiWorker.onerror = () => {
+          try { aiWorker.terminate(); } catch (err) { /* already gone */ }
+          aiWorker = false;
+          // The thought in flight is lost: think again in place.
+          if (aiThinking) {
+            dropAiThought();
+            triggerAIMoveNow();
           }
-        } else if (hazardTiles[m.toR]?.[m.toC]?.type === 'brazier') {
-          score -= 15; // Avoid lingering needlessly on a hazard tile
-        }
-
-        // Center control bonus
-        const centerDist = Math.abs(3.5 - m.toR) + Math.abs(3.5 - m.toC);
-        score += (7 - centerDist) * 8;
-
-        // Pawn advancement bonus
-        if (piece.type === 'pawn') {
-          const advance = color === 'w' ? (6 - m.toR) : (m.toR - 1);
-          score += advance * 12;
-        }
-
-        // Simulate move to check if destination is hanging or gives check
-        boardState[m.toR][m.toC] = piece;
-        boardState[m.fromR][m.fromC] = null;
-        const oppColor = color === 'w' ? 'b' : 'w';
-        if (isKingInCheck(oppColor, boardState)) {
-          score += 45;
-        }
-        // Check if opponent can recapture on destination square
-        for (let rr = 0; rr < 8; rr++) {
-          for (let cc = 0; cc < 8; cc++) {
-            const opp = boardState[rr][cc];
-            if (opp && opp.color === oppColor) {
-              const oppMoves = getPseudoMovesForPiece(rr, cc, boardState);
-              if (oppMoves.some((om) => om.r === m.toR && om.c === m.toC)) {
-                score -= PIECE_VALUES[piece.type] * 0.75;
-                break;
-              }
-            }
-          }
-        }
-        boardState[m.fromR][m.fromC] = piece;
-        boardState[m.toR][m.toC] = target;
-
-        // Small jitter so AI varies openings
-        score += (Math.random() - 0.5) * 14;
-
-        if (score > bestScore + 1) {
-          bestScore = score;
-          bestCandidates = [m];
-        } else if (Math.abs(score - bestScore) <= 1) {
-          bestCandidates.push(m);
-        }
+        };
+      } catch (err) {
+        aiWorker = false;
       }
-
-      return bestCandidates[Math.floor(Math.random() * bestCandidates.length)] || legalMoves[0];
+      return aiWorker || null;
+    }
+    function onAiReply({ id, move }) {
+      if (id !== aiAsk || !aiPending) return;
+      const asked = aiPending;
+      aiThinking = false;
+      aiPending = null;
+      if (gameOver || isAnimatingMove || gameId !== asked.gameId || currentTurn !== asked.color || referee.fen() !== asked.fen) return;
+      const chosen = engineMoveOf(move);
+      if (!chosen) return;
+      executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion, fromAi: true });
     }
 
     function triggerAIMoveNow() {
-      if (isAnimatingMove || gameOver) return false;
+      if (isAnimatingMove || gameOver || aiThinking) return false;
+      // 슬롯머신이 떠 있는 동안(레버를 기다리거나 도는 중)에는 AI 가 먼저 두지 않는다 — 기계가 빠지면 둔다.
+      if (!moveHistory.length && (reelPendingFor || shellReel?.busy())) { aiHeldBySlot = true; return false; }
+      if (referee.turn() !== currentTurn) return false;
+      const worker = aiWorkerOrNull();
+      if (worker) {
+        const ask = aiAskFor(currentTurn);
+        aiAsk += 1;
+        aiThinking = true;
+        aiPending = { fen: ask.fen, color: currentTurn, gameId };
+        worker.postMessage({ id: aiAsk, fen: ask.fen, opts: ask.opts });
+        return true;
+      }
       const chosen = chooseSmartAIMove(currentTurn);
       if (!chosen) return false;
-      return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC);
+      return executeChessMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, { promotion: chosen.promotion, fromAi: true });
+    }
+
+    // ── DR-2a 미리 두기(premove) 1수 ──────────────────────────────────────────────────────────────────────────
+    // AI 가 생각하거나 수가 움직이는 동안에도 내 말을 고르고 다음 수를 정해 둘 수 있다. 내 차례가 오는 순간 그 수가
+    // 그 국면에서 합법이면 바로 두고, 아니면 조용히 버린다(lichess 와 같은 약속). 1수만, 승급은 퀸.
+    // 후보 칸은 심판의 국면으로 계산한다(심판은 연출보다 먼저 수를 둔다) — 내 차례인 것처럼 본 합법 수.
+    let premove = null;      // { fromR, fromC, toR, toC, gameId, ply } — ply: 이 수가 둘 심판 기록 길이
+    let preSel = null;       // { r, c, moves } 고르고 있는 말
+    const premoveStats = { set: 0, played: 0, dropped: 0 };
+    function premoveWaiting() {
+      return gameMode === 'single' && !scriptedGameActive && aiAutoPlay && !gameOver && !promotionPickerOpen &&
+        (playerColor === 'w' || playerColor === 'b') && (currentTurn !== playerColor || isAnimatingMove);
+    }
+    function clearPremove() {
+      premove = null;
+      preSel = null;
+      while (premoveGroup.children.length) {
+        const m = premoveGroup.children.pop();
+        m.geometry?.dispose();
+        m.material?.dispose();
+      }
+    }
+    function premoveMark(r, c, kind) {
+      const geo = kind === 'dot' ? new THREE.CircleGeometry(0.06, 24) : kind === 'to' ? new THREE.CircleGeometry(0.14, 32) : new THREE.RingGeometry(0.115, 0.158, 32);
+      geo.rotateX(-Math.PI / 2);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xa78bfa, transparent: true, opacity: kind === 'to' ? 0.6 : 0.9, side: THREE.DoubleSide, depthWrite: false }));
+      const pos = boardToWorld(r, c);
+      mesh.position.set(pos.x, BOARD_SURFACE_Y + 0.014, pos.z);
+      mesh.renderOrder = 3;
+      premoveGroup.add(mesh);
+    }
+    function drawPremove() {
+      const keep = { premove, preSel };
+      clearPremove();
+      ({ premove, preSel } = keep);
+      if (preSel) {
+        premoveMark(preSel.r, preSel.c, 'ring');
+        for (const m of preSel.moves) premoveMark(m.r, m.c, 'dot');
+      }
+      if (premove) {
+        premoveMark(premove.fromR, premove.fromC, 'ring');
+        premoveMark(premove.toR, premove.toC, 'to');
+      }
+    }
+    const tapMatches = (target) => (m) => (m.r === target.r && m.c === target.c) || (m.castle && m.r === target.r && m.rookFromC === target.c);
+    /** A board tap while waiting for the turn. True when the tap was about the premove (it then does nothing else). */
+    function premoveTap(target) {
+      if (!premoveWaiting()) {
+        if (premove || preSel) clearPremove();
+        return false;
+      }
+      const hadPlan = Boolean(premove || preSel);
+      if (target && preSel) {
+        const m = preSel.moves.find(tapMatches(target));
+        if (m) {
+          const L = referee.history().length;
+          premove = { fromR: preSel.r, fromC: preSel.c, toR: m.r, toC: m.c, gameId, ply: referee.turn() === playerColor ? L : L + 1 };
+          preSel = null;
+          premoveStats.set += 1;
+          drawPremove();
+          sfx.play('button', 0, 1.12);
+          // Ready for the next move: the AI need not wait out its pause either (DR-1c).
+          if (aiTimer !== null && !isAnimatingMove) {
+            clearTimeout(aiTimer);
+            aiTimer = null;
+            aiAsk += 1;
+            aiThinking = false;
+            aiPending = null;
+            triggerAIMoveNow();
+          }
+          return true;
+        }
+      }
+      if (target && referee.colorAt(target.r, target.c) === playerColor) {
+        if (preSel && preSel.r === target.r && preSel.c === target.c) {
+          clearPremove();
+          return true;
+        }
+        premove = null;
+        preSel = { r: target.r, c: target.c, moves: referee.legalMovesFor(target.r, target.c) };
+        drawPremove();
+        return true;
+      }
+      if (hadPlan) {
+        clearPremove();
+        return true;
+      }
+      return false;
+    }
+    /** At the hand-off to the player: play the premove when it is still legal, otherwise drop it without a word. */
+    function runPremove() {
+      const p = premove;
+      clearPremove();
+      if (!p) return false;
+      const ok = !gameOver && !isAnimatingMove && gameMode === 'single' && !scriptedGameActive && !promotionPickerOpen &&
+        currentTurn === playerColor && p.gameId === gameId && referee.history().length === p.ply;
+      const piece = ok && boardState[p.fromR]?.[p.fromC];
+      const legal = piece && piece.color === playerColor && kindAllows(handBrainKind, piece.type) &&
+        getLegalMovesForPiece(p.fromR, p.fromC).find(tapMatches({ r: p.toR, c: p.toC }));
+      const played = Boolean(legal) && executeChessMove(p.fromR, p.fromC, legal.r, legal.c, { promotion: 'queen' });
+      if (played) premoveStats.played += 1;
+      else premoveStats.dropped += 1;
+      return played;
+    }
+
+    /** DR-1c: hurry the move that is playing (a tap on the board, or the API). False when nothing is playing. */
+    function requestSkip() {
+      if (!isAnimatingMove && hitStopLeft <= 0 && slowLeft <= 0) return false;
+      skipFast = true;
+      hitStopLeft = 0;
+      slowLeft = 0;
+      return true;
     }
 
     function maybeScheduleAIMove() {
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
       if (gameOver || isAnimatingMove || preMoveHighlightTask) return;
       if (scriptedGameActive) return;
@@ -3054,7 +5180,7 @@ export function initWizardChess() {
           ) {
             triggerAIMoveNow();
           }
-        }, 540);
+        }, AI_DELAY_MS);
       }
     }
 
@@ -3328,7 +5454,7 @@ export function initWizardChess() {
         const mv = preMoveHighlightTask.move;
         const fromScriptFlag = Boolean(preMoveHighlightTask.fromScript);
         preMoveHighlightTask = null;
-        executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag });
+        executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag, promotion: mv.promotion });
       }
       let safety = 0;
       while (activeMoveTweens.length > 0 && safety < 200) {
@@ -3370,6 +5496,7 @@ export function initWizardChess() {
       if (aiTimer) {
         clearTimeout(aiTimer);
         aiTimer = null;
+        dropAiThought();
       }
 
       // Determine whether the next scripted move is still valid on the current board
@@ -3427,7 +5554,8 @@ export function initWizardChess() {
       }
 
       return executeChessMove(nextMove.fromR, nextMove.fromC, nextMove.toR, nextMove.toC, {
-        fromScript: isFromScript
+        fromScript: isFromScript,
+        promotion: nextMove.promotion
       });
     }
 
@@ -3609,98 +5737,22 @@ export function initWizardChess() {
       impactFlashLight.intensity = 6.2;
     }
 
-    function spawnBrazierIncineration(pos) {
-      const emberMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
-      for (let i = 0; i < 28; i++) {
-        const sz = 0.02 + Math.random() * 0.035;
-        const geo = new THREE.DodecahedronGeometry(sz, 0);
-        const frag = new THREE.Mesh(geo, emberMat);
-        frag.position.set(
-          pos.x + (Math.random() - 0.5) * 0.35,
-          pos.y + Math.random() * 0.25,
-          pos.z + (Math.random() - 0.5) * 0.35
-        );
-        frag.castShadow = true;
-        scene.add(frag);
-        shatterDebris.push({
-          mesh: frag,
-          vel: new THREE.Vector3(
-            (Math.random() - 0.5) * 2.8,
-            2.2 + Math.random() * 2.5,
-            (Math.random() - 0.5) * 2.8
-          ),
-          rotVel: new THREE.Vector3(
-            Math.random() * 12,
-            Math.random() * 12,
-            Math.random() * 12
-          ),
-          life: 1.6
-        });
-      }
-      impactFlashLight.position.set(pos.x, pos.y + 0.45, pos.z);
-      impactFlashLight.intensity = 15.0;
-
-      for (const bl of brazierLights) {
-        if (bl.position.distanceTo(pos) < 2.0) {
-          bl.intensity = 14.0;
-        }
-      }
-    }
-
-    function startCheckmateBrazierExecution(kingMesh, defeatedColor, actualWinner, homePos) {
-      const targetBrazierIdx = homePos.x <= 0 ? 0 : 1;
-      const targetBrazierCfg = brazierCoords[targetBrazierIdx];
-      const targetPos = new THREE.Vector3(
-        targetBrazierCfg.pos[0],
-        targetBrazierCfg.pos[1] + 0.35,
-        targetBrazierCfg.pos[2]
-      );
-
-      const startPos = kingMesh.position.clone();
-
-      // Cinematic Camera Glides towards the Nave Brazier
-      const camTargetPos = new THREE.Vector3(targetPos.x * 0.45, 1.25, 0.0);
-      const camPos = new THREE.Vector3(targetPos.x * 0.25, 2.65, 3.8);
-      smoothCameraTo(camPos, camTargetPos, 1.35);
-
-      let execElapsed = 0;
-      const tExecDuration = 1.35; // 1.35s flight & cremation
-
-      function stepKingBrazierArc(dt) {
-        execElapsed += dt;
-        const u = Math.min(1.0, execElapsed / tExecDuration);
-        const easeU = easeInOutCubic(u);
-
-        // Arc path: parabolic trajectory from chessboard up into the brazier bowl
-        const currX = THREE.MathUtils.lerp(startPos.x, targetPos.x, easeU);
-        const currZ = THREE.MathUtils.lerp(startPos.z, targetPos.z, easeU);
-        const arcY = Math.sin(easeU * Math.PI) * 1.5;
-        const currY = THREE.MathUtils.lerp(startPos.y, targetPos.y, easeU) + arcY;
-
-        kingMesh.position.set(currX, currY, currZ);
-        kingMesh.rotation.x += dt * 3.8;
-        kingMesh.rotation.y += dt * 4.6;
-
-        if (u >= 1.0) {
-          kingMesh.visible = false;
-          spawnBrazierIncineration(targetPos);
-          if (typeof window !== 'undefined' && window.__farmEngine) {
-            window.__farmEngine.awardHazardKill('brazier', 'king');
-            window.__farmEngine.awardCheckmateVictory();
-          }
-          checkmateState.phase = 'cremated';
-          showCheckmateBanner(actualWinner, defeatedColor);
-          return true;
-        }
-        return false;
-      }
-
-      activeMoveTweens.push(stepKingBrazierArc);
+    let drawBannerShown = false;
+    function showDrawBanner(subtitle) {
+      if (drawBannerShown || puzzle) return;
+      drawBannerShown = true;
+      const t = getTranslations(getCurrentLang());
+      document.getElementById('checkmate-crown').textContent = '🤝';
+      document.getElementById('checkmate-title').textContent = t.drawTitle;
+      document.getElementById('checkmate-subtitle').textContent = subtitle;
+      document.getElementById('btn-checkmate-replay').style.display = 'none';
+      document.getElementById('checkmate-overlay').classList.add('visible');
     }
 
     function showCheckmateBanner(winnerColor, defeatedColor) {
       const overlay = document.getElementById('checkmate-overlay');
       const crownEl = document.getElementById('checkmate-crown');
+      document.getElementById('btn-checkmate-replay').style.display = '';
       const titleEl = document.getElementById('checkmate-title');
       const subEl = document.getElementById('checkmate-subtitle');
 
@@ -3708,23 +5760,16 @@ export function initWizardChess() {
       if (crownEl) crownEl.textContent = winnerColor === 'w' ? '♔' : '♚';
       if (titleEl) titleEl.textContent = t.checkmateTitle;
       if (subEl) {
-        const baseSub = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
-        if (winnerColor === playerColor) {
-          subEl.innerHTML = `${baseSub}<br/><span style="color:#f59e0b;font-size:0.9rem;margin-top:6px;display:inline-block;">🔥 대성당 화로 소각 처형 완료 • +250G | +3💎 | +5 성회 | +5 대리석</span>`;
-          if (typeof window !== 'undefined' && window.__juiceEngine) {
-            window.__juiceEngine.registerWin();
-            window.__juiceEngine.progressQuest('q_checkmate');
-            window.__juiceEngine.screenFlash('gold');
-            window.__juiceEngine.spawnFloatingNumber('🏆 CHECKMATE VICTORY!', window.innerWidth / 2, window.innerHeight * 0.35, 'checkmate');
-            window.__juiceEngine.bounceCurrency('gems');
-            window.__juiceEngine.bounceCurrency('ash');
-            window.__juiceEngine.bounceCurrency('marble');
-          }
-        } else {
-          subEl.textContent = baseSub;
-          if (typeof window !== 'undefined' && window.__juiceEngine) {
-            window.__juiceEngine.registerLoss();
-          }
+        subEl.textContent = winnerColor === 'w' ? t.whiteTriumphs : t.blackTriumphs;
+        if (lastTrophy) {
+          const ko = getCurrentLang() !== 'en';
+          const name = (ko ? lastTrophy.name?.ko : lastTrophy.name?.en) || lastTrophy.item;
+          const line = document.createElement('div');
+          line.className = 'trophy-line';
+          line.textContent = ko ? `전리품 획득: ${name}` : `Trophy won: ${name}`;
+          subEl.appendChild(line);
+          flyTrophy(line, lastTrophy.item, name);
+          lastTrophy = null;
         }
       }
       if (overlay) {
@@ -3760,12 +5805,8 @@ export function initWizardChess() {
 
       if (!kingPiece || !kingPiece.mesh) {
         showCheckmateBanner(actualWinner, defeatedColor);
-        if (actualWinner === playerColor && typeof window !== 'undefined' && window.__farmEngine) {
-          window.__farmEngine.awardCheckmateVictory();
-        }
         return false;
       }
-      kingPiece.mesh.visible = true;
 
       // Find the checkmating attacker piece so the King falls away from the blow or into the clearest open square
       let attackerPos = null;
@@ -3844,19 +5885,40 @@ export function initWizardChess() {
 
       // Highlight the defeated King's square with a crimson-and-gold Checkmate ring
       clearSquareHighlights();
-      const outerRingGeo = new THREE.RingGeometry(0.135, 0.175, 36);
-      outerRingGeo.rotateX(-Math.PI / 2);
-      const outerRingMat = new THREE.MeshBasicMaterial({ color: 0xe63946, side: THREE.DoubleSide });
-      const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
-      outerRing.position.set(homePos.x, BOARD_SURFACE_Y + 0.012, homePos.z);
-      squareHighlightsGroup.add(outerRing);
+      moveMarks.mate(kingR, kingC);
 
-      const innerRingGeo = new THREE.RingGeometry(0.10, 0.125, 36);
-      innerRingGeo.rotateX(-Math.PI / 2);
-      const innerRingMat = new THREE.MeshBasicMaterial({ color: 0xf5d76e, side: THREE.DoubleSide });
-      const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
-      innerRing.position.set(homePos.x, BOARD_SURFACE_Y + 0.014, homePos.z);
-      squareHighlightsGroup.add(innerRing);
+      // Rigged animals (2026-10-30): no toppling, no brazier — the defeated king kneels (clamped Kneel clip) and
+      // every piece of the winning side cheers. Mild, cartoon-like (PLAN §14.0 rating notes). Statues keep the
+      // topple below.
+      if (kingPiece.rig && kingPiece.rig !== 'statue') {
+        checkmateState.phase = 'kneel';
+        playPieceClip(kingPiece, 'kneel', false, 0.2);
+        let i = 0;
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const p = boardState[r][c];
+            if (!p || p.color !== actualWinner) continue;
+            const delay = 250 + (i++ % 6) * 90;           // a ripple, not a unison
+            setTimeout(() => {
+              if (checkmateState.active && boardState[r][c] === p) playPieceClip(p, 'victory', true, 0.25);
+            }, delay);
+          }
+        }
+        if (heldCameraKeys.size === 0) {
+          const camSideX = homePos.x >= 0 ? -1.2 : 1.2;
+          smoothCameraTo(
+            new THREE.Vector3(homePos.x + camSideX, BOARD_SURFACE_Y + 1.05, homePos.z + forwardDirZ * 1.6),
+            new THREE.Vector3(homePos.x, BOARD_SURFACE_Y + 0.3, homePos.z),
+            0.95
+          );
+        }
+        setTimeout(() => {
+          if (!checkmateState.active) return;
+          checkmateState.phase = 'fallen';
+          showCheckmateBanner(actualWinner, defeatedColor);
+        }, 1300);
+        return true;
+      }
 
       // Pause the King's idle mixer so its stone statue mesh pivots cleanly as a rigid monument
       if (kingPiece.currentAction) {
@@ -3969,13 +6031,8 @@ export function initWizardChess() {
         if (elapsed >= tTotal) {
           applyKingTopplePose(MAX_FALL_RAD, 0);
           checkmateState.phase = 'fallen';
-          if (actualWinner === playerColor && kingPiece && kingPiece.mesh) {
-            startCheckmateBrazierExecution(kingPiece.mesh, defeatedColor, actualWinner, homePos);
-          } else {
-            if (!bannerShown) {
-              bannerShown = true;
-              showCheckmateBanner(actualWinner, defeatedColor);
-            }
+          if (!bannerShown) {
+            showCheckmateBanner(actualWinner, defeatedColor);
           }
           return true;
         }
@@ -4000,34 +6057,60 @@ export function initWizardChess() {
       const t = getTranslations(getCurrentLang());
 
       turnDot.className = 'turn-dot' + (currentTurn === 'b' ? ' black' : '');
-
-      if (currentTurn === playerColor && typeof window !== 'undefined' && window.__arcaneEngine) {
-        window.__arcaneEngine.onPlayerTurnStart();
-      }
+      document.body.classList.toggle('my-turn', !gameOver && !scriptedGameActive && currentTurn === playerColor);
 
       const legalMoves = getAllLegalMoves(currentTurn);
-      const inCheck = isKingInCheck(currentTurn, boardState);
+      const inCheck = referee.inCheck(currentTurn);
+      const stdReason = referee.turn() === currentTurn ? referee.gameOverReason() : null;
+      // 계약전(SC-1, §3.2-1): 체크메이트 → 계약 2개 → 스테일메이트 → 반복 → 50수 → 킹만 남음 → 차례 상한.
+      // 「킹만 남음」 말고는 기물 부족으로 끝내지 않는다 — 메이트가 안 돼도 목표 포획으로 이길 수 있다.
+      const verdict = contract && referee.turn() === currentTurn ? contractVerdict(contract, referee.history(), referee.contractStandard()) : null;
+      const endReason = verdict && stdReason === 'insufficient' ? null : stdReason;
 
-      if (typeof window !== 'undefined' && window.__juiceEngine) {
-        window.__juiceEngine.setDangerVignette(Boolean(inCheck && currentTurn === playerColor && !gameOver));
-        if (inCheck && currentTurn === playerColor && !gameOver) {
-          window.__juiceEngine.screenFlash('red');
+      if (verdict?.over && (verdict.reason === 'contract' || verdict.reason === 'limit' || verdict.reason === 'kings')) {
+        if (!gameOver) {
+          gameOver = true;
+          const { w, b } = verdict.progress;
+          const sideName = (c) => (c === 'w' ? t.whiteColor : t.blackColor);
+          const line = verdict.reason === 'contract' ? `${sideName(verdict.winner)} 왕관 완성 — 보석 둘을 먼저 모았습니다`
+            : verdict.reason === 'kings' ? '킹만 남았습니다 — 무승부'
+            : verdict.winner ? `24차례 끝 — ${sideName(verdict.winner)} 승리 (계약 ${Math.max(w.done, b.done)} 대 ${Math.min(w.done, b.done)})`
+            : `24차례 끝 — 무승부 (계약 ${w.done} 대 ${b.done})`;
+          // 위쪽 차례 글자는 짧게(길면 단추 줄을 밀어낸다), 자세한 줄은 배너에
+          turnText.textContent = verdict.reason === 'contract' ? `${sideName(verdict.winner)} 왕관 완성` : verdict.winner ? `24차례 판정 — ${sideName(verdict.winner)} 승` : '무승부';
+          const result = !verdict.winner ? 'draw' : verdict.winner === playerColor ? 'win' : 'loss';
+          showDrawBanner(line);
+          document.getElementById('checkmate-crown').textContent = result === 'win' ? '👑' : result === 'loss' ? '🏳️' : '🤝';
+          document.getElementById('checkmate-title').textContent = verdict.reason === 'contract' ? '왕관 완성' : result === 'draw' ? t.drawTitle : '24차례 판정';
+          sfx.play(result === 'win' ? 'mate' : result === 'loss' ? 'lose' : 'draw', 0.25);
+          if (verdict.winner) playFlourish(kingOf(verdict.winner), 'roar');
+          refreshContract(false);
+          reportGameEnd(result, { reason: verdict.reason });
         }
-      }
-
-      if (legalMoves.length === 0) {
+      } else if (legalMoves.length === 0 || endReason) {
         gameOver = true;
-        if (inCheck) {
+        if (endReason === 'checkmate' || (legalMoves.length === 0 && inCheck)) {
           const winner = currentTurn === 'w' ? t.blackColor : t.whiteColor;
           turnText.textContent = t.checkmateWin(winner);
           if (!checkmateState.active) {
+            if (!contract) awardRivalWin(currentTurn === 'w' ? 'b' : 'w');   // 계약전은 라이벌 사다리에 닿지 않는다
             triggerCheckmateSequence(currentTurn, currentTurn === 'w' ? 'b' : 'w');
           }
-        } else {
+          reportGameEnd(currentTurn === playerColor ? 'loss' : 'win', { reason: 'checkmate' });
+        } else if (endReason === 'stalemate' || legalMoves.length === 0) {
           turnText.textContent = t.stalemate;
+          showDrawBanner(t.stalemate);
+          reportGameEnd('draw', { reason: 'stalemate' });
+        } else {
+          turnText.textContent = (t.drawBy && t.drawBy(endReason)) || t.stalemate;
+          showDrawBanner(turnText.textContent);
+          reportGameEnd('draw', { reason: endReason });
         }
       } else {
-        const turnLabel = currentTurn === 'w' ? t.turnWhite : t.turnBlack;
+        // 차례 판(플레이 화면 개편 2026-11-13): 내가 두는 판에서는 색 이름 대신 「내 차례 / 상대 차례」.
+        const seated = !scriptedGameActive && (playerColor === 'w' || playerColor === 'b');
+        const en = getCurrentLang() === 'en';
+        const turnLabel = !seated ? (currentTurn === 'w' ? t.turnWhite : t.turnBlack) : currentTurn === playerColor ? (en ? 'Your move' : '내 차례') : (en ? 'Their move' : '상대 차례');
         const aiColor = playerColor === 'w' ? 'b' : 'w';
         const isAiTurn = !scriptedGameActive && gameMode === 'single' && currentTurn === aiColor;
         if (inCheck) {
@@ -4042,12 +6125,14 @@ export function initWizardChess() {
       if (modeBadge) {
         modeBadge.textContent = playerColor === 'w' ? t.playingAsWhite : t.playingAsBlack;
       }
+      // 친구 대전(랭크 포함)에서는 「AI 수」·「색 바꾸기」를 숨긴다 — AI 가 내 수를 대신 두면 사람끼리 두는 판이 아니다
+      // (기획서 §12.1 「랭크 중 btn-ai-move 비활성」, LA-R R-1). 클릭 처리도 막는다.
       if (btnAiMove) {
-        btnAiMove.style.display = 'inline-flex';
+        btnAiMove.style.display = gameMode === 'multi' ? 'none' : 'inline-flex';
         btnAiMove.textContent = t.aiMove;
       }
       if (btnSideToggle) {
-        btnSideToggle.style.display = 'inline-flex';
+        btnSideToggle.style.display = gameMode === 'multi' ? 'none' : 'inline-flex';
         btnSideToggle.textContent = playerColor === 'w' ? t.playAsBlack : t.playAsWhite;
       }
       if (roomPill) {
@@ -4057,10 +6142,15 @@ export function initWizardChess() {
       if (capturedTray) {
         if (capturedByWhite > 0 || capturedByBlack > 0) {
           const lang = getCurrentLang();
-          if (lang === 'ko') {
-            capturedTray.textContent = `잡은 말 — 백: ${capturedByWhite} | 흑: ${capturedByBlack}`;
+          // TA-2 (2026-11-04 시험 A): 「백: n | 흑: m」은 잡은 수인지 잃은 수인지 읽히지 않았다. 내가 둘 때는 나/상대로 적는다.
+          if (playerColor === 'w' || playerColor === 'b') {
+            const mine = playerColor === 'w' ? capturedByWhite : capturedByBlack;
+            const theirs = playerColor === 'w' ? capturedByBlack : capturedByWhite;
+            capturedTray.textContent = lang === 'ko' ? `내가 잡음 ${mine} · 상대가 잡음 ${theirs}` : `You took ${mine} · They took ${theirs}`;
+          } else if (lang === 'ko') {
+            capturedTray.textContent = `백이 잡음 ${capturedByWhite} · 흑이 잡음 ${capturedByBlack}`;
           } else {
-            capturedTray.textContent = `Captured — White: ${capturedByWhite} | Black: ${capturedByBlack}`;
+            capturedTray.textContent = `White took ${capturedByWhite} · Black took ${capturedByBlack}`;
           }
         } else {
           capturedTray.textContent = '';
@@ -4073,110 +6163,90 @@ export function initWizardChess() {
     // Raycasting & Board Interaction
     // =========================================================================
     const raycaster = new THREE.Raycaster();
+    raycaster.layers.enableAll();   // 계층 렌더가 보드를 정적 층(1)에 두어도 칸을 집을 수 있게
     const pointer = new THREE.Vector2();
     let pointerDownPos = { x: 0, y: 0 };
 
-    window.addEventListener('contextmenu', (e) => {
-      if (typeof window !== 'undefined' && window.__arcaneEngine?.activeSpell) {
-        e.preventDefault();
-        window.__arcaneEngine.cancelSpell();
-      }
-    });
-
-    renderer.domElement.addEventListener('pointerdown', (e) => {
-      pointerDownPos = { x: e.clientX, y: e.clientY };
-    });
-
-    renderer.domElement.addEventListener('pointermove', (e) => {
-      if (typeof window !== 'undefined' && window.__farmEngine && window.__farmEngine.isGardenView) {
-        hoveredSquare = null;
-        return;
-      }
-      const rect = renderer.domElement.getBoundingClientRect();
-      const px = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const py = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      const hoverRay = new THREE.Raycaster();
-      hoverRay.setFromCamera(new THREE.Vector2(px, py), camera);
-      const hits = hoverRay.intersectObjects([...pieceMeshes, ...boardSquareMeshes], true);
-      if (hits.length > 0) {
-        let obj = hits[0].object;
-        let hR = -1, hC = -1;
-        while (obj) {
-          if (obj.userData && obj.userData.piece) {
-            hR = obj.userData.piece.r;
-            hC = obj.userData.piece.c;
-            break;
-          }
-          if (obj.userData && obj.userData.isSquare) {
-            hR = obj.userData.r;
-            hC = obj.userData.c;
-            break;
-          }
-          obj = obj.parent;
-        }
-        if (hR !== -1 && hC !== -1) {
-          hoveredSquare = { r: hR, c: hC };
-          return;
-        }
-      }
-      hoveredSquare = null;
-    });
-
-    renderer.domElement.addEventListener('pointerup', (e) => {
-      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
-      if (moveDist > 6) return;
-
+    // DR-2b 끌기: 내 말에서 시작한 끌기는 카메라를 돌리지 않고 그 말을 옮긴다 — 끌기 시작 = 말 누르기, 놓은 칸 = 두 번째 누르기
+    // (미리 두기도 같은 길). 다른 곳에서 시작한 끌기는 예전처럼 카메라를 돌린다. 말이 손가락을 따라오지는 않는다(표시만).
+    let dragFrom = null;          // { r, c } — the press began on a piece the player may pick up
+    let dragShown = false;        // the pick-up already happened (marks are showing)
+    let dragHeldOrbit = false;    // this drag turned the camera controls off
+    const dragStats = { started: 0, moved: 0 };
+    function aimPointer(e) {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
       raycaster.setFromCamera(pointer, camera);
+    }
+    function releaseDrag() {
+      dragFrom = null;
+      dragShown = false;
+      // A capture duel that began during the drag owns the camera now; it turns the controls back on when it ends.
+      if (dragHeldOrbit && !activeDuelSavedCam) orbitControls.enabled = true;
+      dragHeldOrbit = false;
+    }
+    function mayPickUp(sq) {
+      if (!sq || gameOver || promotionPickerOpen) return false;
+      if (premoveWaiting()) return referee.colorAt(sq.r, sq.c) === playerColor;
+      if (isAnimatingMove || (gameMode === 'multi' && currentTurn !== playerColor)) return false;
+      if (gameMode === 'single' && !scriptedGameActive && currentTurn !== playerColor && (aiThinking || aiTimer !== null)) return false;
+      return boardState[sq.r][sq.c]?.color === currentTurn;
+    }
 
-      // =========================================================================
-      // 1. GARDEN VIEW INTERACTION (Priority #1 when visiting the Cloister Garden)
-      // =========================================================================
-      if (typeof window !== 'undefined' && window.__farmEngine && window.__farmEngine.isGardenView) {
-        const gardenHits = raycaster.intersectObjects(scene.children, true);
-        for (const hit of gardenHits) {
-          let cur = hit.object;
-          while (cur) {
-            if (cur.userData && cur.userData.isGardenPlot) {
-              const plotIdx = cur.userData.plotIndex;
-              const plot = window.__farmEngine.plots[plotIdx];
-              if (!plot) return;
-              if (plot.stage === 3) {
-                window.__farmEngine.harvestPlot(plotIdx);
-              } else if (plot.cropId && !plot.isWatered) {
-                window.__farmEngine.waterPlot(plotIdx);
-              } else if (!plot.cropId) {
-                if (window.__farmEngine.selectedSeedId) {
-                  const planted = window.__farmEngine.plantSeed(plotIdx, window.__farmEngine.selectedSeedId);
-                  if (!planted) {
-                    const seed = window.__farmEngine.selectedSeedId;
-                    const count = window.__farmEngine.seeds[seed] || 0;
-                    if (count <= 0) {
-                      window.__farmEngine.showLootNotification?.(`⚠️ 보유한 씨앗이 없습니다! 상점([🛒 상점])에서 씨앗을 구매하세요.`);
-                    }
-                  }
-                } else {
-                  window.__farmEngine.showLootNotification?.('⚠️ 하단 도크에서 심을 씨앗을 먼저 클릭하세요!');
-                }
-              } else {
-                window.__farmEngine.showLootNotification?.(`🌱 작물이 자라고 있습니다 (${Math.round(plot.growthProgress)}%) - 체스 수를 두면 급속 성장합니다!`);
-              }
-              return;
-            }
-            cur = cur.parent;
-          }
-        }
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      pointerDownPos = { x: e.clientX, y: e.clientY };
+      releaseDrag();
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      aimPointer(e);
+      const sq = squareUnderPointer();
+      if (!mayPickUp(sq)) return;
+      dragFrom = sq;
+      if (orbitControls.enabled) {
+        orbitControls.enabled = false;
+        dragHeldOrbit = true;
+      }
+    });
+
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      if (!dragFrom || dragShown) return;
+      if (Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y) <= 6) return;
+      dragShown = true;
+      dragStats.started += 1;
+      // A premove pick of the same piece is already showing: picking it again would put it down.
+      if (!(preSel && preSel.r === dragFrom.r && preSel.c === dragFrom.c)) boardTap(dragFrom);
+    });
+
+    renderer.domElement.addEventListener('pointercancel', releaseDrag);
+
+    renderer.domElement.addEventListener('pointerup', (e) => {
+      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+      const from = dragFrom;
+      const shown = dragShown;
+      releaseDrag();
+      if (gameOver) return;
+      aimPointer(e);
+      if (moveDist > 6) {
+        if (!from) return;            // a drag that began off my pieces turned the camera
+        if (!shown && !(preSel && preSel.r === from.r && preSel.c === from.c)) boardTap(from);
+        const to = squareUnderPointer();
+        if (!to || (to.r === from.r && to.c === from.c)) return;   // dropped where it began: stays picked up
+        const sig = () => `${referee.history().length}:${premove ? `${premove.toR}${premove.toC}` : ''}`;
+        const before = sig();
+        boardTap(to);
+        if (sig() !== before) dragStats.moved += 1;   // a move made, or a premove set
         return;
       }
+      boardTap(squareUnderPointer());
+    });
 
-      if (isAnimatingMove || gameOver) return;
-
-      // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
-      if (gameMode === 'multi' && currentTurn !== playerColor) return;
-      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) return;
+    // The square a tap means: null when the tap missed the board, undefined when it hit something that is no square.
+    function squareUnderPointer() {
+      const waiting = premoveWaiting();
+      // While waiting for the turn the referee says whose piece stands where (the animation may still be walking there).
+      const mine = waiting ? playerColor : currentTurn;
+      const colorOf = (r, c) => (waiting ? referee.colorAt(r, c) : boardState[r][c]?.color);
+      const choices = waiting ? (preSel ? preSel.moves : []) : (selectedSquare ? validMoves : []);
 
       const pieceMeshes = [];
       for (let r = 0; r < 8; r++) {
@@ -4188,52 +6258,68 @@ export function initWizardChess() {
       }
 
       const hits = raycaster.intersectObjects([...pieceMeshes, ...boardSquareMeshes], true);
-      if (hits.length === 0) {
+      if (hits.length === 0) return null;
+
+      // What a hit stands for: a piece (its square) or a board square.
+      const squareOf = (hit) => {
+        for (let obj = hit.object; obj; obj = obj.parent) {
+          if (obj.userData?.piece) return { r: obj.userData.piece.r, c: obj.userData.piece.c, isPiece: true };
+          if (obj.userData?.isSquare) {
+            const sq = obj.userData.squares?.[hit.instanceId];
+            return sq ? { r: sq.r, c: sq.c, isPiece: false } : null;
+          }
+        }
+        return null;
+      };
+      // The square under the finger wins over a taller piece standing in front of it. From the player camera on a
+      // phone the back rank hides most of the second: tapping e2 picked the e1 king, and a pawn took only a 10px band
+      // of its 30px square (Galaxy Z Flip5, 2026-11-05). A piece's body still counts where the square under it is empty
+      // and not a move: the head of a piece reaching over an empty square, or an enemy to take.
+      const first = squareOf(hits[0]);
+      const floorHit = hits.find((h) => squareOf(h)?.isPiece === false);
+      const floor = floorHit && squareOf(floorHit);
+      const floorMatters = floor && (colorOf(floor.r, floor.c) === mine || choices.some(tapMatches(floor)));
+      const target = floorMatters ? floor : first;
+      return target ? { r: target.r, c: target.c } : undefined;
+    }
+
+    /** What a tap on the board does. `target`: a square, null (missed the board) or undefined (no square). */
+    function boardTap(target) {
+      // 소라 릴이 도는 중에 누르면 바로 목표를 공개한다. 누르기는 삼키지 않는다 — 말 고르기는 그대로 된다.
+      if (shellReel?.revealing()) shellReel.skip();
+      if (gameOver) return;
+      // DR-2a: while waiting for the turn a tap on my piece (or its move) is a premove.
+      if (premoveTap(target)) return;
+      // DR-1c: a tap while a move plays hurries it along; it never selects anything.
+      if (isAnimatingMove) { requestSkip(); return; }
+
+      // Enforce turn ownership in Multiplayer, and in Single Player only block while AI auto-move timer is actively pending
+      if (gameMode === 'multi' && currentTurn !== playerColor) return;
+      // FN-5: while the AI thinks in its worker the board waits too.
+      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiThinking) return;
+      // DR-1c: a tap while the AI is about to move lets it move now instead of waiting out its pause.
+      if (!scriptedGameActive && gameMode === 'single' && currentTurn !== playerColor && aiTimer !== null) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+        dropAiThought();
+        triggerAIMoveNow();
+        return;
+      }
+      if (target === null) {
         if (preMoveHighlightTask) preMoveHighlightTask = null;
         clearSquareHighlights();
         selectedSquare = null;
         validMoves = [];
         return;
       }
-
-      let clickedR = -1;
-      let clickedC = -1;
-      let obj = hits[0].object;
-      while (obj) {
-        if (obj.userData && obj.userData.piece) {
-          clickedR = obj.userData.piece.r;
-          clickedC = obj.userData.piece.c;
-          break;
-        }
-        if (obj.userData && obj.userData.isSquare) {
-          clickedR = obj.userData.r;
-          clickedC = obj.userData.c;
-          break;
-        }
-        if (obj.userData && obj.userData.isPillarObstacle) {
-          clickedR = obj.userData.r;
-          clickedC = obj.userData.c;
-          break;
-        }
-        obj = obj.parent;
-      }
-
-      if (clickedR === -1) return;
-
-      if (typeof window !== 'undefined' && window.__arcaneTileHandler && window.__arcaneTileHandler(clickedR, clickedC)) {
-        if (preMoveHighlightTask) preMoveHighlightTask = null;
-        clearSquareHighlights();
-        selectedSquare = null;
-        validMoves = [];
-        return;
-      }
+      if (!target) return;
+      const clickedR = target.r;
+      const clickedC = target.c;
+      if (promotionPickerOpen) return;          // the promotion chooser owns the next click
 
       // Cancel any pending scripted pre-move highlight timer when the user manually interacts with the board
       if (preMoveHighlightTask) {
         preMoveHighlightTask = null;
-      }
-      if (typeof window !== 'undefined' && window.__onBeastSelect) {
-        window.__onBeastSelect(null, null);
       }
 
       if (selectedSquare) {
@@ -4243,32 +6329,39 @@ export function initWizardChess() {
             (m.castle && m.r === clickedR && m.rookFromC === clickedC)
         );
         if (move) {
+          const mover = boardState[selectedSquare.r][selectedSquare.c];
+          if (mover && mover.type === 'pawn' && (move.r === 0 || move.r === 7)) {
+            const from = { r: selectedSquare.r, c: selectedSquare.c };
+            showPromotionPicker(mover.color, (choice) => {
+              executeChessMove(from.r, from.c, move.r, move.c, { promotion: choice });
+            });
+            return;
+          }
           executeChessMove(selectedSquare.r, selectedSquare.c, move.r, move.c);
           return;
         }
       }
 
       const clickedPiece = boardState[clickedR][clickedC];
+      // Hand and brain (cards/handBrain.js): on the player's turn the hand picks up only the kind the brain named;
+      // '' means the brain has not named one yet.
+      if (gameMode === 'single' && clickedPiece && clickedPiece.color === currentTurn && currentTurn === playerColor && !kindAllows(handBrainKind, clickedPiece.type)) {
+        window.dispatchEvent(new CustomEvent('handbrainblocked', { detail: { type: clickedPiece.type, want: handBrainKind } }));
+        clearSquareHighlights();
+        selectedSquare = null;
+        validMoves = [];
+        return;
+      }
       if (clickedPiece && clickedPiece.color === currentTurn) {
         selectedSquare = { r: clickedR, c: clickedC };
         validMoves = getLegalMovesForPiece(clickedR, clickedC);
         showSquareHighlights(clickedR, clickedC, validMoves);
-        if (typeof window !== 'undefined' && window.__onBeastSelect) {
-          window.__onBeastSelect(getBeastInfo(clickedPiece.type, clickedPiece.color), clickedPiece);
-        }
       } else {
         clearSquareHighlights();
         selectedSquare = null;
         validMoves = [];
-        if (typeof window !== 'undefined' && window.__onBeastSelect) {
-          if (clickedPiece) {
-            window.__onBeastSelect(getBeastInfo(clickedPiece.type, clickedPiece.color), clickedPiece);
-          } else {
-            window.__onBeastSelect(null, null);
-          }
-        }
       }
-    });
+    }
 
     // =========================================================================
     // Multiplayer Room Synchronization (Same-Origin API + Static Site Fallback)
@@ -4421,7 +6514,7 @@ export function initWizardChess() {
               nextMove.from.c,
               nextMove.to.r,
               nextMove.to.c,
-              { fromRemote: true }
+              { fromRemote: true, promotion: nextMove.promotion }
             );
           }
           if (appliedMoveSeq < room.moves.length) {
@@ -4699,30 +6792,79 @@ export function initWizardChess() {
     document.getElementById('btn-script-next')?.addEventListener('click', () => stepScriptForward());
 
     document.getElementById('btn-ai-move')?.addEventListener('click', () => {
+      if (gameMode === 'multi') return;
       triggerAIMoveNow();
     });
 
-    document.getElementById('btn-side-toggle')?.addEventListener('click', () => {
+    // Leaving a game the player has started asks first: its cards only count when the game ends (plan §2).
+    const RESIGN_KEEP_MOVES = 10;     // a resignation this late counts as a lost game; earlier it is just leaving
+    function quitInfo() {
+      const history = referee.history();
+      const myMoves = history.filter((m) => m.color === playerColor).length;
+      const active = gameMode === 'single' && !scriptedGameActive && !gameOver && playerColor !== 'spectator' && myMoves > 0 && !puzzle;   // 연습은 그만둘지 묻지 않는다
+      return { active, myMoves, keepMoves: RESIGN_KEEP_MOVES, keeps: myMoves >= RESIGN_KEEP_MOVES };
+    }
+
+    function askToQuit(kind) {
+      const info = quitInfo();
+      if (!info.active) return false;
+      window.dispatchEvent(new CustomEvent('quitrequest', { detail: { kind, ...info } }));
+      return true;
+    }
+
+    function switchSide() {
       if (gameMode !== 'single') return;
       playerColor = playerColor === 'w' ? 'b' : 'w';
       resetChessBoard(true, scriptedGameActive);
+    }
+
+    // A late resignation ends the game as a loss, so its cards and the island are paid; an early one is a new game.
+    function resign() {
+      const info = quitInfo();
+      if (!info.active) return false;
+      if (!info.keeps) {
+        resetChessBoard(true, false);
+        return true;
+      }
+      if (isAnimatingMove) {
+        setTimeout(resign, 150);
+        return true;
+      }
+      if (aiTimer) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+        dropAiThought();
+      }
+      gameOver = true;
+      // 계약전은 카드를 주지 않는다 — 「카드는 받았어요」는 일반 판에서만 참이다(IR-0)
+      showDrawBanner(contract ? '' : getCurrentLang() === 'en' ? 'You resigned. Your cards are in.' : '기권했어요. 이번 판 카드는 받았어요.');
+      document.getElementById('checkmate-crown').textContent = '🏳️';
+      document.getElementById('checkmate-title').textContent = getCurrentLang() === 'en' ? 'Game over' : '대국 끝';
+      reportGameEnd('loss', { resigned: true });
+      return true;
+    }
+
+    function quitNow(kind) {
+      if (kind === 'resign') return resign();
+      if (kind === 'side') return switchSide();
+      return resetChessBoard(true, false);
+    }
+
+    document.getElementById('btn-side-toggle')?.addEventListener('click', () => {
+      if (gameMode !== 'single' || askToQuit('side')) return;
+      switchSide();
     });
 
-    document.getElementById('btn-reset')?.addEventListener('click', async () => {
-      if (gameMode === 'multi' && roomCode) {
-        const stRoom = getStaticRoom(roomCode);
-        if (stRoom) {
-          stRoom.moves = [];
-          stRoom.turn = 'w';
-          stRoom.resetCount = (stRoom.resetCount || 0) + 1;
-          stRoom.updatedAt = Date.now();
-          saveAndBroadcastStaticRoom(stRoom);
-          applyRemoteRoomState(stRoom);
-        }
-        await mpApiRequest(`/api/rooms/${roomCode}/reset`, { method: 'POST' });
-      } else {
-        resetChessBoard(true, false);
-      }
+    document.getElementById('btn-resign')?.addEventListener('click', () => {
+      if (gameMode === 'multi') { window.dispatchEvent(new CustomEvent('onlinebutton', { detail: { kind: 'resign' } })); return; }
+      askToQuit('resign');
+    });
+
+    // 친구 대전 중의 새 판·기권은 화면 층(Online.tsx)이 상대와 맞춰 처리한다. 옛 방 전송층(/api/rooms)은 쓰지 않는다.
+    document.getElementById('btn-reset')?.addEventListener('click', () => {
+      if (gameMode === 'multi') { window.dispatchEvent(new CustomEvent('onlinebutton', { detail: { kind: 'new' } })); return; }
+      if (askToQuit('new')) return;
+      resetChessBoard(true, false);
     });
 
     // =========================================================================
@@ -4862,6 +7004,8 @@ export function initWizardChess() {
       triggerCheckmateSequence(defCol, winCol);
     });
     document.getElementById('btn-checkmate-newgame')?.addEventListener('click', () => {
+      // 친구 대전 중에는 새 판을 혼자 열지 않는다 — 화면 층이 「다시 두기」로 받는다.
+      if (gameMode === 'multi') { window.dispatchEvent(new CustomEvent('onlinebutton', { detail: { kind: 'new' } })); return; }
       resetChessBoard(true, false);
     });
     document.getElementById('btn-checkmate-dismiss')?.addEventListener('click', () => {
@@ -4873,40 +7017,274 @@ export function initWizardChess() {
     // =========================================================================
     // Programmatic API for Automated Verification & Camera Inspection
     // =========================================================================
-    window.__toggleGardenCamera = (isGarden) => {
-      if (isGarden) {
-        activeCamTransition = null;
-        smoothCameraTo(
-          new THREE.Vector3(0, 3.8, 13.6),
-          new THREE.Vector3(0, 0.95, 9.8),
-          0.85
-        );
-      } else {
-        activeCamTransition = null;
-        setCameraForSide(playerColor);
-      }
-    };
-
     window.wizardChess = {
-      scene,
-      camera,
-      renderer,
-      boardState,
-      boardToWorld,
-      instantiatePiece,
-      spawnStoneShatter,
-      spawnBrazierIncineration,
-      shakeCamera: (intensity = 0.06) => {
-        camera.position.y += intensity;
-        setTimeout(() => {
-          camera.position.y -= intensity;
-        }, 80);
+      // Debug: world-space height (in board squares) of one piece per type/colour, measured in its current pose.
+      debugPieceHeights: () => {
+        const out = {};
+        const box = new THREE.Box3();
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const p = boardState[r][c];
+            const key = p ? `${p.type}_${p.color}` : null;
+            if (!p || !p.mesh || out[key]) continue;
+            box.setFromObject(p.mesh, true);
+            out[key] = Number(((box.max.y - box.min.y) / BOARD_SQ_SIZE).toFixed(2));
+          }
+        }
+        return out;
       },
-      hazardTiles,
-      impactFlashLight,
-      switchChessSkin,
-      playerColor: () => playerColor,
+      // Debug: play a clip role (idle/move/attack/hit/shatter/victory/kneel/bored) on the piece at (r, c).
+      debugPlayClip: (r, c, role, loop = false) => {
+        const p = boardState[r]?.[c];
+        if (!p) return false;
+        playPieceClip(p, role, loop, 0.08);
+        return p.clipMap?.[role.toLowerCase()] || null;
+      },
+      // Appearance (PLAN §14.2 · §14.3): looks only — stages and trinkets never change a move.
+      getLookCatalog,
+      getCosmetics,
+      setCosmetics,
+      debugImpacts: () => impactCount,
+      // Debug: whether the last capture counted as an upset ("역전!", capture-matchup plan CX-1).
+      debugLastUpset: () => lastUpset,
+      // Debug: hide the impact words, for the muted who-took-whom quiz recordings (capture-matchup human test A).
+      debugHideWords: (on) => impactFx.setWordsHidden(on),
+      // Debug: the last capture's special case (CX-4): mirror match, pawn combo count and pitch, pieces swayed by a roar.
+      // Debug: the game's moves (chess.js verbose history), for the twenty-game capture log (capture-matchup human test B).
+      debugHistory: () => referee.history(),
+      debugSpecial: () => ({ ...(lastSpecial || {}), impacts: impactCount, mirrorPose: lastMirrorPose && { ...lastMirrorPose }, swaying: roarSways.length }),
+      // Debug: a move (or its highlight) is still playing, so a test waits before the next step.
+      debugBusy: () => isAnimatingMove || Boolean(preMoveHighlightTask) || aiThinking,
+      debugAiWorker: () => (aiWorker ? 'worker' : aiWorker === false ? 'sync' : 'unset'),
+      // DR-1c: the same as tapping the board while a move plays.
+      skipAnimation: () => requestSkip(),
+      // DR-2a: the same as tapping square (r, c) on the board (tests drive the tap path without aiming the camera).
+      tapSquare: (r, c) => boardTap(r == null ? null : { r, c }),
+      debugDrag: () => ({ ...dragStats, holding: Boolean(dragFrom), orbit: orbitControls.enabled }),
+      debugPremove: () => ({ premove: premove && { ...premove }, preSel: preSel && { r: preSel.r, c: preSel.c, n: preSel.moves.length }, marks: premoveGroup.children.length, waiting: premoveWaiting(), ...premoveStats }),
+      // Debug: why a move is still running (a test that waits on debugBusy can say what it is waiting for).
+      debugMoveState: () => ({ clock: moveClock && { total: moveClock.total, strikeDone: moveClock.strikeDone, isCapture: moveClock.isCapture, elapsed: moveClock.elapsed() }, animating: isAnimatingMove, preMove: Boolean(preMoveHighlightTask), tweens: activeMoveTweens.length, hitStopLeft, slowLeft, aiTimer: Boolean(aiTimer), gameOver, gameMode, aiAutoPlay, renderPaused, manualStepMode }),
+      debugFlourish: (r, c, role) => playFlourish(boardState[r][c], role),
+      showThreats,
+      takeBackMove,
+      quitInfo,
+      quitNow,
+      setFreePlay,
+      setLastMoveMarks,
+      debugLastMoveMark: () => ({ visible: lastMoveMark.visible, at: [0, 1].map((i) => { const m = new THREE.Matrix4(); lastMoveMark.getMatrixAt(i, m); const v = new THREE.Vector3().setFromMatrixPosition(m); return [+v.x.toFixed(3), +v.z.toFixed(3)]; }) }),
+      debugSounds: () => ({ played: sfx.playedCount(), state: sfx.state(), muted: sfx.isMuted(), recent: sfx.recent() }),
+      getRivalCatalog,
+      startRival,
+      skipEntrance: landEntrance,
+      getVillageRivals: () => (activePack?.rivals || []).map(({ id, name, visitsFor, flag, rewards }) => ({
+        id,
+        name,
+        visitsFor,
+        flag,
+        wins: rivalProgress.wins[id] || 0,
+        owned: rewards.filter((x) => rivalProgress.unlocked.includes(x)).length,
+        total: rewards.length,
+        complete: rewards.every((x) => rivalProgress.unlocked.includes(x))
+      })),
+      getVillageWeekly: () => activePack?.weekly || [],
+      setRenderPaused: (on) => { renderPaused = Boolean(on); },
+      // 잠수 전환 (아틀란티스 계획서 AT-2): 마을로 갈 때 카메라가 판 가장자리 아래 수면 바로 위로 내려가고, 돌아오면 떠났던 자리로 올라온다.
+      diveCamera: (seconds = 0.45) => {
+        divePose = { pos: camera.position.clone(), target: orbitControls.target.clone() };
+        const dir = new THREE.Vector3(camera.position.x, 0, camera.position.z);
+        if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+        dir.normalize();
+        // Over the beach just past the board's rim, tipping down into the water, so the pieces slide out of the frame instead of filling it.
+        const from = dir.clone().multiplyScalar(2.6);
+        const into = dir.clone().multiplyScalar(1.9);
+        smoothCameraTo(new THREE.Vector3(from.x, BOARD_SURFACE_Y + 0.1, from.z), new THREE.Vector3(into.x, BOARD_SURFACE_Y - 1.2, into.z), seconds);
+      },
+      surfaceCamera: (seconds = 0.6) => {
+        const back = divePose || defaultCameraFor(playerCamSide);
+        divePose = null;
+        smoothCameraTo(back.pos, back.target, seconds);
+      },
+      // Hearts earned in the village grow that one individual on the board; the model set already has every stage.
+      // 절차적 섬(PI-3): 체스 판 둘레의 해안선을 군도의 지금 섬 모양으로. 같은 섬이면 아무것도 안 한다.
+      setIslandCoast: (theme, seed = 0) => publicApiCoast(theme, seed),
+      debugIslandCoast: () => ({ reef: seaBiome?.reefCheck?.() || null, key: islandCoastKey, on: Boolean(seaBiome?.ocean?.coastOn?.()), horizon: horizonIsland ? horizonIsland.state() : null, zenith: seaBiome?.ocean?.sky ? seaBiome.ocean.sky.uZenith.value.getHexString() : null, calls: renderer.info.render.calls }),
+      setSlotStages: async (map) => {
+        slotStages = map || {};
+        await ensureCosmeticAssets();
+        rebuildAllPieces();
+      },
+      debugRenderCalls: () => renderer.info.render.calls,
+      // 캐릭터 룩 A 의 세기를 바꾼다(전후 비교용). 인자 없이 부르면 지금 값만 돌려준다.
+      // 타격 1(GX-1~3): 마지막 화면 번쩍임과 겹친 불빛의 상태
+      debugHitFx: (v) => ({ slow: (v && typeof v.slow === 'number' ? (hitFxSlow = Math.min(1, Math.max(0.02, v.slow))) : hitFxSlow), flash: lastFlash, flashes: flashCount, glow: hitGlow ? hitGlow.state() : null }),
+      debugAnimalLook: (v) => { if (v) { if (typeof v.sat === 'number') animalLook.sat.value = v.sat; if (typeof v.rim === 'number') animalLook.rim.value = v.rim; } return { sat: animalLook.sat.value, rim: animalLook.rim.value }; },
+      // 계층 렌더 실험(①): 켜기/끄기, 프레임 통계, 모아 둔 GPU ms 표본(EXT_disjoint_timer_query_webgl2 가 있을 때만).
+      setLayered: (on, hz) => layered.setEnabled(on, hz),
+      debugLayered: () => layered.stats(),
+      debugGpuMs: () => gpuTimer.take(),
+      // 화면 보정(WG-P1): 켜고 끄기 · 세기 · 상태
+      setPost: (on) => postFx.setEnabled(on),
+      setPostParams: (p) => postFx.setParams(p),
+      setPostSamples: (n) => postFx.setSamples(n),
+      debugPost: () => postFx.state(),
+      // 판의 시간 · 밀물(WG-4 · WG-5)
+      debugTime: () => ({ day: +dayNow.toFixed(3), name: dayLook(dayNow).name, tide: +tideNow.toFixed(3), override: timeOverride && { ...timeOverride } }),
+      setTimeOverride: (o) => { timeOverride = o && typeof o === 'object' ? { ...o } : null; return timeOverride; },
+      gpuTimerAvailable: gpuTimer.available,
+      // 드로우콜 분해 실험(엔진 선택 계획서 §5 1일차): 장면·렌더러·카메라를 읽기 전용으로 노출
+      debugScene: () => scene, debugRenderer: () => renderer, debugCamera: () => camera,
+      // 피킹 디버그: NDC 좌표에서 클릭 처리와 같은 레이캐스트를 돌려 어느 칸이 잡히는지 돌려준다
+      debugPick: (nx, ny) => {
+        raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+        const hits = raycaster.intersectObjects([...boardSquareMeshes], true);
+        const h = hits[0];
+        if (!h) return null;
+        const sq = h.object.userData.squares?.[h.instanceId];
+        return { instanceId: h.instanceId, r: sq?.r, c: sq?.c, dist: +h.distance.toFixed(3), isInstanced: !!h.object.isInstancedMesh };
+      },
+      // Debug: where square (r, c) sits on the page, so a test can tap it like a finger.
+      debugSquareClient: (r, c) => {
+        const w = boardToWorld(r, c);
+        const v = new THREE.Vector3(w.x, BOARD_SURFACE_Y, w.z).project(camera);
+        const rect = renderer.domElement.getBoundingClientRect();
+        return { x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
+      },
+      debugSelected: () => (selectedSquare ? { ...selectedSquare } : null),
+      // Debug: the attacker's strike pose this frame and where it is on screen (capture-matchup CX-3).
+      debugAttackPose: () => {
+        if (!lastAttackPose) return null;
+        const { mesh, ...p } = lastAttackPose;
+        const v = mesh.getWorldPosition(new THREE.Vector3()).project(camera);
+        const rect = renderer.domElement.getBoundingClientRect();
+        return { ...p, x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
+      },
+      // Debug: the taken animals still on their way out (capture-matchup CX-2): age, height in squares, how far the
+      // head leans from upright (degrees) and where they are on screen.
+      debugFading: () => fadingPieces.map((f) => {
+        const m = f.piece.mesh;
+        const v = m.getWorldPosition(new THREE.Vector3()).project(camera);
+        const rect = renderer.domElement.getBoundingClientRect();
+        const head = new THREE.Vector3(0, 1, 0).applyQuaternion(m.quaternion);
+        return {
+          type: f.type, age: f.age, variant: f.variant,
+          up: (m.position.y - f.start.y) / BOARD_SQ_SIZE,
+          back: ((m.position.x - f.start.x) * f.dx + (m.position.z - f.start.z) * f.dz) / BOARD_SQ_SIZE,
+          leanDeg: Math.acos(Math.max(-1, Math.min(1, head.y))) * 180 / Math.PI,
+          x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height
+        };
+      }),
+      // Debug: open the promotion chooser; resolves with the picked role
+      debugPromotionPicker: (color = 'w') => new Promise((res) => showPromotionPicker(color, res)),
+      // Debug: bone sockets of a piece template (model space, bind pose)
+      debugSockets: (type, color = 'w') => {
+        const look = cosmetics?.[color]?.[type];
+        const tpl = (look && pieceTemplates[`${type}_${color}_${look.stage}`]) || pieceTemplates[`${type}_${color}`];
+        const s = tpl && computeSockets(tpl);
+        const bb = tpl && tpl.bbox;
+        return s && { bbox: bb && [bb.min.toArray(), bb.max.toArray()], head: { at: s.head.at.toArray(), width: s.head.width }, neck: { at: s.neck.at.toArray(), width: s.neck.width }, dbg: s.dbg };
+      },
       setCameraPreset,
+      setBountyMarks,
+      // Debug: signature captures on or off, to compare a capture with and without them.
+      setSignatureFx: (on) => signatureFx.setEnabled(on),
+      // 소라 릴(PP-1, 시험): 스위치 · 지금 릴 돌리기 · 상태.
+      // 둘째 인자가 참이면 켜 둠을 저장한다(메뉴의 「왕관 계약전」). 다음 새 판부터 적용된다.
+      setContractLab: (on, keep = false) => {
+        contractLab = Boolean(on);
+        if (contractLab) { loadShellReel(); sfx.preload?.(); }
+        if (keep) { contractStore = { ...contractStore, on: contractLab }; try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* */ } }
+        return contractLab;
+      },
+      isContractOn: () => contractLab,
+      debugSamples: () => sfx.samples(),
+      playReel: (setId) => loadShellReel().then(() => startContractReel(setId)),
+      skipReel: () => Boolean(shellReel?.skip()),
+      pullLever: () => Boolean(shellReel?.pull()),
+      // 파도타기로 지금 가장 높이 뜬 말(칸 단위)과, 쉬는 높이에서 벗어나 있는 말의 수(움직이는 수가 없을 때 0 이어야 한다).
+      debugReelHopMax: () => reelHops.reduce((m, h) => Math.max(m, (h.mesh.position.y - h.baseY) / BOARD_SQ_SIZE), 0),
+      debugReelOffBase: () => boardState.flat().filter((p) => p?.mesh && p.rig !== 'statue' && Math.abs(p.mesh.position.y - BOARD_SURFACE_Y) > 1e-6).length,
+      // 현상 딱지 · 매치 포인트 무대(PP-1 ②·⑤) 상태.
+      debugContract: () => ({
+        stage: contractStageNow, mix: +stageMix.toFixed(3), revealed: contractRevealed.slice(), finalShown: finalPointShown, hotPieces: contractHot.size,
+        set: contract ? contract.id : null, pliesLeft: contractPliesLeft, gameOver, end: lastContractEnd && { ...lastContractEnd },
+        store: { games: contractStore.games, win: contractStore.win, loss: contractStore.loss, draw: contractStore.draw },
+        hud: contractHud ? contractHud.state() : null,
+        aiContract: contract ? contractAiState(contract, referee.history(), undefined, contractRung, playerColor === 'w' ? 'b' : 'w') || null : null,
+        rung: contractRung, rungName: RUNG_NAMES[contractRung], storeRung: contractStore.rung, goldPieces: contractGold.size, dangerPieces: contractDanger.size, oops: { ...oopsStats },
+        progress: contractState && { w: contractState.w, b: contractState.b, winner: contractState.winner, matchPoint: contractState.matchPoint },
+        seaTime: +seaTime.toFixed(3), shallow: seaBiome?.ocean ? seaBiome.ocean.water.uShallow.value.getHexString() : null, zenith: seaBiome?.ocean?.sky ? seaBiome.ocean.sky.uZenith.value.getHexString() : null,
+        crown: crownGems ? crownGems.state() : null,
+        ...(bountyTags ? bountyTags.state() : { tags: 0, hot: 0, halos: 0, gold: 0, shield: 0, draws: 0, types: [] })
+      }),
+      // 한 방 퍼즐(IR-3, 시험): 연습 열기 · 놓친 왕관 열기 · 상태.
+      startPractice: (i = 0) => loadShellReel().then(() => startPractice(i)),
+      startMissedCrown: () => startMissed(),
+      debugPuzzle: () => ({ loaded: Boolean(puzzleLib), count: puzzleData ? puzzleData.length : 0, puzzle: puzzle && { ...puzzle }, missed: missedOffer && { ply: missedOffer.ply, answers: missedOffer.answers.slice() }, practiceDone: Boolean(contractStore.practice), stats: { ...puzzleStats }, bar: puzzleBar ? puzzleBar.state() : null, resume: (() => { try { return window.localStorage.getItem(RESUME_KEY) !== null; } catch (e) { return null; } })() }),
+      debugReel: () => ({ lab: contractLab, contract: contract && contract.id, games: contractGames, hops: reelHops.length, pending: reelPendingFor !== 0, loaded: Boolean(shellReel), ...(shellReel ? shellReel.state() : { active: false, waiting: false, plays: 0, stopped: [], goals: [] }) }),
+      // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.
+      // 종류 잠금(CO-1): 부른 종류는 손이 둘 때까지 다른 종류로 못 바꾼다. 바뀌었는지 돌려준다.
+      setHandBrain: (kind) => {
+        const want = kind === null || kind === undefined ? null : String(kind);
+        handBrainKind = lockKind(handBrainKind, want);
+        const changed = handBrainKind === want;
+        const held = selectedSquare && boardState[selectedSquare.r][selectedSquare.c];
+        if (held && handBrainKind !== null && held.type !== handBrainKind) {
+          clearSquareHighlights();
+          selectedSquare = null;
+          validMoves = [];
+        }
+        return changed;
+      },
+      setTeamGame: (on) => { teamGame = Boolean(on); },
+      // 친구 초대 대전(src/net/matchCore.js · Online.tsx). 내 색으로 새 판을 그리고, 이미 둔 수(이어 받기)는 연출 없이 놓는다.
+      startOnline: ({ color, moves = [] } = {}) => {
+        scriptedGameActive = false;
+        gameMode = 'multi';
+        playerColor = color === 'b' ? 'b' : 'w';
+        activeRivalId = null;
+        notifyRivalChange();
+        handBrainKind = null;
+        teamGame = false;
+        const back = moves.length ? replayResume({ moves }) : null;
+        resetChessBoard(true, false, !back);
+        if (back) {
+          referee.adopt(back.chess);
+          restoreBoardSnapshot({
+            fen: back.chess.fen(), currentTurn: back.turn, gameOver: false, capturedByWhite: back.capturedByWhite,
+            capturedByBlack: back.capturedByBlack, scriptCursor: 0, scriptedGameActive: false, scriptDeviated: false, cells: back.cells
+          }, { keepReferee: true });
+          moveHistory = back.before.map(takebackEntry);
+          window.dispatchEvent(new CustomEvent('gamestarted', { detail: { gameId, resumed: moves.length, color: playerColor, online: true } }));
+        }
+        return { gameId, plies: referee.history().length };
+      },
+      // 상대 수. 연출 중이면 끝날 때까지 기다렸다 둔다. 둔 뒤에 true(엔진·심판이 거부하면 false).
+      applyOnlineMove: (mv) => new Promise((done) => {
+        const go = () => {
+          if (gameMode !== 'multi' || !mv) return done(false);
+          if (isAnimatingMove) { setTimeout(go, 120); return; }
+          const a = squareRC(mv.from);
+          const b = squareRC(mv.to);
+          done(executeChessMove(a.r, a.c, b.r, b.c, { fromRemote: true, promotion: mv.promotion }) !== false);
+        };
+        go();
+      }),
+      endOnline: () => {
+        if (gameMode !== 'multi') return;
+        gameMode = 'single';
+        resetChessBoard(true, false);
+      },
+      isOnline: () => gameMode === 'multi',
+      // 시작 단계(모델 읽기·첫 판)가 끝났는가. 친구 대전 화면은 이것을 기다렸다가 판을 세운다.
+      isStarted: () => engineStarted,
+      getHandBrainState: () => ({
+        fen: referee.fen(),
+        history: referee.history().map((m) => positionKey(m.after)),
+        playerColor,
+        turn: referee.turn(),
+        gameId,
+        ready: gameMode === 'single' && !scriptedGameActive && !gameOver && !isAnimatingMove && playerColor !== 'spectator'
+      }),
       setCameraPose,
       setCameraLook: setCameraPose,
       setCameraKeySpeedPercent,
@@ -4951,8 +7329,7 @@ export function initWizardChess() {
           enforceCathedralBoundsAndSolidColumns(prev, camera.position, orbitControls.target);
           path.push(camera.position.toArray().map((v) => Number(v.toFixed(3))));
         }
-        if (composer) composer.render();
-        else renderer.render(scene, camera);
+        renderer.render(scene, camera);
         return path;
       },
       setSinglePlayerSide: (color) => {
@@ -4967,6 +7344,7 @@ export function initWizardChess() {
         if (aiTimer) {
           clearTimeout(aiTimer);
           aiTimer = null;
+          dropAiThought();
         }
         activeMoveTweens.length = 0;
         isAnimatingMove = false;
@@ -4983,9 +7361,9 @@ export function initWizardChess() {
           boardState[p.r][p.c] = inst;
         }
         currentTurn = turn;
+        syncRefereeFromBoard(turn);
         updateTurnUI();
-        if (composer) composer.render();
-        else renderer.render(scene, camera);
+        renderer.render(scene, camera);
       },
       triggerDemoCapture: () => {
         // Set up an immediate pawn capture (e4 x d5) and execute it
@@ -5004,8 +7382,11 @@ export function initWizardChess() {
         bp.mesh.position.copy(boardToWorld(3, 3));
 
         currentTurn = 'w';
+        syncRefereeFromBoard('w');
         return executeChessMove(4, 4, 3, 3);
       },
+      getFen: () => referee.fen(),
+      getPgn: () => referee.pgn(),
       getState: () => ({
         gameMode,
         scriptedGameActive,
@@ -5017,12 +7398,10 @@ export function initWizardChess() {
         selectedSquare,
         validMovesCount: validMoves.length,
         highlightMeshCount: squareHighlightsGroup.children.length,
+        moveMarks: moveMarks.state(),
         uiHidden: document.body.classList.contains('cinematic-ui-hidden'),
         playerColor,
         currentTurn,
-        hazardTiles: hazardTiles.map((row) =>
-          row.map((cell) => (cell ? { type: cell.type, r: cell.r, c: cell.c } : null))
-        ),
         roomCode,
         isAnimatingMove,
         gameOver,
@@ -5054,8 +7433,7 @@ export function initWizardChess() {
         telemetry: cameraTelemetry
       }),
       captureScreenshot: async (filename) => {
-        if (composer) composer.render();
-        else renderer.render(scene, camera);
+        drawFrame();
         const outCanvas = document.createElement('canvas');
         outCanvas.width = renderer.domElement.width;
         outCanvas.height = renderer.domElement.height;
@@ -5191,25 +7569,144 @@ export function initWizardChess() {
       for (let i = 0; i < steps; i++) {
         stepScene(subDt, false);
       }
-      if (composer) composer.render();
-      else renderer.render(scene, camera);
+      drawFrame();
     };
 
     // =========================================================================
     // Main Animation Loop
     // =========================================================================
     let elapsedTotal = 0;
+    // Bounty marks (objective-layer plan OL-1, 2026-11-06): a 💰 with the capture count over every piece wearing a
+    // bounty, all drawn as one Points object that follows its pieces. The cards layer says which squares (setBountyMarks).
+    let bountyMarks = [];
+    const bountyAtlas = (() => {
+      const C = 64;
+      const canvas = document.createElement('canvas');
+      canvas.width = C * 4;
+      canvas.height = C;
+      const ctx = canvas.getContext('2d');
+      for (let i = 0; i < 4; i++) {
+        const x = i * C + C / 2;
+        ctx.fillStyle = 'rgba(255, 214, 92, 0.96)';
+        ctx.strokeStyle = '#8a5a00';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(x, C / 2, C / 2 - 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = '30px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('💰', x - 7, C / 2 + 2);
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillStyle = '#5a2d0c';
+        ctx.fillText(String(i + 2), x + 15, C / 2 + 12);   // cells: 2, 3, 4, 5+ captures
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    })();
+    const bountyGeo = new THREE.BufferGeometry();
+    bountyGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(16 * 3), 3));
+    bountyGeo.setAttribute('aCell', new THREE.Float32BufferAttribute(new Float32Array(16), 1));
+    bountyGeo.setDrawRange(0, 0);
+    const bountyPoints = new THREE.Points(bountyGeo, new THREE.ShaderMaterial({
+      uniforms: { uAtlas: { value: bountyAtlas }, uSize: { value: 44 * renderer.getPixelRatio() } },
+      vertexShader: `attribute float aCell; varying float vCell; uniform float uSize;
+        void main() { vCell = aCell; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_PointSize = uSize; }`,
+      fragmentShader: `uniform sampler2D uAtlas; varying float vCell;
+        void main() { vec4 c = texture2D(uAtlas, vec2((vCell + gl_PointCoord.x) / 4.0, 1.0 - gl_PointCoord.y));
+          if (c.a < 0.05) discard; gl_FragColor = c; }`,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false
+    }));
+    bountyPoints.frustumCulled = false;
+    bountyPoints.visible = false;
+    bountyPoints.renderOrder = 20;
+    bountyPoints.material.userData = { outlineParameters: { visible: false } };   // OutlineEffect reads the material
+    scene.add(bountyPoints);
+    const bountyBox = new THREE.Box3();
+    function updateBountyMarks() {
+      const pos = bountyGeo.attributes.position;
+      const cell = bountyGeo.attributes.aCell;
+      let n = 0;
+      for (const mark of bountyMarks) {
+        const piece = boardState[mark.r]?.[mark.c];
+        if (!piece?.mesh || n >= 16) continue;
+        // The piece's own height, measured once: a lion's mane stands taller than a meerkat.
+        if (piece.bountyTop === undefined) piece.bountyTop = bountyBox.setFromObject(piece.mesh).max.y - piece.mesh.position.y;
+        const p = piece.mesh.position;
+        pos.setXYZ(n, p.x, p.y + piece.bountyTop + 0.08, p.z);
+        cell.setX(n, Math.min(3, mark.captures - 2));
+        n++;
+      }
+      bountyGeo.setDrawRange(0, n);
+      bountyPoints.visible = n > 0;   // an empty draw still counts against the 100-call gate
+      if (n) { pos.needsUpdate = true; cell.needsUpdate = true; }
+    }
+    /** [{ sq: 'e5', captures: 2 }, ...] from the cards layer; [] clears the board. */
+    function setBountyMarks(marks) {
+      bountyMarks = (marks || []).map((m) => ({ r: 8 - Number(m.sq[1]), c: 'abcdefgh'.indexOf(m.sq[0]), captures: m.captures }));
+      updateBountyMarks();
+    }
+
+    // 판의 시간 · 밀물(WG-4 · WG-5, 11-19): 판의 수에서 목표를 정하고 1~2초에 걸쳐 다가간다. 시험용으로 `setTimeOverride` 가 덮는다.
+    let dayNow = 0;
+    let tideNow = 0;
+    let timeOverride = null;   // { day?, tide? } — 캡처·블라인드 측정용
+    function stepDayAndTide(dt) {
+      const played = moveHistory.length;
+      const limit = contract ? CONTRACT_PLY_LIMIT : 0;
+      const dayTarget = timeOverride?.day ?? dayPhase({ plies: played, limit, puzzle: Boolean(puzzle) });
+      const tideTarget = timeOverride?.tide ?? (contract && !puzzle ? tideLevel({ pliesLeft: contractPliesLeft, limit: CONTRACT_PLY_LIMIT }) : 0);
+      dayNow = timeOverride?.snap ? dayTarget : approach(dayNow, dayTarget, dt, 1.1);
+      tideNow = timeOverride?.snap ? tideTarget : approach(tideNow, tideTarget, dt, 0.9);
+      const look = dayLook(dayNow);
+      postFx.setTint(look.tint, look.lift);
+      seaBiome?.ocean?.setTide?.(tideNow);
+    }
+
     function stepScene(dt, doRender = true) {
+      if (skipFast) {
+        if (isAnimatingMove || hitStopLeft > 0 || slowLeft > 0) dt *= SKIP_SPEED;
+        else skipFast = false;
+      }
       elapsedTotal += dt;
+      stepDayAndTide(dt);
       const prevCamPos = camera.position.clone();
+
+      // Effects run on real time; the game itself holds during a hit stop and slows through a big capture.
+      impactFx.update(dt);
+      hitGlow?.update(dt * hitFxSlow);
+      signatureFx.update(dt, camera);
+      if (reelPendingFor) {
+        reelPendingAge += dt;
+        if (reelPendingFor !== gameId || gameOver) reelPendingFor = 0;
+        else if (moveHistory.length) { reelPendingFor = 0; revealContractNow(); }   // 릴보다 먼저 뒀다 — 릴 없이 목표를 다 공개
+        else if (reelPendingAge >= 0.3 && shellReel) { reelPendingFor = 0; startContractReel(); }
+        else if (reelPendingAge > 10 && !shellReel) { reelPendingFor = 0; revealContractNow(); }   // 연출 묶음을 못 받았다 — 기계 없이 공개
+      }
+      shellReel?.update(dt);
+      if (aiHeldBySlot && !reelPendingFor && !shellReel?.busy()) { aiHeldBySlot = false; if (!gameOver && gameMode === 'single' && currentTurn !== playerColor) triggerAIMoveNow(); }
+      stepReelHops(dt);
+      moveMarks.step(dt);
+      stepContract(dt);
+      const realDt = dt;
+      if (hitStopLeft > 0) {
+        hitStopLeft -= realDt;
+        dt = 0;
+      } else if (slowLeft > 0) {
+        slowLeft -= realDt;
+        dt = realDt * SLOW_FACTOR;
+      }
+      impactFx.updateGame(dt);
+      stepFlourishes(dt);
 
       for (const mixer of activeMixers) {
         mixer.update(dt);
       }
-
-      if (typeof updateBeastTokens === 'function') {
-        updateBeastTokens(dt, boardState, camera, selectedSquare, hoveredSquare);
-      }
+      if (bountyMarks.length) updateBountyMarks();
 
       // Feature 3c: Advance pre-move piece selection & valid-squares highlight beat before executing scripted move
       if (preMoveHighlightTask && !isAnimatingMove) {
@@ -5222,7 +7719,7 @@ export function initWizardChess() {
           const mv = preMoveHighlightTask.move;
           const fromScriptFlag = Boolean(preMoveHighlightTask.fromScript);
           preMoveHighlightTask = null;
-          executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag });
+          executeChessMove(mv.fromR, mv.fromC, mv.toR, mv.toC, { fromScript: fromScriptFlag, promotion: mv.promotion });
         }
       }
 
@@ -5230,6 +7727,7 @@ export function initWizardChess() {
         const done = activeMoveTweens[i](dt);
         if (done) activeMoveTweens.splice(i, 1);
       }
+      if (entranceDrops.length) stepEntrance(dt);
 
       // Feature 4: Video-game style WASD + R/F camera translation AND Arrow-key camera rotation
       // with separate UI-configurable Move Speed & Rot Speed (both default 10%) and smooth ease-in / ease-out velocity damping
@@ -5346,6 +7844,11 @@ export function initWizardChess() {
         impactFlashLight.intensity = Math.max(0, impactFlashLight.intensity - dt * 28);
       }
 
+      stepFadingPieces(dt);
+      stepRoarSways(dt);
+      syncSideRings();
+      stepContactShadows();
+
       for (let i = shatterDebris.length - 1; i >= 0; i--) {
         const d = shatterDebris[i];
         d.life -= dt;
@@ -5396,12 +7899,6 @@ export function initWizardChess() {
       }
 
       // Advance volumetric GLSL brazier flames & active warm firelight flicker
-      for (let i = 0; i < activeBrazierTileMeshes.length; i++) {
-        const mesh = activeBrazierTileMeshes[i];
-        if (mesh && mesh.material && mesh.material.emissiveIntensity !== undefined) {
-          mesh.material.emissiveIntensity = 0.55 + Math.sin(elapsedTotal * 3.8 + i * 2.1) * 0.22;
-        }
-      }
       for (let i = 0; i < brazierFireUniforms.length; i++) {
         brazierFireUniforms[i].uTime.value = elapsedTotal;
       }
@@ -5427,11 +7924,11 @@ export function initWizardChess() {
       }
 
       if (doRender) {
-        if (composer) {
-          composer.render();
-        } else {
-          renderer.render(scene, camera);
-        }
+        camera.position.add(impactFx.shakeOffset);
+        gpuTimer.begin();
+        drawFrame(elapsedTotal);
+        gpuTimer.end();
+        camera.position.sub(impactFx.shakeOffset);
       }
     }
 
@@ -5446,16 +7943,23 @@ export function initWizardChess() {
       }
       if (manualStepMode) return;
       const dt = Math.min(clock.getDelta(), 0.1);
+      if (renderPaused) return;
+      seaTime += dt * (1 - 0.6 * stageMix);
+      seaBiome?.tick(seaTime);
+      horizonIsland?.face(camera.position.z);
       stepScene(dt || 0.016, true);
     }
 
     window.addEventListener('resize', () => {
+      // A camera still at the default view refits to the new shape; one the player has turned stays where it is.
+      const before = camera.aspect;
+      const atDefault = !activeCamTransition && ['w', 'b'].find((side) => camera.position.distanceTo(defaultCameraFor(side, before).pos) < 0.12);
       camera.aspect = window.innerWidth / window.innerHeight;
+      viewH = window.innerHeight;
+      if (atDefault) setCameraForSide(atDefault, true);
+      shiftPortraitView();
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      if (composer) {
-        composer.setSize(window.innerWidth, window.innerHeight);
-      }
     });
 
 
@@ -5464,10 +7968,19 @@ export function initWizardChess() {
       await loadAllAssets();
       const params = new URLSearchParams(window.location.search);
       const urlSide = params.get('side');
+      const saved = urlSide ? null : readResume();
       if (urlSide === 'b' || urlSide === 'black') {
         playerColor = 'b';
       }
-      resetChessBoard(true, true);
+      if (saved) playerColor = saved.color;
+      // 친구 대전(?room=)은 화면 층이 엔진 준비 뒤에 판을 세운다 — 여기서 혼자 판을 열어 덮어쓰지 않는다.
+      if (gameMode !== 'multi') {
+        resetChessBoard(true, true, !saved);
+        if (saved) await resumeGame(saved);
+        setCameraForSide(playerColor === 'b' ? 'b' : 'w', true);
+      }
+      engineStarted = true;
+      window.dispatchEvent(new CustomEvent('enginestarted'));
       if (navigator.webdriver) {
         window.wizardChess.stepBy(0.9, 15);
       } else {

@@ -1,0 +1,38 @@
+강함(어려움) {"uniqueGames":40,"winRate":0.89,"firsts":{"grown":6,"adult":15,"starlitOne":17,"island":18},"grainFullShare":0,"coinsLeft":5426,"built":8,"rivals":{"picnic":{"items":2,"winRate":1,"gamesForAll":2},"bamboo_band":{"items":2,"winRate":0.73,"gamesForAll":3},"acorn_court":{"items":3,"winRate":0.87,"gamesForAll":4}}} 2816s
+{
+ "games": 150,
+ "rivalGames": 15,
+ "profiles": {
+  "강함(어려움)": {
+   "uniqueGames": 40,
+   "winRate": 0.89,
+   "firsts": {
+    "grown": 6,
+    "adult": 15,
+    "starlitOne": 17,
+    "island": 18
+   },
+   "grainFullShare": 0,
+   "coinsLeft": 5426,
+   "built": 8,
+   "rivals": {
+    "picnic": {
+     "items": 2,
+     "winRate": 1,
+     "gamesForAll": 2
+    },
+    "bamboo_band": {
+     "items": 2,
+     "winRate": 0.73,
+     "gamesForAll": 3
+    },
+    "acorn_court": {
+     "items": 3,
+     "winRate": 0.87,
+     "gamesForAll": 4
+    }
+   }
+  }
+ },
+ "seconds": 2817
+}

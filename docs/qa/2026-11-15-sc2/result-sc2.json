@@ -1,0 +1,274 @@
+{
+ "at": "2026-11-18T14:38:05.725Z",
+ "base": "http://localhost:3000/",
+ "rows": [
+  {
+   "item": "desk 꺼 둔 저장이면 끔",
+   "want": "스위치 없는 주소 · 계약전 끔 · 이번 판에 계약 없음",
+   "got": {
+    "on": false,
+    "reel": null,
+    "url": ""
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 메뉴에서 켬",
+   "want": "단추가 화면 안 · 「끔」→「켬」 · 저장 on=true",
+   "got": {
+    "before": {
+     "text": "👑 왕관 계약전: 끔",
+     "inView": true,
+     "h": 42
+    },
+    "after": {
+     "on": true,
+     "text": "👑 왕관 계약전: 켬",
+     "pressed": "true",
+     "saved": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 다시 열어도 켬",
+   "want": "주소에 스위치 없음 · 계약 p2nb(첫 판 고정) · 목표판 보임",
+   "got": {
+    "opened": true,
+    "on": true,
+    "contract": "p2nb",
+    "plays": 1,
+    "url": "",
+    "hud": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 음원 파일",
+   "want": "여섯 개 모두 200 · 합 40KB 이하 · 엔진이 여섯 개를 받아 둠",
+   "got": {
+    "files": [
+     [
+      "reel-rise",
+      200,
+      2892
+     ],
+     [
+      "reel-stop",
+      200,
+      3031
+     ],
+     [
+      "reel-stop-final",
+      200,
+      4817
+     ],
+     [
+      "matchpoint-hush",
+      200,
+      6274
+     ],
+     [
+      "sting-win",
+      200,
+      8077
+     ],
+     [
+      "sting-lose",
+      200,
+      6613
+     ]
+    ],
+    "samples": {
+     "asked": true,
+     "ready": [],
+     "waiting": [
+      "reelRise",
+      "reelStop",
+      "reelFinal",
+      "matchHush",
+      "stingWin",
+      "stingLose"
+     ]
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 이긴 판 보상",
+   "want": "결과 상자에 「도토리 +18」(화면 안) · 마을 도토리 +18 · 마을 판 수 그대로",
+   "got": {
+    "coins0": 30,
+    "startCoins": 30,
+    "games0": 0,
+    "text": "🌰 도토리 +18",
+    "inView": true,
+    "coins": 48,
+    "games": 0,
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13,
+     "coins": 18,
+     "jackpot": false,
+     "work": 0
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 한 번만 준다",
+   "want": "기다려도 더 늘지 않는다",
+   "got": {
+    "again": 48,
+    "want": 48
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 다시 끔",
+   "want": "계약전 끔 · 저장 on=false",
+   "got": {
+    "on": false,
+    "saved": false
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 꺼 둔 저장이면 끔",
+   "want": "스위치 없는 주소 · 계약전 끔 · 이번 판에 계약 없음",
+   "got": {
+    "on": false,
+    "reel": null,
+    "url": ""
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 메뉴에서 켬",
+   "want": "단추가 화면 안 · 「끔」→「켬」 · 저장 on=true",
+   "got": {
+    "before": {
+     "text": "👑 왕관 계약전: 끔",
+     "inView": true,
+     "h": 44
+    },
+    "after": {
+     "on": true,
+     "text": "👑 왕관 계약전: 켬",
+     "pressed": "true",
+     "saved": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 다시 열어도 켬",
+   "want": "주소에 스위치 없음 · 계약 p2nb(첫 판 고정) · 목표판 보임",
+   "got": {
+    "opened": true,
+    "on": true,
+    "contract": "p2nb",
+    "plays": 1,
+    "url": "",
+    "hud": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 음원 파일",
+   "want": "여섯 개 모두 200 · 합 40KB 이하 · 엔진이 여섯 개를 받아 둠",
+   "got": {
+    "files": [
+     [
+      "reel-rise",
+      200,
+      2892
+     ],
+     [
+      "reel-stop",
+      200,
+      3031
+     ],
+     [
+      "reel-stop-final",
+      200,
+      4817
+     ],
+     [
+      "matchpoint-hush",
+      200,
+      6274
+     ],
+     [
+      "sting-win",
+      200,
+      8077
+     ],
+     [
+      "sting-lose",
+      200,
+      6613
+     ]
+    ],
+    "samples": {
+     "asked": true,
+     "ready": [],
+     "waiting": [
+      "reelRise",
+      "reelStop",
+      "reelFinal",
+      "matchHush",
+      "stingWin",
+      "stingLose"
+     ]
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 이긴 판 보상",
+   "want": "결과 상자에 「도토리 +18」(화면 안) · 마을 도토리 +18 · 마을 판 수 그대로",
+   "got": {
+    "coins0": 30,
+    "startCoins": 30,
+    "games0": 0,
+    "text": "🌰 도토리 +18",
+    "inView": true,
+    "coins": 48,
+    "games": 0,
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13,
+     "coins": 18,
+     "jackpot": false,
+     "work": 0
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 한 번만 준다",
+   "want": "기다려도 더 늘지 않는다",
+   "got": {
+    "again": 48,
+    "want": 48
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 다시 끔",
+   "want": "계약전 끔 · 저장 on=false",
+   "got": {
+    "on": false,
+    "saved": false
+   },
+   "ok": true
+  }
+ ]
+}

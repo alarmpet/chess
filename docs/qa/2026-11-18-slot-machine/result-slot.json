@@ -1,0 +1,838 @@
+{
+ "url": "http://localhost:3000/",
+ "at": "2026-11-19T08:22:17.812Z",
+ "pass": 42,
+ "total": 42,
+ "rows": [
+  {
+   "item": "mouse 기계가 레버를 기다린다",
+   "want": "떠 있음 · 아직 안 돎 · 표적 셋 다 가림(명판 ?) · 딱지 0",
+   "got": {
+    "waiting": true,
+    "active": false,
+    "stopped": [
+     false,
+     false,
+     false
+    ],
+    "plates": [
+     "?",
+     "?",
+     "?"
+    ],
+    "revealed": [
+     false,
+     false,
+     false
+    ],
+    "tags": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 기계 · 레버 · 단추가 화면 안",
+   "want": "기계 폭이 화면의 40% 이상",
+   "got": {
+    "cab": [
+     260,
+     46,
+     642,
+     499
+    ],
+    "lever": [
+     643,
+     153,
+     691,
+     323
+    ],
+    "btn": [
+     355,
+     403,
+     547,
+     452
+    ],
+    "vw": 944,
+    "vh": 545,
+    "plates": [
+     "?",
+     "?",
+     "?"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 기다리는 동안 판은 안 눌린다",
+   "want": "수 0 · 여전히 기다림 · AI 도 안 둠",
+   "got": {
+    "history": 0,
+    "waiting": true
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 레버로 돈다",
+   "want": "진짜 누르기로 당겨짐 · 레버가 내려감 · 세 릴이 빠르게 도는 중 · 그림 45장 다 받음",
+   "got": {
+    "pulled": true,
+    "pics": 45,
+    "fast": 3,
+    "pulledCls": true,
+    "msg": "돌아간다…!"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 쿵 · 쿵 · 쾅",
+   "want": "한 개씩 멈춤(1 → 2 → 3) · 멈출 때마다 HUD 칸이 하나씩 · 기계 시계로 1.3 · 2.1 · 3.3초(+0.5 안)",
+   "got": [
+    {
+     "t": 1.353,
+     "stopped": 1,
+     "revealed": 1,
+     "tags": 8
+    },
+    {
+     "t": 2.133,
+     "stopped": 2,
+     "revealed": 2,
+     "tags": 10
+    },
+    {
+     "t": 3.359,
+     "stopped": 3,
+     "revealed": 3,
+     "tags": 12
+    }
+   ],
+   "ok": true
+  },
+  {
+   "item": "mouse 표적 그림이 가운데 선다",
+   "want": "미어캣 · 캥거루 · 판다가 창 한가운데(어긋남 3px 안) · 명판 「미어캣 ×2 · 캥거루 ×1 · 판다 ×1」 · 수량 ×2 ×1 ×1",
+   "got": {
+    "faces": [
+     {
+      "animal": "meerkat",
+      "loaded": true,
+      "off": 0
+     },
+     {
+      "animal": "kangaroo",
+      "loaded": true,
+      "off": 0
+     },
+     {
+      "animal": "panda",
+      "loaded": true,
+      "off": 0
+     }
+    ],
+    "plates": [
+     "미어캣 ×2",
+     "캥거루 ×1",
+     "판다 ×1"
+    ],
+    "counts": [
+     "×2",
+     "×1",
+     "×1"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 터진다",
+   "want": "전구 승리 깜빡임 · 동전 20개 이상 · 「표적 확정」 글",
+   "got": {
+    "win": true,
+    "coins": 34,
+    "msg": "🎯 표적 확정! 먼저 둘을 잡으면 왕관 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 빠진 뒤",
+   "want": "기계 숨김 · 동전 치움 · HUD 세 칸 · 딱지 있음 · 이제 판이 눌린다(e2-e4)",
+   "got": {
+    "shown": "none",
+    "coins": 0,
+    "hud": [
+     true,
+     true,
+     true
+    ],
+    "tags": 12
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 드로우콜",
+   "want": "기계가 떠 있는 동안 3D 드로우콜이 100 이하(기계는 DOM)",
+   "got": {
+    "idle": 56,
+    "during": 60,
+    "after": 73,
+    "moved": true
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 단추로 당기고 눌러서 건너뛰기",
+   "want": "큰 단추로도 당겨짐 · 누른 뒤 1.2초 안에 다 멈춤 · 그림은 그대로 미어캣 · 캥거루 · 판다",
+   "got": {
+    "allStopped": true,
+    "skipMs": 462,
+    "skipped": true,
+    "phase": "done",
+    "faces": [
+     "meerkat",
+     "kangaroo",
+     "panda"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 이어 하기 = 기계 없음",
+   "want": "판 중간으로 돌아오면 안 뜨고 표적은 바로 다 보인다",
+   "got": {
+    "moves": 6,
+    "waiting": false,
+    "active": false,
+    "plays": 0,
+    "revealed": [
+     true,
+     true,
+     true
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 보통 체스 = 기계 없음",
+   "want": "?lab=classic 은 기계가 안 뜬다",
+   "got": {
+    "lab": false,
+    "waiting": false,
+    "plays": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 호랑이가 든 세트",
+   "want": "미어캣 · 판다 · 호랑이가 가운데 · 명판 「미어캣 ×1 · 판다 ×1 · 호랑이 ×1」 · 잭팟 아님",
+   "got": {
+    "faces": [
+     "meerkat",
+     "panda",
+     "tiger"
+    ],
+    "plates": [
+     "미어캣 ×1",
+     "판다 ×1",
+     "호랑이 ×1"
+    ],
+    "jackpot": false
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 잭팟 연출",
+   "want": "미어캣 셋 · 둘이 맞으면 「설마?!」 · 셋째 릴은 4.2초 뒤(보통 3.3) · JACKPOT 글자 · 동전 60개 이상 · 「미어캣 3마리 사냥 — 보상 2배」",
+   "got": {
+    "faces": [
+     "meerkat",
+     "meerkat",
+     "meerkat"
+    ],
+    "tease": "같은 말이 둘…! 설마?!",
+    "t": 4.268,
+    "cls": true,
+    "coins": 90,
+    "msg": "🎰 잭팟! 미어캣 3마리 사냥 — 보상 2배",
+    "plates": [
+     "미어캣",
+     "미어캣",
+     "미어캣"
+    ],
+    "banner": "sm-jack"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 잭팟 판 안내",
+   "want": "HUD 에 「잭팟 판! 미어캣 3마리를 먼저 잡으면 승리 · 보상 2배」 · 상대 미어캣 여덟에 딱지",
+   "got": {
+    "hint": "🎰 잭팟 판! 미어캣 3마리를 먼저 잡으면 승리 · 보상 2배",
+    "on": true,
+    "set": "j-p3",
+    "tags": 8
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 잭팟 판의 보상",
+   "want": "이어 하기: 내 진도 [1,1,0](둘 잡음) → cxb7 로 왕관 완성 · 도토리 36(보통 18의 두 배) · 결과 창에 「잭팟 판 2배」 · 사자 카드 희귀 이상",
+   "got": {
+    "mine": [
+     1,
+     1,
+     0
+    ],
+    "over": true,
+    "end": {
+     "gameId": 5151,
+     "set": "j-p3",
+     "result": "win",
+     "reason": "contract",
+     "plies": 7,
+     "coins": 36,
+     "jackpot": true,
+     "work": 0
+    },
+    "payLine": "🎰 잭팟 판 2배 · 🌰 도토리 +36",
+    "got": [
+     "meerkat_0",
+     "lion_2"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 조커 잭팟",
+   "want": "캥거루 셋 · 「캥거루 1마리 사냥 — 보상 2배」 · HUD 첫 칸 「조커 ★」 · 양쪽 왕관에 조커 보석 하나씩 · 내 진도 [1,0,0] · 안내에 「조커」 · 상대 캥거루 둘에 딱지",
+   "got": {
+    "faces": [
+     "kangaroo",
+     "kangaroo",
+     "kangaroo"
+    ],
+    "msg": "🎰 잭팟! 캥거루 1마리 사냥 — 보상 2배",
+    "hint": "🎰 잭팟 판! 캥거루 1마리를 먼저 잡으면 승리(조커 보석 ★ 하나는 받고 시작) · 보상 2배",
+    "names": [
+     "조커 ★",
+     "캥거루 ×1",
+     "캥거루 ×1"
+    ],
+    "crown": {
+     "sockets": 4,
+     "gems": 2,
+     "flying": 0,
+     "landed": 0,
+     "w": [
+      "j"
+     ],
+     "b": [
+      "j"
+     ],
+     "draws": 2
+    },
+    "stage": "finalPoint",
+    "tags": 2,
+    "mine": {
+     "counts": [
+      1,
+      0,
+      0
+     ],
+     "done": 1
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 조커 잭팟을 끝까지",
+   "want": "axb4 로 캥거루 하나를 잡자 왕관 완성 · 9반수 · 왕관 보석 [조커, 캥거루] · 도토리 36 · 「잭팟 판 2배」",
+   "got": {
+    "over": true,
+    "end": {
+     "gameId": 6161,
+     "set": "j-n",
+     "result": "win",
+     "reason": "contract",
+     "plies": 9,
+     "coins": 36,
+     "jackpot": true,
+     "work": 0
+    },
+    "crown": [
+     "j",
+     "n"
+    ],
+    "pay": "🎰 잭팟 판 2배 · 🌰 도토리 +36",
+    "title": "왕관 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 코뿔소 조커 잭팟",
+   "want": "코뿔소 셋 · 「코뿔소 1마리 사냥 — 보상 2배」 · HUD 「조커 ★ · 코뿔소 ×1 · 코뿔소 ×1」 · 조커 보석 · 딱지 2",
+   "got": {
+    "faces": [
+     "rhino",
+     "rhino",
+     "rhino"
+    ],
+    "msg": "🎰 잭팟! 코뿔소 1마리 사냥 — 보상 2배",
+    "hint": "🎰 잭팟 판! 코뿔소 1마리를 먼저 잡으면 승리(조커 보석 ★ 하나는 받고 시작) · 보상 2배",
+    "names": [
+     "조커 ★",
+     "코뿔소 ×1",
+     "코뿔소 ×1"
+    ],
+    "crown": [
+     "j"
+    ],
+    "tags": 2,
+    "set": "j-r"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 호랑이 조커 잭팟",
+   "want": "호랑이 셋 · 「호랑이 1마리 사냥 — 보상 2배」 · HUD 「조커 ★ · 호랑이 ×1 · 호랑이 ×1」 · 조커 보석 · 딱지 1",
+   "got": {
+    "faces": [
+     "tiger",
+     "tiger",
+     "tiger"
+    ],
+    "msg": "🎰 잭팟! 호랑이 1마리 사냥 — 보상 2배",
+    "hint": "🎰 잭팟 판! 호랑이 1마리를 먼저 잡으면 승리(조커 보석 ★ 하나는 받고 시작) · 보상 2배",
+    "names": [
+     "조커 ★",
+     "호랑이 ×1",
+     "호랑이 ×1"
+    ],
+    "crown": [
+     "j"
+    ],
+    "tags": 1,
+    "set": "j-q"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 오류 없음",
+   "want": "페이지 예외 0",
+   "got": [],
+   "ok": true
+  },
+  {
+   "item": "touch 기계가 레버를 기다린다",
+   "want": "떠 있음 · 아직 안 돎 · 표적 셋 다 가림(명판 ?) · 딱지 0",
+   "got": {
+    "waiting": true,
+    "active": false,
+    "stopped": [
+     false,
+     false,
+     false
+    ],
+    "plates": [
+     "?",
+     "?",
+     "?"
+    ],
+    "revealed": [
+     false,
+     false,
+     false
+    ],
+    "tags": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 기계 · 레버 · 단추가 화면 안",
+   "want": "기계 폭이 화면의 70% 이상",
+   "got": {
+    "cab": [
+     29,
+     236,
+     314,
+     576
+    ],
+    "lever": [
+     315,
+     317,
+     351,
+     443
+    ],
+    "btn": [
+     99,
+     502,
+     244,
+     541
+    ],
+    "vw": 375,
+    "vh": 812,
+    "plates": [
+     "?",
+     "?",
+     "?"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 기다리는 동안 판은 안 눌린다",
+   "want": "수 0 · 여전히 기다림 · AI 도 안 둠",
+   "got": {
+    "history": 0,
+    "waiting": true
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 레버로 돈다",
+   "want": "진짜 누르기로 당겨짐 · 레버가 내려감 · 세 릴이 빠르게 도는 중 · 그림 45장 다 받음",
+   "got": {
+    "pulled": true,
+    "pics": 45,
+    "fast": 3,
+    "pulledCls": true,
+    "msg": "돌아간다…!"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 쿵 · 쿵 · 쾅",
+   "want": "한 개씩 멈춤(1 → 2 → 3) · 멈출 때마다 HUD 칸이 하나씩 · 기계 시계로 1.3 · 2.1 · 3.3초(+0.5 안)",
+   "got": [
+    {
+     "t": 1.403,
+     "stopped": 1,
+     "revealed": 1,
+     "tags": 8
+    },
+    {
+     "t": 2.118,
+     "stopped": 2,
+     "revealed": 2,
+     "tags": 10
+    },
+    {
+     "t": 3.407,
+     "stopped": 3,
+     "revealed": 3,
+     "tags": 12
+    }
+   ],
+   "ok": true
+  },
+  {
+   "item": "touch 표적 그림이 가운데 선다",
+   "want": "미어캣 · 캥거루 · 판다가 창 한가운데(어긋남 3px 안) · 명판 「미어캣 ×2 · 캥거루 ×1 · 판다 ×1」 · 수량 ×2 ×1 ×1",
+   "got": {
+    "faces": [
+     {
+      "animal": "meerkat",
+      "loaded": true,
+      "off": 0
+     },
+     {
+      "animal": "kangaroo",
+      "loaded": true,
+      "off": 0
+     },
+     {
+      "animal": "panda",
+      "loaded": true,
+      "off": 0
+     }
+    ],
+    "plates": [
+     "미어캣 ×2",
+     "캥거루 ×1",
+     "판다 ×1"
+    ],
+    "counts": [
+     "×2",
+     "×1",
+     "×1"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 터진다",
+   "want": "전구 승리 깜빡임 · 동전 20개 이상 · 「표적 확정」 글",
+   "got": {
+    "win": true,
+    "coins": 34,
+    "msg": "🎯 표적 확정! 먼저 둘을 잡으면 왕관 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 빠진 뒤",
+   "want": "기계 숨김 · 동전 치움 · HUD 세 칸 · 딱지 있음 · 이제 판이 눌린다(e2-e4)",
+   "got": {
+    "shown": "none",
+    "coins": 0,
+    "hud": [
+     true,
+     true,
+     true
+    ],
+    "tags": 12
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 드로우콜",
+   "want": "기계가 떠 있는 동안 3D 드로우콜이 100 이하(기계는 DOM)",
+   "got": {
+    "idle": 52,
+    "during": 69,
+    "after": 69,
+    "moved": true
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 단추로 당기고 눌러서 건너뛰기",
+   "want": "큰 단추로도 당겨짐 · 누른 뒤 1.2초 안에 다 멈춤 · 그림은 그대로 미어캣 · 캥거루 · 판다",
+   "got": {
+    "allStopped": true,
+    "skipMs": 511,
+    "skipped": true,
+    "phase": "done",
+    "faces": [
+     "meerkat",
+     "kangaroo",
+     "panda"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 이어 하기 = 기계 없음",
+   "want": "판 중간으로 돌아오면 안 뜨고 표적은 바로 다 보인다",
+   "got": {
+    "moves": 6,
+    "waiting": false,
+    "active": false,
+    "plays": 0,
+    "revealed": [
+     true,
+     true,
+     true
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 보통 체스 = 기계 없음",
+   "want": "?lab=classic 은 기계가 안 뜬다",
+   "got": {
+    "lab": false,
+    "waiting": false,
+    "plays": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 호랑이가 든 세트",
+   "want": "미어캣 · 판다 · 호랑이가 가운데 · 명판 「미어캣 ×1 · 판다 ×1 · 호랑이 ×1」 · 잭팟 아님",
+   "got": {
+    "faces": [
+     "meerkat",
+     "panda",
+     "tiger"
+    ],
+    "plates": [
+     "미어캣 ×1",
+     "판다 ×1",
+     "호랑이 ×1"
+    ],
+    "jackpot": false
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 잭팟 연출",
+   "want": "미어캣 셋 · 둘이 맞으면 「설마?!」 · 셋째 릴은 4.2초 뒤(보통 3.3) · JACKPOT 글자 · 동전 60개 이상 · 「미어캣 3마리 사냥 — 보상 2배」",
+   "got": {
+    "faces": [
+     "meerkat",
+     "meerkat",
+     "meerkat"
+    ],
+    "tease": "같은 말이 둘…! 설마?!",
+    "t": 4.32,
+    "cls": true,
+    "coins": 90,
+    "msg": "🎰 잭팟! 미어캣 3마리 사냥 — 보상 2배",
+    "plates": [
+     "미어캣",
+     "미어캣",
+     "미어캣"
+    ],
+    "banner": "sm-jack"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 잭팟 판 안내",
+   "want": "HUD 에 「잭팟 판! 미어캣 3마리를 먼저 잡으면 승리 · 보상 2배」 · 상대 미어캣 여덟에 딱지",
+   "got": {
+    "hint": "🎰 잭팟 판! 미어캣 3마리를 먼저 잡으면 승리 · 보상 2배",
+    "on": true,
+    "set": "j-p3",
+    "tags": 8
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 잭팟 판의 보상",
+   "want": "이어 하기: 내 진도 [1,1,0](둘 잡음) → cxb7 로 왕관 완성 · 도토리 36(보통 18의 두 배) · 결과 창에 「잭팟 판 2배」 · 사자 카드 희귀 이상",
+   "got": {
+    "mine": [
+     1,
+     1,
+     0
+    ],
+    "over": true,
+    "end": {
+     "gameId": 5151,
+     "set": "j-p3",
+     "result": "win",
+     "reason": "contract",
+     "plies": 7,
+     "coins": 36,
+     "jackpot": true,
+     "work": 0
+    },
+    "payLine": "🎰 잭팟 판 2배 · 🌰 도토리 +36",
+    "got": [
+     "meerkat_0",
+     "lion_2"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 조커 잭팟",
+   "want": "캥거루 셋 · 「캥거루 1마리 사냥 — 보상 2배」 · HUD 첫 칸 「조커 ★」 · 양쪽 왕관에 조커 보석 하나씩 · 내 진도 [1,0,0] · 안내에 「조커」 · 상대 캥거루 둘에 딱지",
+   "got": {
+    "faces": [
+     "kangaroo",
+     "kangaroo",
+     "kangaroo"
+    ],
+    "msg": "🎰 잭팟! 캥거루 1마리 사냥 — 보상 2배",
+    "hint": "🎰 잭팟 판! 캥거루 1마리를 먼저 잡으면 승리(조커 보석 ★ 하나는 받고 시작) · 보상 2배",
+    "names": [
+     "조커 ★",
+     "캥거루 ×1",
+     "캥거루 ×1"
+    ],
+    "crown": {
+     "sockets": 4,
+     "gems": 2,
+     "flying": 0,
+     "landed": 0,
+     "w": [
+      "j"
+     ],
+     "b": [
+      "j"
+     ],
+     "draws": 2
+    },
+    "stage": "finalPoint",
+    "tags": 2,
+    "mine": {
+     "counts": [
+      1,
+      0,
+      0
+     ],
+     "done": 1
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 조커 잭팟을 끝까지",
+   "want": "axb4 로 캥거루 하나를 잡자 왕관 완성 · 9반수 · 왕관 보석 [조커, 캥거루] · 도토리 36 · 「잭팟 판 2배」",
+   "got": {
+    "over": true,
+    "end": {
+     "gameId": 6161,
+     "set": "j-n",
+     "result": "win",
+     "reason": "contract",
+     "plies": 9,
+     "coins": 36,
+     "jackpot": true,
+     "work": 0
+    },
+    "crown": [
+     "j",
+     "n"
+    ],
+    "pay": "🎰 잭팟 판 2배 · 🌰 도토리 +36",
+    "title": "왕관 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 코뿔소 조커 잭팟",
+   "want": "코뿔소 셋 · 「코뿔소 1마리 사냥 — 보상 2배」 · HUD 「조커 ★ · 코뿔소 ×1 · 코뿔소 ×1」 · 조커 보석 · 딱지 2",
+   "got": {
+    "faces": [
+     "rhino",
+     "rhino",
+     "rhino"
+    ],
+    "msg": "🎰 잭팟! 코뿔소 1마리 사냥 — 보상 2배",
+    "hint": "🎰 잭팟 판! 코뿔소 1마리를 먼저 잡으면 승리(조커 보석 ★ 하나는 받고 시작) · 보상 2배",
+    "names": [
+     "조커 ★",
+     "코뿔소 ×1",
+     "코뿔소 ×1"
+    ],
+    "crown": [
+     "j"
+    ],
+    "tags": 2,
+    "set": "j-r"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 호랑이 조커 잭팟",
+   "want": "호랑이 셋 · 「호랑이 1마리 사냥 — 보상 2배」 · HUD 「조커 ★ · 호랑이 ×1 · 호랑이 ×1」 · 조커 보석 · 딱지 1",
+   "got": {
+    "faces": [
+     "tiger",
+     "tiger",
+     "tiger"
+    ],
+    "msg": "🎰 잭팟! 호랑이 1마리 사냥 — 보상 2배",
+    "hint": "🎰 잭팟 판! 호랑이 1마리를 먼저 잡으면 승리(조커 보석 ★ 하나는 받고 시작) · 보상 2배",
+    "names": [
+     "조커 ★",
+     "호랑이 ×1",
+     "호랑이 ×1"
+    ],
+    "crown": [
+     "j"
+    ],
+    "tags": 1,
+    "set": "j-q"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 오류 없음",
+   "want": "페이지 예외 0",
+   "got": [],
+   "ok": true
+  }
+ ]
+}

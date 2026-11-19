@@ -1,0 +1,53 @@
+100 판, 163s
+200 판, 451s
+300 판, 654s
+400 판, 819s
+500 판, 977s
+600 판, 1118s
+700 판, 1300s
+800 판, 1485s
+900 판, 1640s
+1000 판, 1791s
+{
+ "games": 1000,
+ "pair": "easy-easy",
+ "maxPly": 160,
+ "perGame": {
+  "en_passant": {
+   "white": 0.062,
+   "black": 0.084
+  },
+  "underpromotion": {
+   "white": 0.085,
+   "black": 0.079
+  },
+  "castle_check": {
+   "white": 0.002,
+   "black": 0
+  },
+  "double_check": {
+   "white": 0.002,
+   "black": 0
+  },
+  "discovered_check": {
+   "white": 0.09,
+   "black": 0.058
+  },
+  "knight_fork": {
+   "white": 0.112,
+   "black": 0.081
+  },
+  "back_rank_mate": {
+   "white": 0.265,
+   "black": 0.078
+  },
+  "smothered_mate": {
+   "white": 0,
+   "black": 0
+  },
+  "pawn_mate": {
+   "white": 0.001,
+   "black": 0.051
+  }
+ }
+}

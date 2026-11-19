@@ -1,0 +1,13 @@
+{
+ "gotE4": 1794058029836,
+ "sentE5": 1794058030733,
+ "bar1": "👫 3LLLYA\n🟢 친구 연결됨\n친구 차례\n기권\n나가기",
+ "lostAt": 1794058052861,
+ "bar2": "👫 3LLLYA\n🟠 친구 연결 끊김\n친구 차례\n기권\n나가기",
+ "afterLeave": {
+  "online": false,
+  "url": "http://127.0.0.1:3000/",
+  "bar": false,
+  "cls": ""
+ }
+}

@@ -1,0 +1,53 @@
+{
+ "at": "2026-11-14T20:30:24.799Z",
+ "set": "p4nb",
+ "goals": [
+  {
+   "type": "p",
+   "count": 4
+  },
+  {
+   "type": "n",
+   "count": 1
+  },
+  {
+   "type": "b",
+   "count": 1
+  }
+ ],
+ "rule": "base",
+ "level": "normal",
+ "seed": 7000,
+ "games": 100,
+ "seconds": 140,
+ "reasons": {
+  "limit": 5,
+  "contract": 91,
+  "checkmate": 4
+ },
+ "white": 47,
+ "black": 49,
+ "draw": 4,
+ "whiteShareOfDecided": 0.49,
+ "plies": {
+  "median": 25,
+  "p90": 46
+ },
+ "captures": {
+  "median": 5,
+  "min": 3
+ },
+ "firstCapture": 11,
+ "loserDoneOne": 84,
+ "winGoals": {
+  "-": 9,
+  "n+b": 80,
+  "p4+n": 9,
+  "p4+b": 2
+ },
+ "goalUse": {
+  "p4": 0.12,
+  "n": 0.98,
+  "b": 0.9
+ }
+}

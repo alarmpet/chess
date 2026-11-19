@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-09T15:28:19.108Z",
+  "phase": 1,
+  "shiftMs": 0,
+  "pass": 3,
+  "total": 3,
+  "rows": [
+    {
+      "item": "시즌 1 판 넣기",
+      "want": "counted ×27",
+      "got": 27,
+      "ok": true
+    },
+    {
+      "item": "시즌 1 나",
+      "want": "시즌 1 · 27판 · 우두머리 이상",
+      "got": "{\"season\":{\"n\":1,\"endsAt\":1795964400000,\"daysLeft\":20,\"games\":27,\"peak\":781,\"minGames\":5},\"points\":781,\"tier\":\"alpha\",\"trophies\":[]}",
+      "ok": true
+    },
+    {
+      "item": "시즌 1 상대(3패)",
+      "want": "3판 · 새끼",
+      "got": "{\"season\":{\"n\":1,\"endsAt\":1795964400000,\"daysLeft\":20,\"games\":3,\"peak\":0,\"minGames\":5},\"points\":0}",
+      "ok": true
+    }
+  ]
+}

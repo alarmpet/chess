@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-11T08:10:15.113Z",
+  "pass": 3,
+  "total": 3,
+  "rows": [
+    {
+      "item": "생각 도중 새 판",
+      "want": "작업자 · 새 판 수 0 · 바쁨 아님(늦은 답 버림)",
+      "got": "{\"thinking\":true,\"mode\":\"worker\",\"after\":{\"n\":0,\"busy\":false}}",
+      "ok": true
+    },
+    {
+      "item": "새 판에서 AI 답",
+      "want": "d4 뒤 흑이 둠",
+      "got": "{\"replied\":true,\"h\":[\"d4\",\"Nf6\"]}",
+      "ok": true
+    },
+    {
+      "item": "생각 도중 흑 폰 클릭",
+      "want": "선택 없음",
+      "got": "null",
+      "ok": true
+    }
+  ]
+}

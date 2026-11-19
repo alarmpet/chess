@@ -1,0 +1,250 @@
+easy-easy: 61s, 평균 97.2 ply
+normal-normal: 424s, 평균 117.7 ply
+normal-easy: 619s, 평균 95.2 ply
+easy-normal: 899s, 평균 100.7 ply
+{
+ "easy-easy": {
+  "games": 60,
+  "avgPlies": 97.2,
+  "rows": {
+   "first_capture": {
+    "closed": 1,
+    "whiteFirst": 0.55,
+    "meanPly": 11
+   },
+   "race_knight": {
+    "closed": 0.98,
+    "whiteFirst": 0.42,
+    "meanPly": 17
+   },
+   "race_bishop": {
+    "closed": 0.95,
+    "whiteFirst": 0.56,
+    "meanPly": 22
+   },
+   "race_rook": {
+    "closed": 0.78,
+    "whiteFirst": 0.36,
+    "meanPly": 52
+   },
+   "race_queen": {
+    "closed": 0.77,
+    "whiteFirst": 0.5,
+    "meanPly": 34
+   },
+   "first_check": {
+    "closed": 1,
+    "whiteFirst": 0.53,
+    "meanPly": 33
+   },
+   "castle": {
+    "closed": 0.92,
+    "whiteFirst": 0.71,
+    "meanPly": 18
+   },
+   "center": {
+    "closed": 1,
+    "whiteFirst": 0.7,
+    "meanPly": 2
+   },
+   "promote": {
+    "closed": 0.33,
+    "whiteFirst": 0.5,
+    "meanPly": 102
+   },
+   "knight_capture": {
+    "closed": 0.98,
+    "whiteFirst": 0.56,
+    "meanPly": 15
+   },
+   "bishop_capture": {
+    "closed": 0.97,
+    "whiteFirst": 0.52,
+    "meanPly": 21
+   }
+  }
+ },
+ "normal-normal": {
+  "games": 60,
+  "avgPlies": 117.7,
+  "rows": {
+   "first_capture": {
+    "closed": 1,
+    "whiteFirst": 0.53,
+    "meanPly": 11
+   },
+   "race_knight": {
+    "closed": 1,
+    "whiteFirst": 0.48,
+    "meanPly": 15
+   },
+   "race_bishop": {
+    "closed": 1,
+    "whiteFirst": 0.62,
+    "meanPly": 24
+   },
+   "race_rook": {
+    "closed": 0.97,
+    "whiteFirst": 0.52,
+    "meanPly": 56
+   },
+   "race_queen": {
+    "closed": 0.98,
+    "whiteFirst": 0.56,
+    "meanPly": 41
+   },
+   "first_check": {
+    "closed": 1,
+    "whiteFirst": 0.53,
+    "meanPly": 28
+   },
+   "castle": {
+    "closed": 0.83,
+    "whiteFirst": 0.54,
+    "meanPly": 19
+   },
+   "center": {
+    "closed": 1,
+    "whiteFirst": 0.73,
+    "meanPly": 2
+   },
+   "promote": {
+    "closed": 0.42,
+    "whiteFirst": 0.44,
+    "meanPly": 116
+   },
+   "knight_capture": {
+    "closed": 0.98,
+    "whiteFirst": 0.44,
+    "meanPly": 17
+   },
+   "bishop_capture": {
+    "closed": 1,
+    "whiteFirst": 0.53,
+    "meanPly": 23
+   }
+  }
+ },
+ "normal-easy": {
+  "games": 60,
+  "avgPlies": 95.2,
+  "rows": {
+   "first_capture": {
+    "closed": 1,
+    "whiteFirst": 0.92,
+    "meanPly": 15
+   },
+   "race_knight": {
+    "closed": 1,
+    "whiteFirst": 0.73,
+    "meanPly": 17
+   },
+   "race_bishop": {
+    "closed": 1,
+    "whiteFirst": 0.57,
+    "meanPly": 23
+   },
+   "race_rook": {
+    "closed": 0.78,
+    "whiteFirst": 0.62,
+    "meanPly": 50
+   },
+   "race_queen": {
+    "closed": 0.85,
+    "whiteFirst": 0.65,
+    "meanPly": 40
+   },
+   "first_check": {
+    "closed": 1,
+    "whiteFirst": 0.88,
+    "meanPly": 29
+   },
+   "castle": {
+    "closed": 0.92,
+    "whiteFirst": 0.87,
+    "meanPly": 19
+   },
+   "center": {
+    "closed": 1,
+    "whiteFirst": 0.62,
+    "meanPly": 2
+   },
+   "promote": {
+    "closed": 0.35,
+    "whiteFirst": 1,
+    "meanPly": 89
+   },
+   "knight_capture": {
+    "closed": 0.97,
+    "whiteFirst": 0.84,
+    "meanPly": 23
+   },
+   "bishop_capture": {
+    "closed": 0.97,
+    "whiteFirst": 0.64,
+    "meanPly": 22
+   }
+  }
+ },
+ "easy-normal": {
+  "games": 60,
+  "avgPlies": 100.7,
+  "rows": {
+   "first_capture": {
+    "closed": 1,
+    "whiteFirst": 0.08,
+    "meanPly": 12
+   },
+   "race_knight": {
+    "closed": 1,
+    "whiteFirst": 0.33,
+    "meanPly": 17
+   },
+   "race_bishop": {
+    "closed": 1,
+    "whiteFirst": 0.35,
+    "meanPly": 22
+   },
+   "race_rook": {
+    "closed": 0.9,
+    "whiteFirst": 0.28,
+    "meanPly": 56
+   },
+   "race_queen": {
+    "closed": 0.88,
+    "whiteFirst": 0.49,
+    "meanPly": 47
+   },
+   "first_check": {
+    "closed": 1,
+    "whiteFirst": 0.28,
+    "meanPly": 28
+   },
+   "castle": {
+    "closed": 0.9,
+    "whiteFirst": 0.5,
+    "meanPly": 19
+   },
+   "center": {
+    "closed": 1,
+    "whiteFirst": 0.77,
+    "meanPly": 2
+   },
+   "promote": {
+    "closed": 0.42,
+    "whiteFirst": 0.12,
+    "meanPly": 95
+   },
+   "knight_capture": {
+    "closed": 1,
+    "whiteFirst": 0.25,
+    "meanPly": 18
+   },
+   "bishop_capture": {
+    "closed": 1,
+    "whiteFirst": 0.35,
+    "meanPly": 24
+   }
+  }
+ }
+}

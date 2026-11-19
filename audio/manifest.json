@@ -1,0 +1,60 @@
+{
+  "about": "WILD CROWN 음원 제작 목록. 프롬프트가 원본이다. ElevenLabs 웹 앱에서 생성(계획서 docs/plans/2026-11-11-slot-chess-village-plan.md §9-2). 원본 후보는 저장소 밖 D:/tmp/wc-audio/raw 에 받는다.",
+  "produced": {
+    "date": "2026-11-12",
+    "sfx": "28종 × 후보 4개(WAV 48kHz 스테레오), 한 번에 67크레딧. 거의 무음 후보: burst-shell 1·4, cue-ink 4",
+    "music": "7곡 × 후보 2개(WAV 48kHz 스테레오, 60초), 한 곡 두 후보에 1,800크레딧. 노을은 30초 시험판 2개도 있음",
+    "loops": "4종 × 후보 4개(WAV, 반복 켜짐, 길이 지정: 릴 4초 · 환경 20초). 길이를 정하면 후보 4개에 초당 약 13.4크레딧",
+    "credits": "40,000 → 23,569 (16,431 사용)",
+    "picked": "아직 고르지 않음 — .reports/audio-pick/index.html 에서 듣고 고른다",
+    "post": "node tools/audio_post.mjs"
+  },
+  "sfxDefaults": { "tool": "elevenlabs web sound-effects", "model": "v3", "duration": "auto", "promptInfluence": 0.3, "loop": false, "takes": 4 },
+  "sfx": [
+    { "id": "reel-stop", "use": "① 소라 릴 멈춤 쿵(1·2번째)", "status": "generated 2026-11-12", "prompt": "A single deep, round, satisfying thud of a giant seashell slot reel locking into place, followed by a short watery splash tail. Cute, cartoonish, warm, not scary. One hit only." },
+    { "id": "finale-splash", "use": "⑥ 피날레 풍덩", "status": "generated 2026-11-12", "prompt": "A cute cartoon animal plopping into the sea: one big round splash with a bubbly, playful tail and a tiny rising bubble pop at the end. Bright, soft, friendly, not harsh." },
+    { "id": "reel-rise", "use": "① 소라가 바다에서 솟음", "prompt": "Giant seashells rising out of the sea: a rushing column of water whooshing upward with bubbles and a soft sparkle at the top. Cartoon game sound, round and friendly, about one second." },
+    { "id": "reel-stop-final", "use": "① 세 번째 릴 멈춤 쾅", "prompt": "Big final slot reel lock: one heavy, round, wooden-shell thump with a bright sparkling chime burst and a small water splash right after. Triumphant, cute, cartoonish, not harsh." },
+    { "id": "crown-splash", "use": "① 왕관 모양 물보라", "prompt": "Crown-shaped water fountain burst: a quick upward spray of water with glittering magical shimmer falling like droplets. Short, bright, celebratory, cute game sound." },
+    { "id": "tag-stick", "use": "② 현상 딱지 붙음", "prompt": "Sticker slap: a clear, punchy paper sticker slapped onto a wooden board with a cute rubbery pop. Crisp and loud, about one second, cartoon game user interface sound.", "note": "첫 프롬프트(tiny soft paper smack… Very short)는 후보 넷이 모두 거의 무음이라 11-12 에 고쳐 다시 뽑음" },
+    { "id": "tag-jiggle", "use": "② 딱지 흔들림(노림)", "prompt": "Tiny dangling tag jiggling: a quick light rattle of paper and a very small jingle bell shaking twice. Short, cute, subtle game sound." },
+    { "id": "cue-lightning", "use": "③ 예고: 번개 구름", "prompt": "Soft electric charge-up: a short rising crackle and gentle buzzing hum building for half a second, like a tiny friendly storm cloud getting ready. Not scary, no thunder boom." },
+    { "id": "cue-star", "use": "③ 예고: 별 조준선", "prompt": "Twinkling star aim lock-on: a quick rising glassy shimmer ending in one bright high ping. Short, magical, cute game sound." },
+    { "id": "cue-ink", "use": "③ 예고: 먹물 번짐", "prompt": "Wet ink brush swish: one quick smooth brush stroke on paper with a soft watery bloom at the end. Short, calm, satisfying." },
+    { "id": "burst-shell", "use": "③ 폭발: 조개 거품", "prompt": "Bubbly foam burst: a seashell popping open with a round pop and a spray of many tiny fizzing bubbles. Short, soft, playful cartoon impact." },
+    { "id": "burst-firework", "use": "③ 폭발: 불꽃놀이", "prompt": "Small firework pop up close: one soft bang followed by crackling sparkles fading out. Cute, round, not loud or sharp, cartoon game impact." },
+    { "id": "burst-confetti", "use": "③ 폭발: 종이 꽃가루", "prompt": "Party confetti popper: one light pop with a flutter of paper pieces falling. Short, cheerful, soft, cartoon game sound." },
+    { "id": "whale", "use": "⑥ 고래가 받아 올림", "prompt": "Friendly cartoon whale surfacing: a big gentle watery swell, a soft low happy whoo call, and a spout of water spraying. Warm, round, not scary." },
+    { "id": "fireworks-far", "use": "⑥ 마을 실루엣 폭죽", "prompt": "Distant fireworks over the sea at a small island festival: a few soft booms with crackling sparkle tails, heard from far away. Warm, gentle, celebratory, no crowd." },
+    { "id": "raft", "use": "⑩ 뗏목 손님 도착", "prompt": "Wooden raft gently bumping onto a sandy beach: creaking logs, a soft thud on wet sand, and small waves lapping. Short, cozy, cartoon game sound." },
+    { "id": "hammer", "use": "⑩ 공방 망치질", "prompt": "Cute workshop mallet: one bright wooden mallet tap on a small metal piece with a pleasant ringing ting. Short, clean, satisfying, toy-like." },
+    { "id": "part-pop", "use": "⑩ 부품이 통통 튀어 선반에", "prompt": "Bouncy crafted part: a springy boing as a small object pops up, then a neat click as it lands in place. Short, playful, cartoon." },
+    { "id": "cheer", "use": "⑩ 축제 환호", "prompt": "Little crowd of cute cartoon animals cheering yay together with a few claps. Short, happy, high and soft voices, not human sounding." },
+    { "id": "matchpoint-hush", "use": "⑤ 매치 포인트로 넘어감", "prompt": "Hush transition: a soft downward whoosh as if the air goes quiet, ending in a low gentle underwater hum. Short, tense but calm, no impact." },
+    { "id": "acorn-burst", "use": "③ 도토리 튀기", "prompt": "Handful of acorns scattering: several small wooden nuts bouncing on a wooden board and dropping into a cloth pouch. Short, light, satisfying, cartoon." },
+    { "id": "wave-jump", "use": "① 말들의 파도타기", "prompt": "Ripple of tiny hops: a fast run of many small soft boing jumps sweeping from left to right like a stadium wave, with a light whoosh. Short, cute, cartoon." },
+    { "id": "gold-reel", "use": "⑨ 황금 릴", "prompt": "Golden magical shimmer swell: warm glowing chimes rising and blooming into one rich bell tone, like treasure being revealed. Short, bright, cute game sound." },
+    { "id": "craft-done", "use": "⑩ 제작 완성", "prompt": "Ta-da craft complete: a bright two-note marimba flourish with a small anvil ring and sparkle. Short, proud, cute game reward sound." },
+    { "id": "jingle-reel", "use": "① 릴 시작 징글", "prompt": "Three second game jingle to start a round: playful ukulele strum and marimba run going up, ending on a bright open chord. Cute, sunny, instrumental." },
+    { "id": "sting-win", "use": "승리 스팅어", "prompt": "Victory sting for a cute animal chess game: short triumphant marimba, ukulele and steel pan fanfare ending on a happy major chord with a cymbal shimmer. About three seconds, instrumental." },
+    { "id": "sting-lose", "use": "패배 스팅어", "prompt": "Gentle defeat sting for a cute game: soft descending marimba and ukulele phrase, a little sad but kind and encouraging, ending softly. About three seconds, instrumental." },
+    { "id": "sting-festival", "use": "⑩ 축제 스팅어", "prompt": "Island festival sting: lively steel pan and hand drum burst with shakers, joyful and dancing, ending with a bright hit. About four seconds, instrumental." }
+  ],
+  "sfxLoops": [
+    { "id": "reel-spin-loop", "use": "① 릴이 도는 동안", "seconds": 4, "prompt": "Spinning seashell slot reels: a steady fast rolling wooden clatter with a soft watery whirl, constant speed, no start and no stop. Cute cartoon game sound, seamless loop." },
+    { "id": "sea-day-loop", "use": "환경: 낮 파도", "seconds": 20, "prompt": "Daytime tropical beach ambience: gentle small waves lapping on sand, light breeze, a few distant seagulls. Calm, bright, steady, no music, no voices, seamless loop." },
+    { "id": "sea-night-loop", "use": "환경: 밤바다", "seconds": 20, "prompt": "Night tropical beach ambience: slow soft waves, quiet crickets, occasional tiny water sparkle. Peaceful, dark, steady, no music, no voices, seamless loop." },
+    { "id": "village-loop", "use": "환경: 마을", "seconds": 20, "prompt": "Cozy island village ambience: light breeze in palm leaves, distant gentle hammering and wooden creaks, soft chatter of small cute animals far away, a wind chime now and then. Warm, steady, no music, seamless loop." }
+  ],
+  "musicDefaults": { "tool": "elevenlabs web music", "model": "v2.5", "lyrics": "instrumental", "variations": 2, "length": "1m" },
+  "musicCommon": "Instrumental loopable game background music for a cute animal chess game on a tropical island. Ukulele and marimba lead, soft steel pan, light hand percussion, gentle bass. Major key. No vocals.",
+  "music": [
+    { "id": "bgm-sunset", "use": "⑧ 노을 무대", "status": "30s test generated 2026-11-12 (Beachside Checkmate)", "prompt": "Instrumental loopable game background music for a cute animal chess game on a sunset beach. Warm ukulele and marimba melody, soft steel pan, light hand percussion, gentle bass. Cozy, playful, a little heroic. Mid-tempo around 100 BPM, major key. No vocals." },
+    { "id": "bgm-morning", "use": "⑧ 아침 무대", "prompt": "Instrumental loopable game background music for a cute animal chess game on a tropical island at early morning. Light ukulele and marimba melody, soft steel pan, gentle shaker, airy flute, sparse and fresh, waking up. Around 92 BPM, major key. No vocals." },
+    { "id": "bgm-noon", "use": "⑧ 한낮 무대", "prompt": "Instrumental loopable game background music for a cute animal chess game on a tropical island at bright noon. Bouncy ukulele and marimba melody, steel pan, hand drums and claps, cheerful and energetic, sunny. Around 112 BPM, major key. No vocals." },
+    { "id": "bgm-night", "use": "⑧ 밤 무대(야광 바다)", "prompt": "Instrumental loopable game background music for a cute animal chess game on a tropical island at night with a glowing sea. Soft marimba and kalimba melody, warm electric piano, gentle ukulele, slow hand percussion, dreamy and calm but playful. Around 84 BPM, major key. No vocals." },
+    { "id": "bgm-aurora", "use": "⑧ 오로라 무대", "prompt": "Instrumental loopable game background music for a cute animal chess game under an aurora sky. Sparkling celesta and marimba melody, ukulele, shimmering pads, light bells, steady soft percussion, magical and wondrous, uplifting. Around 100 BPM, major key. No vocals." },
+    { "id": "bgm-village", "use": "마을", "prompt": "Instrumental loopable game background music for a cozy island village of cute animals building and crafting. Relaxed ukulele and marimba, soft accordion, woodblock and shaker rhythm like gentle hammering, friendly and homely. Around 96 BPM, major key. No vocals." },
+    { "id": "bgm-golden", "use": "⑨ 황금 판", "prompt": "Instrumental loopable game background music for a special golden round of a cute animal chess game. Bright steel pan and marimba melody with ukulele, glittering bells, confident hand drums, festive and exciting, treasure feeling. Around 116 BPM, major key. No vocals." }
+  ]
+}

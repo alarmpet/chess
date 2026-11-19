@@ -1,0 +1,39 @@
+대등(보통) {"uniqueGames":40,"winRate":0.42,"firsts":{"grown":3,"adult":21,"island":21,"starlitOne":25,"starlitAll":94},"grainFullShare":0,"coinsLeft":4256,"built":8,"rivals":{"picnic":{"items":2,"winRate":1,"gamesForAll":2},"bamboo_band":{"items":2,"winRate":0.4,"gamesForAll":5},"acorn_court":{"items":3,"winRate":0.6,"gamesForAll":5}}} 797s
+{
+ "games": 150,
+ "rivalGames": 15,
+ "profiles": {
+  "대등(보통)": {
+   "uniqueGames": 40,
+   "winRate": 0.42,
+   "firsts": {
+    "grown": 3,
+    "adult": 21,
+    "island": 21,
+    "starlitOne": 25,
+    "starlitAll": 94
+   },
+   "grainFullShare": 0,
+   "coinsLeft": 4256,
+   "built": 8,
+   "rivals": {
+    "picnic": {
+     "items": 2,
+     "winRate": 1,
+     "gamesForAll": 2
+    },
+    "bamboo_band": {
+     "items": 2,
+     "winRate": 0.4,
+     "gamesForAll": 5
+    },
+    "acorn_court": {
+     "items": 3,
+     "winRate": 0.6,
+     "gamesForAll": 5
+    }
+   }
+  }
+ },
+ "seconds": 797
+}

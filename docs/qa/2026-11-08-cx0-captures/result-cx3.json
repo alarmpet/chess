@@ -1,0 +1,692 @@
+[
+ {
+  "key": "pawn>pawn",
+  "san": "exd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1207.4721784077483,
+   "y": 574.2521125119562
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2501,
+  "file": "pawn-x-pawn-cx3.webm",
+  "kb": 804,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "pawn>knight",
+  "san": "exf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1483.3620490051726,
+   "y": 497.9631209063473
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3840,
+  "file": "pawn-x-knight-cx3.webm",
+  "kb": 1020,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "pawn>bishop",
+  "san": "bxc3",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1027.0362612601084,
+   "y": 764.0451307831298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2816,
+  "file": "pawn-x-bishop-cx3.webm",
+  "kb": 1093,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "pawn>rook",
+  "san": "bxa1=Q",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1699.6536972125853,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3187,
+  "file": "pawn-x-rook-cx3.webm",
+  "kb": 1309,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "pawn>queen",
+  "san": "gxf3",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1532.9637387398918,
+   "y": 764.0451307831298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4099,
+  "file": "pawn-x-queen-cx3.webm",
+  "kb": 1197,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "knight>pawn",
+  "san": "Nxe5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1352.5278215922517,
+   "y": 574.2521125119562
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3500,
+  "file": "knight-x-pawn-cx3.webm",
+  "kb": 858,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>knight",
+  "san": "Nxd4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1202.0188377466927,
+   "y": 662.013387464298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3836,
+  "file": "knight-x-knight-cx3.webm",
+  "kb": 1108,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>bishop",
+  "san": "Nxd7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1371.783498303827,
+   "y": 884.1360613263377
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2843,
+  "file": "knight-x-bishop-cx3.webm",
+  "kb": 1158,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>rook",
+  "san": "Nxa1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1699.6536972125853,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2998,
+  "file": "knight-x-rook-cx3.webm",
+  "kb": 1149,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>queen",
+  "san": "Nxg4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 917.3608920387416,
+   "y": 574.2521125119565
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3311,
+  "file": "knight-x-queen-cx3.webm",
+  "kb": 1447,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "bishop>pawn",
+  "san": "Bxd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1357.9811622533075,
+   "y": 662.0133874642983
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2437,
+  "file": "bishop-x-pawn-cx3.webm",
+  "kb": 843,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>knight",
+  "san": "Bxf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1483.3620490051726,
+   "y": 497.9631209063473
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3756,
+  "file": "bishop-x-knight-cx3.webm",
+  "kb": 1051,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>bishop",
+  "san": "Bxd7+",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1216.3714587285997,
+   "y": 431.03491122950265
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3942,
+  "file": "bishop-x-bishop-cx3.webm",
+  "kb": 1116,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>rook",
+  "san": "Bxa1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1699.6536972125853,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3036,
+  "file": "bishop-x-rook-cx3.webm",
+  "kb": 1163,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>queen",
+  "san": "Bxe7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1188.216501696173,
+   "y": 884.1360613263377
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3109,
+  "file": "bishop-x-queen-cx3.webm",
+  "kb": 1235,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "rook>pawn",
+  "san": "Rxe5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1352.5278215922517,
+   "y": 574.2521125119562
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3682,
+  "file": "rook-x-pawn-cx3.webm",
+  "kb": 980,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>knight",
+  "san": "Rxd1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1179.3052271438896,
+   "y": 1027.5462872349754
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3845,
+  "file": "rook-x-knight-cx3.webm",
+  "kb": 1155,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>bishop",
+  "san": "Rxf1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1582.0843185683311,
+   "y": 1027.5462872349754
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3838,
+  "file": "rook-x-bishop-cx3.webm",
+  "kb": 1199,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>rook",
+  "san": "Rxd1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1339.9505281732263,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4575,
+  "file": "rook-x-rook-cx3.webm",
+  "kb": 1436,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>queen",
+  "san": "Rxd2",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1188.216501696173,
+   "y": 884.1360613263373
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4027,
+  "file": "rook-x-queen-cx3.webm",
+  "kb": 1243,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "queen>pawn",
+  "san": "Qxd4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1202.0188377466927,
+   "y": 662.013387464298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2588,
+  "file": "queen-x-pawn-cx3.webm",
+  "kb": 957,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "queen>knight",
+  "san": "Qxd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1357.9811622533075,
+   "y": 662.0133874642983
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2992,
+  "file": "queen-x-knight-cx3.webm",
+  "kb": 1136,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "queen>bishop",
+  "san": "Qxf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1027.0362612601084,
+   "y": 764.0451307831303
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3032,
+  "file": "queen-x-bishop-cx3.webm",
+  "kb": 1175,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "queen>rook",
+  "san": "Qxa8",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 860.3463027874147,
+   "y": 371.8441988112791
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3841,
+  "file": "queen-x-rook-cx3.webm",
+  "kb": 1145,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "queen>queen",
+  "san": "Qxe7+",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1343.6285412714003,
+   "y": 431.03491122950265
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4148,
+  "file": "queen-x-queen-cx3.webm",
+  "kb": 1299,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>pawn",
+  "san": "Kxf7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1004.6495050885193,
+   "y": 884.1360613263378
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2479,
+  "file": "king-x-pawn-cx3.webm",
+  "kb": 872,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>knight",
+  "san": "Kxf2",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1555.3504949114808,
+   "y": 884.1360613263373
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3724,
+  "file": "king-x-knight-cx3.webm",
+  "kb": 1190,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>bishop",
+  "san": "Kxe7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1188.216501696173,
+   "y": 884.1360613263377
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2714,
+  "file": "king-x-bishop-cx3.webm",
+  "kb": 1085,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>rook",
+  "san": "Kxh1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1984.8634099927724,
+   "y": 1027.5462872349754
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2798,
+  "file": "king-x-rook-cx3.webm",
+  "kb": 1110,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>queen",
+  "san": "Kxd8",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1380.6947728561104,
+   "y": 1027.5462872349758
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3029,
+  "file": "king-x-queen-cx3.webm",
+  "kb": 1133,
+  "impacts": 1,
+  "upset": false
+ }
+]

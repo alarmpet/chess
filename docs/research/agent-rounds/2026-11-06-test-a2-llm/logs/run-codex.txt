@@ -1,0 +1,26 @@
+codex alone 1 e4  손실 0 8s
+codex alone 2 e5  손실 4 8s
+codex alone 3 c4  손실 12 19s
+codex alone 4 Qg4  손실 32 36s
+codex alone 5 Nf3  손실 0 48s
+codex alone 6 Qf5  손실 0 36s
+codex alone 7 exd6  손실 54 40s
+codex alone 8 Qd3  손실 36 58s
+codex alone 9 Qe4+  손실 0 41s
+codex alone 10 Qe3  손실 58 40s
+codex alone 11 g3  손실 38 51s
+codex alone 12 dxe3  손실 0 18s
+{"who":"codex","cond":"alone","moves":12,"invalid":0,"blunders":0,"meanLoss":20,"pgn":"[Event \"?\"]\n[Site \"?\"]\n[Date \"????.??.??\"]\n[Round \"?\"]\n[White \"?\"]\n[Black \"?\"]\n[Result \"*\"]\n\n1. e4 Nf6 2. e5 Nd5 3. c4 Nf4 4. Qg4 Ne6 5. Nf3 h5 6. Qf5 d5 7. exd6 exd6 8. Qd3 Nf4 9. Qe4+ Qe7 10. Qe3 Nd7 11. g3 Qxe3+ 12. dxe3 *"}
+codex adviser 1 e4  손실 0 8s
+codex adviser 2 Nc3  손실 0 8s
+codex adviser 3 exd5  손실 0 18s
+codex adviser 4 Nxd5  손실 0 23s
+codex adviser 5 c4  손실 0 31s
+codex adviser 6 Qe2  손실 0 18s
+codex adviser 7 f3  손실 28 22s
+codex adviser 8 Qf2  손실 0 15s
+codex adviser 9 Kxf2  손실 0 30s
+codex adviser 10 Ne2  손실 0 18s
+codex adviser 11 Kg3  손실 44 26s
+codex adviser 12 b3  손실 18 25s
+{"who":"codex","cond":"adviser","moves":12,"invalid":0,"blunders":0,"meanLoss":8,"pgn":"[Event \"?\"]\n[Site \"?\"]\n[Date \"????.??.??\"]\n[Round \"?\"]\n[White \"?\"]\n[Black \"?\"]\n[Result \"*\"]\n\n1. e4 Nf6 2. Nc3 d5 3. exd5 Nxd5 4. Nxd5 Qxd5 5. c4 Qe4+ 6. Qe2 Bf5 7. f3 Qh4+ 8. Qf2 Qxf2+ 9. Kxf2 e5 10. Ne2 Nc6 11. Kg3 Bc5 12. b3 *"}

@@ -1,0 +1,16 @@
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s01-rally-strip.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s02-bounty-marks.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s03-quests-album.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s04-stamps-album.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s05-handbrain-panel.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s06-handbrain-family.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s07-handbrain-adviser.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s08-blitz-setting.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s09-blitz-green.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/s10-blitz-zoom.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/sig-1.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/sig-2.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/sig-3.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/sig-4.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/sig-5.jpg
+D:/chess/docs/research/agent-rounds/2026-11-06-test-a2-llm/img/sig-6.jpg

@@ -1,0 +1,47 @@
+{
+ "seed": 2000000,
+ "level": "normal",
+ "games": 100,
+ "rows": [
+  {
+   "id": "p3nq",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 3
+    },
+    {
+     "type": "n",
+     "count": 1
+    },
+    {
+     "type": "q",
+     "count": 1
+    }
+   ],
+   "games": 100,
+   "white": 46,
+   "black": 50,
+   "draw": 4,
+   "whiteShare": 0.479,
+   "reasons": {
+    "contract": 92,
+    "limit": 7,
+    "checkmate": 1
+   },
+   "contractShare": 0.92,
+   "plies": {
+    "median": 30,
+    "p90": 47
+   },
+   "captures": 8,
+   "use": [
+    0.83,
+    0.97,
+    0.21
+   ],
+   "sec": 297
+  }
+ ]
+}

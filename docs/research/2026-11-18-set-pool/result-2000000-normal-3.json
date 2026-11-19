@@ -1,0 +1,46 @@
+{
+ "seed": 2000000,
+ "level": "normal",
+ "games": 100,
+ "rows": [
+  {
+   "id": "p2n2b2",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 2
+    },
+    {
+     "type": "n",
+     "count": 2
+    },
+    {
+     "type": "b",
+     "count": 2
+    }
+   ],
+   "games": 100,
+   "white": 45,
+   "black": 41,
+   "draw": 14,
+   "whiteShare": 0.523,
+   "reasons": {
+    "contract": 86,
+    "limit": 14
+   },
+   "contractShare": 0.86,
+   "plies": {
+    "median": 30,
+    "p90": 48
+   },
+   "captures": 8,
+   "use": [
+    0.95,
+    0.85,
+    0.2
+   ],
+   "sec": 302
+  }
+ ]
+}

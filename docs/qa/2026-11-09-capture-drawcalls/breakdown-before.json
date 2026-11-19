@@ -1,0 +1,121 @@
+{
+ "calls": 207,
+ "size": [
+  0,
+  0
+ ],
+ "groups": [
+  [
+   "biome>Mesh:IcosahedronGeometry",
+   {
+    "n": 66,
+    "mats": 66
+   }
+  ],
+  [
+   "piece>Mesh:BufferGeometry",
+   {
+    "n": 32,
+    "mats": 32
+   }
+  ],
+  [
+   "piece>SkinnedMesh:BufferGeometry:skin",
+   {
+    "n": 32,
+    "mats": 32
+   }
+  ],
+  [
+   "biome>Mesh:CylinderGeometry",
+   {
+    "n": 22,
+    "mats": 22
+   }
+  ],
+  [
+   "biome>Mesh:SphereGeometry",
+   {
+    "n": 19,
+    "mats": 19
+   }
+  ],
+  [
+   "biome>Mesh:CircleGeometry",
+   {
+    "n": 9,
+    "mats": 9
+   }
+  ],
+  [
+   "biome>Mesh:BufferGeometry:nocull",
+   {
+    "n": 7,
+    "mats": 7
+   }
+  ],
+  [
+   "board>Mesh:BoxGeometry",
+   {
+    "n": 6,
+    "mats": 6
+   }
+  ],
+  [
+   "biome>Mesh:BufferGeometry",
+   {
+    "n": 6,
+    "mats": 6
+   }
+  ],
+  [
+   "biome>Mesh:PlaneGeometry",
+   {
+    "n": 2,
+    "mats": 2
+   }
+  ],
+  [
+   "side-rings>Mesh:RingGeometry:nocull",
+   {
+    "n": 2,
+    "mats": 2
+   }
+  ],
+  [
+   "Mesh>Mesh:ExtrudeGeometry:nocull",
+   {
+    "n": 1,
+    "mats": 1
+   }
+  ],
+  [
+   "biome>Mesh:BoxGeometry",
+   {
+    "n": 1,
+    "mats": 1
+   }
+  ],
+  [
+   "biome>Mesh:DodecahedronGeometry",
+   {
+    "n": 1,
+    "mats": 1
+   }
+  ],
+  [
+   "biome>Mesh:IcosahedronGeometry:nocull",
+   {
+    "n": 1,
+    "mats": 1
+   }
+  ],
+  [
+   "Mesh>Mesh:PlaneGeometry:nocull",
+   {
+    "n": 1,
+    "mats": 1
+   }
+  ]
+ ]
+}

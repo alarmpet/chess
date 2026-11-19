@@ -1,0 +1,212 @@
+{
+  "label": "waves",
+  "date": "2026-11-05T12:36:12.845Z",
+  "url": "http://localhost:3000/",
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+  "viewport": [
+    952,
+    893,
+    1
+  ],
+  "gpu": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "blankRafMs": 41.5,
+  "jsMs": 1.2,
+  "jsP95": 2.2,
+  "renderMs": 0.7,
+  "rafMs": 41.6,
+  "gpuMs": 29.53,
+  "gpuP95": 50.38,
+  "calls": 96,
+  "spread": 0.4,
+  "floorMs": 1.1,
+  "maxMs": 1.5,
+  "withinCap": true,
+  "loads": [
+    {
+      "jsMs": 1.1,
+      "jsP95": 2.2,
+      "renderMs": 0.7,
+      "gpuMs": 27.78,
+      "gpuP95": 45.46,
+      "rafMs": 41.5,
+      "calls": 96,
+      "samples": [
+        {
+          "js": {
+            "median": 1.1,
+            "p95": 1.8,
+            "n": 107
+          },
+          "render": {
+            "median": 0.7,
+            "p95": 1.1,
+            "n": 108
+          },
+          "gpu": {
+            "median": 26.91,
+            "p95": 41.74,
+            "n": 108
+          }
+        },
+        {
+          "js": {
+            "median": 1.1,
+            "p95": 2.2,
+            "n": 102
+          },
+          "render": {
+            "median": 0.7,
+            "p95": 1.5,
+            "n": 102
+          },
+          "gpu": {
+            "median": 27.78,
+            "p95": 45.95,
+            "n": 102
+          }
+        },
+        {
+          "js": {
+            "median": 1,
+            "p95": 2.2,
+            "n": 103
+          },
+          "render": {
+            "median": 0.7,
+            "p95": 1.4,
+            "n": 103
+          },
+          "gpu": {
+            "median": 28.31,
+            "p95": 45.46,
+            "n": 104
+          }
+        }
+      ]
+    },
+    {
+      "jsMs": 1.5,
+      "jsP95": 2.6,
+      "renderMs": 0.8,
+      "gpuMs": 29.53,
+      "gpuP95": 51.53,
+      "rafMs": 41.6,
+      "calls": 96,
+      "samples": [
+        {
+          "js": {
+            "median": 1.5,
+            "p95": 2.6,
+            "n": 98
+          },
+          "render": {
+            "median": 0.8,
+            "p95": 1.5,
+            "n": 99
+          },
+          "gpu": {
+            "median": 29.53,
+            "p95": 51.53,
+            "n": 99
+          }
+        },
+        {
+          "js": {
+            "median": 1.6,
+            "p95": 3.1,
+            "n": 94
+          },
+          "render": {
+            "median": 1,
+            "p95": 1.9,
+            "n": 94
+          },
+          "gpu": {
+            "median": 34.53,
+            "p95": 53.27,
+            "n": 94
+          }
+        },
+        {
+          "js": {
+            "median": 1.4,
+            "p95": 2.3,
+            "n": 100
+          },
+          "render": {
+            "median": 0.8,
+            "p95": 1.4,
+            "n": 100
+          },
+          "gpu": {
+            "median": 26.92,
+            "p95": 50.3,
+            "n": 100
+          }
+        }
+      ]
+    },
+    {
+      "jsMs": 1.2,
+      "jsP95": 2.1,
+      "renderMs": 0.7,
+      "gpuMs": 30.28,
+      "gpuP95": 50.38,
+      "rafMs": 41.7,
+      "calls": 96,
+      "samples": [
+        {
+          "js": {
+            "median": 1.2,
+            "p95": 2.2,
+            "n": 95
+          },
+          "render": {
+            "median": 0.7,
+            "p95": 1.4,
+            "n": 96
+          },
+          "gpu": {
+            "median": 32.1,
+            "p95": 50.38,
+            "n": 96
+          }
+        },
+        {
+          "js": {
+            "median": 1.2,
+            "p95": 2,
+            "n": 101
+          },
+          "render": {
+            "median": 0.7,
+            "p95": 1.2,
+            "n": 101
+          },
+          "gpu": {
+            "median": 26.32,
+            "p95": 48.31,
+            "n": 101
+          }
+        },
+        {
+          "js": {
+            "median": 1.2,
+            "p95": 2.1,
+            "n": 95
+          },
+          "render": {
+            "median": 0.7,
+            "p95": 1.2,
+            "n": 95
+          },
+          "gpu": {
+            "median": 30.28,
+            "p95": 53,
+            "n": 95
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -6,3 +6,15 @@ dist-ssr/
 .env.*.local
 .DS_Store
 Thumbs.db
+
+# tri-agent-review 라운드 작업 폴더 (완료 후 docs/research/agent-rounds/ 로 옮김)
+.reports/
+
+# Downloaded review text stays local
+docs/research/agent-rounds/2026-10-31-town-survey/steam-dumps/
+docs/research/agent-rounds/2026-10-31-town-survey/steam-dumps-A/
+# 내려받은 남의 영상·자막·장면 그림은 이 PC 에만 둔다(조사 기록 README 가 가리키는 원본은 YouTube 주소)
+docs/research/2026-11-11-slot-chess/video/
+
+# wrangler 로컬 캐시
+.wrangler/

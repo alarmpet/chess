@@ -1,0 +1,80 @@
+{
+ "base": {
+  "js": {
+   "median": 1.3,
+   "p95": 3.9,
+   "n": 69
+  },
+  "render": {
+   "median": 1,
+   "p95": 3.1,
+   "n": 69
+  },
+  "calls": 222
+ },
+ "hidePiece": {
+  "js": {
+   "median": 0.9,
+   "p95": 1.9,
+   "n": 70
+  },
+  "render": {
+   "median": 0.6,
+   "p95": 1.4,
+   "n": 70
+  },
+  "calls": 94
+ },
+ "hideBoard": {
+  "js": {
+   "median": 1.1,
+   "p95": 2.8,
+   "n": 71
+  },
+  "render": {
+   "median": 0.9,
+   "p95": 2.1,
+   "n": 71
+  },
+  "calls": 154
+ },
+ "hideBiome": {
+  "js": {
+   "median": 1,
+   "p95": 2.6,
+   "n": 69
+  },
+  "render": {
+   "median": 0.8,
+   "p95": 2.1,
+   "n": 69
+  },
+  "calls": 197
+ },
+ "hideAll": {
+  "js": {
+   "median": 0.5,
+   "p95": 1,
+   "n": 71
+  },
+  "render": {
+   "median": 0.2,
+   "p95": 0.5,
+   "n": 71
+  },
+  "calls": 0
+ },
+ "base2": {
+  "js": {
+   "median": 1.9,
+   "p95": 3.8,
+   "n": 71
+  },
+  "render": {
+   "median": 1.6,
+   "p95": 3.3,
+   "n": 71
+  },
+  "calls": 226
+ }
+}

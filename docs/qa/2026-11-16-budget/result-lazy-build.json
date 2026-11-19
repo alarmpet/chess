@@ -1,0 +1,150 @@
+{
+ "at": "2026-11-16T08:41:57.482Z",
+ "base": "http://localhost:4173/",
+ "rows": [
+  {
+   "item": "desk 처음에는 안 받음",
+   "want": "마을·외형·라이벌·설정·친구 대전·손과 뇌 조각을 받지 않았다",
+   "got": {
+    "early": [],
+    "scripts": 3
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 마을 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 라이벌 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 외형 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 설정 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 친구 대전 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 마을 닫은 뒤 판",
+   "want": "판이 다시 그려진다(드로우콜 > 0)",
+   "got": {
+    "frames": 34,
+    "calls": 65
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 초대 링크",
+   "want": "?room= 으로 열면 방 막대가 뜬다",
+   "got": {
+    "bar": true,
+    "code": "👫 ABCDEF"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 처음에는 안 받음",
+   "want": "마을·외형·라이벌·설정·친구 대전·손과 뇌 조각을 받지 않았다",
+   "got": {
+    "early": [],
+    "scripts": 3
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 마을 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 라이벌 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 외형 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 설정 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 친구 대전 열림",
+   "want": "누르면 조각을 받아 창이 뜬다",
+   "got": {
+    "ok": true,
+    "got": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 마을 닫은 뒤 판",
+   "want": "판이 다시 그려진다(드로우콜 > 0)",
+   "got": {
+    "frames": 33,
+    "calls": 63
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 초대 링크",
+   "want": "?room= 으로 열면 방 막대가 뜬다",
+   "got": {
+    "bar": true,
+    "code": "👫 ABCDEF"
+   },
+   "ok": true
+  }
+ ]
+}

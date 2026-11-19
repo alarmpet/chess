@@ -1,0 +1,102 @@
+{
+ "api": "http://127.0.0.1:8787",
+ "out": {
+  "firstOnly": {
+   "http": 200,
+   "status": "waiting",
+   "matchId": "SMKCA64:1:g6ld_711YIJeikdG:kk8BxUrZpcrRVPz1"
+  },
+  "second": {
+   "http": 200,
+   "status": "counted",
+   "matchId": "SMKCA64:1:g6ld_711YIJeikdG:kk8BxUrZpcrRVPz1",
+   "result": "0-1",
+   "white": {
+    "id": "g6ld_711YIJeikdG",
+    "before": 1500,
+    "after": 1338
+   },
+   "black": {
+    "id": "kk8BxUrZpcrRVPz1",
+    "before": 1500,
+    "after": 1662
+   }
+  },
+  "again": {
+   "http": 200,
+   "status": "counted",
+   "matchId": "SMKCA64:1:g6ld_711YIJeikdG:kk8BxUrZpcrRVPz1",
+   "result": "0-1",
+   "white": {
+    "id": "g6ld_711YIJeikdG",
+    "before": 1500,
+    "after": 1338
+   },
+   "black": {
+    "id": "kk8BxUrZpcrRVPz1",
+    "before": 1500,
+    "after": 1662
+   }
+  },
+  "whiteAfter": {
+   "id": "g6ld_711YIJeikdG",
+   "rating": 1338,
+   "rd": 290,
+   "games": 1,
+   "wins": 0,
+   "losses": 1,
+   "draws": 0,
+   "badge": "cub"
+  },
+  "blackAfter": {
+   "id": "kk8BxUrZpcrRVPz1",
+   "rating": 1662,
+   "rd": 290,
+   "games": 1,
+   "wins": 1,
+   "losses": 0,
+   "draws": 0,
+   "badge": "cub"
+  },
+  "mismatchA": {
+   "http": 200,
+   "status": "waiting",
+   "matchId": "SMKCA64:2:g6ld_711YIJeikdG:kk8BxUrZpcrRVPz1"
+  },
+  "mismatchB": {
+   "http": 409,
+   "status": "mismatch",
+   "matchId": "SMKCA64:2:g6ld_711YIJeikdG:kk8BxUrZpcrRVPz1",
+   "error": "mismatch"
+  },
+  "forged": {
+   "http": 400,
+   "status": "rejected",
+   "error": "signature"
+  },
+  "illegal": {
+   "http": 400,
+   "status": "rejected",
+   "error": "illegal"
+  },
+  "notOver": {
+   "http": 400,
+   "status": "rejected",
+   "error": "not-over"
+  },
+  "badJson": 400,
+  "assetStillServed": 200
+ },
+ "checks": {
+  "waitingFirst": true,
+  "countedSecond": true,
+  "notTwice": true,
+  "mismatch": true,
+  "forged": true,
+  "illegal": true,
+  "notOver": true,
+  "badJson": true,
+  "assets": true
+ },
+ "allOk": true
+}

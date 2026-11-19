@@ -1,0 +1,35 @@
+// 만든 파일 — 손으로 고치지 않는다. node tools/crown_puzzles.mjs 300 4100 30
+// 봇 계약전 300판에서 뽑은 「한 수로 왕관 완성」 국면 30개. 쉬운 순(고를 잡기가 적은 순), 색·보석 종류를 돌아가며.
+// 검사: src/rules/crownPuzzles.js 의 puzzleProblem (test/crownPuzzles.test.mjs 가 전부 다시 본다).
+export const CROWN_PUZZLES = [
+  {"id":"cp01","set":"p3nb","color":"w","moves":"e2e4 e7e5 g1f3 b8c6 b1c3 f8d6 d2d4 c6d4 f3d4 e5d4 d1d4 d6e7 d4g7 b7b6 g7h8 e7d6","answer":"h8h7","gem":"p"},
+  {"id":"cp02","set":"p3nb","color":"w","moves":"g1f3 g8f6 d2d3 b8c6 e2e4 e7e6 b1c3 d7d5 c1f4 f8d6 f4d6 d5e4 c3e4 c7d6","answer":"e4f6","gem":"n"},
+  {"id":"cp03","set":"p3nb","color":"w","moves":"e2e4 d7d5 b1c3 g8f6 f1d3 f6e4 c3e4 b8d7 e4c3 d7e5 d3b5 c8d7","answer":"b5d7","gem":"b"},
+  {"id":"cp04","set":"p3nb","color":"b","moves":"b1c3 d7d5 g1f3 b8c6 d2d4 c8e6 e2e4 d5e4 c3e4 g8f6 f1d3 f6e4 d3e4 d8d4 f3d4","answer":"e6a2","gem":"p"},
+  {"id":"cp05","set":"p3nb","color":"b","moves":"e2e4 b8c6 b1c3 g8f6 g1e2 e7e6 d2d4 d7d5 c1g5 f6e4 g5d8 c6d8 h1g1","answer":"e4c3","gem":"n"},
+  {"id":"cp06","set":"p3nb","color":"b","moves":"d2d4 b8c6 e2e4 g8f6 b1c3 e7e5 g1f3 f8d6 f3e5 d6e5 d4e5 c6e5 f1d3","answer":"e5d3","gem":"b"},
+  {"id":"cp07","set":"p3nb","color":"w","moves":"e2e4 d7d5 f1b5 b8d7 e4d5 h7h6 d2d4 h6h5 g1e2 g8f6 b1c3 e7e6 c1g5 f8d6 g5f6 g7f6 e1g1 e8g8 c3e4 d6e7 d5e6 f7e6","answer":"e4f6","gem":"p"},
+  {"id":"cp08","set":"p3nb","color":"w","moves":"b1c3 e7e5 e2e3 g8f6 g1f3 b8c6 d2d4 d7d6 d4e5 d6e5 f1b5 f8d6 d1d6 d8d6","answer":"b5c6","gem":"n"},
+  {"id":"cp09","set":"p3nb","color":"w","moves":"e2e4 b8c6 b1c3 e7e5 g1f3 f8b4 d2d4 e5d4 d1d4 c6d4 f3d4 d7d5 f1b5 c8d7","answer":"b5d7","gem":"b"},
+  {"id":"cp10","set":"p2nb","color":"b","moves":"g1f3 g8f6 b1c3 b8c6 d2d4 h7h6 e2e4 d7d6 f1d3 e7e5 c3d5 c6d4 f3d4 f6d5 e1g1 c8d7 c1d2 d8g5 d2e1","answer":"g5g2","gem":"p"},
+  {"id":"cp11","set":"p3nb","color":"b","moves":"b1c3 g8f6 e2e4 d7d5 f1d3 f6e4 d3e4 d5e4 c3e4 b8c6 g1f3 c8f5 d2d3","answer":"f5e4","gem":"n"},
+  {"id":"cp12","set":"p3nb","color":"b","moves":"g1f3 g8f6 b1c3 d7d5 d2d4 b8c6 c1f4 c8g4 e2e3 e7e5 f4e5 g4f3 d1f3","answer":"c6e5","gem":"b"},
+  {"id":"cp13","set":"p3nb","color":"w","moves":"e2e4 d7d5 b1c3 e7e6 d2d3 f8c5 c1d2 g8f6 d2f4 d5e4 c3e4 f6e4 d3e4 b8c6 g1f3 e8g8 d1d8 c6d8 f1c4 f7f5 f4c7 f5e4","answer":"c4e6","gem":"p"},
+  {"id":"cp14","set":"p3nb","color":"w","moves":"d2d4 b8c6 g1f3 g8f6 c1f4 d7d5 b1c3 c8f5 h2h3 e7e6 e2e3 f8d6 f1b5 e8g8 f4d6 d8d6","answer":"b5c6","gem":"n"},
+  {"id":"cp15","set":"p3nb","color":"w","moves":"e2e4 g8f6 d1f3 e7e6 d2d4 d7d5 b1c3 f6e4 c1f4 b8c6 c3e4 c6d4 f3a3 f8a3","answer":"b2a3","gem":"b"},
+  {"id":"cp16","set":"p2nb","color":"b","moves":"g1f3 d7d5 d2d4 b8c6 e2e3 g8f6 b1c3 c8e6 f1e2 d8d6 e1f1 e8c8 f1g1 e6f5 c1d2 e7e5 f3e5 d6e5 d4e5 f5c2 e2b5","answer":"c6e5","gem":"p"},
+  {"id":"cp17","set":"p3nb","color":"b","moves":"d2d4 d7d6 b1d2 b8c6 g1f3 e7e5 e2e3 g8f6 f1b5 c8e6 b5c6 b7c6 d4e5 d6e5 f3e5","answer":"d8d2","gem":"n"},
+  {"id":"cp18","set":"p3nb","color":"b","moves":"g1f3 b8c6 e2e4 e7e5 d2d4 g8f6 b1c3 e5d4 f3d4 d7d6 c1e3 d6d5 e4d5 d8d5 c3d5 f6d5 f1d3","answer":"d5e3","gem":"b"},
+  {"id":"cp19","set":"p3nb","color":"w","moves":"e2e4 d7d5 f1b5 b8d7 e4d5 h7h6 d2d4 h6h5 g1e2 g8f6 b1c3 e7e6 c1g5 f8d6 g5f6 g7f6 e1g1 e8g8 c3e4 d6e7 d5e6 f7e6 d1d3 f6f5 d3g3 g8h7","answer":"g3c7","gem":"p"},
+  {"id":"cp20","set":"p2nb","color":"w","moves":"g1f3 b8c6 b1c3 g8f6 e2e4 e7e5 f1d3 d7d5 c3d5 d8d5 e4d5 f6d5 d1e2 f7f6 f3e5 f6e5 e2f3 f8c5","answer":"f3d5","gem":"n"},
+  {"id":"cp21","set":"p3nb","color":"w","moves":"b1c3 e7e5 d2d4 b8c6 c1e3 d7d5 d4e5 g8e7 g1f3 c8d7 c3d5 e7f5 d5c7 d8c7","answer":"d1d7","gem":"b"},
+  {"id":"cp22","set":"p3nb","color":"b","moves":"d2d4 b8c6 b1c3 g8f6 e2e4 e7e5 g1f3 f8b4 d1d3 e5d4 f3d4 d7d5 d4c6 b7c6 e4e5 d5d4 e5f6 d8f6 d3e4 f6e6 f1d3 d4c3 b2c3","answer":"b4c3","gem":"p"},
+  {"id":"cp23","set":"p2nb","color":"b","moves":"d2d4 d7d5 b1c3 b8c6 g1f3 g8f6 c1f4 e7e6 e2e3 f8e7 f1b5 e8f8 b5c6 b7c6 f4c7 e7b4 c7d6 d8d6 d1b1","answer":"b4c3","gem":"n"},
+  {"id":"cp24","set":"p3nb","color":"b","moves":"b1c3 g8f6 d2d4 d7d5 g1f3 b8c6 e2e3 c8f5 f1d3 f6e4 e1g1 e7e5 f3e5 f8b4 c3d5 c6e5 d3e4","answer":"f5e4","gem":"b"},
+  {"id":"cp25","set":"p3nb","color":"w","moves":"g1f3 b8c6 e2e4 d7d5 d1e2 g8f6 d2d3 e7e5 e4d5 f6d5 b1c3 c8f5 f3e5 d5c3 b2c3 c6e5 e2e5 d8e7 c1f4 c7c6 e1c1 e7e5 f4e5 f8a3 c1d2 g7g6 e5h8 a3d6 h8d4 a7a6 d2c1 e8c8 c1b1 c8b8 f1e2 f5e6 e2f3 d8h8","answer":"f3c6","gem":"p"},
+  {"id":"cp26","set":"p3nb","color":"w","moves":"b1c3 e7e5 e2e3 d7d5 g1f3 b8c6 f1d3 c8e6 e1g1 g8f6 e3e4 f8c5 e4d5 f6d5 d3b5 e8f8 c3e4 c5d6 e4d6 d8d6","answer":"b5c6","gem":"n"},
+  {"id":"cp27","set":"p3nb","color":"w","moves":"b1c3 b8c6 e2e3 g8f6 f1d3 e7e5 g1f3 d7d5 e1g1 f8c5 e3e4 f6e4 d3e4 d5e4 c3e4 d8d5","answer":"e4c5","gem":"b"},
+  {"id":"cp28","set":"p3nb","color":"b","moves":"b1c3 e7e5 d2d4 b8c6 g1f3 d7d6 c1e3 g8f6 d4e5 f6d7 e3g5 d6e5 g5d8 e8d8 d1d3 f8c5 e2e4 d8e7 d3c4 h8e8 e1c1 c5f2 f1d3 f2b6 c1b1 d7c5 h1f1","answer":"c5e4","gem":"p"},
+  {"id":"cp29","set":"p3nb","color":"b","moves":"d2d4 d7d5 b1d2 b8c6 g1f3 g8f6 e2e3 e7e6 f1d3 f8b4 e1g1 e8g8 e3e4 d5e4 d2e4 e6e5 d4e5 d8d3 d1d3","answer":"f6e4","gem":"n"},
+  {"id":"cp30","set":"p3nb","color":"b","moves":"b1c3 g8f6 g1f3 b8c6 d2d4 d7d5 c1e3 e7e6 d1d3 f8d6 a1b1 h8f8 a2a3 e6e5 d4e5 d6e5 c3d5 f6d5 f3e5","answer":"d5e3","gem":"b"}
+];

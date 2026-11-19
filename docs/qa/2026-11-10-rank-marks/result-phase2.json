@@ -1,0 +1,57 @@
+{
+  "at": "2026-11-09T16:39:07.608Z",
+  "phase": 2,
+  "shiftMs": 2419200000,
+  "pass": 8,
+  "total": 8,
+  "rows": [
+    {
+      "item": "시즌 2 나: 300점 내려가도 첫 도달 그대로",
+      "want": "481점 · firsts adult·alpha · 지난 시즌 테두리 alpha",
+      "got": "{\"points\":481,\"firsts\":[\"adult\",\"alpha\"],\"trophies\":[{\"season\":1,\"tier\":\"alpha\",\"peak\":781,\"games\":27,\"frame\":true}]}",
+      "ok": true
+    },
+    {
+      "item": "시즌 2 O0: 3판 → 리본만(테두리 없음)",
+      "want": "trophies [시즌 1 · games 3 · frame false]",
+      "got": "[{\"season\":1,\"tier\":\"cub\",\"peak\":0,\"games\":3,\"frame\":false}]",
+      "ok": true
+    },
+    {
+      "item": "O0 의 친구 무대에서 나의 테두리",
+      "want": "frame alpha",
+      "got": "{\"frame\":\"alpha\",\"points\":481}",
+      "ok": true
+    },
+    {
+      "item": "O0 자기 줄",
+      "want": "frame 없음(리본만)",
+      "got": "null",
+      "ok": true
+    },
+    {
+      "item": "나 친구 창 왕관 도장",
+      "want": "성체·우두머리 받음 · 왕관 받는 법 · 리본 「시즌 1 함께 둠」 · 이번 시즌 리본까지 3판",
+      "got": "{\"stamps\":[\"✔ 🐾 성체 첫 도달\",\"✔ ⭐ 우두머리 첫 도달\",\"· 👑 왕관 첫 도달 · 사다리 900점에 한 번 닿으면\"],\"ribbons\":[\"🎀 시즌 1 함께 둠\"],\"left\":\"이번 시즌 리본까지 랭크 3판\",\"rows\":[{\"text\":\"1 나 🐾II 481\",\"frame\":\"alpha\"},{\"text\":\"2 🦉 부엉이 친구 VT ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🦉 부엉이 친구 FG ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🐿️ 다람쥐 친구 P0 ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🦔 고슴도치 친구 HW ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🐼 판다 친구 L9 ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🐳 고래 친구 QM ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🦊 여우 친구 SR ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🦊 여우 친구 4B ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"},{\"text\":\"2 🦦 수달 친구 3D ✏️ 🍼III 0 3승 0패\",\"frame\":\"\"}]}",
+      "ok": true
+    },
+    {
+      "item": "O0 친구 창: 도장 0 · 리본 1 · 무대의 나 줄에 우두머리 테두리",
+      "want": "stamps 미획득 3 · 리본 시즌 1 · frame alpha 줄",
+      "got": "{\"stamps\":[\"· 🐾 성체 첫 도달 · 사다리 300점에 한 번 닿으면\",\"· ⭐ 우두머리 첫 도달 · 사다리 600점에 한 번 닿으면\",\"· 👑 왕관 첫 도달 · 사다리 900점에 한 번 닿으면\"],\"ribbons\":[\"🎀 시즌 1 함께 둠\"],\"left\":\"이번 시즌 리본까지 랭크 3판\",\"rows\":[{\"text\":\"1 🐼 판다 친구 ML ✏️ 🐾II 481 0승 3패\",\"frame\":\"alpha\"},{\"text\":\"2 나 🍼III 0\",\"frame\":\"\"}]}",
+      "ok": true
+    },
+    {
+      "item": "O0 방 막대: 친구(나) 이름에 우두머리 테두리",
+      "want": "frame-alpha · 넘침 없음",
+      "got": "{\"cls\":\"peer-name frame-alpha\",\"text\":\"🐼 판다 친구 ML\",\"shadow\":\"rgb(127, 196, 255) 0px 0px 0px 2px inset\",\"right\":360,\"vw\":390}",
+      "ok": true
+    },
+    {
+      "item": "내 방 막대: 친구(O0) 이름",
+      "want": "테두리 없음(리본만)",
+      "got": "peer-name",
+      "ok": true
+    }
+  ]
+}

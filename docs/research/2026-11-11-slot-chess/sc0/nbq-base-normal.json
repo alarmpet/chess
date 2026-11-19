@@ -1,0 +1,53 @@
+{
+ "at": "2026-11-14T20:32:38.077Z",
+ "set": "nbq",
+ "goals": [
+  {
+   "type": "n",
+   "count": 1
+  },
+  {
+   "type": "b",
+   "count": 1
+  },
+  {
+   "type": "q",
+   "count": 1
+  }
+ ],
+ "rule": "base",
+ "level": "normal",
+ "seed": 7000,
+ "games": 100,
+ "seconds": 133,
+ "reasons": {
+  "contract": 91,
+  "limit": 8,
+  "checkmate": 1
+ },
+ "white": 50,
+ "black": 42,
+ "draw": 8,
+ "whiteShareOfDecided": 0.543,
+ "plies": {
+  "median": 25,
+  "p90": 44
+ },
+ "captures": {
+  "median": 5,
+  "min": 2
+ },
+ "firstCapture": 11,
+ "loserDoneOne": 81,
+ "winGoals": {
+  "n+q": 14,
+  "n+b": 70,
+  "-": 9,
+  "b+q": 7
+ },
+ "goalUse": {
+  "n": 0.92,
+  "b": 0.85,
+  "q": 0.23
+ }
+}

@@ -1,0 +1,990 @@
+[
+ {
+  "key": "pawn>pawn",
+  "san": "exd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1207.4721784077483,
+   "y": 574.2521125119562
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3424,
+  "file": "pawn-x-pawn-quiz.webm",
+  "kb": 688,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 1,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "pawn>knight",
+  "san": "exf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1483.3620490051726,
+   "y": 497.9631209063473
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3803,
+  "file": "pawn-x-knight-quiz.webm",
+  "kb": 1039,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "pawn>bishop",
+  "san": "bxc3",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1027.0362612601084,
+   "y": 764.0451307831298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2819,
+  "file": "pawn-x-bishop-quiz.webm",
+  "kb": 1021,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "pawn>rook",
+  "san": "bxa1=Q",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1699.6536972125853,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3204,
+  "file": "pawn-x-rook-quiz.webm",
+  "kb": 1146,
+  "impacts": 1,
+  "upset": true,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "pawn>queen",
+  "san": "gxf3",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1532.9637387398918,
+   "y": 764.0451307831298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4198,
+  "file": "pawn-x-queen-quiz.webm",
+  "kb": 1139,
+  "impacts": 1,
+  "upset": true,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>pawn",
+  "san": "Nxe5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1352.5278215922517,
+   "y": 574.2521125119562
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3478,
+  "file": "knight-x-pawn-quiz.webm",
+  "kb": 644,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>knight",
+  "san": "Nxd4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1202.0188377466927,
+   "y": 662.013387464298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2958,
+  "file": "knight-x-knight-quiz.webm",
+  "kb": 975,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": true,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": {
+    "type": "knight",
+    "lift": 0,
+    "pitch": 0,
+    "roll": 0,
+    "yaw": 0,
+    "stretch": 1
+   },
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>bishop",
+  "san": "Nxd7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1371.783498303827,
+   "y": 884.1360613263377
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3865,
+  "file": "knight-x-bishop-quiz.webm",
+  "kb": 1025,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>rook",
+  "san": "Nxa1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1699.6536972125853,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2989,
+  "file": "knight-x-rook-quiz.webm",
+  "kb": 1018,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "knight>queen",
+  "san": "Nxg4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 917.3608920387416,
+   "y": 574.2521125119565
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4159,
+  "file": "knight-x-queen-quiz.webm",
+  "kb": 1229,
+  "impacts": 1,
+  "upset": true,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "bishop>pawn",
+  "san": "Bxd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1357.9811622533075,
+   "y": 662.0133874642983
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3301,
+  "file": "bishop-x-pawn-quiz.webm",
+  "kb": 726,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "bishop>knight",
+  "san": "Bxf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1483.3620490051726,
+   "y": 497.9631209063473
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2801,
+  "file": "bishop-x-knight-quiz.webm",
+  "kb": 1022,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "bishop>bishop",
+  "san": "Bxd7+",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1216.3714587285997,
+   "y": 431.03491122950265
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4062,
+  "file": "bishop-x-bishop-quiz.webm",
+  "kb": 1046,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": true,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": {
+    "type": "bishop",
+    "lift": 0,
+    "pitch": 0,
+    "roll": 0,
+    "yaw": 0,
+    "stretch": 1
+   },
+   "swaying": 0
+  }
+ },
+ {
+  "key": "bishop>rook",
+  "san": "Bxa1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1699.6536972125853,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3970,
+  "file": "bishop-x-rook-quiz.webm",
+  "kb": 1046,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "bishop>queen",
+  "san": "Bxe7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1188.216501696173,
+   "y": 884.1360613263377
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3119,
+  "file": "bishop-x-queen-quiz.webm",
+  "kb": 1180,
+  "impacts": 1,
+  "upset": true,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "rook>pawn",
+  "san": "Rxe5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1352.5278215922517,
+   "y": 574.2521125119562
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3772,
+  "file": "rook-x-pawn-quiz.webm",
+  "kb": 909,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "rook>knight",
+  "san": "Rxd1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1179.3052271438896,
+   "y": 1027.5462872349754
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3896,
+  "file": "rook-x-knight-quiz.webm",
+  "kb": 1065,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "rook>bishop",
+  "san": "Rxf1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1582.0843185683311,
+   "y": 1027.5462872349754
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2888,
+  "file": "rook-x-bishop-quiz.webm",
+  "kb": 1056,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "rook>rook",
+  "san": "Rxd1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1339.9505281732263,
+   "y": 371.8441988112794
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3602,
+  "file": "rook-x-rook-quiz.webm",
+  "kb": 1268,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": true,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": {
+    "type": "rook",
+    "lift": 0,
+    "pitch": 0,
+    "roll": 0,
+    "yaw": 0,
+    "stretch": 1
+   },
+   "swaying": 0
+  }
+ },
+ {
+  "key": "rook>queen",
+  "san": "Rxd2",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1188.216501696173,
+   "y": 884.1360613263373
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4057,
+  "file": "rook-x-queen-quiz.webm",
+  "kb": 1014,
+  "impacts": 1,
+  "upset": true,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "queen>pawn",
+  "san": "Qxd4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1202.0188377466927,
+   "y": 662.013387464298
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2555,
+  "file": "queen-x-pawn-quiz.webm",
+  "kb": 703,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "queen>knight",
+  "san": "Qxd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1357.9811622533075,
+   "y": 662.0133874642983
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3138,
+  "file": "queen-x-knight-quiz.webm",
+  "kb": 1093,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "queen>bishop",
+  "san": "Qxf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1027.0362612601084,
+   "y": 764.0451307831303
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3010,
+  "file": "queen-x-bishop-quiz.webm",
+  "kb": 1143,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "queen>rook",
+  "san": "Qxa8",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 860.3463027874147,
+   "y": 371.8441988112791
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3784,
+  "file": "queen-x-rook-quiz.webm",
+  "kb": 1050,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "queen>queen",
+  "san": "Qxe7+",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1343.6285412714003,
+   "y": 431.03491122950265
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4202,
+  "file": "queen-x-queen-quiz.webm",
+  "kb": 1061,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": true,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 0,
+   "impacts": 1,
+   "mirrorPose": {
+    "type": "queen",
+    "lift": 0,
+    "pitch": 0,
+    "roll": 0,
+    "yaw": 0,
+    "stretch": 1
+   },
+   "swaying": 0
+  }
+ },
+ {
+  "key": "king>pawn",
+  "san": "Kxf7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1004.6495050885193,
+   "y": 884.1360613263378
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 3431,
+  "file": "king-x-pawn-quiz.webm",
+  "kb": 812,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 7,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "king>knight",
+  "san": "Kxf2",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1555.3504949114808,
+   "y": 884.1360613263373
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 4068,
+  "file": "king-x-knight-quiz.webm",
+  "kb": 1144,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 9,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "king>bishop",
+  "san": "Kxe7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1188.216501696173,
+   "y": 884.1360613263377
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2780,
+  "file": "king-x-bishop-quiz.webm",
+  "kb": 918,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 8,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "king>rook",
+  "san": "Kxh1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1984.8634099927724,
+   "y": 1027.5462872349754
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2815,
+  "file": "king-x-rook-quiz.webm",
+  "kb": 1057,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 3,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ },
+ {
+  "key": "king>queen",
+  "san": "Kxd8",
+  "canvas": [
+   1920,
+   921
+  ],
+  "sq": {
+   "x": 1380.6947728561104,
+   "y": 1027.5462872349758
+  },
+  "dpr": [
+   0.75,
+   2560,
+   1228
+  ],
+  "ok": true,
+  "busyMs": 2985,
+  "file": "king-x-queen-quiz.webm",
+  "kb": 1051,
+  "impacts": 1,
+  "upset": false,
+  "special": {
+   "mirror": false,
+   "comboN": 0,
+   "pitch": 1,
+   "swayed": 5,
+   "impacts": 1,
+   "mirrorPose": null,
+   "swaying": 0
+  }
+ }
+]

@@ -1,0 +1,458 @@
+{
+ "at": "2026-11-18T14:30:41.604Z",
+ "base": "http://localhost:3000/",
+ "measured": {
+  "desk": {
+   "common": {
+    "n": 6,
+    "sm": true,
+    "foil": null,
+    "float": "none",
+    "glows": 1,
+    "stars": null
+   },
+   "uncommon": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-glint",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "rare": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-holo",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "hero": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-gold",
+    "float": "none",
+    "glows": 2,
+    "stars": "wc-twinkle"
+   }
+  },
+  "phone": {
+   "common": {
+    "n": 6,
+    "sm": true,
+    "foil": null,
+    "float": "none",
+    "glows": 1,
+    "stars": null
+   },
+   "uncommon": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-glint",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "rare": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-holo",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "hero": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-gold",
+    "float": "none",
+    "glows": 2,
+    "stars": "wc-twinkle"
+   }
+  },
+  "calm": {
+   "common": {
+    "n": 6,
+    "sm": true,
+    "foil": null,
+    "float": "none",
+    "glows": 1,
+    "stars": null
+   },
+   "uncommon": {
+    "n": 6,
+    "sm": true,
+    "foil": "none",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "rare": {
+    "n": 6,
+    "sm": true,
+    "foil": "none",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "hero": {
+    "n": 6,
+    "sm": true,
+    "foil": "none",
+    "float": "none",
+    "glows": 2,
+    "stars": "none"
+   }
+  }
+ },
+ "rows": [
+  {
+   "item": "desk 도감 열림",
+   "want": "네 등급의 카드가 모두 보인다",
+   "got": {
+    "opened": true,
+    "n": {
+     "common": 6,
+     "uncommon": 6,
+     "rare": 6,
+     "hero": 6
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 도감이 화면 안",
+   "want": "가로로 넘치지 않는다",
+   "got": {
+    "scroll": 603,
+    "client": 603,
+    "left": 347,
+    "right": 918,
+    "vw": 1280
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 카드 보기(영웅)",
+   "want": "큰 카드가 화면 안 · ★★★★ · 금빛 무대와 빛살",
+   "got": {
+    "insOpen": true,
+    "cls": "card-inspect g3",
+    "grade": "★★★★ 영웅",
+    "w": 320,
+    "inView": true,
+    "rays": 1,
+    "spin": "ci-spin",
+    "float": "wc-float"
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 다음 카드",
+   "want": "영웅 다음은 다음 동물의 일반(★) · 빛살 없음",
+   "got": {
+    "cls": "card-inspect g0",
+    "grade": "★ 일반",
+    "rays": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 마을에 전시",
+   "want": "단추가 켜지고 저장에 들어간다",
+   "got": {
+    "on": true,
+    "saved": [
+     "meerkat_3"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 닫기",
+   "want": "카드 보기만 닫히고 도감은 남는다",
+   "got": {
+    "inspect": false,
+    "book": true
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 일반",
+   "want": "빛 겹 없음 · 후광 없음(그림자 1겹)",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": null,
+    "float": "none",
+    "glows": 1,
+    "stars": null
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 고급",
+   "want": "은빛 반짝임(wc-glint) · 후광 1겹 더",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-glint",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 희귀",
+   "want": "흐르는 홀로그램(wc-holo) · 후광 · 큰 카드는 흔들림",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-holo",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 영웅",
+   "want": "금빛 훑기(wc-gold) · 후광 · 별(wc-twinkle) · 큰 카드는 흔들림",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-gold",
+    "float": "none",
+    "glows": 2,
+    "stars": "wc-twinkle"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 도감 열림",
+   "want": "네 등급의 카드가 모두 보인다",
+   "got": {
+    "opened": true,
+    "n": {
+     "common": 6,
+     "uncommon": 6,
+     "rare": 6,
+     "hero": 6
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 도감이 화면 안",
+   "want": "가로로 넘치지 않는다",
+   "got": {
+    "scroll": 356,
+    "client": 356,
+    "left": 33,
+    "right": 357,
+    "vw": 390
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 카드 보기(영웅)",
+   "want": "큰 카드가 화면 안 · ★★★★ · 금빛 무대와 빛살",
+   "got": {
+    "insOpen": true,
+    "cls": "card-inspect g3",
+    "grade": "★★★★ 영웅",
+    "w": 250,
+    "inView": true,
+    "rays": 1,
+    "spin": "ci-spin",
+    "float": "wc-float"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 다음 카드",
+   "want": "영웅 다음은 다음 동물의 일반(★) · 빛살 없음",
+   "got": {
+    "cls": "card-inspect g0",
+    "grade": "★ 일반",
+    "rays": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 마을에 전시",
+   "want": "단추가 켜지고 저장에 들어간다",
+   "got": {
+    "on": true,
+    "saved": [
+     "meerkat_3"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 닫기",
+   "want": "카드 보기만 닫히고 도감은 남는다",
+   "got": {
+    "inspect": false,
+    "book": true
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 일반",
+   "want": "빛 겹 없음 · 후광 없음(그림자 1겹)",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": null,
+    "float": "none",
+    "glows": 1,
+    "stars": null
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 고급",
+   "want": "은빛 반짝임(wc-glint) · 후광 1겹 더",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-glint",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 희귀",
+   "want": "흐르는 홀로그램(wc-holo) · 후광 · 큰 카드는 흔들림",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-holo",
+    "float": "none",
+    "glows": 2,
+    "stars": null
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 영웅",
+   "want": "금빛 훑기(wc-gold) · 후광 · 별(wc-twinkle) · 큰 카드는 흔들림",
+   "got": {
+    "n": 6,
+    "sm": true,
+    "foil": "wc-gold",
+    "float": "none",
+    "glows": 2,
+    "stars": "wc-twinkle"
+   },
+   "ok": true
+  },
+  {
+   "item": "calm 도감 열림",
+   "want": "네 등급의 카드가 모두 보인다",
+   "got": {
+    "opened": true,
+    "n": {
+     "common": 6,
+     "uncommon": 6,
+     "rare": 6,
+     "hero": 6
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "calm 도감이 화면 안",
+   "want": "가로로 넘치지 않는다",
+   "got": {
+    "scroll": 356,
+    "client": 356,
+    "left": 33,
+    "right": 357,
+    "vw": 390
+   },
+   "ok": true
+  },
+  {
+   "item": "calm 카드 보기(영웅)",
+   "want": "큰 카드가 화면 안 · ★★★★ · 금빛 무대와 빛살",
+   "got": {
+    "insOpen": true,
+    "cls": "card-inspect g3",
+    "grade": "★★★★ 영웅",
+    "w": 250,
+    "inView": true,
+    "rays": 1,
+    "spin": "none",
+    "float": "none"
+   },
+   "ok": true
+  },
+  {
+   "item": "calm 다음 카드",
+   "want": "영웅 다음은 다음 동물의 일반(★) · 빛살 없음",
+   "got": {
+    "cls": "card-inspect g0",
+    "grade": "★ 일반",
+    "rays": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "calm 마을에 전시",
+   "want": "단추가 켜지고 저장에 들어간다",
+   "got": {
+    "on": true,
+    "saved": [
+     "meerkat_3"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "calm 닫기",
+   "want": "카드 보기만 닫히고 도감은 남는다",
+   "got": {
+    "inspect": false,
+    "book": true
+   },
+   "ok": true
+  },
+  {
+   "item": "calm 효과 줄이기",
+   "want": "움직임이 모두 멈춘다(후광은 남는다)",
+   "got": {
+    "u": {
+     "n": 6,
+     "sm": true,
+     "foil": "none",
+     "float": "none",
+     "glows": 2,
+     "stars": null
+    },
+    "r": {
+     "n": 6,
+     "sm": true,
+     "foil": "none",
+     "float": "none",
+     "glows": 2,
+     "stars": null
+    },
+    "hh": {
+     "n": 6,
+     "sm": true,
+     "foil": "none",
+     "float": "none",
+     "glows": 2,
+     "stars": "none"
+    }
+   },
+   "ok": true
+  }
+ ]
+}

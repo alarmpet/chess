@@ -1,0 +1,50 @@
+약함(쉬움) {
+  win: 1,
+  loss: 39,
+  pliesMedian: 94,
+  playerCapturesMedian: 8,
+  playerCapturesAvg: 7.5
+} 174s
+대등(보통) {
+  win: 20,
+  loss: 19,
+  pliesMedian: 112,
+  playerCapturesMedian: 11,
+  playerCapturesAvg: 11
+} 563s
+강함(어려움) {
+  win: 39,
+  loss: 1,
+  pliesMedian: 99,
+  playerCapturesMedian: 14,
+  playerCapturesAvg: 12.3
+} 2118s
+{
+ "what": "pace",
+ "at": "2026-11-06T10:30:11.074Z",
+ "games": 40,
+ "rows": {
+  "약함(쉬움)": {
+   "win": 1,
+   "loss": 39,
+   "pliesMedian": 94,
+   "playerCapturesMedian": 8,
+   "playerCapturesAvg": 7.5
+  },
+  "대등(보통)": {
+   "win": 20,
+   "loss": 19,
+   "pliesMedian": 112,
+   "playerCapturesMedian": 11,
+   "playerCapturesAvg": 11
+  },
+  "강함(어려움)": {
+   "win": 39,
+   "loss": 1,
+   "pliesMedian": 99,
+   "playerCapturesMedian": 14,
+   "playerCapturesAvg": 12.3
+  }
+ },
+ "seconds": 2118
+}

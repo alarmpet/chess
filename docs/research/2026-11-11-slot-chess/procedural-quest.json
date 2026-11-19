@@ -1,0 +1,86 @@
+{
+  "title": "퀘스트가 \"가죽 10개 가져와\"뿐인 이유 — 고정 목록 vs 템플릿 조합 vs 월드 스테이트 | 밥따뚜의 AI게임 유튜브",
+  "text": "처음 › 퀘스트 만들기 · 월드 스테이트\n 테스트해 보기\n 쇼츠와 정리\n게임 디자인 · 쇼츠 22편\n퀘스트가 \"가죽 10개 가져와\"뿐인 이유\n\n고정 목록 vs 템플릿 조합 vs 월드 스테이트 — 같은 마을 게시판에 퀘스트를 붙이는 세 가지 방법\n\n마을 게시판 퀘스트 비교하기\n유튜브에서 보기\n공유\n\nNPC 하루의 마을 그대로입니다. 대장간 철 · 우물 물 · 솥 음식 · 시장 물건은 쓰면 줄고, 바닥나면 그 물건을 못 씁니다.\n\n 고정 목록\n손으로 쓴 다섯 장 — 오후 7:41에 다 깨면 끝입니다.\n 템플릿 조합\n\n\"[무엇을] [몇 개] [어디서]\" 빈칸을 무작위로 채웁니다.\n\n 끝없이 · 비슷비슷\n49장 · 6가지 이틀씩 세 번 깬 퀘스트의 아이템 종류.\n 철이 없는데\n대장간 철이 바닥나도 게시판은 마을 사정을 보지 않습니다.\n 월드 스테이트에서 만들기\n\n재고가 모자라면 그 사정이 퀘스트가 됩니다 — 누가 · 왜 부탁하는지가 카드에 붙습니다.\n\n 왜 생겼나\n이유 100% \"왜?\" 칸이 지금 마을 숫자입니다.\n 다시 망치 소리\n철광석을 건네면 대장간 철이 차고 대장장이가 다시 일합니다.\n하루 동안 재 보면\n0시간\n12시간\n24시간\n  고정 목록\n20.2시간\n  5장\n이유 0%\n  템플릿\n20.2시간\n  8장\n이유 0%\n  월드 스테이트\n2.3시간\n  4.3장\n이유 100%\n철 · 물 · 음식 · 물건 중 무언가 바닥난 시간 · 하루\n\n시드 셋으로 새벽 5시부터 하루씩 돌린 평균 · 모험가는 자동으로 고름 · 모험가가 쉬면  월드 스테이트도 20시간\n\n무엇을 쓰면 좋을까\n 고정 목록\n\n이야기가 정해진 메인 퀘스트\n\n 템플릿 조합\n\n시간 때우기 반복 퀘스트\n\n 월드 스테이트\n\n마을 · 경제가 돌아가는 게임 — 템플릿에 누가 · 왜를 붙여 섞기\n\n그림: Kenney (CC0)\n타일: The Fan-tasy Tileset (itch.io 구매)\n캐릭터: Tiny Questers (밥따뚜 제작)\n던전: 트리거 테일즈 방 스타일 (원본 Pixel Crawler)\n전투 이펙트: Beat 'em Up Combat Effects – 2D Pixel Art VFX Pack (itch.io 구매)\n엔진: Phaser 3\n개인정보 처리방침\n이용약관\nCopyright © 2026 bobddadoo\n무단 복제 · 재배포 · AI 학습 금지\n문의",
+  "links": [
+    {
+      "text": "유튜브 채널",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    },
+    {
+      "text": "불 번짐 · 재료 · 바람 · 습기\n쇼츠 23편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/fire-spread/play"
+    },
+    {
+      "text": "퀘스트 만들기 · 월드 스테이트\n쇼츠 22편 · 게임 디자인",
+      "url": "https://game.bobthief.com/procedural-quest/play"
+    },
+    {
+      "text": "밧줄 물리 · 버렛\n쇼츠 21편 · 물리 시뮬레이션",
+      "url": "https://game.bobthief.com/rope-physics/play"
+    },
+    {
+      "text": "승률 그래프 · 역전 기회\n쇼츠 20편 · 게임 디자인",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "좀비 감염 · SIR\n쇼츠 19편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/zombie-outbreak/play"
+    },
+    {
+      "text": "턴제 전투 · 행동 타임라인\n쇼츠 18편 · 전투 시스템",
+      "url": "https://game.bobthief.com/turn-order/play"
+    },
+    {
+      "text": "NPC 하루 · 스마트 오브젝트\n쇼츠 17편 · 마을 AI",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "공격 토큰 · 포위 자리\n쇼츠 16편 · 무리 전투",
+      "url": "https://game.bobthief.com/attack-token/play"
+    },
+    {
+      "text": "우선순위 vs 유틸리티 AI\n쇼츠 15편 · 게임 AI",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "던전 생성 · BSP · 동굴\n쇼츠 14편 · 맵 만들기",
+      "url": "https://game.bobthief.com/dungeon-gen/play"
+    },
+    {
+      "text": "몬스터 무리 · 보이드\n쇼츠 13편 · 무리 AI",
+      "url": "https://game.bobthief.com/boids/play"
+    },
+    {
+      "text": "길 안내 · 미니맵 · 발자국\n쇼츠 12편 · 웨이파인딩",
+      "url": "https://game.bobthief.com/wayfinding/play"
+    },
+    {
+      "text": "게임 주스 · 타격감\n쇼츠 11편 · 손맛 살리기",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "랜덤 맵 · 노이즈 · WFC\n쇼츠 10편 · 맵 만들기",
+      "url": "https://game.bobthief.com/random-map/play"
+    },
+    {
+      "text": "FSM vs 비헤이비어 트리\n쇼츠 9편 · 게임 AI",
+      "url": "https://game.bobthief.com/fsm-vs-bt/play"
+    },
+    {
+      "text": " 테스트해 보기",
+      "url": "https://game.bobthief.com/procedural-quest/play"
+    },
+    {
+      "text": "마을 게시판 퀘스트 비교하기",
+      "url": "https://game.bobthief.com/procedural-quest/play"
+    },
+    {
+      "text": "유튜브에서 보기",
+      "url": "https://youtube.com/shorts/V5DsuoOV3ng"
+    },
+    {
+      "text": "bobddadoo",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+{
+ "0-off": {
+  "rows": [
+   {
+    "ply": 6,
+    "by": "knight",
+    "hitMs": 1422,
+    "moveMs": 2584,
+    "peakCalls": 105
+   },
+   {
+    "ply": 7,
+    "by": "pawn",
+    "hitMs": 1924,
+    "moveMs": 3962,
+    "peakCalls": 102
+   },
+   {
+    "ply": 10,
+    "by": "bishop",
+    "hitMs": 1859,
+    "moveMs": 2974,
+    "peakCalls": 101
+   },
+   {
+    "ply": 11,
+    "by": "queen",
+    "hitMs": 2171,
+    "moveMs": 3236,
+    "peakCalls": 99
+   },
+   {
+    "ply": 12,
+    "by": "rook",
+    "hitMs": 1340,
+    "moveMs": 2898,
+    "peakCalls": 79
+   },
+   {
+    "ply": 13,
+    "by": "king",
+    "hitMs": 1856,
+    "moveMs": 2906,
+    "peakCalls": 92
+   }
+  ],
+  "totalMs": 27092
+ },
+ "1-on": {
+  "rows": [
+   {
+    "ply": 6,
+    "by": "knight",
+    "hitMs": 1453,
+    "moveMs": 2542,
+    "peakCalls": 106
+   },
+   {
+    "ply": 7,
+    "by": "pawn",
+    "hitMs": 1874,
+    "moveMs": 3090,
+    "peakCalls": 103
+   },
+   {
+    "ply": 10,
+    "by": "bishop",
+    "hitMs": 1985,
+    "moveMs": 3095,
+    "peakCalls": 102
+   },
+   {
+    "ply": 11,
+    "by": "queen",
+    "hitMs": 2171,
+    "moveMs": 3315,
+    "peakCalls": 105
+   },
+   {
+    "ply": 12,
+    "by": "rook",
+    "hitMs": 1314,
+    "moveMs": 3791,
+    "peakCalls": 81
+   },
+   {
+    "ply": 13,
+    "by": "king",
+    "hitMs": 1882,
+    "moveMs": 2934,
+    "peakCalls": 98
+   }
+  ],
+  "totalMs": 27288
+ },
+ "2-off": {
+  "rows": [
+   {
+    "ply": 6,
+    "by": "knight",
+    "hitMs": 1458,
+    "moveMs": 2533,
+    "peakCalls": 105
+   },
+   {
+    "ply": 7,
+    "by": "pawn",
+    "hitMs": 1923,
+    "moveMs": 3197,
+    "peakCalls": 102
+   },
+   {
+    "ply": 10,
+    "by": "bishop",
+    "hitMs": 1918,
+    "moveMs": 3000,
+    "peakCalls": 101
+   },
+   {
+    "ply": 11,
+    "by": "queen",
+    "hitMs": 2215,
+    "moveMs": 3277,
+    "peakCalls": 99
+   },
+   {
+    "ply": 12,
+    "by": "rook",
+    "hitMs": 1342,
+    "moveMs": 2872,
+    "peakCalls": 86
+   },
+   {
+    "ply": 13,
+    "by": "king",
+    "hitMs": 1878,
+    "moveMs": 2955,
+    "peakCalls": 92
+   }
+  ],
+  "totalMs": 26225
+ },
+ "3-on": {
+  "rows": [
+   {
+    "ply": 6,
+    "by": "knight",
+    "hitMs": 1468,
+    "moveMs": 2683,
+    "peakCalls": 106
+   },
+   {
+    "ply": 7,
+    "by": "pawn",
+    "hitMs": 1995,
+    "moveMs": 3097,
+    "peakCalls": 104
+   },
+   {
+    "ply": 10,
+    "by": "bishop",
+    "hitMs": 1859,
+    "moveMs": 2948,
+    "peakCalls": 102
+   },
+   {
+    "ply": 11,
+    "by": "queen",
+    "hitMs": 2162,
+    "moveMs": 3250,
+    "peakCalls": 105
+   },
+   {
+    "ply": 12,
+    "by": "rook",
+    "hitMs": 1340,
+    "moveMs": 2706,
+    "peakCalls": 89
+   },
+   {
+    "ply": 13,
+    "by": "king",
+    "hitMs": 1994,
+    "moveMs": 3086,
+    "peakCalls": 98
+   }
+  ],
+  "totalMs": 26594
+ }
+}

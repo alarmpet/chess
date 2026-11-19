@@ -1,0 +1,430 @@
+{
+ "url": "http://localhost:4173/",
+ "at": "2026-11-12T13:29:37.145Z",
+ "pass": 19,
+ "total": 19,
+ "measured": {
+  "fullGame": {
+   "seconds": 33,
+   "plies": 19,
+   "end": {
+    "gameId": 3488699747,
+    "set": "p2nb",
+    "result": "win",
+    "reason": "contract",
+    "plies": 19
+   },
+   "progress": {
+    "w": {
+     "counts": [
+      2,
+      1,
+      0
+     ],
+     "done": 2
+    },
+    "b": {
+     "counts": [
+      2,
+      0,
+      0
+     ],
+     "done": 1
+    }
+   },
+   "maxCalls": 81
+  }
+ },
+ "rows": [
+  {
+   "item": "mouse 계약은 판을 열 때 정해진다",
+   "want": "릴이 멈추기 전에도 세트 p2nb · 남은 48반수",
+   "got": {
+    "set": "p2nb",
+    "pliesLeft": 48,
+    "aiKnows": 48
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse HUD",
+   "want": "세 칸 다 드러남 · 규칙 한 줄 · 남은 차례 24 · 가로(wide) · 화면 안",
+   "got": {
+    "on": true,
+    "layout": "wide",
+    "shown": [
+     true,
+     true,
+     true
+    ],
+    "hint": true,
+    "mine": [
+     0,
+     0,
+     0
+    ],
+    "theirs": [
+     0,
+     0,
+     0
+    ],
+    "mineDone": 0,
+    "theirsDone": 0,
+    "turnsLeft": 24,
+    "rect": {
+     "x": 14,
+     "y": 122,
+     "w": 132,
+     "h": 302
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 이어 하기",
+   "want": "세트 p2nb · 릴 0번 · 나 [1,0,1] 상대 [1,1,0] · 막 finalPoint · 남은 차례 18 · 딱지 있음",
+   "got": {
+    "set": "p2nb",
+    "plays": 0,
+    "mine": [
+     1,
+     0,
+     1
+    ],
+    "theirs": [
+     1,
+     1,
+     0
+    ],
+    "stage": "finalPoint",
+    "turnsLeft": 18,
+    "tags": 9
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 계약으로 종료",
+   "want": "Qxf7+ 에서 끝 · 승 · 사유 contract · 13반수 · AI 가 더 안 둠",
+   "got": {
+    "ended": true,
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13
+    },
+    "plies": 13
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 종료 화면",
+   "want": "배너 「계약 완성」 · 차례 글자에 사유",
+   "got": {
+    "visible": true,
+    "title": "계약 완성",
+    "sub": "백 계약 완성 — 목표 둘을 먼저 채웠습니다",
+    "turn": "백 계약 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 전용 기록",
+   "want": "계약 기록 1판 1승 · 일반 정산 사건(gamefinished) 0번 · contractfinished 1번 · 이어 하기 지워짐",
+   "got": {
+    "store": {
+     "games": 1,
+     "win": 1,
+     "loss": 0,
+     "draw": 0
+    },
+    "game": 0,
+    "contract": 1,
+    "resumeLeft": null,
+    "last": {
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse AI 가 계약으로 이긴다",
+   "want": "6.Qxf3 뒤 AI 가 폰을 잡아 계약 완성 · 패 · 사유 contract · 12반수",
+   "got": {
+    "aiEnded": true,
+    "reply": [
+     "Qxa2"
+    ],
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "loss",
+     "reason": "contract",
+     "plies": 12
+    },
+    "theirs": [
+     2,
+     1,
+     0
+    ],
+    "title": "계약 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 되돌리기",
+   "want": "6.axb3 으로 비숍을 잡으면 나 [0,0,1] → 두 수 무르면 [0,0,0] · 남은 차례 19 로 · 막 matchPoint",
+   "got": {
+    "before": [
+     0,
+     0,
+     0
+    ],
+    "after": [
+     0,
+     0,
+     1
+    ],
+    "reply": [
+     "Bb4+"
+    ],
+    "took": true,
+    "back": [
+     0,
+     0,
+     0
+    ],
+    "turnsLeft": [
+     19,
+     18,
+     19
+    ],
+    "over": false,
+    "stage": "matchPoint"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 스위치 꺼짐",
+   "want": "세트 없음 · HUD 없음 · 딱지 0",
+   "got": {
+    "set": null,
+    "hud": null,
+    "tags": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "한 판 완주",
+   "want": "AI 대 AI 로 48반수 안에 종료 · 사유 기록 · 전용 기록 1판 · 배너 · 드로우콜 ≤ 100",
+   "got": {
+    "over": true,
+    "plies": 19,
+    "end": {
+     "gameId": 3488699747,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 19
+    },
+    "store": {
+     "games": 1,
+     "win": 1,
+     "loss": 0,
+     "draw": 0
+    },
+    "game": 0,
+    "contract": 1,
+    "bannerOn": true,
+    "maxCalls": 81
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 계약은 판을 열 때 정해진다",
+   "want": "릴이 멈추기 전에도 세트 p2nb · 남은 48반수",
+   "got": {
+    "set": "p2nb",
+    "pliesLeft": 48,
+    "aiKnows": 48
+   },
+   "ok": true
+  },
+  {
+   "item": "touch HUD",
+   "want": "세 칸 다 드러남 · 규칙 한 줄 · 남은 차례 24 · 세로(tall) · 화면 안",
+   "got": {
+    "on": true,
+    "layout": "tall",
+    "shown": [
+     true,
+     true,
+     true
+    ],
+    "hint": true,
+    "mine": [
+     0,
+     0,
+     0
+    ],
+    "theirs": [
+     0,
+     0,
+     0
+    ],
+    "mineDone": 0,
+    "theirsDone": 0,
+    "turnsLeft": 24,
+    "rect": {
+     "x": 8,
+     "y": 104,
+     "w": 360,
+     "h": 125
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 이어 하기",
+   "want": "세트 p2nb · 릴 0번 · 나 [1,0,1] 상대 [1,1,0] · 막 finalPoint · 남은 차례 18 · 딱지 있음",
+   "got": {
+    "set": "p2nb",
+    "plays": 0,
+    "mine": [
+     1,
+     0,
+     1
+    ],
+    "theirs": [
+     1,
+     1,
+     0
+    ],
+    "stage": "finalPoint",
+    "turnsLeft": 18,
+    "tags": 9
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 계약으로 종료",
+   "want": "Qxf7+ 에서 끝 · 승 · 사유 contract · 13반수 · AI 가 더 안 둠",
+   "got": {
+    "ended": true,
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13
+    },
+    "plies": 13
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 종료 화면",
+   "want": "배너 「계약 완성」 · 차례 글자에 사유",
+   "got": {
+    "visible": true,
+    "title": "계약 완성",
+    "sub": "백 계약 완성 — 목표 둘을 먼저 채웠습니다",
+    "turn": "백 계약 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 전용 기록",
+   "want": "계약 기록 1판 1승 · 일반 정산 사건(gamefinished) 0번 · contractfinished 1번 · 이어 하기 지워짐",
+   "got": {
+    "store": {
+     "games": 1,
+     "win": 1,
+     "loss": 0,
+     "draw": 0
+    },
+    "game": 0,
+    "contract": 1,
+    "resumeLeft": null,
+    "last": {
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch AI 가 계약으로 이긴다",
+   "want": "6.Qxf3 뒤 AI 가 폰을 잡아 계약 완성 · 패 · 사유 contract · 12반수",
+   "got": {
+    "aiEnded": true,
+    "reply": [
+     "Qxa2"
+    ],
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "loss",
+     "reason": "contract",
+     "plies": 12
+    },
+    "theirs": [
+     2,
+     1,
+     0
+    ],
+    "title": "계약 완성"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 되돌리기",
+   "want": "6.axb3 으로 비숍을 잡으면 나 [0,0,1] → 두 수 무르면 [0,0,0] · 남은 차례 19 로 · 막 matchPoint",
+   "got": {
+    "before": [
+     0,
+     0,
+     0
+    ],
+    "after": [
+     0,
+     0,
+     1
+    ],
+    "reply": [
+     "Bb4+"
+    ],
+    "took": true,
+    "back": [
+     0,
+     0,
+     0
+    ],
+    "turnsLeft": [
+     19,
+     18,
+     19
+    ],
+    "over": false,
+    "stage": "matchPoint"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 스위치 꺼짐",
+   "want": "세트 없음 · HUD 없음 · 딱지 0",
+   "got": {
+    "set": null,
+    "hud": null,
+    "tags": 0
+   },
+   "ok": true
+  }
+ ]
+}

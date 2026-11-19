@@ -1,0 +1,31 @@
+// 대기 중 드로우콜이 첫 국면(게이트 98)과 이어 하기 국면에서 왜 다른지: 그림자 갱신·말 수·보이는 메시 수.
+const fs = await import('node:fs/promises');
+const lines = JSON.parse(await fs.readFile('D:/chess/docs/qa/2026-11-08-cx0-captures/lines.json', 'utf8'));
+const task = await taskSpace('drawcall probe');
+const page = task.page('p1');
+const probe = () => page.evaluate(async () => {
+  const w = window.wizardChess; const r = w.debugRenderer(); const s = w.debugScene();
+  const seen = []; const orig = r.render.bind(r);
+  let shadowFrames = 0;
+  r.render = (a, b) => { const nu = r.shadowMap.needsUpdate || r.shadowMap.autoUpdate; orig(a, b); seen.push(r.info.render.calls); if (nu) shadowFrames++; };
+  await new Promise((ok) => setTimeout(ok, 1000)); r.render = orig;
+  let meshes = 0, casters = 0; s.traverseVisible((o) => { if (o.isMesh || o.isSprite || o.isPoints) { meshes++; if (o.castShadow) casters++; } });
+  return { min: Math.min(...seen), max: Math.max(...seen), n: seen.length, shadowFrames, autoUpdate: r.shadowMap.autoUpdate, enabled: r.shadowMap.enabled, meshes, casters, pieces: s.children.filter((o) => o.name === 'piece').length, layered: w.debugLayered?.() };
+});
+await page.goto('http://127.0.0.1:3000/', { timeout: 90000 });
+await page.evaluate(() => { localStorage.clear(); localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 })); });
+await page.reload({ timeout: 90000 });
+await page.waitForFunction(() => window.wizardChess?.isStarted?.() && !window.wizardChess.debugBusy?.(), undefined, { timeout: 120000 });
+await page.waitForTimeout(6000);
+console.log('first', JSON.stringify(await probe()));
+const L = lines.find((l) => l.key === 'pawn>pawn');
+await page.evaluate((L) => localStorage.setItem('wildcrown.resume.v1', JSON.stringify({ v: 1, gameId: 777, color: L.color, rivalId: null, moves: L.moves })), L);
+await page.reload({ timeout: 90000 });
+await page.waitForFunction(() => window.wizardChess?.isStarted?.() && !window.wizardChess.debugBusy?.(), undefined, { timeout: 120000 });
+await page.waitForTimeout(6000);
+console.log('resume', JSON.stringify(await probe()));
+await page.evaluate(() => document.querySelectorAll('.panel-overlay .panel-close').forEach((b) => b.click()));
+await page.waitForTimeout(1500);
+console.log('resume-closed', JSON.stringify(await probe()));
+await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+await task.finish({ keep: [] });

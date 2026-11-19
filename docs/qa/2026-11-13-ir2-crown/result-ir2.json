@@ -1,0 +1,302 @@
+{
+ "at": "2026-11-19T07:35:10.193Z",
+ "base": "http://localhost:3000/",
+ "rows": [
+  {
+   "item": "mouse 왕관 자리",
+   "want": "자리 4 · 보석 1(흑 나이트) · 날아오는 것 0 · 보석 드로우콜 ≤ 2 · 전체 ≤ 100",
+   "got": {
+    "crown": {
+     "sockets": 4,
+     "gems": 1,
+     "flying": 0,
+     "landed": 0,
+     "w": [],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    },
+    "calls": 61
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse HUD 왕관 거울",
+   "want": "머리줄에 「내 왕관」 빈 자리 둘 · 상대 자리에 ♞ 하나 · 「정식 상대」 · 화면 안",
+   "got": {
+    "crown": {
+     "mine": [
+      null,
+      null
+     ],
+     "theirs": [
+      "♞",
+      null
+     ]
+    },
+    "head": {
+     "h": 62,
+     "fits": true,
+     "text": "내 왕관정식 상대♞남은 차례 19",
+     "right": 146,
+     "vw": 944
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 보석이 날아와 박힘",
+   "want": "날아오는 보석 1 → 박힘 · 내 왕관 [b] · HUD 내 자리에 ♝",
+   "got": {
+    "flew": true,
+    "landed": true,
+    "w": [
+     "b"
+    ],
+    "hud": [
+     "♝",
+     null
+    ],
+    "calls": 72
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 왕관 완성",
+   "want": "승 · 내 왕관 [b, p] · 판 위 보석 3 · 배너 「왕관 완성」 · 결과 줄과 보석(♝ ♟ / ♞ 빈칸)",
+   "got": {
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13,
+     "coins": 18,
+     "jackpot": false,
+     "work": 0
+    },
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "b",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    },
+    "res": {
+     "rows": [
+      [
+       "♝",
+       "♟"
+      ],
+      [
+       "♞",
+       null
+      ]
+     ],
+     "line": "미어캣 ×2 · 판다 보석으로 왕관을 먼저 완성했어요.",
+     "title": "왕관 완성",
+     "inView": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 새 판은 빈 왕관",
+   "want": "자리 4 · 보석 0 · HUD 양쪽 빈 자리",
+   "got": {
+    "crown": {
+     "sockets": 4,
+     "gems": 0,
+     "flying": 0,
+     "landed": 1,
+     "w": [],
+     "b": [],
+     "draws": 1
+    },
+    "hud": {
+     "mine": [
+      null,
+      null
+     ],
+     "theirs": [
+      null,
+      null
+     ]
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 스위치 꺼짐",
+   "want": "계약 없음 · 보석 모듈 없음 · HUD 없음",
+   "got": {
+    "set": null,
+    "crown": null,
+    "hud": null
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 왕관 자리",
+   "want": "자리 4 · 보석 1(흑 나이트) · 날아오는 것 0 · 보석 드로우콜 ≤ 2 · 전체 ≤ 100",
+   "got": {
+    "crown": {
+     "sockets": 4,
+     "gems": 1,
+     "flying": 0,
+     "landed": 0,
+     "w": [],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    },
+    "calls": 57
+   },
+   "ok": true
+  },
+  {
+   "item": "touch HUD 왕관 거울",
+   "want": "머리줄에 「내 왕관」 빈 자리 둘 · 상대 자리에 ♞ 하나 · 「정식 상대」 · 화면 안",
+   "got": {
+    "crown": {
+     "mine": [
+      null,
+      null
+     ],
+     "theirs": [
+      "♞",
+      null
+     ]
+    },
+    "head": {
+     "h": 26,
+     "fits": true,
+     "text": "내 왕관정식 상대♞남은 차례 19",
+     "right": 368,
+     "vw": 375
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 머리줄 한 줄",
+   "want": "세로 화면 머리줄 높이 ≤ 32px",
+   "got": {
+    "h": 26,
+    "fits": true,
+    "text": "내 왕관정식 상대♞남은 차례 19",
+    "right": 368,
+    "vw": 375
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 보석이 날아와 박힘",
+   "want": "날아오는 보석 1 → 박힘 · 내 왕관 [b] · HUD 내 자리에 ♝",
+   "got": {
+    "flew": true,
+    "landed": true,
+    "w": [
+     "b"
+    ],
+    "hud": [
+     "♝",
+     null
+    ],
+    "calls": 68
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 왕관 완성",
+   "want": "승 · 내 왕관 [b, p] · 판 위 보석 3 · 배너 「왕관 완성」 · 결과 줄과 보석(♝ ♟ / ♞ 빈칸)",
+   "got": {
+    "end": {
+     "gameId": 4242,
+     "set": "p2nb",
+     "result": "win",
+     "reason": "contract",
+     "plies": 13,
+     "coins": 18,
+     "jackpot": false,
+     "work": 0
+    },
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "b",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    },
+    "res": {
+     "rows": [
+      [
+       "♝",
+       "♟"
+      ],
+      [
+       "♞",
+       null
+      ]
+     ],
+     "line": "미어캣 ×2 · 판다 보석으로 왕관을 먼저 완성했어요.",
+     "title": "왕관 완성",
+     "inView": true
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 새 판은 빈 왕관",
+   "want": "자리 4 · 보석 0 · HUD 양쪽 빈 자리",
+   "got": {
+    "crown": {
+     "sockets": 4,
+     "gems": 0,
+     "flying": 0,
+     "landed": 1,
+     "w": [],
+     "b": [],
+     "draws": 1
+    },
+    "hud": {
+     "mine": [
+      null,
+      null
+     ],
+     "theirs": [
+      null,
+      null
+     ]
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 스위치 꺼짐",
+   "want": "계약 없음 · 보석 모듈 없음 · HUD 없음",
+   "got": {
+    "set": null,
+    "crown": null,
+    "hud": null
+   },
+   "ok": true
+  }
+ ]
+}

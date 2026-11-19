@@ -1,0 +1,123 @@
+{
+ "hidden": {
+  "piece": {
+   "median": 34.8,
+   "p95": 48.6,
+   "calls": 94,
+   "tris": 998182
+  },
+  "board": {
+   "median": 34.7,
+   "p95": 48.7,
+   "calls": 154,
+   "tris": 1674742
+  },
+  "biome": {
+   "median": 34.8,
+   "p95": 48.6,
+   "calls": 197,
+   "tris": 715120
+  },
+  "piece+board": {
+   "median": 34.7,
+   "p95": 48.7,
+   "calls": 26,
+   "tris": 978934
+  },
+  "all": {
+   "median": 34.7,
+   "p95": 48.6,
+   "calls": 0,
+   "tris": 0
+  }
+ },
+ "base": {
+  "median": 34.7,
+  "p95": 48.6,
+  "calls": 222,
+  "tris": 1693990
+ },
+ "base2": {
+  "median": 34.8,
+  "p95": 48.6,
+  "calls": 226,
+  "tris": 1693998
+ },
+ "piece0": [
+  {
+   "name": "pedestal",
+   "type": "Mesh",
+   "tris": 880,
+   "mat": "MeshStandardMaterial",
+   "skinned": false,
+   "castShadow": true
+  },
+  {
+   "name": "",
+   "type": "Mesh",
+   "tris": 768,
+   "mat": "MeshStandardMaterial",
+   "skinned": false,
+   "castShadow": false
+  },
+  {
+   "name": "side-ring",
+   "type": "Mesh",
+   "tris": 96,
+   "mat": "MeshBasicMaterial",
+   "skinned": false,
+   "castShadow": false
+  },
+  {
+   "name": "low",
+   "type": "SkinnedMesh",
+   "tris": 20000,
+   "mat": "MeshStandardMaterial",
+   "skinned": true,
+   "castShadow": true
+  }
+ ],
+ "perPieceTris": [
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744,
+  21744
+ ],
+ "shadow": {
+  "autoUpdate": false,
+  "enabled": true
+ },
+ "dpr": 1,
+ "canvas": [
+  1920,
+  921
+ ]
+}

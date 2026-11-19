@@ -1,0 +1,29 @@
+{
+ "at": "2026-11-12T17:55:38.230Z",
+ "novice": "plain",
+ "rivalLevel": "easy",
+ "set": "p2nb",
+ "games": 100,
+ "seed": 9000,
+ "seconds": 69,
+ "win": 10,
+ "loss": 90,
+ "draw": 0,
+ "lostByContract": 89,
+ "lastMoveOops": 39,
+ "lastMoveForced": 50,
+ "lastMoveOther": 0,
+ "oopsPerGame": {
+  "median": 0,
+  "max": 1,
+  "total": 40,
+  "gamesWith": 40
+ },
+ "firstOopsPly": 15,
+ "missed": {
+  "total": 19,
+  "gamesWith": 10,
+  "thenLost": 3
+ },
+ "plies": 17
+}

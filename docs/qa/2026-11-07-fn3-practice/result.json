@@ -1,0 +1,73 @@
+{
+ "start": {
+  "rewind": true,
+  "mark": {
+   "visible": false,
+   "at": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0
+    ]
+   ]
+  }
+ },
+ "afterMine": {
+  "visible": true,
+  "at": [
+   [
+    0.17,
+    0.85
+   ],
+   [
+    0.17,
+    0.17
+   ]
+  ]
+ },
+ "afterReply": {
+  "mark": {
+   "visible": true,
+   "at": [
+    [
+     0.17,
+     -0.85
+    ],
+    [
+     0.17,
+     -0.17
+    ]
+   ]
+  },
+  "last": 2
+ },
+ "rewindClick": true,
+ "afterRewind": {
+  "mark": {
+   "visible": false,
+   "at": [
+    [
+     0.17,
+     -0.85
+    ],
+    [
+     0.17,
+     -0.17
+    ]
+   ]
+  },
+  "ply": 0,
+  "button": false
+ },
+ "threatEasy": [
+  "호랑이가 노려지고 있어요"
+ ],
+ "normal": {
+  "rewind": false,
+  "stage": "normal"
+ },
+ "threatNormal": []
+}

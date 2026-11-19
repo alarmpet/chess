@@ -1,0 +1,21 @@
+// 배포본 방장(흑): 손님(로컬, 백)의 첫 수를 받고 d5 로 답한 뒤 방을 나간다. 배포 주소의 저장은 처음(빈 상태)으로 비운다.
+const fs = await import('node:fs/promises');
+const DIR = 'C:/Users/petbl/ego/online-1v1-20261107/';
+const task = await taskSpace('online 1v1 check');
+const page = task.page('p1');
+const out = {};
+await page.waitForFunction(() => /친구 연결됨/.test(document.querySelector('#online-bar')?.innerText || ''), undefined, { timeout: 60000 });
+out.panelClosed = await page.evaluate(() => !document.querySelector('.online-panel'));
+await page.waitForFunction(() => window.wizardChess.getHandBrainState().history.length >= 1, undefined, { timeout: 120000 });
+out.got1 = Date.now();
+await page.waitForFunction(() => { try { return window.wizardChess.executeChessMove(1, 3, 3, 3) !== false; } catch (e) { return false; } }, undefined, { timeout: 20000 });
+out.sent2 = Date.now();
+await page.waitForTimeout(2500);
+out.bar = await page.evaluate(() => document.querySelector('#online-bar')?.innerText);
+await page.screenshot({ path: DIR + 'f2-deployed-host-black.png' });
+await page.click('#online-leave', { label: 'Leave room' });
+await page.waitForTimeout(800);
+await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+console.log(JSON.stringify(out));
+await fs.writeFile(DIR + 'result-11.json', JSON.stringify(out, null, 1));
+await task.finish({ keep: [] });

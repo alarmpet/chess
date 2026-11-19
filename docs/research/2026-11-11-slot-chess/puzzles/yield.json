@@ -1,0 +1,63 @@
+{
+ "at": "2026-11-13T05:51:11.708Z",
+ "games": 300,
+ "seed": 4100,
+ "seconds": 65,
+ "candidates": 312,
+ "candidatesPerGame": 1.04,
+ "gamesWithCandidate": 298,
+ "uniqueAnswer": 147,
+ "uniqueRatio": 0.471,
+ "dropped": {
+  "inCheck": 4,
+  "enPassantOrPromotion": 1,
+  "noOtherCapture": 59,
+  "duplicate": 0,
+  "answerIsMate": 0
+ },
+ "answersHistogram": {
+  "1": 147,
+  "2": 75,
+  "3": 55,
+  "4": 21,
+  "5": 11,
+  "6": 3
+ },
+ "targetsHistogram": {
+  "1": 174,
+  "2": 80,
+  "3": 38,
+  "4": 14,
+  "5": 6
+ },
+ "gemKindsHistogram": {
+  "1": 247,
+  "2": 65
+ },
+ "usable": 83,
+ "usablePerGame": 0.28,
+ "usableByColorGem": {
+  "bb": 18,
+  "bn": 14,
+  "bp": 8,
+  "wb": 22,
+  "wn": 15,
+  "wp": 6
+ },
+ "pieces": {
+  "median": 28,
+  "min": 22,
+  "max": 30,
+  "atMost12": 0
+ },
+ "plies": {
+  "median": 19,
+  "min": 11,
+  "max": 46
+ },
+ "otherCaptures": {
+  "median": 1,
+  "max": 6
+ },
+ "kept": 30
+}

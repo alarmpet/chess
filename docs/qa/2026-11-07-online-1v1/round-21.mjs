@@ -1,0 +1,24 @@
+// PC 방장(백) ↔ 폰 손님(흑). e4 → (폰 터치 e5) → 폰이 내려간 신호를 받으면 Nf3 → (폰 복귀 뒤 Nc6) 를 기다린다.
+const fs = await import('node:fs/promises');
+const DIR = 'C:/Users/petbl/ego/online-1v1-20261107/';
+const task = await taskSpace('online phone check');
+const page = task.page('p1');
+const ply = (n, t = 300000) => page.waitForFunction((n) => window.wizardChess.getHandBrainState().history.length >= n, n, { timeout: t });
+const until = async (file, ms = 300000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { await fs.access(DIR + file); return true; } catch (e) { await new Promise((r) => setTimeout(r, 300)); } } return false; };
+const out = {};
+out.e4 = await page.evaluate(() => window.wizardChess.executeChessMove(6, 4, 4, 4));
+out.sentE4 = Date.now();
+await ply(2);
+out.gotE5 = Date.now();
+out.sigBg = await until('sig-bg');
+await page.waitForTimeout(1500);
+out.nf3 = await page.evaluate(() => window.wizardChess.executeChessMove(7, 6, 5, 5));
+out.sentNf3 = Date.now();
+await fs.writeFile(DIR + 'sig-nf3', String(out.sentNf3));
+await ply(4);
+out.gotNc6 = Date.now();
+await page.waitForTimeout(2000);
+out.bar = await page.evaluate(() => document.querySelector('#online-bar')?.innerText);
+await page.screenshot({ path: DIR + 'g1-pc-host.png' });
+console.log(JSON.stringify(out));
+await fs.writeFile(DIR + 'result-21.json', JSON.stringify(out, null, 1));

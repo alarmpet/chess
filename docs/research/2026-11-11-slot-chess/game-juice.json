@@ -1,0 +1,94 @@
+{
+  "title": "때리는 맛 없는 게임, 이것만 켜 보세요 — 게임 주스 7가지 (히트 스톱 · 넉백 · 쇼크웨이브) | 밥따뚜의 AI게임 유튜브",
+  "text": "처음 › 게임 주스 — 타격감 살리기\n 테스트해 보기\n 쇼츠와 정리\n타격감 · 쇼츠 11편\n때리는 맛 없는 게임, 이것만 켜 보세요\n\n게임 주스 7가지 — 히트 스톱 · 넉백 · 쇼크웨이브\n\n직접 켜 보기\n유튜브에서 보기\n공유\n\n규칙 · 체력 · 데미지는 그대로, 손맛 연출(게임 주스 — 쇼츠 7편)만 켭니다.\n\n 효과 끔\n체력만 줄어듭니다.\n 전부 켬\n같은 공격, 다른 손맛.\n게임 주스 7가지\n 1 히트 스톱\n닿는 순간 0.1초 멈춤\n 2 흰 번쩍\n맞은 쪽을 한 번 하얗게\n 3 넉백\n뒤로 살짝 밀기\n 4 효과음\n✓\n✗\n0.2초\n0.2초 늦으면 따로 놂 (점선 = 닿는 프레임)\n 5 화면 흔들림\n센 공격에만 짧게\n 6 파편 · 데미지 숫자\n센 공격은 크고 노랗게\n 7 쇼크웨이브\n둥근 물결로 화면이 일렁임\n + 마지막 한 방 슬로 모션\n마지막 한 방만 느리게\n쇼크웨이브는 셰이더로\n맞은 자리\n퍼지는 원 띠\n반지름이 점점 커진다\n띠 안의 화면을\n바깥쪽으로 밀어서\n→ 일렁여 보인다\n원 띠 안의 점이 중심 쪽 색을 가져와, 그림이 바깥으로 밀려 보입니다.\n알맞은 세기\n 과하게\n히트 스톱 0.45초 · 매번 흔들림 — 끊기고 어지럽습니다.\n히트 스톱\n\n0.05 ~ 0.15초 (0.3초 넘으면 끊김)\n\n흰 번쩍\n\n0.05 ~ 0.1초\n\n넉백\n\n몸 길이 반쯤\n\n흔들림 · 물결\n\n센 공격 · 마지막 한 방에만\n\nAI 에게도 “히트 스톱 0.1초, 흰 번쩍 0.08초, 넉백 12px”처럼 이름 · 숫자로 부탁하면 정확합니다.\n\n 직접 켜 보면 더 잘 보입니다\n\n하나씩 켜고 직접 때려 보며 알맞은 정도를 찾아 보세요.\n\n테스트해 보기 →\n\n 팔라딘 · 오크: Tiny Questers(밥따뚜 제작) · 결투장: The Fan-tasy Tileset(ventilatore) — itch.io 유료 에셋\n\n그림: Kenney (CC0)\n타일: The Fan-tasy Tileset (itch.io 구매)\n캐릭터: Tiny Questers (밥따뚜 제작)\n던전: 트리거 테일즈 방 스타일 (원본 Pixel Crawler)\n전투 이펙트: Beat 'em Up Combat Effects – 2D Pixel Art VFX Pack (itch.io 구매)\n엔진: Phaser 3\n개인정보 처리방침\n이용약관\nCopyright © 2026 bobddadoo\n무단 복제 · 재배포 · AI 학습 금지\n문의",
+  "links": [
+    {
+      "text": "유튜브 채널",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    },
+    {
+      "text": "불 번짐 · 재료 · 바람 · 습기\n쇼츠 23편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/fire-spread/play"
+    },
+    {
+      "text": "퀘스트 만들기 · 월드 스테이트\n쇼츠 22편 · 게임 디자인",
+      "url": "https://game.bobthief.com/procedural-quest/play"
+    },
+    {
+      "text": "밧줄 물리 · 버렛\n쇼츠 21편 · 물리 시뮬레이션",
+      "url": "https://game.bobthief.com/rope-physics/play"
+    },
+    {
+      "text": "승률 그래프 · 역전 기회\n쇼츠 20편 · 게임 디자인",
+      "url": "https://game.bobthief.com/win-chance/play"
+    },
+    {
+      "text": "좀비 감염 · SIR\n쇼츠 19편 · 시뮬레이션",
+      "url": "https://game.bobthief.com/zombie-outbreak/play"
+    },
+    {
+      "text": "턴제 전투 · 행동 타임라인\n쇼츠 18편 · 전투 시스템",
+      "url": "https://game.bobthief.com/turn-order/play"
+    },
+    {
+      "text": "NPC 하루 · 스마트 오브젝트\n쇼츠 17편 · 마을 AI",
+      "url": "https://game.bobthief.com/smart-object/play"
+    },
+    {
+      "text": "공격 토큰 · 포위 자리\n쇼츠 16편 · 무리 전투",
+      "url": "https://game.bobthief.com/attack-token/play"
+    },
+    {
+      "text": "우선순위 vs 유틸리티 AI\n쇼츠 15편 · 게임 AI",
+      "url": "https://game.bobthief.com/utility-ai/play"
+    },
+    {
+      "text": "던전 생성 · BSP · 동굴\n쇼츠 14편 · 맵 만들기",
+      "url": "https://game.bobthief.com/dungeon-gen/play"
+    },
+    {
+      "text": "몬스터 무리 · 보이드\n쇼츠 13편 · 무리 AI",
+      "url": "https://game.bobthief.com/boids/play"
+    },
+    {
+      "text": "길 안내 · 미니맵 · 발자국\n쇼츠 12편 · 웨이파인딩",
+      "url": "https://game.bobthief.com/wayfinding/play"
+    },
+    {
+      "text": "게임 주스 · 타격감\n쇼츠 11편 · 손맛 살리기",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "랜덤 맵 · 노이즈 · WFC\n쇼츠 10편 · 맵 만들기",
+      "url": "https://game.bobthief.com/random-map/play"
+    },
+    {
+      "text": "FSM vs 비헤이비어 트리\n쇼츠 9편 · 게임 AI",
+      "url": "https://game.bobthief.com/fsm-vs-bt/play"
+    },
+    {
+      "text": " 테스트해 보기",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "직접 켜 보기",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "유튜브에서 보기",
+      "url": "https://youtube.com/shorts/ToSc-hfQ7fM"
+    },
+    {
+      "text": "쇼츠 7편",
+      "url": "https://youtube.com/shorts/cv0-_-mYhsU"
+    },
+    {
+      "text": "테스트해 보기 →",
+      "url": "https://game.bobthief.com/game-juice/play"
+    },
+    {
+      "text": "bobddadoo",
+      "url": "https://www.youtube.com/channel/UCz6XRdjD-IrKvw8oom6biJw"
+    }
+  ]
+}

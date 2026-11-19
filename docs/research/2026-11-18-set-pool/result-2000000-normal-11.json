@@ -1,0 +1,47 @@
+{
+ "seed": 2000000,
+ "level": "normal",
+ "games": 100,
+ "rows": [
+  {
+   "id": "pbq",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 1
+    },
+    {
+     "type": "b",
+     "count": 1
+    },
+    {
+     "type": "q",
+     "count": 1
+    }
+   ],
+   "games": 100,
+   "white": 47,
+   "black": 50,
+   "draw": 3,
+   "whiteShare": 0.485,
+   "reasons": {
+    "contract": 91,
+    "checkmate": 6,
+    "limit": 3
+   },
+   "contractShare": 0.91,
+   "plies": {
+    "median": 27,
+    "p90": 38
+   },
+   "captures": 6,
+   "use": [
+    1,
+    0.74,
+    0.26
+   ],
+   "sec": 279
+  }
+ ]
+}

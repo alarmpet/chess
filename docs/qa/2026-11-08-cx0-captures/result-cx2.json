@@ -1,0 +1,422 @@
+[
+ {
+  "key": "pawn>pawn",
+  "san": "exd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3408,
+  "file": "pawn-x-pawn-cx2.webm",
+  "kb": 375,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "pawn>knight",
+  "san": "exf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2850,
+  "file": "pawn-x-knight-cx2.webm",
+  "kb": 1201,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "pawn>bishop",
+  "san": "bxc3",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2773,
+  "file": "pawn-x-bishop-cx2.webm",
+  "kb": 1080,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "pawn>rook",
+  "san": "bxa1=Q",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3115,
+  "file": "pawn-x-rook-cx2.webm",
+  "kb": 1351,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "pawn>queen",
+  "san": "gxf3",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3195,
+  "file": "pawn-x-queen-cx2.webm",
+  "kb": 1383,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "knight>pawn",
+  "san": "Nxe5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2452,
+  "file": "knight-x-pawn-cx2.webm",
+  "kb": 1017,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>knight",
+  "san": "Nxd4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2858,
+  "file": "knight-x-knight-cx2.webm",
+  "kb": 1242,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>bishop",
+  "san": "Nxd7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2884,
+  "file": "knight-x-bishop-cx2.webm",
+  "kb": 1221,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>rook",
+  "san": "Nxa1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2993,
+  "file": "knight-x-rook-cx2.webm",
+  "kb": 1223,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "knight>queen",
+  "san": "Nxg4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3236,
+  "file": "knight-x-queen-cx2.webm",
+  "kb": 1453,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "bishop>pawn",
+  "san": "Bxd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2400,
+  "file": "bishop-x-pawn-cx2.webm",
+  "kb": 1012,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>knight",
+  "san": "Bxf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3747,
+  "file": "bishop-x-knight-cx2.webm",
+  "kb": 1273,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>bishop",
+  "san": "Bxd7+",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3014,
+  "file": "bishop-x-bishop-cx2.webm",
+  "kb": 1211,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>rook",
+  "san": "Bxa1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3022,
+  "file": "bishop-x-rook-cx2.webm",
+  "kb": 1277,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "bishop>queen",
+  "san": "Bxe7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3091,
+  "file": "bishop-x-queen-cx2.webm",
+  "kb": 1228,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "rook>pawn",
+  "san": "Rxe5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3675,
+  "file": "rook-x-pawn-cx2.webm",
+  "kb": 1185,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>knight",
+  "san": "Rxd1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3846,
+  "file": "rook-x-knight-cx2.webm",
+  "kb": 1198,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>bishop",
+  "san": "Rxf1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3769,
+  "file": "rook-x-bishop-cx2.webm",
+  "kb": 1228,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>rook",
+  "san": "Rxd1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3619,
+  "file": "rook-x-rook-cx2.webm",
+  "kb": 1513,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "rook>queen",
+  "san": "Rxd2",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 4052,
+  "file": "rook-x-queen-cx2.webm",
+  "kb": 1420,
+  "impacts": 1,
+  "upset": true
+ },
+ {
+  "key": "queen>pawn",
+  "san": "Qxd4",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2596,
+  "file": "queen-x-pawn-cx2.webm",
+  "kb": 1035,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "queen>knight",
+  "san": "Qxd5",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": false,
+  "busyMs": 5320,
+  "file": "queen-x-knight-cx2.webm",
+  "kb": 2416,
+  "impacts": 0,
+  "upset": false
+ },
+ {
+  "key": "queen>bishop",
+  "san": "Qxf6",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2936,
+  "file": "queen-x-bishop-cx2.webm",
+  "kb": 1389,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "queen>rook",
+  "san": "Qxa8",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2853,
+  "file": "queen-x-rook-cx2.webm",
+  "kb": 1393,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "queen>queen",
+  "san": "Qxe7+",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 3184,
+  "file": "queen-x-queen-cx2.webm",
+  "kb": 1609,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>pawn",
+  "san": "Kxf7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2383,
+  "file": "king-x-pawn-cx2.webm",
+  "kb": 1102,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>knight",
+  "san": "Kxf2",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2755,
+  "file": "king-x-knight-cx2.webm",
+  "kb": 1301,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>bishop",
+  "san": "Kxe7",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2710,
+  "file": "king-x-bishop-cx2.webm",
+  "kb": 1135,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>rook",
+  "san": "Kxh1",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2754,
+  "file": "king-x-rook-cx2.webm",
+  "kb": 1229,
+  "impacts": 1,
+  "upset": false
+ },
+ {
+  "key": "king>queen",
+  "san": "Kxd8",
+  "canvas": [
+   1920,
+   921
+  ],
+  "ok": true,
+  "busyMs": 2984,
+  "file": "king-x-queen-cx2.webm",
+  "kb": 1280,
+  "impacts": 1,
+  "upset": false
+ }
+]

@@ -1,0 +1,310 @@
+{
+ "at": "2026-11-19T07:49:30.391Z",
+ "base": "http://localhost:3000/",
+ "measured": {
+  "desk-big": {
+   "shotAt": {
+    "live": 18,
+    "ms": 2769
+   },
+   "maxCalls": 71,
+   "flash": {
+    "kind": "capture",
+    "tone": "gold",
+    "rgb": "255, 200, 70",
+    "alpha": 0.3,
+    "ms": 320,
+    "n": 1
+   }
+  },
+  "phone-big": {
+   "shotAt": {
+    "live": 18,
+    "ms": 2648
+   },
+   "maxCalls": 65,
+   "flash": {
+    "kind": "capture",
+    "tone": "gold",
+    "rgb": "255, 200, 70",
+    "alpha": 0.3,
+    "ms": 320,
+    "n": 1
+   }
+  }
+ },
+ "rows": [
+  {
+   "item": "desk 큰 잡기",
+   "want": "번쩍임: capture · 금빛 · 0.3 · 320ms / 불빛이 떴다 사라진다 / 드로우콜 ≤ 80",
+   "got": {
+    "flash": {
+     "kind": "capture",
+     "tone": "gold",
+     "rgb": "255, 200, 70",
+     "alpha": 0.3,
+     "ms": 320,
+     "n": 1
+    },
+    "glow": {
+     "hits": 1,
+     "live": 0,
+     "visible": false
+    },
+    "shotAt": {
+     "live": 18,
+     "ms": 2769
+    },
+    "maxCalls": 71
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 불빛이 남지 않는다",
+   "want": "끝나면 조각 0 · 메시 숨김",
+   "got": {
+    "slow": 1,
+    "flash": {
+     "kind": "capture",
+     "tone": "gold",
+     "rgb": "255, 200, 70",
+     "alpha": 0.3,
+     "ms": 320,
+     "n": 1
+    },
+    "flashes": 1,
+    "glow": {
+     "hits": 1,
+     "live": 0,
+     "visible": false
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 작은 잡기",
+   "want": "화면 번쩍임 0번 · 불빛 조각 ≤ 2",
+   "got": {
+    "flashes": [
+     0,
+     0
+    ],
+    "glow": {
+     "hits": 1,
+     "live": 0,
+     "visible": false
+    },
+    "shotAt": {
+     "live": 2,
+     "ms": 1472
+    },
+    "maxCalls": 74
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 잡으며 체크",
+   "want": "번쩍임 2번(잡기 → 체크), 마지막은 주황",
+   "got": {
+    "flashes": [
+     0,
+     2
+    ],
+    "flash": {
+     "kind": "check",
+     "tone": "orange",
+     "rgb": "255, 150, 50",
+     "alpha": 0.2,
+     "ms": 260,
+     "n": 2
+    },
+    "hist": [
+     "e4",
+     "e5",
+     "Qh5",
+     "Nc6",
+     "Qxf7+"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 내 말이 잡힘",
+   "want": "AI 가 퀸을 잡으면 붉은 번쩍임",
+   "got": {
+    "lost": true,
+    "flash": {
+     "kind": "capture",
+     "tone": "red",
+     "rgb": "255, 86, 86",
+     "alpha": 0.3,
+     "ms": 320,
+     "n": 1
+    },
+    "last": "Nxg5"
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 흔들림 끔",
+   "want": "화면 번쩍임 0번 · 불빛은 1번",
+   "got": {
+    "flashes": [
+     0,
+     0
+    ],
+    "hits": [
+     0,
+     1
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 모양(느리게)",
+   "want": "불빛 조각이 떠 있고 화면 가장자리가 물들어 있다",
+   "got": {
+    "live": 18,
+    "opacity": 0.247924,
+    "calls": 69
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 큰 잡기",
+   "want": "번쩍임: capture · 금빛 · 0.3 · 320ms / 불빛이 떴다 사라진다 / 드로우콜 ≤ 80",
+   "got": {
+    "flash": {
+     "kind": "capture",
+     "tone": "gold",
+     "rgb": "255, 200, 70",
+     "alpha": 0.3,
+     "ms": 320,
+     "n": 1
+    },
+    "glow": {
+     "hits": 1,
+     "live": 0,
+     "visible": false
+    },
+    "shotAt": {
+     "live": 18,
+     "ms": 2648
+    },
+    "maxCalls": 65
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 불빛이 남지 않는다",
+   "want": "끝나면 조각 0 · 메시 숨김",
+   "got": {
+    "slow": 1,
+    "flash": {
+     "kind": "capture",
+     "tone": "gold",
+     "rgb": "255, 200, 70",
+     "alpha": 0.3,
+     "ms": 320,
+     "n": 1
+    },
+    "flashes": 1,
+    "glow": {
+     "hits": 1,
+     "live": 0,
+     "visible": false
+    }
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 작은 잡기",
+   "want": "화면 번쩍임 0번 · 불빛 조각 ≤ 2",
+   "got": {
+    "flashes": [
+     0,
+     0
+    ],
+    "glow": {
+     "hits": 1,
+     "live": 0,
+     "visible": false
+    },
+    "shotAt": {
+     "live": 2,
+     "ms": 1475
+    },
+    "maxCalls": 72
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 잡으며 체크",
+   "want": "번쩍임 2번(잡기 → 체크), 마지막은 주황",
+   "got": {
+    "flashes": [
+     0,
+     2
+    ],
+    "flash": {
+     "kind": "check",
+     "tone": "orange",
+     "rgb": "255, 150, 50",
+     "alpha": 0.2,
+     "ms": 260,
+     "n": 2
+    },
+    "hist": [
+     "e4",
+     "e5",
+     "Qh5",
+     "Nc6",
+     "Qxf7+"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 내 말이 잡힘",
+   "want": "AI 가 퀸을 잡으면 붉은 번쩍임",
+   "got": {
+    "lost": true,
+    "flash": {
+     "kind": "capture",
+     "tone": "red",
+     "rgb": "255, 86, 86",
+     "alpha": 0.3,
+     "ms": 320,
+     "n": 1
+    },
+    "last": "Nxg5"
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 흔들림 끔",
+   "want": "화면 번쩍임 0번 · 불빛은 1번",
+   "got": {
+    "flashes": [
+     0,
+     0
+    ],
+    "hits": [
+     0,
+     1
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 모양(느리게)",
+   "want": "불빛 조각이 떠 있고 화면 가장자리가 물들어 있다",
+   "got": {
+    "live": 18,
+    "opacity": 0.24787,
+    "calls": 63
+   },
+   "ok": true
+  }
+ ]
+}

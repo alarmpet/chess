@@ -1,0 +1,44 @@
+{
+  "at": "2026-11-11T12:39:15.531Z",
+  "url": "http://localhost:3000/",
+  "pass": 6,
+  "total": 6,
+  "rows": [
+    {
+      "item": "연출 중 실제 클릭으로 미리 두기",
+      "want": "g1 고르면 보라 표시(고른 칸+후보 3: e4 뒤라 Ne2 도) · f3 누르면 미리 둔 수 · 흑 뒤 3번째 수 Nf3 · 표시 지움",
+      "got": "{\"picked\":{\"r\":7,\"c\":6,\"n\":3},\"pickedMarks\":4,\"set\":[7,6,5,5],\"marks\":2,\"h1\":[\"e4\",\"d5\",\"Nf3\"],\"after\":{\"premove\":null,\"preSel\":null,\"marks\":0,\"waiting\":true,\"set\":1,\"played\":1,\"dropped\":0},\"ms\":9731}",
+      "ok": true
+    },
+    {
+      "item": "다시 누르기·빈 칸 누르기로 취소",
+      "want": "고름 → 같은 말 다시 누르면 없음 · 미리 둔 뒤 빈 칸 누르면 없음",
+      "got": "{\"sel2\":{\"r\":6,\"c\":3,\"n\":2},\"off2\":[null,null,0],\"off3\":[null,null,0]}",
+      "ok": true
+    },
+    {
+      "item": "불법이 된 미리 두기는 버림",
+      "want": "e4 e5 d4 Bb4+ 뒤 Nf3 안 둠 · 버림 1 · 표시 지움 · 오류 없음",
+      "got": "{\"e5\":true,\"bb4\":true,\"set\":true,\"h3\":[\"e4\",\"e5\",\"d4\",\"Bb4+\"],\"after\":{\"premove\":null,\"preSel\":null,\"marks\":0,\"waiting\":false,\"set\":3,\"played\":1,\"dropped\":1}}",
+      "ok": true
+    },
+    {
+      "item": "새 판에서 미리 두기 지움",
+      "want": "미리 둠 → 새 판 → 수 0 · 미리 둔 수 없음 · 표시 0",
+      "got": "{\"set\":true,\"after\":{\"pm\":{\"premove\":null,\"preSel\":null,\"marks\":0,\"waiting\":false,\"set\":4,\"played\":1,\"dropped\":1},\"n\":0}}",
+      "ok": true
+    },
+    {
+      "item": "내 차례 보통 선택",
+      "want": "선택 e2 · 미리 두기 아님",
+      "got": "{\"sel\":\"{\\\"r\\\":6,\\\"c\\\":4}\",\"pm\":{\"premove\":null,\"preSel\":null,\"marks\":0,\"waiting\":false,\"set\":4,\"played\":1,\"dropped\":1}}",
+      "ok": true
+    },
+    {
+      "item": "연출 중 빈 칸 = 건너뛰기",
+      "want": "미리 두기 없음 · 연출이 끝남",
+      "got": "{\"pm\":[null,null],\"ms\":201}",
+      "ok": true
+    }
+  ]
+}

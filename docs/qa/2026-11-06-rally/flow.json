@@ -1,0 +1,38 @@
+{
+ "gid": 2941156118,
+ "r": {
+  "notes": [
+   "🔥 반격 목표: 체크 한 번 → 도토리 +5"
+  ],
+  "strip1": "🎯 호랑이를 먼저 잡기\n🔥 체크 한 번\n📋 0/3\n11수째"
+ },
+ "r2": {
+  "notes": [
+   "🔥 반격 성공: 체크 한 번! 판이 끝나면 도토리 +5"
+  ],
+  "strip2": "🎯 호랑이를 먼저 잡기\n📋 0/3\n11수째",
+  "c0": 0,
+  "c1": 55,
+  "log": {
+   "type": "game",
+   "at": "2026-11-06T05:22:20.288Z",
+   "result": "loss",
+   "seconds": 21,
+   "plies": 0,
+   "captures": 0,
+   "cards": [
+    "lion_0"
+   ],
+   "fresh": 1,
+   "mission": "race_queen",
+   "missionState": null,
+   "resigned": false,
+   "rally": {
+    "offered": 1,
+    "done": 1
+   },
+   "usedScout": false,
+   "usedRewind": false
+  }
+ }
+}

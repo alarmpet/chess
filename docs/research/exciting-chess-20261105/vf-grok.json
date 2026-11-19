@@ -1,0 +1,470 @@
+[
+ {
+  "id": "g1 brawl wiki",
+  "url": "https://brawlstars.fandom.com/wiki/Bounty",
+  "keys": [
+   "bounty",
+   "7"
+  ],
+  "status": 403,
+  "final": "https://brawlstars.fandom.com/wiki/Bounty",
+  "title": "Just a moment...",
+  "found": [
+   [
+    "bounty",
+    false
+   ],
+   [
+    "7",
+    false
+   ]
+  ],
+  "len": 60,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "g1 brawl ign",
+  "url": "https://www.ign.com/wikis/brawl-stars/Bounty",
+  "keys": [
+   "bounty"
+  ],
+  "status": 200,
+  "final": "https://www.ign.com/wikis/brawl-stars/Bounty",
+  "title": "Bounty - Brawl Stars Guide - IGN",
+  "found": [
+   [
+    "bounty",
+    true
+   ]
+  ],
+  "len": 5769,
+  "snips": [
+   " Bounty - Brawl Stars Guide - IGN Skip to content Shorts Daily Games Entertainment Reviews Guides Home Search Reviews All Reviews Editor&#x27;s Choice Game Reviews Movie Reviews TV Show Reviews Tech Reviews News All News Columns PlayStation Xbox Nintendo PC Mob"
+  ]
+ },
+ {
+  "id": "g5 lol shutdown",
+  "url": "https://wiki.leagueoflegends.com/en-us/Champion_gold_bounties",
+  "keys": [
+   "shut down",
+   "bounty"
+  ],
+  "status": 403,
+  "final": "https://wiki.leagueoflegends.com/en-us/Champion_gold_bounties",
+  "title": "Please wait",
+  "found": [
+   [
+    "shut down",
+    false
+   ],
+   [
+    "bounty",
+    false
+   ]
+  ],
+  "len": 336,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "g5 lol 25.09",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-25-09-notes/",
+  "keys": [
+   "bount",
+   "comeback"
+  ],
+  "status": 200,
+  "final": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-25-09-notes/",
+  "title": "Patch 25.09 Notes",
+  "found": [
+   [
+    "bount",
+    true
+   ],
+   [
+    "comeback",
+    true
+   ]
+  ],
+  "len": 32776,
+  "snips": [
+   "f Spirit Blossom skins, a new battle pass, and much more! When it comes to the gameplay side of things we’ll be shipping a few QoL improvements to systems like Bounties, switching roles in champ select, and your gray screen! Not to mention updates to make Rod of Ages, Boots of Swiftness, and Symbiotic Soles less dominant, bringing up Unflinching, upgraded Feat boots, and Ignite, plus the normal array of live champion",
+   "ing and damaging any other nearby enemies as well as granting your team a Spirit Petal Bounties We’re adjusting Bounties this season to make them a more useful comeback mechanism. They are now more powerful for the losing team, can no longer hurt the losing team, and should more accurately reflect the game state. We’re generally paying out more gold than before and cleaning up some rules for accuracy and fairness. To"
+  ]
+ },
+ {
+  "id": "g6 obj bounty",
+  "url": "https://wiki.leagueoflegends.com/en-us/Objective_bounties",
+  "keys": [
+   "objective bount",
+   "behind"
+  ],
+  "status": 403,
+  "final": "https://wiki.leagueoflegends.com/en-us/Objective_bounties",
+  "title": "Please wait",
+  "found": [
+   [
+    "objective bount",
+    false
+   ],
+   [
+    "behind",
+    false
+   ]
+  ],
+  "len": 336,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "g7 lol 26.1",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+  "keys": [
+   "feats of strength",
+   "atakhan",
+   "role quest"
+  ],
+  "status": 200,
+  "final": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+  "title": "Patch 26.1 Notes",
+  "found": [
+   [
+    "feats of strength",
+    true
+   ],
+   [
+    "atakhan",
+    true
+   ],
+   [
+    "role quest",
+    true
+   ]
+  ],
+  "len": 111822,
+  "snips": [
+   "r rewards, mid laners receive a free upgrade to their boots, and periodically get an empowered Recall. The boots upgrades are based on the items introduced for Feats of Strength, but they've been heavily reworked and are significantly more powerful now. Gold and experience from minions reduced by 25% outside of mid lane until level 3 Quest Progress: 1350 points required for quest completion Ranged Champions gain 1.5%",
+   "st Completion, Control Ward gold cost reduced to 40g After Quest Completion, store up to 2 Control Wards on your Role Quest slot instead of your item inventory Atakhan, Blood Roses, Feats, and Kills With the new season, we're waving goodbye to Atakhan, Blood Roses, and Feats of Strength. These three features combined to make Summoner's Rift in 2025 unique, but Atakhan's story has come to an end, and ultimately these ",
+   "oward turret pushing and away from epic monster contests with tuning changes and the brand-new Crystalline Overgrowth. Role power is rebalanced, with brand-new Role Quests for each role. New vision mechanics to learn and master await you with Faelights. New items for each class yearn for a new home in your inventory, plus most champions' base crit damage is now 200%. Ranked play has new changes to reduce the pain of "
+  ]
+ },
+ {
+  "id": "g9 challenges",
+  "url": "https://www.leagueoflegends.com/en-gb/news/game-updates/challenges-walkthrough/",
+  "keys": [
+   "challenges",
+   "300"
+  ],
+  "status": 200,
+  "final": "https://www.leagueoflegends.com/en-gb/news/game-updates/challenges-walkthrough/",
+  "title": "Challenges Walkthrough",
+  "found": [
+   [
+    "challenges",
+    true
+   ],
+   [
+    "300",
+    true
+   ]
+  ],
+  "len": 7435,
+  "snips": [
+   " Challenges Walkthrough Challenges Walkthrough Build your League legacy by ranking up across more than 300 Challenges! Game Updates BarackProbama, RiotAether 2022-05-06T15:00:00.000Z Challenges are designed to provide meaningful progression to all League player",
+   " Challenges Walkthrough Challenges Walkthrough Build your League legacy by ranking up across more than 300 Challenges! Game Updates BarackProbama, RiotAether 2022-05-06T15:00:00.000Z Challenges are designed to provide meaningful progression to all League players—so not just Ranked ravagers, but ARAM aficionados, Clash contenders, and cosmetic collectors too. Yo"
+  ]
+ },
+ {
+  "id": "g10 hs progression",
+  "url": "https://hearthstone.blizzard.com/en-us/news/23534414/revamping-progression-rewards-in-hearthstone",
+  "keys": [
+   "weekly quest",
+   "achievement"
+  ],
+  "status": 200,
+  "final": "https://hearthstone.blizzard.com/en-us/news/23534414/revamping-progression-rewards-in-hearthstone",
+  "title": "Revamping Progression &amp; Rewards in Hearthstone - Hearthstone",
+  "found": [
+   [
+    "weekly quest",
+    true
+   ],
+   [
+    "achievement",
+    true
+   ]
+  ],
+  "len": 5700,
+  "snips": [
+   "ystem that tracks your in-game accomplishments. A central Rewards Track for all earnable rewards outside of Ranked play. A Quest Revamp that supports daily and weekly quests. An updated Profile Page with player info, ranks, and stats. You’ll be able to access each of these pages by clicking on a new Journal icon that will replace the Quest Log on the main menu. The Progression &#38; Rewards revamp detailed here will ",
+   "it’s finally here! In what is shaping up to be Hearthstone ’s biggest systems update ever, the progression revamp includes four major parts: The addition of an Achievements System that tracks your in-game accomplishments. A central Rewards Track for all earnable rewards outside of Ranked play. A Quest Revamp that supports daily and weekly quests. An updated Profile Page with player info, ranks, and stats. You’ll be a"
+  ]
+ },
+ {
+  "id": "g11 rl challenges",
+  "url": "https://www.epicgames.com/help/rocket-league-c-37599050/gameplay-c-32343914/what-are-challenges-in-rocket-league-a15628314",
+  "keys": [
+   "three weekly",
+   "challenges"
+  ],
+  "status": 403,
+  "final": "https://www.epicgames.com/help/rocket-league-c-37599050/gameplay-c-32343914/what-are-challenges-in-rocket-league-a15628314",
+  "title": "",
+  "found": [
+   [
+    "three weekly",
+    false
+   ],
+   [
+    "challenges",
+    false
+   ]
+  ],
+  "len": 78,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "g12 tft double up",
+  "url": "https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/double-up-upgraded/",
+  "keys": [
+   "double up",
+   "teamwork"
+  ],
+  "status": 200,
+  "final": "https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/double-up-upgraded/",
+  "title": "Double Up Upgraded!!",
+  "found": [
+   [
+    "double up",
+    true
+   ],
+   [
+    "teamwork",
+    true
+   ]
+  ],
+  "len": 5702,
+  "snips": [
+   " Double Up Upgraded!! Double Up Upgraded!! Double Up is graduating from the Workshop with a slew of upgrades. Game Updates Rodger “Riot Prism” Caudill 2025-03-19T16:00:00.000Z Double Up is graduating from the Workshop with a slew of upgrades, from the often-req",
+   "t Prism” Caudill 2025-03-19T16:00:00.000Z Double Up is graduating from the Workshop with a slew of upgrades, from the often-requested custom lobbies to the new Teamwork Cannon and beyond! All of these upgrades go live with the release of Cyber City on April 2nd during patch 14.1. As for now, let’s cover what to expect, starting with gameplay! Gameplay Updated: Teamwork Cannon and Gifting Out with the old Rune of Alle"
+  ]
+ },
+ {
+  "id": "g13 valorant",
+  "url": "https://playvalorant.com/en-us/news/game-updates/progression-update-explainer-faq/",
+  "keys": [
+   "checkpoint",
+   "daily"
+  ],
+  "status": 200,
+  "final": "https://playvalorant.com/en-us/news/game-updates/progression-update-explainer-faq/",
+  "title": "Progression Update Explainer + FAQ",
+  "found": [
+   [
+    "checkpoint",
+    true
+   ],
+   [
+    "daily",
+    true
+   ]
+  ],
+  "len": 13026,
+  "snips": [
+   "e revamped Daily Missions! You will now be able to view your Dailies and watch your playtime contribute to earning progress on our new daily milestones, called Checkpoints. Every game mode, except Deathmatch, earns Checkpoint Progress, so play whatever mode you want and you’ll earn progress automatically. Dailies stack up. You can also acquire catch up bonuses, which allow you to earn rewards even if you can’t play e",
+   "lp you prepare. In the middle of earning an item in an Agent Contract? Grind it out quickly because Agent Contracts are changing on June 27! DAILIES - Reworked Daily Missions We’ve revamped Daily Missions! You will now be able to view your Dailies and watch your playtime contribute to earning progress on our new daily milestones, called Checkpoints. Every game mode, except Deathmatch, earns Checkpoint Progress, so pl"
+  ]
+ },
+ {
+  "id": "g15 ow2",
+  "url": "https://news.blizzard.com/en-us/article/24303010/reign-of-talon-s5-midcycle-sets-up-the-showdown",
+  "keys": [
+   "taking reign",
+   "fomo",
+   "loot hunt"
+  ],
+  "status": 200,
+  "final": "https://news.blizzard.com/en-us/article/24303010/reign-of-talon-s5-midcycle-sets-up-the-showdown",
+  "title": "Reign of Talon – S5 Midcycle Sets Up the Showdown — Overwatch 2 — Blizzard News",
+  "found": [
+   [
+    "taking reign",
+    true
+   ],
+   [
+    "fomo",
+    true
+   ],
+   [
+    "loot hunt",
+    true
+   ]
+  ],
+  "len": 8345,
+  "snips": [
+   "n has shifted and shattered. Vendetta took the throne. Doomfist refused to stay gone. Doctrine emerged from Grímsvötn. Now those threads finally collide in the Taking Reign event as Doomfist and Overwatch head to Rialto for the conclusion of our first year-long story. The five-week event features 24 tiers of rewards to earn as you play and complete challenges. Fight your way towards an Epic Sigma skin recolor in the ",
+   " Pass for 1,000 Overwatch Coins to open an additional path towards Legendary Resurgence Doomfist , Vendetta’s new Legendary Weapon, and more. And no worries on FOMO. Once purchased, the Premium Event Pass can be finished AT ANY POINT in Season 6 or otherwise. A year of ambition, betrayal, old grudges, and very questionable alliances has brought everyone to Rialto. There’s only one thing left to do: settle who gets to",
+   "ber 7. Complete three digs each week to earn a Loot Box and keep digging to rake in extra Loot Boxes, Epic Loot Boxes, and even a Legendary Loot Box! Junkrat’s Loot Hunt returns November 20–23, but this time you can raid the stash on your schedule. Complete five games to finish a challenge and grab a Loot Box, then do it again—and again—up to nine times throughout the event. No daily reset means you can cause all of "
+  ]
+ },
+ {
+  "id": "g16 blue shell",
+  "url": "https://en.wikipedia.org/wiki/Blue_shell",
+  "keys": [
+   "spiny",
+   "konno"
+  ],
+  "status": 200,
+  "final": "https://en.wikipedia.org/wiki/Blue_shell",
+  "title": "Blue shell - Wikipedia",
+  "found": [
+   [
+    "spiny",
+    true
+   ],
+   [
+    "konno",
+    true
+   ]
+  ],
+  "len": 15615,
+  "snips": [
+   "s PDF Printable version In other projects Wikidata item Appearance move to sidebar hide From Wikipedia, the free encyclopedia Power-up in the Mario Kart series Spiny Shell Mario Kart element A blue shell as it appears in Mario Kart 8 Publisher Nintendo First appearance Mario Kart 64 (1996) Genre Kart racing game In-universe information Type Power-up Traits and abilities Offensive item The blue shell , [ 1 ] [ 2 ] off",
+   " much of the film's depiction of Rainbow Road after shouting \"Blue shell!\" as a battlecry. [ 19 ] Development [ edit ] In a 2011 interview with Kotaku , Hideki Konno , who directed Super Mario Kart and Mario Kart 64 , was asked about the Spiny Shell's inclusion in the series. He stated that it was introduced in Mario Kart 64 to keep players together due to the limited processing power of the Nintendo 64 and that \"we "
+  ]
+ },
+ {
+  "id": "g17 unite",
+  "url": "https://en.wikipedia.org/wiki/Pok%C3%A9mon_Unite",
+  "keys": [
+   "scoreboard",
+   "frustrat"
+  ],
+  "status": 200,
+  "final": "https://en.wikipedia.org/wiki/Pok%C3%A9mon_Unite",
+  "title": "Pokémon Unite - Wikipedia",
+  "found": [
+   [
+    "scoreboard",
+    true
+   ],
+   [
+    "frustrat",
+    true
+   ]
+  ],
+  "len": 32353,
+  "snips": [
+   " Pokémon. [ 10 ] Currently, the game has over 79 playable Pokémon. [ 11 ] Aside from the gameplay, Pokémon Unite differs from other MOBAs by lacking an in-game scoreboard , to discourage players from leaving the game out of frustration when they are losing in score; [ 12 ] instead, the current score is implied through announcements at specific times of the match, specifically at 5 minutes to the end of the match, 3 m",
+   "n. [ 11 ] Aside from the gameplay, Pokémon Unite differs from other MOBAs by lacking an in-game scoreboard , to discourage players from leaving the game out of frustration when they are losing in score; [ 12 ] instead, the current score is implied through announcements at specific times of the match, specifically at 5 minutes to the end of the match, 3 minutes to the end of the match, two minutes before the end of th"
+  ]
+ },
+ {
+  "id": "g14 snap",
+  "url": "https://en.wikipedia.org/wiki/Marvel_Snap",
+  "keys": [
+   "location",
+   "nexus"
+  ],
+  "status": 200,
+  "final": "https://en.wikipedia.org/wiki/Marvel_Snap",
+  "title": "Marvel Snap - Wikipedia",
+  "found": [
+   [
+    "location",
+    true
+   ],
+   [
+    "nexus",
+    true
+   ]
+  ],
+  "len": 30016,
+  "snips": [
+   "cter with cost, power level, and generally a special ability. At the start of each round, both players are able play one or more cards face down on one or more locations. Playing cards costs energy; each player starts with one energy for the first turn, and their capacity increases by one each turn after, allowing them to play more expensive cards. Locations are randomly assigned for each match, and revealed one by o",
+   "free-to-play -model featuring microtransactions for the purchase of in game currency, cosmetic skins and a battle pass . [ 7 ] The game's beta release included Nexus event with loot boxes to acquire certain cards or in-game cosmetics, allowing players to gamble for new cards and skins with in-game currency or real money, [ 25 ] which sparked controversy among the player base [ 26 ] and was called out as predatory by "
+  ]
+ },
+ {
+  "id": "g-anti duels",
+  "url": "https://hearthstone.blizzard.com/en-us/news/24033780/duels-runs-coming-to-an-end",
+  "keys": [
+   "duels"
+  ],
+  "status": 200,
+  "final": "https://hearthstone.blizzard.com/en-us/news/24033780/duels-runs-coming-to-an-end",
+  "title": "Duels Runs Coming to an End - Hearthstone",
+  "found": [
+   [
+    "duels",
+    true
+   ]
+  ],
+  "len": 995,
+  "snips": [
+   " Duels Runs Coming to an End - Hearthstone Duels Runs Coming to an End Blizzard Entertainment 01/04/2024 As we think about the future of Hearthstone and where the team can best focus their efforts, we’ve made the difficult decision to discontinue support for th"
+  ]
+ },
+ {
+  "id": "g-anti cr quests",
+  "url": "https://clashroyale.fandom.com/wiki/Quests",
+  "keys": [
+   "quest",
+   "removed"
+  ],
+  "status": 403,
+  "final": "https://clashroyale.fandom.com/wiki/Quests",
+  "title": "Just a moment...",
+  "found": [
+   [
+    "quest",
+    false
+   ],
+   [
+    "removed",
+    false
+   ]
+  ],
+  "len": 60,
+  "snips": [
+   null,
+   null
+  ]
+ },
+ {
+  "id": "g20 urf",
+  "url": "https://en.wikipedia.org/wiki/League_of_Legends",
+  "keys": [
+   "ultra rapid fire",
+   "burnout"
+  ],
+  "status": 200,
+  "final": "https://en.wikipedia.org/wiki/League_of_Legends",
+  "title": "League of Legends - Wikipedia",
+  "found": [
+   [
+    "ultra rapid fire",
+    true
+   ],
+   [
+    "burnout",
+    true
+   ]
+  ],
+  "len": 88933,
+  "snips": [
+   "orm play between Windows and macOS clients. [ 32 ] Other game modes have been made available temporarily, typically aligning with in-game events. [ 33 ] [ 34 ] Ultra Rapid Fire (URF) mode was available for two weeks as a 2014 April Fools Day prank. In the mode, champion abilities have no resource cost, significantly reduced cooldown timers, increased movement speed, reduced healing, and faster attacks. [ 35 ] [ 36 ] ",
+   "ealing, and faster attacks. [ 35 ] [ 36 ] In April 2015, Riot disclosed that it had not brought the mode back because its unbalanced design resulted in player \"burnout\". Riot also said the costs associated with maintaining and balancing URF were too high. [ 37 ] Other temporary modes include One for All and Nexus Blitz. One for All has players pick a champion for all members of their team to play. [ 38 ] [ 39 ] In Ne"
+  ]
+ }
+]

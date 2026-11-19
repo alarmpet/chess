@@ -1,0 +1,430 @@
+{
+ "at": "2026-11-17T15:33:42.280Z",
+ "base": "http://localhost:4173/",
+ "query": "?lab=contract",
+ "runs": [
+  {
+   "name": "desk",
+   "run": 1,
+   "query": "?lab=contract",
+   "t": {
+    "started": 54.8,
+    "reelStart": 55.2,
+    "reelStop": 56.5,
+    "tags": 56.5,
+    "canMove": 58.1,
+    "firstCapture": 62.3,
+    "firstGem": 85.3
+   },
+   "moves": [
+    "e4",
+    "exd5",
+    "d4",
+    "Nc3",
+    "Kd2",
+    "a3",
+    "Nf3",
+    "a4",
+    "Nxe4"
+   ],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "gemPly": 18,
+   "end": {
+    "progress": {
+     "w": {
+      "counts": [
+       1,
+       1,
+       0
+      ],
+      "done": 1
+     },
+     "b": {
+      "counts": [
+       1,
+       1,
+       0
+      ],
+      "done": 1
+     },
+     "winner": null,
+     "matchPoint": {
+      "w": true,
+      "b": true
+     }
+    },
+    "gameOver": false,
+    "crown": {
+     "sockets": 4,
+     "gems": 2,
+     "flying": 1,
+     "landed": 1,
+     "w": [
+      "n"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    },
+    "rung": "입문"
+   },
+   "errors": []
+  },
+  {
+   "name": "desk",
+   "run": 2,
+   "query": "?lab=contract",
+   "t": {
+    "started": 46.2,
+    "reelStart": 46.6,
+    "reelStop": 47.8,
+    "tags": 47.8,
+    "canMove": 49.5,
+    "firstCapture": 60.4,
+    "firstGem": 70.3
+   },
+   "moves": [
+    "e4",
+    "Nf3",
+    "Nxe5",
+    "Nxd7"
+   ],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "gemPly": 8,
+   "end": {
+    "progress": {
+     "w": {
+      "counts": [
+       2,
+       0,
+       0
+      ],
+      "done": 1
+     },
+     "b": {
+      "counts": [
+       1,
+       1,
+       0
+      ],
+      "done": 1
+     },
+     "winner": null,
+     "matchPoint": {
+      "w": true,
+      "b": true
+     }
+    },
+    "gameOver": false,
+    "crown": {
+     "sockets": 4,
+     "gems": 2,
+     "flying": 1,
+     "landed": 1,
+     "w": [
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    },
+    "rung": "입문"
+   },
+   "errors": []
+  },
+  {
+   "name": "desk",
+   "run": 3,
+   "query": "?lab=contract",
+   "t": {
+    "started": 52.4,
+    "reelStart": 52.7,
+    "reelStop": 54,
+    "tags": 54,
+    "canMove": 55.7,
+    "firstCapture": 77.3,
+    "firstGem": 92.3
+   },
+   "moves": [
+    "e4",
+    "Nf3",
+    "Nc3",
+    "Nxe5",
+    "d4",
+    "Qxd4"
+   ],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "gemPly": 12,
+   "end": {
+    "progress": {
+     "w": {
+      "counts": [
+       1,
+       1,
+       0
+      ],
+      "done": 1
+     },
+     "b": {
+      "counts": [
+       1,
+       1,
+       0
+      ],
+      "done": 1
+     },
+     "winner": null,
+     "matchPoint": {
+      "w": true,
+      "b": true
+     }
+    },
+    "gameOver": false,
+    "crown": {
+     "sockets": 4,
+     "gems": 2,
+     "flying": 0,
+     "landed": 2,
+     "w": [
+      "n"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    },
+    "rung": "입문"
+   },
+   "errors": []
+  },
+  {
+   "name": "phone",
+   "run": 1,
+   "query": "?lab=contract",
+   "t": {
+    "started": 47.3,
+    "reelStart": 47.7,
+    "reelStop": 48.9,
+    "tags": 48.9,
+    "canMove": 50.6,
+    "firstCapture": 62.9,
+    "firstGem": 75.1
+   },
+   "moves": [
+    "e4",
+    "e5",
+    "d4",
+    "Nf3",
+    "exd6",
+    "Bc4",
+    "Bxf7+"
+   ],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "gemPly": 14,
+   "end": {
+    "progress": {
+     "w": {
+      "counts": [
+       2,
+       0,
+       0
+      ],
+      "done": 1
+     },
+     "b": {
+      "counts": [
+       1,
+       0,
+       1
+      ],
+      "done": 1
+     },
+     "winner": null,
+     "matchPoint": {
+      "w": true,
+      "b": true
+     }
+    },
+    "gameOver": false,
+    "crown": {
+     "sockets": 4,
+     "gems": 2,
+     "flying": 1,
+     "landed": 1,
+     "w": [
+      "p"
+     ],
+     "b": [
+      "b"
+     ],
+     "draws": 2
+    },
+    "rung": "입문"
+   },
+   "errors": []
+  },
+  {
+   "name": "phone",
+   "run": 2,
+   "query": "?lab=contract",
+   "t": {
+    "started": 57,
+    "reelStart": 57.3,
+    "reelStop": 58.6,
+    "tags": 58.6,
+    "canMove": 60.2,
+    "firstCapture": 70.2,
+    "firstGem": 94.6
+   },
+   "moves": [
+    "e4",
+    "Nf3",
+    "Nxe5",
+    "d4",
+    "Ke2",
+    "d5",
+    "Bf4",
+    "Bxe5"
+   ],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "gemPly": 16,
+   "end": {
+    "progress": {
+     "w": {
+      "counts": [
+       1,
+       1,
+       0
+      ],
+      "done": 1
+     },
+     "b": {
+      "counts": [
+       0,
+       1,
+       1
+      ],
+      "done": 2
+     },
+     "winner": "b",
+     "matchPoint": {
+      "w": true,
+      "b": false
+     }
+    },
+    "gameOver": true,
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 1,
+     "landed": 2,
+     "w": [
+      "n"
+     ],
+     "b": [
+      "n",
+      "b"
+     ],
+     "draws": 2
+    },
+    "rung": "입문"
+   },
+   "errors": []
+  },
+  {
+   "name": "phone",
+   "run": 3,
+   "query": "?lab=contract",
+   "t": {
+    "started": 32.3,
+    "reelStart": 32.7,
+    "reelStop": 33.9,
+    "tags": 33.9,
+    "canMove": 35.6,
+    "firstCapture": 41.7,
+    "firstGem": 54.1
+   },
+   "moves": [
+    "e4",
+    "exd5",
+    "d4",
+    "dxe5"
+   ],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "gemPly": 8,
+   "end": {
+    "progress": {
+     "w": {
+      "counts": [
+       2,
+       0,
+       0
+      ],
+      "done": 1
+     },
+     "b": {
+      "counts": [
+       2,
+       0,
+       0
+      ],
+      "done": 1
+     },
+     "winner": null,
+     "matchPoint": {
+      "w": true,
+      "b": true
+     }
+    },
+    "gameOver": false,
+    "crown": {
+     "sockets": 4,
+     "gems": 2,
+     "flying": 1,
+     "landed": 1,
+     "w": [
+      "p"
+     ],
+     "b": [
+      "p"
+     ],
+     "draws": 2
+    },
+    "rung": "입문"
+   },
+   "errors": []
+  }
+ ]
+}

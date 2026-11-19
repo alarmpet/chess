@@ -1,0 +1,331 @@
+{
+ "at": "2026-11-17T17:58:56.891Z",
+ "base": "http://localhost:4173/",
+ "query": "",
+ "runs": [
+  {
+   "name": "desk",
+   "run": 1,
+   "query": "",
+   "t": {
+    "started": 29.9,
+    "reelStart": 30.2,
+    "reelStop": 31.5,
+    "tags": 31.5,
+    "canMove": 34.9,
+    "puzzleOpen": 34.9,
+    "firstGem": 37.8
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": null,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "bar": "연습 1/3\n왕관 완성! 보석 둘이 모였어요.\n다음 문제",
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 4057
+     }
+    },
+    "on": true,
+    "saved": null,
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "desk",
+   "run": 2,
+   "query": "",
+   "t": {
+    "started": 27.8,
+    "reelStart": 28.2,
+    "reelStop": 30,
+    "tags": 30,
+    "canMove": 32.8,
+    "puzzleOpen": 32.8,
+    "firstGem": 35.6
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": null,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "bar": "연습 1/3\n왕관 완성! 보석 둘이 모였어요.\n다음 문제",
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 3930
+     }
+    },
+    "on": true,
+    "saved": null,
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "desk",
+   "run": 3,
+   "query": "",
+   "t": {
+    "started": 29.2,
+    "reelStart": 29.5,
+    "reelStop": 30.8,
+    "tags": 30.8,
+    "canMove": 33.2,
+    "puzzleOpen": 33.3,
+    "firstGem": 38
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": null,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "bar": "연습 1/3\n왕관 완성! 보석 둘이 모였어요.\n다음 문제",
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 5474
+     }
+    },
+    "on": true,
+    "saved": null,
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "phone",
+   "run": 1,
+   "query": "",
+   "t": {
+    "started": 22.8,
+    "reelStart": 23.1,
+    "reelStop": 24.4,
+    "tags": 24.4,
+    "canMove": 26.7,
+    "puzzleOpen": 26.8,
+    "firstGem": 30.2
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": null,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "bar": "연습 1/3\n왕관 완성! 보석 둘이 모였어요.\n다음 문제",
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 4082
+     }
+    },
+    "on": true,
+    "saved": null,
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "phone",
+   "run": 2,
+   "query": "",
+   "t": {
+    "started": 21.5,
+    "reelStart": 21.9,
+    "reelStop": 23.2,
+    "tags": 23.2,
+    "canMove": 25.6,
+    "puzzleOpen": 25.6,
+    "firstGem": 29.3
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": null,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "bar": "연습 1/3\n왕관 완성! 보석 둘이 모였어요.\n다음 문제",
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 4404
+     }
+    },
+    "on": true,
+    "saved": null,
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "phone",
+   "run": 3,
+   "query": "",
+   "t": {
+    "started": 19.7,
+    "reelStart": 20.1,
+    "reelStop": 21.3,
+    "tags": 21.3,
+    "canMove": 23.7,
+    "puzzleOpen": 23.8,
+    "firstGem": 27.2
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": null,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "bar": "연습 1/3\n왕관 완성! 보석 둘이 모였어요.\n다음 문제",
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 4079
+     }
+    },
+    "on": true,
+    "saved": null,
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  }
+ ]
+}

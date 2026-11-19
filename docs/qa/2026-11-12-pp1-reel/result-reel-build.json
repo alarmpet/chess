@@ -1,0 +1,240 @@
+{
+ "url": "http://localhost:4173/",
+ "at": "2026-11-12T09:42:29.335Z",
+ "pass": 16,
+ "total": 16,
+ "measured": {
+  "mouse": {
+   "stops": [
+    {
+     "t": 0.704,
+     "ms": 580
+    },
+    {
+     "t": 1.001,
+     "ms": 875
+    },
+    {
+     "t": 1.307,
+     "ms": 1201
+    }
+   ],
+   "maxHopSquares": 0.42,
+   "callsIdle": 67,
+   "callsDuring": 74,
+   "frames": 126,
+   "skipMs": 838
+  },
+  "touch": {
+   "stops": [
+    {
+     "t": 0.702,
+     "ms": 574
+    },
+    {
+     "t": 1.001,
+     "ms": 871
+    },
+    {
+     "t": 1.313,
+     "ms": 1183
+    }
+   ],
+   "maxHopSquares": 0.42,
+   "callsIdle": 65,
+   "callsDuring": 72,
+   "frames": 104,
+   "skipMs": 871
+  }
+ },
+ "rows": [
+  {
+   "item": "mouse 스위치 꺼짐 = 릴 없음",
+   "want": "새 판을 열어도 안 돎",
+   "got": {
+    "lab": false,
+    "plays": 0,
+    "active": false
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 새 판에 릴이 돈다",
+   "want": "첫 판 고정 세트 p2·n1·b1",
+   "got": {
+    "started": true,
+    "contract": "p2nb",
+    "goals": [
+     "p2",
+     "n1",
+     "b1"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 쿵·쿵·쾅 시간표",
+   "want": "0.7 · 1.0 · 1.3초(±0.12)",
+   "got": [
+    0.704,
+    1.001,
+    1.307
+   ],
+   "ok": true
+  },
+  {
+   "item": "mouse 파도타기 뒤 제자리",
+   "want": "말이 뜨고(>0.1칸) 끝나면 모두 제자리 · 릴 숨김",
+   "got": {
+    "maxHop": 0.42,
+    "hopsLeft": 0,
+    "active": false,
+    "offBase": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 드로우콜",
+   "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값으로",
+   "got": {
+    "idle": 67,
+    "during": 74,
+    "after": 67
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 도는 중에 수 두기",
+   "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
+   "got": {
+    "tBefore": 0.109,
+    "skipped": true,
+    "stopped": [
+     true,
+     true,
+     true
+    ],
+    "h1": [
+     "e4"
+    ],
+    "offBase": 0,
+    "contract": "p2nb"
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 건너뛰기",
+   "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
+   "got": {
+    "skipMs": 838,
+    "contract": "p2nb",
+    "games": 3
+   },
+   "ok": true
+  },
+  {
+   "item": "mouse 이어 하기 = 릴 없음",
+   "want": "판 중간으로 돌아오면 안 돎",
+   "got": {
+    "moves": 2,
+    "plays": 0,
+    "active": false
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 스위치 꺼짐 = 릴 없음",
+   "want": "새 판을 열어도 안 돎",
+   "got": {
+    "lab": false,
+    "plays": 0,
+    "active": false
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 새 판에 릴이 돈다",
+   "want": "첫 판 고정 세트 p2·n1·b1",
+   "got": {
+    "started": true,
+    "contract": "p2nb",
+    "goals": [
+     "p2",
+     "n1",
+     "b1"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 쿵·쿵·쾅 시간표",
+   "want": "0.7 · 1.0 · 1.3초(±0.12)",
+   "got": [
+    0.702,
+    1.001,
+    1.313
+   ],
+   "ok": true
+  },
+  {
+   "item": "touch 파도타기 뒤 제자리",
+   "want": "말이 뜨고(>0.1칸) 끝나면 모두 제자리 · 릴 숨김",
+   "got": {
+    "maxHop": 0.42,
+    "hopsLeft": 0,
+    "active": false,
+    "offBase": 0
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 드로우콜",
+   "want": "도는 동안 ≤ 100 · 끝나면 쉬는 값으로",
+   "got": {
+    "idle": 65,
+    "during": 72,
+    "after": 65
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 도는 중에 수 두기",
+   "want": "릴 도는 중 e2→e4 가 둬지고 릴은 바로 공개 · 말은 제자리",
+   "got": {
+    "tBefore": 0.165,
+    "skipped": true,
+    "stopped": [
+     true,
+     true,
+     true
+    ],
+    "h1": [
+     "e4"
+    ],
+    "offBase": 0,
+    "contract": "p2nb"
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 건너뛰기",
+   "want": "누른 뒤 1.2초 안에 끝 · 세 번째 판은 풀 안의 세트",
+   "got": {
+    "skipMs": 871,
+    "contract": "pnr",
+    "games": 3
+   },
+   "ok": true
+  },
+  {
+   "item": "touch 이어 하기 = 릴 없음",
+   "want": "판 중간으로 돌아오면 안 돎",
+   "got": {
+    "moves": 2,
+    "plays": 0,
+    "active": false
+   },
+   "ok": true
+  }
+ ]
+}

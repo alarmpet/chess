@@ -1,0 +1,53 @@
+{
+ "at": "2026-11-14T20:22:06.674Z",
+ "set": "p2bq",
+ "goals": [
+  {
+   "type": "p",
+   "count": 2
+  },
+  {
+   "type": "b",
+   "count": 1
+  },
+  {
+   "type": "q",
+   "count": 1
+  }
+ ],
+ "rule": "base",
+ "level": "normal",
+ "seed": 7000,
+ "games": 100,
+ "seconds": 152,
+ "reasons": {
+  "contract": 95,
+  "limit": 3,
+  "checkmate": 2
+ },
+ "white": 45,
+ "black": 52,
+ "draw": 3,
+ "whiteShareOfDecided": 0.464,
+ "plies": {
+  "median": 25,
+  "p90": 37
+ },
+ "captures": {
+  "median": 7,
+  "min": 3
+ },
+ "firstCapture": 10,
+ "loserDoneOne": 63,
+ "winGoals": {
+  "p2+b": 68,
+  "p2+q": 21,
+  "b+q": 6,
+  "-": 5
+ },
+ "goalUse": {
+  "p2": 0.94,
+  "b": 0.78,
+  "q": 0.28
+ }
+}
