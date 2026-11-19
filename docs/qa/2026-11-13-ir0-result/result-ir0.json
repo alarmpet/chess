@@ -1,5 +1,5 @@
 {
- "at": "2026-11-17T05:19:54.144Z",
+ "at": "2026-11-18T14:02:20.080Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
@@ -110,6 +110,7 @@
      "reason": "checkmate",
      "plies": 7,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "hud": null,
@@ -243,6 +244,7 @@
      "reason": "checkmate",
      "plies": 7,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "hud": null,

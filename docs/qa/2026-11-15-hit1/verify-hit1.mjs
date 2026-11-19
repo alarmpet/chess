@@ -6,6 +6,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const OUT = new URL('./', import.meta.url);
 const BASE = process.env.WC_URL || 'http://localhost:3000/';
+const CLASSIC = `${BASE}?lab=classic`;   // 보통 체스로 연다 — 계약전이 기본이 된 뒤(11-18)에도 이 검증은 보통 판을 본다
 const RESULT = process.argv[2] || 'result-hit1.json';
 const SHOTS = process.argv[3] || 'after';
 mkdirSync(new URL(`./${SHOTS}/`, OUT), { recursive: true });
@@ -67,7 +68,7 @@ for (const [port, name, w, h, touch] of [[9551, 'desk', 1280, 800, false], [9552
         localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null })),
         localStorage.setItem('wildcrown.fx.v1', JSON.stringify({ shake: ${shake}, quick: false, cards: false, dive: false, quests: false, blitz: false })),
         localStorage.setItem('wildcrown.resume.v1', ${JSON.stringify(JSON.stringify({ v: 1, gameId: 91, color, rivalId: null, moves }))}), 1)`);
-      await send('Page.navigate', { url: BASE });
+      await send('Page.navigate', { url: CLASSIC });
       await sleep(1500);
       if (await until(`${W}?.isStarted?.() && !${W}.debugBusy() && ${W}.debugHistory().slice(0, ${moves.length}).map((m) => m.from + m.to).join() === ${JSON.stringify(moves.map((m) => m.from + m.to).join())}`, tries < 2 ? 45000 : 90000)) break;
       console.log('⚠️ 심은 판이 안 열림 — 다시 심는다', tries + 1);

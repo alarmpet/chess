@@ -1,29 +1,30 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-17T05:11:15.706Z",
+ "at": "2026-11-19T08:28:58.666Z",
  "pass": 19,
  "total": 19,
  "measured": {
   "fullGame": {
-   "seconds": 27,
+   "seconds": 28,
    "plies": 18,
    "end": {
-    "gameId": 3890734019,
+    "gameId": 4075455371,
     "set": "p2nb",
     "result": "loss",
     "reason": "contract",
     "plies": 18,
     "coins": 10,
+    "jackpot": false,
     "work": 0
    },
    "progress": {
     "w": {
      "counts": [
-      1,
       0,
+      1,
       0
      ],
-     "done": 0
+     "done": 1
     },
     "b": {
      "counts": [
@@ -34,7 +35,7 @@
      "done": 2
     }
    },
-   "maxCalls": 80
+   "maxCalls": 81
   }
  },
  "rows": [
@@ -129,6 +130,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "plies": 13
@@ -183,6 +185,7 @@
      "reason": "contract",
      "plies": 12,
      "coins": 10,
+     "jackpot": false,
      "work": 0
     },
     "theirs": [
@@ -244,12 +247,13 @@
     "over": true,
     "plies": 18,
     "end": {
-     "gameId": 3890734019,
+     "gameId": 4075455371,
      "set": "p2nb",
      "result": "loss",
      "reason": "contract",
      "plies": 18,
      "coins": 10,
+     "jackpot": false,
      "work": 0
     },
     "store": {
@@ -261,7 +265,7 @@
     "game": 0,
     "contract": 1,
     "bannerOn": true,
-    "maxCalls": 80
+    "maxCalls": 81
    },
    "ok": true
   },
@@ -356,6 +360,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "plies": 13
@@ -410,6 +415,7 @@
      "reason": "contract",
      "plies": 12,
      "coins": 10,
+     "jackpot": false,
      "work": 0
     },
     "theirs": [

@@ -1,5 +1,5 @@
 {
- "at": "2026-11-17T06:06:06.846Z",
+ "at": "2026-11-18T14:30:41.604Z",
  "base": "http://localhost:3000/",
  "measured": {
   "desk": {
@@ -139,7 +139,7 @@
     "insOpen": true,
     "cls": "card-inspect g3",
     "grade": "★★★★ 영웅",
-    "w": 319,
+    "w": 320,
     "inView": true,
     "rays": 1,
     "spin": "ci-spin",
@@ -262,7 +262,7 @@
     "insOpen": true,
     "cls": "card-inspect g3",
     "grade": "★★★★ 영웅",
-    "w": 248,
+    "w": 250,
     "inView": true,
     "rays": 1,
     "spin": "ci-spin",

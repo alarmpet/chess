@@ -6,6 +6,7 @@ import { KIND_ORDER, newVillage } from '../../../src/village/economy.js';
 
 const OUT = new URL('./', import.meta.url);
 const BASE = process.env.WC_URL || 'http://localhost:3000/';
+const CLASSIC = `${BASE}?lab=classic`;   // 보통 체스로 연다 — 계약전이 기본이 된 뒤(11-18)에도 이 검증은 보통 판을 본다
 const RESULT = process.argv[2] || 'result-pi.json';
 const SHOTS = process.argv[3] || 'after';
 mkdirSync(new URL(`./${SHOTS}/`, OUT), { recursive: true });
@@ -53,7 +54,7 @@ for (const [port, name, w, h, touch] of [[9611, 'desk', 1280, 800, false], [9612
   for (const theme of THEMES) {
     const v = { ...newVillage(), games: 30, arch: { current: theme, done: [], seed: 1234 } };
     await ev(`(${base}, localStorage.removeItem('wildcrown.resume.v1'), localStorage.setItem('wildcrown.village.v1', ${JSON.stringify(JSON.stringify(v))}), 1)`);
-    await send('Page.navigate', { url: BASE });
+    await send('Page.navigate', { url: CLASSIC });
     await sleep(1500);
     await until(ready, 90000);
     await until(`${W}.debugIslandCoast?.().on === true`, 20000);
@@ -79,7 +80,7 @@ for (const [port, name, w, h, touch] of [[9611, 'desk', 1280, 800, false], [9612
   // 2) 군도 지도: 일곱 섬 그림이 캔버스로, 사진 없이. 끝낸 섬은 색, 안 간 섬은 실루엣.
   const v = { ...newVillage(), games: 120, arch: { current: 'tiger', done: ['kelp', 'kangaroo', 'panda', 'rhino'].map(rec), seed: 1234 } };
   await ev(`(${base}, localStorage.removeItem('wildcrown.islands.v1'), localStorage.setItem('wildcrown.village.v1', ${JSON.stringify(JSON.stringify(v))}), 1)`);
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: CLASSIC });
   await sleep(1500);
   await until(ready, 90000);
   await ev(`document.getElementById('btn-village')?.click()`);

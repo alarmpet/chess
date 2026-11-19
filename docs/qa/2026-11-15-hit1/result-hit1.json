@@ -1,13 +1,13 @@
 {
- "at": "2026-11-17T06:18:13.626Z",
+ "at": "2026-11-19T07:49:30.391Z",
  "base": "http://localhost:3000/",
  "measured": {
   "desk-big": {
    "shotAt": {
     "live": 18,
-    "ms": 2807
+    "ms": 2769
    },
-   "maxCalls": 57,
+   "maxCalls": 71,
    "flash": {
     "kind": "capture",
     "tone": "gold",
@@ -20,9 +20,9 @@
   "phone-big": {
    "shotAt": {
     "live": 18,
-    "ms": 4655
+    "ms": 2648
    },
-   "maxCalls": 64,
+   "maxCalls": 65,
    "flash": {
     "kind": "capture",
     "tone": "gold",
@@ -53,9 +53,9 @@
     },
     "shotAt": {
      "live": 18,
-     "ms": 2807
+     "ms": 2769
     },
-    "maxCalls": 57
+    "maxCalls": 71
    },
    "ok": true
   },
@@ -96,9 +96,9 @@
     },
     "shotAt": {
      "live": 2,
-     "ms": 1460
+     "ms": 1472
     },
-    "maxCalls": 60
+    "maxCalls": 74
    },
    "ok": true
   },
@@ -165,8 +165,8 @@
    "want": "불빛 조각이 떠 있고 화면 가장자리가 물들어 있다",
    "got": {
     "live": 18,
-    "opacity": 0.246935,
-    "calls": 81
+    "opacity": 0.247924,
+    "calls": 69
    },
    "ok": true
   },
@@ -189,9 +189,9 @@
     },
     "shotAt": {
      "live": 18,
-     "ms": 4655
+     "ms": 2648
     },
-    "maxCalls": 64
+    "maxCalls": 65
    },
    "ok": true
   },
@@ -232,9 +232,9 @@
     },
     "shotAt": {
      "live": 2,
-     "ms": 1733
+     "ms": 1475
     },
-    "maxCalls": 82
+    "maxCalls": 72
    },
    "ok": true
   },
@@ -301,8 +301,8 @@
    "want": "불빛 조각이 떠 있고 화면 가장자리가 물들어 있다",
    "got": {
     "live": 18,
-    "opacity": 0.246937,
-    "calls": 49
+    "opacity": 0.24787,
+    "calls": 63
    },
    "ok": true
   }

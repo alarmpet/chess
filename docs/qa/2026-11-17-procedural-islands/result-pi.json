@@ -1,13 +1,13 @@
 {
- "at": "2026-11-17T06:43:46.713Z",
+ "at": "2026-11-18T14:55:13.026Z",
  "base": "http://localhost:3000/",
  "measured": {
   "desk": {
    "kelp": {
     "reef": {
-     "total": 82,
+     "total": 0,
      "onSand": 0,
-     "sig": -1206373656
+     "sig": 0
     },
     "key": "kelp:1234",
     "on": true,
@@ -17,13 +17,13 @@
      "z": -4.7
     },
     "zenith": "3f9fe8",
-    "calls": 66
+    "calls": 53
    },
    "kangaroo": {
     "reef": {
-     "total": 82,
+     "total": 0,
      "onSand": 0,
-     "sig": -1067624749
+     "sig": 0
     },
     "key": "kangaroo:1234",
     "on": true,
@@ -33,7 +33,7 @@
      "z": -4.7
     },
     "zenith": "b89db8",
-    "calls": 66
+    "calls": 53
    },
    "panda": {
     "reef": {
@@ -246,8 +246,8 @@
      "crown:1234"
     ],
     "calls": [
-     66,
-     66,
+     53,
+     53,
      66,
      66,
      66,

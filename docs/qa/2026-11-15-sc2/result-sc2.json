@@ -1,9 +1,9 @@
 {
- "at": "2026-11-17T06:21:28.594Z",
+ "at": "2026-11-18T14:38:05.725Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
-   "item": "desk 처음에는 끔",
+   "item": "desk 꺼 둔 저장이면 끔",
    "want": "스위치 없는 주소 · 계약전 끔 · 이번 판에 계약 없음",
    "got": {
     "on": false,
@@ -112,6 +112,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     }
    },
@@ -136,7 +137,7 @@
    "ok": true
   },
   {
-   "item": "phone 처음에는 끔",
+   "item": "phone 꺼 둔 저장이면 끔",
    "want": "스위치 없는 주소 · 계약전 끔 · 이번 판에 계약 없음",
    "got": {
     "on": false,
@@ -245,6 +246,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     }
    },

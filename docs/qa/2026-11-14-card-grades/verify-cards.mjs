@@ -6,6 +6,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const OUT = new URL('./', import.meta.url);
 const BASE = process.env.WC_URL || 'http://localhost:3000/';
+const CLASSIC = `${BASE}?lab=classic`;   // 보통 체스로 연다 — 계약전이 기본이 된 뒤(11-18)에도 이 검증은 보통 판을 본다
 const RESULT = process.argv[2] || 'result-cards.json';
 const SHOTS = process.argv[3] || 'after';
 mkdirSync(new URL(`./${SHOTS}/`, OUT), { recursive: true });
@@ -43,7 +44,7 @@ for (const [port, name, w, h, touch, reduce] of [[9541, 'desk', 1280, 800, false
   await until(`location.href.startsWith(${JSON.stringify(BASE)}) && document.readyState !== 'loading'`, 60000);
   const seeded = await ev(`(localStorage.setItem('wildcrown.cards.v1', ${JSON.stringify(JSON.stringify({ v: 1, cards: all, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 }))}), localStorage.removeItem('wildcrown.resume.v1'), localStorage.getItem('wildcrown.cards.v1').length)`);
   if (!(seeded > 100)) throw new Error('카드 저장을 심지 못했다: ' + seeded);
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: CLASSIC });
   await sleep(1500);
   await until(`${W}?.isStarted?.() && !${W}.debugBusy()`, 90000);
   await sleep(2000);

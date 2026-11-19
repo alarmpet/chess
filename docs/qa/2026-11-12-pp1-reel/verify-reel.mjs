@@ -1,3 +1,4 @@
+// ⚠️ 2026-11-18: 소라 릴은 왕관 슬롯머신(src/fx/slotMachine.js)으로 바뀌었다. 이 스크립트는 옛 릴 전용이라 이제 4/16 — 새 검증은 docs/qa/2026-11-18-slot-machine/verify-slot.mjs.
 // PP-1 소라 릴 확인: 시험 스위치(?lab=contract) 뒤에서만 돌고, 계약 목표 셋을 시간표대로 공개하고, 말들이 파도타기를 한 뒤
 // 정확히 제자리로 돌아오고, 입력을 막지 않고(도는 중에 실제 클릭으로 수를 둔다), 누르면 건너뛰고, 쉬는 동안 드로우콜이 늘지 않는다.
 // dev 서버(3000)에서: node docs/qa/2026-11-12-pp1-reel/verify-reel.mjs   (빌드판: WC_URL=http://localhost:4173/)
@@ -28,6 +29,9 @@ for (const [port, name, phone] of [[9486, 'mouse', false], [9487, 'touch', true]
   ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
   await new Promise((ok) => { ws.onopen = ok; });
   const send = (method, params = {}) => new Promise((ok) => { const i = ++id; pending.set(i, ok); ws.send(JSON.stringify({ id: i, method, params })); });
+  // 슬롯머신(11-18): 레버를 기다리지 않고 바로 당기는 사람 흉내 — 문서가 열릴 때마다 심는다
+  await send('Page.enable');
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: 'setInterval(() => { try { window.wizardChess?.pullLever?.(); } catch (e) {} }, 120);' });
   const ev = async (expression) => { const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }); if (r.result?.exceptionDetails) throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 300)); return r.result?.result?.value; };
   const until = async (expr, ms = 60000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await ev(expr).catch(() => false)) return true; await sleep(20); } return false; };
   const shot = async (file) => { const s = await send('Page.captureScreenshot', { format: 'jpeg', quality: 82 }); { const shotBuf = Buffer.from(s.result.data, 'base64'); for (let k = 0; ; k++) { try { writeFileSync(new URL(file, OUT), shotBuf); break; } catch (e) { if (k >= 5) { console.log('⚠️ 캡처를 못 씀(파일이 잠김)', String(e.code || e)); break; } await sleep(500); } } } };
@@ -54,7 +58,7 @@ for (const [port, name, phone] of [[9486, 'mouse', false], [9487, 'touch', true]
       localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null }));
       localStorage.setItem('wildcrown.contract.v1', JSON.stringify({ v: 1, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: 2, lossRun: 0 }));   // IR-1 뒤: 상대는 「정식」으로 고정
       localStorage.removeItem('wildcrown.resume.v1'); return 1; })()`);
-    await send('Page.navigate', { url: BASE + query });
+    await send('Page.navigate', { url: BASE + (query || '?lab=classic') });
     await sleep(1500);
     await until(`(() => { const w = ${W}; return w?.isStarted?.() && !w.debugBusy(); })()`, 90000);
   };

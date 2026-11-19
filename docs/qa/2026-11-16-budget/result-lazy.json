@@ -1,5 +1,5 @@
 {
- "at": "2026-11-17T06:29:47.387Z",
+ "at": "2026-11-18T14:45:38.001Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
@@ -60,7 +60,7 @@
    "item": "desk 마을 닫은 뒤 판",
    "want": "판이 다시 그려진다(드로우콜 > 0)",
    "got": {
-    "frames": 43,
+    "frames": 44,
     "calls": 66
    },
    "ok": true
@@ -132,7 +132,7 @@
    "item": "phone 마을 닫은 뒤 판",
    "want": "판이 다시 그려진다(드로우콜 > 0)",
    "got": {
-    "frames": 35,
+    "frames": 43,
     "calls": 64
    },
    "ok": true

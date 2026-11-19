@@ -6,6 +6,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const OUT = new URL('./', import.meta.url);
 const BASE = process.env.WC_URL || 'http://localhost:3000/';
+const CLASSIC = `${BASE}?lab=classic`;   // 보통 체스로 연다 — 계약전이 기본이 된 뒤(11-18)에도 이 검증은 보통 판을 본다
 const RESULT = process.argv[2] || 'result-lazy.json';
 const SHOTS = process.argv[3] || 'after';
 mkdirSync(new URL(`./${SHOTS}/`, OUT), { recursive: true });
@@ -40,7 +41,7 @@ for (const [port, name, w, h, touch] of [[9581, 'desk', 1280, 800, false], [9582
   await ev(`(localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 })),
     localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null })),
     localStorage.setItem('wildcrown.fx.v1', JSON.stringify({ shake: true, quick: false, cards: false, dive: false, quests: false, blitz: false })), localStorage.removeItem('wildcrown.resume.v1'), 1)`);
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: CLASSIC });
   await sleep(1500);
   await until(`${W}?.isStarted?.() && !${W}.debugBusy()`, 90000);
   await sleep(1500);

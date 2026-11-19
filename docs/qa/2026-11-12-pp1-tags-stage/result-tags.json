@@ -1,32 +1,32 @@
 {
  "url": "http://localhost:3000/",
- "at": "2026-11-17T06:47:15.806Z",
+ "at": "2026-11-19T08:25:31.439Z",
  "pass": 24,
  "total": 24,
  "measured": {
   "mouse": {
-   "idleCalls": 69,
-   "tagCalls": 73,
-   "idleMatch": 68,
-   "stageCalls": 74,
+   "idleCalls": 70,
+   "tagCalls": 74,
+   "idleMatch": 69,
+   "stageCalls": 75,
    "zenithBase": "3f9fe8",
    "zenithMatch": "307eb9",
    "shallowBase": "42c9cd",
    "shallowMatch": "3ab4b7",
    "seaRate": 0.4,
-   "doneCalls": 69
+   "doneCalls": 70
   },
   "touch": {
-   "idleCalls": 65,
-   "tagCalls": 69,
-   "idleMatch": 64,
-   "stageCalls": 70,
+   "idleCalls": 66,
+   "tagCalls": 70,
+   "idleMatch": 65,
+   "stageCalls": 71,
    "zenithBase": "3f9fe8",
    "zenithMatch": "307eb9",
    "shallowBase": "42c9cd",
    "shallowMatch": "3ab4b7",
    "seaRate": 0.4,
-   "doneCalls": 65
+   "doneCalls": 66
   }
  },
  "rows": [
@@ -70,8 +70,8 @@
    "want": "딱지가 그리는 메시 3(종류마다 하나) · 전체 ≤ 100",
    "got": {
     "draws": 3,
-    "idle": 69,
-    "calls": 73
+    "idle": 70,
+    "calls": 74
    },
    "ok": true
   },
@@ -121,8 +121,8 @@
     "tags": 12,
     "halos": 12,
     "draws": 4,
-    "idle": 68,
-    "calls": 74
+    "idle": 69,
+    "calls": 75
    },
    "ok": true
   },
@@ -142,7 +142,7 @@
      null,
      null
     ],
-    "beat": 2
+    "beat": 1
    },
    "ok": true
   },
@@ -227,8 +227,8 @@
    "want": "딱지가 그리는 메시 3(종류마다 하나) · 전체 ≤ 100",
    "got": {
     "draws": 3,
-    "idle": 65,
-    "calls": 69
+    "idle": 66,
+    "calls": 70
    },
    "ok": true
   },
@@ -278,8 +278,8 @@
     "tags": 12,
     "halos": 12,
     "draws": 4,
-    "idle": 64,
-    "calls": 70
+    "idle": 65,
+    "calls": 71
    },
    "ok": true
   },
@@ -299,7 +299,7 @@
      null,
      null
     ],
-    "beat": 2
+    "beat": 1
    },
    "ok": true
   },

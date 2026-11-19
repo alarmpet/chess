@@ -5,6 +5,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const OUT = new URL('./', import.meta.url);
 const BASE = process.env.WC_URL || 'http://localhost:3000/';
+const CLASSIC = `${BASE}?lab=classic`;   // 보통 체스로 연다 — 계약전이 기본이 된 뒤(11-18)에도 이 검증은 보통 판을 본다
 const RESULT = process.argv[2] || 'result-play.json';
 const SHOTS = process.argv[3] || 'after';
 mkdirSync(new URL(`./${SHOTS}/`, OUT), { recursive: true });
@@ -40,7 +41,7 @@ for (const [port, name, w, h, touch] of [[9531, 'desk', 1280, 800, false], [9532
   await ev(`(localStorage.setItem('wildcrown.cards.v1', JSON.stringify({ v: 1, cards: {}, sinceRare: 0, sinceHero: 0, firstDone: true, games: 10, dust: 0, shelf: [], shelfSlots: 3 })),
     localStorage.setItem('wildcrown.skill.v1', JSON.stringify({ v: 1, rating: 1000, games: 30, mode: 'fixed', step: 3, hold: 0, change: null })),
     localStorage.setItem('wildcrown.fx.v1', JSON.stringify({ shake: true, quick: false, cards: false, dive: false, quests: false, blitz: false })), localStorage.removeItem('wildcrown.resume.v1'), 1)`);
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: CLASSIC });
   await sleep(1500);
   await until(`${W}?.isStarted?.() && !${W}.debugBusy()`, 90000);
   await sleep(2500);
@@ -105,7 +106,7 @@ for (const [port, name, w, h, touch] of [[9531, 'desk', 1280, 800, false], [9532
 
   // 3차: 1.e4 d5 2.d4 에서 이어 한다(상대가 e5 를 둔 것으로) — 잡을 말이 있는 국면에서 고리 · 퀸의 여러 점 · 위험 표시를 본다
   await ev(`(localStorage.setItem('wildcrown.resume.v1', JSON.stringify({ v: 1, gameId: 77, color: 'w', rivalId: null, moves: [['e2','e4'],['d7','d5'],['d2','d4'],['e7','e5']].map(([from, to]) => ({ from, to })) })), 1)`);
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: CLASSIC });
   await sleep(1500);
   await until(`${W}?.isStarted?.() && !${W}.debugBusy() && ${W}.debugHistory().length === 4`, 90000);
   await sleep(2500);
@@ -127,7 +128,7 @@ for (const [port, name, w, h, touch] of [[9531, 'desk', 1280, 800, false], [9532
 
   // 4차: 체크메이트 고리 — 1.f3 e5 2.g4 에서 흑으로 이어 해 Qh4# 를 실제로 눌러 둔다
   await ev(`(localStorage.setItem('wildcrown.resume.v1', JSON.stringify({ v: 1, gameId: 78, color: 'b', rivalId: null, moves: [['f2','f3'],['e7','e5'],['g2','g4']].map(([from, to]) => ({ from, to })) })), 1)`);
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: CLASSIC });
   await sleep(1500);
   await until(`${W}?.isStarted?.() && !${W}.debugBusy() && ${W}.debugHistory().length === 3`, 90000);
   await sleep(2500);

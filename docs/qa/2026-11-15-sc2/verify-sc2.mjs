@@ -38,6 +38,9 @@ for (const [port, name, w, h, touch] of [[9561, 'desk', 1280, 800, false], [9562
   ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
   await new Promise((ok) => { ws.onopen = ok; });
   const send = (method, params = {}) => new Promise((ok) => { const i = ++id; pending.set(i, ok); ws.send(JSON.stringify({ id: i, method, params })); });
+  // 슬롯머신(11-18): 레버를 기다리지 않고 바로 당기는 사람 흉내 — 문서가 열릴 때마다 심는다
+  await send('Page.enable');
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: 'setInterval(() => { try { window.wizardChess?.pullLever?.(); } catch (e) {} }, 120);' });
   const ev = async (expression) => (await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result?.result?.value;
   const until = async (expr, ms = 60000, step = 50) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await ev(expr).catch(() => false)) return true; await sleep(step); } return false; };
   const shot = async (file) => { const s = await send('Page.captureScreenshot', { format: 'jpeg', quality: 88 }); { const shotBuf = Buffer.from(s.result.data, 'base64'); for (let k = 0; ; k++) { try { writeFileSync(new URL(`./${SHOTS}/${file}`, OUT), shotBuf); break; } catch (e) { if (k >= 5) { console.log('⚠️ 캡처를 못 씀(파일이 잠김)', String(e.code || e)); break; } await sleep(500); } } } };
@@ -72,14 +75,14 @@ for (const [port, name, w, h, touch] of [[9561, 'desk', 1280, 800, false], [9562
   const ready = `${W}?.isStarted?.() && !${W}.debugBusy()`;
   const coinsNow = `(JSON.parse(localStorage.getItem('wildcrown.village.v1') || 'null')?.coins ?? ${START_COINS})`;
 
-  // 1) 처음에는 꺼져 있다(주소에 스위치 없음)
-  await ev(`(${base}, localStorage.removeItem('wildcrown.resume.v1'), localStorage.removeItem('wildcrown.contract.v1'), 1)`);
+  // 1) 메뉴에서 꺼 둔 저장(on=false)이면 꺼져 있다(주소에 스위치 없음). 11-18 부터 저장이 없으면 켬이 기본이다.
+  await ev(`(${base}, localStorage.removeItem('wildcrown.resume.v1'), localStorage.setItem('wildcrown.contract.v1', JSON.stringify({ v: 1, on: false })), 1)`);
   await send('Page.navigate', { url: BASE });
   await sleep(1500);
   await until(ready, 90000);
   await sleep(1500);
   const off = await ev(`({ on: ${W}.isContractOn(), reel: ${W}.debugReel().contract, url: location.search })`);
-  check(`${name} 처음에는 끔`, '스위치 없는 주소 · 계약전 끔 · 이번 판에 계약 없음', off, off.on === false && off.reel === null && off.url === '');
+  check(`${name} 꺼 둔 저장이면 끔`, '스위치 없는 주소 · 계약전 끔 · 이번 판에 계약 없음', off, off.on === false && off.reel === null && off.url === '');
 
   // 2) 메뉴에서 켠다: 단추가 「켬」이 되고 저장에 남는다
   await ev(`[...document.querySelectorAll('button')].find((b) => /메뉴|☰/.test(b.textContent || ''))?.click()`);
@@ -93,7 +96,8 @@ for (const [port, name, w, h, touch] of [[9561, 'desk', 1280, 800, false], [9562
   check(`${name} 메뉴에서 켬`, '단추가 화면 안 · 「끔」→「켬」 · 저장 on=true', { before: btn0, after: on }, Boolean(btn0?.inView) && /끔/.test(btn0.text) && on.on === true && /켬/.test(on.text || '') && on.pressed === 'true' && on.saved === true);
 
   // 3) 다시 열어도 켜져 있고(스위치 없는 주소), 새 판이 계약전으로 열린다
-  await ev(`(localStorage.removeItem('wildcrown.resume.v1'), 1)`);
+  // 연습을 마친 사람으로 둔다 — 처음 여는 사람은 릴 뒤에 연습 1번이 스스로 열린다(11-18, HK-2 측정이 따로 본다)
+  await ev(`(localStorage.removeItem('wildcrown.resume.v1'), localStorage.setItem('wildcrown.contract.v1', JSON.stringify({ ...JSON.parse(localStorage.getItem('wildcrown.contract.v1')), practice: 1 })), 1)`);
   await send('Page.navigate', { url: BASE });
   await sleep(1500);
   await until(ready, 90000);

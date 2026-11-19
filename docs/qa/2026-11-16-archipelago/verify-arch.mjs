@@ -7,6 +7,7 @@ import { BUILDINGS, KIND_ORDER, newVillage } from '../../../src/village/economy.
 
 const OUT = new URL('./', import.meta.url);
 const BASE = process.env.WC_URL || 'http://localhost:3000/';
+const CLASSIC = `${BASE}?lab=classic`;   // 보통 체스로 연다 — 계약전이 기본이 된 뒤(11-18)에도 이 검증은 보통 판을 본다
 const RESULT = process.argv[2] || 'result-arch.json';
 const SHOTS = process.argv[3] || 'after';
 mkdirSync(new URL(`./${SHOTS}/`, OUT), { recursive: true });
@@ -50,7 +51,7 @@ for (const [port, name, w, h, touch] of [[9601, 'desk', 1280, 800, false], [9602
   const vil = () => ev(`JSON.parse(localStorage.getItem('wildcrown.village.v1') || 'null')`);
   const reopen = async (v) => {
     await ev(`(${base}, localStorage.removeItem('wildcrown.resume.v1'), localStorage.removeItem('wildcrown.islands.v1'), localStorage.setItem('wildcrown.village.v1', ${JSON.stringify(v)}), 1)`);
-    await send('Page.navigate', { url: BASE });
+    await send('Page.navigate', { url: CLASSIC });
     await sleep(1500);
     await until(ready, 90000);
     await sleep(1000);

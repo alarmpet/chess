@@ -1,5 +1,5 @@
 {
- "at": "2026-11-17T05:27:04.685Z",
+ "at": "2026-11-18T14:07:23.887Z",
  "base": "http://localhost:3000/",
  "rows": [
   {
@@ -37,6 +37,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "storeRung": 1,
@@ -159,6 +160,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "storeRung": 1,

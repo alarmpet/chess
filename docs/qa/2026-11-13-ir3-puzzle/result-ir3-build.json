@@ -1,5 +1,5 @@
 {
- "at": "2026-11-17T04:58:59.536Z",
+ "at": "2026-11-18T13:35:17.505Z",
  "base": "http://localhost:4173/",
  "practice": [
   "cp01",
@@ -50,10 +50,11 @@
      "index": 0,
      "total": 3,
      "id": "cp01",
+     "auto": false,
      "tries": 0,
      "hint": false,
      "solved": false,
-     "at": 24157,
+     "at": 27387,
      "ms": null
     },
     "bar": {
@@ -92,10 +93,11 @@
      "index": 0,
      "total": 3,
      "id": "cp01",
+     "auto": false,
      "tries": 1,
      "hint": true,
      "solved": false,
-     "at": 24157,
+     "at": 27387,
      "ms": null
     },
     "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
@@ -112,11 +114,12 @@
      "index": 0,
      "total": 3,
      "id": "cp01",
+     "auto": false,
      "tries": 1,
      "hint": true,
      "solved": true,
-     "at": 24157,
-     "ms": 5870
+     "at": 27387,
+     "ms": 5678
     },
     "crown": [
      "n",
@@ -146,7 +149,7 @@
        "kind": "practice",
        "index": 0,
        "tries": 1,
-       "ms": 5870
+       "ms": 5678
       }
      ]
     }
@@ -176,7 +179,7 @@
     "practiceDone": true,
     "store": {
      "v": 1,
-     "on": false,
+     "on": true,
      "games": 0,
      "win": 0,
      "loss": 0,
@@ -258,6 +261,7 @@
      "reason": "resign",
      "plies": 24,
      "coins": 0,
+     "jackpot": false,
      "work": 0
     }
    },
@@ -280,7 +284,7 @@
     "overlay": false,
     "store": {
      "v": 1,
-     "on": false,
+     "on": true,
      "games": 4,
      "win": 1,
      "loss": 3,
@@ -363,10 +367,11 @@
      "index": 0,
      "total": 3,
      "id": "cp01",
+     "auto": false,
      "tries": 0,
      "hint": false,
      "solved": false,
-     "at": 9002.79999999702,
+     "at": 22821.600000023842,
      "ms": null
     },
     "bar": {
@@ -391,7 +396,7 @@
      "hud": false,
      "squares": 0
     },
-    "calls": 51
+    "calls": 64
    },
    "ok": true
   },
@@ -405,10 +410,11 @@
      "index": 0,
      "total": 3,
      "id": "cp01",
+     "auto": false,
      "tries": 1,
      "hint": true,
      "solved": false,
-     "at": 9002.79999999702,
+     "at": 22821.600000023842,
      "ms": null
     },
     "bar": "그 수로는 왕관이 완성되지 않아요. 금빛 왕관이 붙은 말을 잡아 보세요.",
@@ -425,11 +431,12 @@
      "index": 0,
      "total": 3,
      "id": "cp01",
+     "auto": false,
      "tries": 1,
      "hint": true,
      "solved": true,
-     "at": 9002.79999999702,
-     "ms": 6792
+     "at": 22821.600000023842,
+     "ms": 5900
     },
     "crown": [
      "n",
@@ -459,7 +466,7 @@
        "kind": "practice",
        "index": 0,
        "tries": 1,
-       "ms": 6792
+       "ms": 5900
       }
      ]
     }
@@ -489,7 +496,7 @@
     "practiceDone": true,
     "store": {
      "v": 1,
-     "on": false,
+     "on": true,
      "games": 0,
      "win": 0,
      "loss": 0,
@@ -571,6 +578,7 @@
      "reason": "resign",
      "plies": 24,
      "coins": 0,
+     "jackpot": false,
      "work": 0
     }
    },
@@ -593,7 +601,7 @@
     "overlay": false,
     "store": {
      "v": 1,
-     "on": false,
+     "on": true,
      "games": 4,
      "win": 1,
      "loss": 3,

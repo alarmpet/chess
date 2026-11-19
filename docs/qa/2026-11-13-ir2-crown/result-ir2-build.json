@@ -1,5 +1,5 @@
 {
- "at": "2026-11-17T06:00:28.613Z",
+ "at": "2026-11-18T14:27:21.787Z",
  "base": "http://localhost:4173/",
  "rows": [
   {
@@ -58,7 +58,7 @@
      "♝",
      null
     ],
-    "calls": 84
+    "calls": 58
    },
    "ok": true
   },
@@ -73,6 +73,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "crown": {
@@ -211,7 +212,7 @@
      "♝",
      null
     ],
-    "calls": 80
+    "calls": 67
    },
    "ok": true
   },
@@ -226,6 +227,7 @@
      "reason": "contract",
      "plies": 13,
      "coins": 18,
+     "jackpot": false,
      "work": 0
     },
     "crown": {
