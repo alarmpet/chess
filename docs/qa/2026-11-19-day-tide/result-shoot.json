@@ -1,0 +1,84 @@
+{
+ "at": "2026-11-19T08:19:24.321Z",
+ "base": "http://localhost:3000/",
+ "pass": 8,
+ "total": 8,
+ "rows": [
+  {
+   "item": "desk 새 판",
+   "want": "아침(0) · 밀물 0",
+   "got": {
+    "day": 0,
+    "name": "아침",
+    "tide": 0,
+    "override": null
+   },
+   "ok": true
+  },
+  {
+   "item": "desk GPU",
+   "want": "밀물 1 이 밀물 0 보다 1ms 넘게 비싸지 않다",
+   "got": {
+    "tide0": 22.03,
+    "tide1": 22.16
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 24반수 뒤",
+   "want": "남은 24반수 · 시간 0.5(오후 쪽) · 밀물 0.2~0.5",
+   "got": {
+    "left": 24,
+    "day": 0.499,
+    "name": "오후",
+    "tide": 0.367,
+    "override": null
+   },
+   "ok": true
+  },
+  {
+   "item": "desk 오류 없음",
+   "want": "페이지 예외 0",
+   "got": [],
+   "ok": true
+  },
+  {
+   "item": "phone 새 판",
+   "want": "아침(0) · 밀물 0",
+   "got": {
+    "day": 0,
+    "name": "아침",
+    "tide": 0,
+    "override": null
+   },
+   "ok": true
+  },
+  {
+   "item": "phone GPU",
+   "want": "밀물 1 이 밀물 0 보다 1ms 넘게 비싸지 않다",
+   "got": {
+    "tide0": 34.76,
+    "tide1": 24.44
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 24반수 뒤",
+   "want": "남은 24반수 · 시간 0.5(오후 쪽) · 밀물 0.2~0.5",
+   "got": {
+    "left": 24,
+    "day": 0.499,
+    "name": "오후",
+    "tide": 0.367,
+    "override": null
+   },
+   "ok": true
+  },
+  {
+   "item": "phone 오류 없음",
+   "want": "페이지 예외 0",
+   "got": [],
+   "ok": true
+  }
+ ]
+}

@@ -8,7 +8,8 @@ import { CONTRACT_NEED } from '../rules/contractSets.js';
 
 export const GEM_FLY_SEC = 0.85;     // 잡은 자리에서 왕관까지
 export const GEM_POP_SEC = 0.35;     // 박힐 때 통 튀는 시간
-export const GEM_COLORS = { p: '#ffc233', n: '#35d6b8', b: '#a877ff', r: '#ff7a5c', q: '#ff7ec0' };
+// j: 조커 보석(조커 잭팟에서 양쪽이 하나씩 받고 시작한다) — 흰빛
+export const GEM_COLORS = { p: '#ffc233', n: '#35d6b8', b: '#a877ff', r: '#ff7a5c', q: '#ff7ec0', j: '#ffffff' };
 
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
 
@@ -21,11 +22,13 @@ export function crownGemList(set, moves = []) {
   const out = { w: [], b: [] };
   if (!set) return out;
   const counts = { w: set.goals.map(() => 0), b: set.goals.map(() => 0) };
+  // 조커 세트: 첫 칸은 처음부터 조커 보석으로 차 있다(contractProgress 와 같은 규칙). 잡아서 얻은 것이 아니라 자리(at)가 없다.
+  if (set.joker) for (const color of ['w', 'b']) { counts[color][0] = set.goals[0].count; out[color].push({ type: 'j', goal: 0, ply: 0, at: null }); }
   for (let i = 0; i < moves.length; i++) {
     const m = moves[i];
     if (!m?.captured || !counts[m.color]) continue;
-    const gi = set.goals.findIndex((g) => g.type === m.captured);
-    if (gi < 0 || counts[m.color][gi] >= set.goals[gi].count) continue;
+    const gi = set.goals.findIndex((g, k) => g.type === m.captured && counts[m.color][k] < g.count);   // 덜 찬 첫 칸(잭팟은 같은 종류 셋)
+    if (gi < 0) continue;
     counts[m.color][gi] += 1;
     if (counts[m.color][gi] < set.goals[gi].count) continue;
     out[m.color].push({ type: m.captured, goal: gi, ply: i + 1, at: m.to });
@@ -106,7 +109,7 @@ export function createCrownGems(scene, { square }) {
         const key = `${g.goal}:${g.ply}`;
         const old = have.find((h) => h.key === key);
         if (old) return old;
-        const from = fly && g.ply === plies && pos ? pos(g.at) : null;
+        const from = fly && g.ply === plies && pos && g.at ? pos(g.at) : null;
         return { type: g.type, key, fly: from ? 0 : null, pop: from ? 0 : GEM_POP_SEC, from };
       });
       held[side] = next;

@@ -166,6 +166,19 @@ export function commitPouch(col, pouch) {
   return true;
 }
 
+/**
+ * 판이 끝날 때 주머니를 도감에 넣는다. countGame=false(왕관 계약전)는 카드만 넣고 판 수(games)는 올리지 않는다 —
+ * 판 수는 보통 체스의 미션·현상금 열림과 상대 세기에 쓰인다. 이미 정산한 판이면 아무것도 바꾸지 않고 null.
+ */
+export function closePouch(col, pouch, gameId, countGame = true) {
+  const id = gameId >>> 0;
+  if (col.settled.includes(id)) return null;
+  if (pouch && pouch.gameId === id) commitPouch(col, pouch);
+  else col.settled = [...col.settled, id].slice(-SETTLED_MAX);
+  if (countGame) col.games += 1;
+  return { dust: convertOverflow(col) };
+}
+
 /** Spare copies beyond the one that fills the album slot. */
 export const sparesOf = (col, animal, rarity) => Math.max(0, (col.cards[cardId(animal, rarity)] || 0) - 1);
 

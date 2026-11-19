@@ -1,0 +1,287 @@
+{
+ "seed": 7000,
+ "level": "normal",
+ "games": 100,
+ "rows": [
+  {
+   "id": "p3nb2",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 3
+    },
+    {
+     "type": "n",
+     "count": 1
+    },
+    {
+     "type": "b",
+     "count": 2
+    }
+   ],
+   "games": 100,
+   "white": 52,
+   "black": 40,
+   "draw": 8,
+   "whiteShare": 0.565,
+   "reasons": {
+    "contract": 89,
+    "limit": 10,
+    "checkmate": 1
+   },
+   "contractShare": 0.89,
+   "plies": {
+    "median": 31,
+    "p90": 48
+   },
+   "captures": 8,
+   "use": [
+    0.83,
+    0.96,
+    0.21
+   ],
+   "sec": 321
+  },
+  {
+   "id": "p2n2r2",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 2
+    },
+    {
+     "type": "n",
+     "count": 2
+    },
+    {
+     "type": "r",
+     "count": 2
+    }
+   ],
+   "games": 100,
+   "white": 55,
+   "black": 33,
+   "draw": 12,
+   "whiteShare": 0.625,
+   "reasons": {
+    "contract": 78,
+    "limit": 17,
+    "checkmate": 5
+   },
+   "contractShare": 0.78,
+   "plies": {
+    "median": 32,
+    "p90": 48
+   },
+   "captures": 9,
+   "use": [
+    1,
+    0.97,
+    0.03
+   ],
+   "sec": 341
+  },
+  {
+   "id": "p3n2q",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 3
+    },
+    {
+     "type": "n",
+     "count": 2
+    },
+    {
+     "type": "q",
+     "count": 1
+    }
+   ],
+   "games": 100,
+   "white": 48,
+   "black": 33,
+   "draw": 19,
+   "whiteShare": 0.593,
+   "reasons": {
+    "limit": 25,
+    "contract": 72,
+    "checkmate": 3
+   },
+   "contractShare": 0.72,
+   "plies": {
+    "median": 35,
+    "p90": 48
+   },
+   "captures": 9,
+   "use": [
+    0.79,
+    0.69,
+    0.51
+   ],
+   "sec": 387
+  },
+  {
+   "id": "p3b2r2",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 3
+    },
+    {
+     "type": "b",
+     "count": 2
+    },
+    {
+     "type": "r",
+     "count": 2
+    }
+   ],
+   "games": 100,
+   "white": 36,
+   "black": 30,
+   "draw": 34,
+   "whiteShare": 0.545,
+   "reasons": {
+    "limit": 62,
+    "contract": 28,
+    "checkmate": 10
+   },
+   "contractShare": 0.28,
+   "plies": {
+    "median": 48,
+    "p90": 48
+   },
+   "captures": 11,
+   "use": [
+    0.96,
+    0.89,
+    0.14
+   ],
+   "sec": 479
+  },
+  {
+   "id": "pr2q",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "p",
+     "count": 1
+    },
+    {
+     "type": "r",
+     "count": 2
+    },
+    {
+     "type": "q",
+     "count": 1
+    }
+   ],
+   "games": 100,
+   "white": 26,
+   "black": 18,
+   "draw": 56,
+   "whiteShare": 0.591,
+   "reasons": {
+    "contract": 34,
+    "limit": 56,
+    "checkmate": 10
+   },
+   "contractShare": 0.34,
+   "plies": {
+    "median": 48,
+    "p90": 48
+   },
+   "captures": 11,
+   "use": [
+    1,
+    0.09,
+    0.91
+   ],
+   "sec": 475
+  },
+  {
+   "id": "n2b2r2",
+   "jackpot": false,
+   "goals": [
+    {
+     "type": "n",
+     "count": 2
+    },
+    {
+     "type": "b",
+     "count": 2
+    },
+    {
+     "type": "r",
+     "count": 2
+    }
+   ],
+   "games": 100,
+   "white": 32,
+   "black": 23,
+   "draw": 45,
+   "whiteShare": 0.582,
+   "reasons": {
+    "contract": 28,
+    "limit": 70,
+    "checkmate": 2
+   },
+   "contractShare": 0.28,
+   "plies": {
+    "median": 48,
+    "p90": 48
+   },
+   "captures": 11,
+   "use": [
+    1,
+    0.96,
+    0.04
+   ],
+   "sec": 410
+  },
+  {
+   "id": "j-p2",
+   "jackpot": true,
+   "goals": [
+    {
+     "type": "p",
+     "count": 2
+    },
+    {
+     "type": "p",
+     "count": 2
+    },
+    {
+     "type": "p",
+     "count": 2
+    }
+   ],
+   "games": 100,
+   "white": 50,
+   "black": 39,
+   "draw": 11,
+   "whiteShare": 0.562,
+   "reasons": {
+    "limit": 18,
+    "contract": 76,
+    "checkmate": 6
+   },
+   "contractShare": 0.76,
+   "plies": {
+    "median": 36,
+    "p90": 48
+   },
+   "captures": 11,
+   "use": [
+    1,
+    1,
+    0
+   ],
+   "sec": 256
+  }
+ ]
+}

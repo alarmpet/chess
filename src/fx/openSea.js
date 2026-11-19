@@ -5,6 +5,11 @@ import * as THREE from 'three';
 
 /** How far the beach reaches past the board's rim. */
 const BEACH = 0.26;
+/** 밀물이 가득일 때 해안선이 들어오는 거리 — 해변 폭(BEACH)과 물가 띠(0.13)를 지나 판 가장자리까지. */
+const TIDE_REACH = 0.36;
+/** 밀물이 가득일 때 물 평면이 올라가는 높이(해변은 물 위 0.05). 해변을 덮고 판의 흙벽을 타고 오른다 —
+ *  0.07 은 데스크 카메라에서 해변이 좁게만 보여 블라인드 비평가가 물높이 순서를 틀렸다(11-19). */
+const TIDE_RISE = 0.17;
 const CORNER = 0.35;
 const SKY_RADIUS = 58;
 
@@ -81,7 +86,7 @@ void main() {
 }`;
 
 const FLOOR_FRAG = `
-uniform float uTime;
+uniform float uTime, uTide;
 uniform vec3 uSand, uLagoon, uReef, uDeep, uCaustic, uSun;
 varying vec3 vWorld;
 ${SHAPE_GLSL}
@@ -105,15 +110,17 @@ void main() {
   float grain = noise(p * 14.0) * 0.5 + noise(p * 4.0) * 0.5;
   vec3 col = uSand * (0.93 + 0.1 * grain);
   // Wet sand, then rippled lagoon floor, then patches of reef rock, then blue.
-  col = mix(col, col * vec3(0.82, 0.74, 0.6), smoothstep(0.14, 0.0, abs(e - 0.13)));
+  // 젖은 모래 띠는 물가를 따라간다(밀물이면 섬 쪽으로)
+  float eS = e + uTide * ${TIDE_REACH.toFixed(2)};
+  col = mix(col, col * vec3(0.82, 0.74, 0.6), smoothstep(0.14, 0.0, abs(eS - 0.13)));
   col = mix(col, uLagoon * (0.94 + 0.12 * grain), smoothstep(0.14, 0.62, e));
   col *= 1.0 + 0.07 * sin((p.x + p.y * 0.6) * 15.0 + noise(p * 2.0) * 7.0) * smoothstep(0.2, 0.7, e);
   float rock = smoothstep(0.42, 0.68, noise(p * 1.6 + 7.0)) * smoothstep(0.35, 0.9, e);
   col = mix(col, uReef, rock * 0.8);
   col = mix(col, uDeep, smoothstep(0.5, 2.4, depth));
-  if (e > 0.0) {
+  if (eS > 0.0) {
     float light = caustic(p * 0.42, uTime * 0.55);
-    col += uCaustic * min(light, 1.6) * 1.3 * exp(-depth * 0.9) * smoothstep(0.12, 0.3, e);
+    col += uCaustic * min(light, 1.6) * 1.3 * exp(-max(depth, 0.0) * 0.9) * smoothstep(0.12, 0.3, eS);
   }
   // The board's shadow on the beach, which this unlit floor would otherwise miss.
   vec2 off = p + uSun.xz * 0.16;
@@ -125,8 +132,8 @@ void main() {
 }`;
 
 const WATER_FRAG = `
-uniform float uTime, uFadeFrom, uFadeTo;
-uniform vec3 uDeep, uShallow, uFoam, uHorizon, uSky, uSun;
+uniform float uTime, uFadeFrom, uFadeTo, uTide;
+uniform vec3 uDeep, uShallow, uFoam, uHorizon, uSky, uSun, uLagoonTint;
 varying vec3 vWorld;
 ${SHAPE_GLSL}
 // The sea looked like still glass from the player camera (user, 2026-11-05: 「파도도 안 치고 너무 잔잔해」). Longer
@@ -140,7 +147,13 @@ float roll(vec2 p, float t, float h) { return sin(dot(p, ROLL_DIR) * 1.7 + t * 1
 void main() {
   vec2 p = vWorld.xz / uScale;
   float t = uTime;
-  float e = islandEdge(p);
+  // 밀물(WG-5, 11-19): 해안선이 섬 쪽으로 TIDE_REACH 만큼 들어온다. 물 평면도 그만큼 올라가 있어(JS) 해변을 덮는다 —
+  // 새 물가 안쪽(아직 마른 모래)은 버린다. 밀물 0 이면 예전과 같다.
+  float e0 = islandEdge(p);
+  float e = e0 + uTide * ${TIDE_REACH.toFixed(2)};
+  if (uTide > 0.0 && e < 0.1) discard;
+  // 밀물에 새로 잠긴 해변(예전엔 마른 모래): 얕아도 물로 읽히게 물빛을 진하게 — 투명하면 「바랜 모래」로만 보였다(11-19 캡처)
+  float flooded = uTide > 0.0 ? smoothstep(0.12, -0.02, e0) : 0.0;
   float h = swell(p, t);
   float r = roll(p, t, h);
   // Open water only: by the beach the shore foam and the shallows do the moving.
@@ -165,6 +178,8 @@ void main() {
   col = mix(col, mix(uShallow, uFoam, 0.4), smoothstep(0.55, 1.0, r) * 0.28 * far);
   float caps = smoothstep(0.8, 0.97, r) * smoothstep(0.58, 0.82, noise(p * 3.1 - t * vec2(0.35, 0.2))) * far;
   foam = max(foam, caps * 0.7);
+  col = mix(col, mix(uShallow, uLagoonTint, 0.35), flooded * 0.55);
+  alpha = max(alpha, flooded * (0.5 + 0.1 * h));
   col = mix(col, uFoam, foam);
   col += vec3(1.0, 0.96, 0.85) * glint;
   gl_FragColor = vec4(col, max(max(alpha, foam * 0.92), min(glint, 1.0)));
@@ -253,7 +268,7 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
   const sun = new THREE.Vector3(3.8, 8.5, 4.2).normalize();
   const horizon = new THREE.Color(env.background);
   const color = (hex) => new THREE.Color(hex);
-  const shared = { uTime: { value: 0 }, uHalf: { value: half }, uScale: { value: scale }, uSun: { value: sun }, uCoastOn: { value: 0 }, uCoast: { value: new Array(COAST_SAMPLES).fill(0) } };
+  const shared = { uTime: { value: 0 }, uTide: { value: 0 }, uHalf: { value: half }, uScale: { value: scale }, uSun: { value: sun }, uCoastOn: { value: 0 }, uCoast: { value: new Array(COAST_SAMPLES).fill(0) } };
   let coast = null;
 
   const floor = new THREE.Mesh(floorGeometry(half), new THREE.ShaderMaterial({
@@ -284,6 +299,7 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
       uFoam: { value: color(sea.foam) },
       uHorizon: { value: horizon },
       uSky: { value: color(sea.sky) },
+      uLagoonTint: { value: color(sea.lagoon) },
       uFadeFrom: { value: sea.fadeFrom ?? 16 },
       uFadeTo: { value: sea.fadeTo ?? 46 }
     }
@@ -331,6 +347,14 @@ export function createOpenSea(group, env, { islandHalf, waterY, rand, scale = 1,
       return Boolean(coast);
     },
     coastOn: () => Boolean(coast),
+    /** 밀물 0 ~ 1(dayCycle.js 의 tideLevel). */
+    setTide(f) {
+      const v = Math.min(1, Math.max(0, Number(f) || 0));
+      shared.uTide.value = v;
+      water.position.y = waterY + v * TIDE_RISE;
+      return v;
+    },
+    tide: () => shared.uTide.value,
     tick(t) {
       shared.uTime.value = t;
       clouds.position.x = Math.sin(t * 0.03) * 0.5;

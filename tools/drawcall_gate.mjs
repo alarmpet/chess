@@ -75,13 +75,14 @@ function cdp(wsUrl) {
     if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.text || 'evaluate 실패');
     return r.result?.result?.value;
   };
-  return { ready, evaluate, close: () => ws.close() };
+  return { ready, evaluate, send, close: () => ws.close() };
 }
 
 try {
   const url = await startServer();
   log(`서버 ${url}`);
-  const wsUrl = await launchChrome(url);
+  // 보통 체스로 연다(?lab=classic). 계약전이 기본이 된 뒤(11-18)의 첫 화면은 아래에서 따로 잰다.
+  const wsUrl = await launchChrome(`${url}?lab=classic`);
   const c = cdp(wsUrl);
   await c.ready;
   await c.evaluate('new Promise((ok) => { const t = setInterval(() => { if (window.wizardChess?.debugRenderCalls) { clearInterval(t); ok(true); } }, 250); })');
@@ -133,6 +134,27 @@ try {
         if (!m.hit) { log(`실패: ${L.key} 잡기가 일어나지 않았다`); process.exitCode = 1; }
         else if (m.peak > MAX) { log('실패: 잡기 순간 상한 초과'); process.exitCode = 1; }
       }
+      await c.evaluate('(() => { localStorage.clear(); return true; })()');
+    }
+    // 계약전 첫 화면(HK-2, 11-18): 저장 없이 스위치 없는 주소로 열면 슬롯머신(레버를 바로 당김) → 표적 딱지 → 연습 1번이 열린다. 연습이 열리고 3초 뒤까지의 최대.
+    if (process.env.DRAWCALL_CONTRACT !== '0') {
+      await c.send('Page.navigate', { url });
+      await new Promise((ok) => setTimeout(ok, 1500));
+      await c.evaluate('new Promise((ok) => { const t = setInterval(() => { if (window.wizardChess?.isStarted?.() && window.wizardChess.debugRenderer) { clearInterval(t); ok(true); } }, 100); })');
+      const m = await c.evaluate(`new Promise((ok) => {
+        const w = window.wizardChess; const rr = w.debugRenderer(); const orig = rr.render.bind(rr); let peak = 0;
+        rr.render = (a, b) => { orig(a, b); peak = Math.max(peak, rr.info.render.calls); };
+        // 헤드리스(SwiftShader)는 프레임이 느려 릴이 오래 걸린다 — 연습이 열리고 3초 뒤, 또는 90초에 끝낸다
+        const t0 = performance.now(); let openAt = 0;
+        const t = setInterval(() => {
+          w.pullLever?.();   // 슬롯머신(11-18): 레버를 바로 당긴다
+          if (!openAt && w.debugPuzzle().puzzle && !w.debugBusy()) openAt = performance.now();
+          if ((openAt && performance.now() - openAt > 3000) || performance.now() - t0 > 90000) { clearInterval(t); rr.render = orig; ok({ peak, contract: w.debugReel().contract, puzzle: Boolean(w.debugPuzzle().puzzle), plays: w.debugReel().plays, sec: Math.round((performance.now() - t0) / 1000) }); }
+        }, 100);
+      })`);
+      log(`계약전 첫 화면(릴 · 딱지 · 연습 1번) ${m.sec}초 동안 최대 ${m.peak} · 상한 ${MAX}`);
+      if (!m.contract || !m.plays || !m.puzzle) { log(`실패: 계약전 첫 화면이 열리지 않았다 ${JSON.stringify(m)}`); process.exitCode = 1; }
+      else if (m.peak > MAX) { log('실패: 계약전 첫 화면 상한 초과'); process.exitCode = 1; }
       await c.evaluate('(() => { localStorage.clear(); return true; })()');
     }
     c.close();

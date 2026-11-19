@@ -67,9 +67,10 @@ test('계약전 한 판은 한 번만 주고, 마을의 판 수는 올리지 않
   assert.equal(v.coins, 23);
 });
 
-test('계약전 켜 둠은 저장에 남고, 없으면 꺼져 있다', () => {
-  assert.equal(emptyContractStore().on, false);
+test('계약전은 기본이 켬이고, 메뉴에서 끈 것(on=false)만 저장에 남아 꺼진다', () => {
+  assert.equal(emptyContractStore().on, true);
   assert.equal(sanitizeContractStore({ v: 1, on: true }).on, true);
-  assert.equal(sanitizeContractStore({ v: 1, on: 'yes' }).on, false);
-  assert.equal(sanitizeContractStore({ v: 1 }).on, false);
+  assert.equal(sanitizeContractStore({ v: 1, on: false }).on, false);
+  assert.equal(sanitizeContractStore({ v: 1 }).on, true);
+  assert.equal(sanitizeContractStore(null).on, true);
 });

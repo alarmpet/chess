@@ -5,7 +5,7 @@ import { fxSettings } from '../fx/settings.js';
 import CardFace, { ANIMAL_EN, ANIMAL_KO, RARITY_EN, RARITY_KO } from './CardFace';
 import {
   ANIMALS, ANIMAL_OF, DROP_TABLE, HERO, HERO_GUARANTEE, MERGE_COST, RARE, RARE_GUARANTEE, RARITIES, UNLOCK_GAMES,
-  albumProgress, howToGet, nextGoal, awardCard, buyShelfSlot, cardId, checkCard, commitPouch, consolationCard, convertOverflow, mergeCard, mergeList, newPouch, withPouch,
+  albumProgress, howToGet, nextGoal, awardCard, buyShelfSlot, cardId, checkCard, closePouch, consolationCard, mergeCard, mergeList, newPouch, withPouch,
   seededRoll, shelfPrice, sparesOf, toggleShelf
 } from './economy.js';
 import { MISSION_ACORNS, raceStep, sharedMission } from './missions.js';
@@ -26,13 +26,13 @@ const MERGE_MS = 1100;
 type Won = { id: string; animal: string; rarity: number; fresh: boolean; check?: boolean };
 type Fly = Won & { key: number; x: number; y: number };
 type Game = {
-  id: number; lastPly: number; won: Won[]; started: number; captures: number;
+  id: number; puzzle: boolean; lastPly: number; won: Won[]; started: number; captures: number;
   mission: any; missionState: string | null; quest: string | null; boost: boolean; ply: number;
   bounty: { on: Record<string, number> } | null; bountyAcorns: number; stampsOn: boolean; stampAcorns: number; questAcorns: number;
   rally: { active: string | null; offered: number; done: number } | null; rallyAcorns: number; scout: number; rewind: number; usedScout: boolean; usedRewind: boolean;
 };
 const freshGame = (id: number): Game => ({
-  id, lastPly: 0, won: [], started: Date.now(), captures: 0,
+  id, puzzle: false, lastPly: 0, won: [], started: Date.now(), captures: 0,
   mission: null, missionState: null, quest: null, boost: false, ply: 0, bounty: null, bountyAcorns: 0, stampsOn: false, stampAcorns: 0, questAcorns: 0, rally: null, rallyAcorns: 0, scout: 0, rewind: 0, usedScout: false, usedRewind: false
 });
 const engine = () => (window as any).wizardChess;
@@ -176,6 +176,8 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       const d = (e as CustomEvent).detail;
       startGame(d.gameId);
       const g = game.current;
+      // 연습 문제는 정산이 없다 — 카드도 주지 않는다(날아가는 카드를 보여 주고 버리지 않는다).
+      if (g.puzzle) return;
       // A taken-back move and its replay share a move number, so a capture pays only once.
       if (!d.byPlayer || d.ply <= g.lastPly) return;
       g.lastPly = d.ply;
@@ -197,6 +199,7 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       if (held && held.gameId !== d.gameId) clearPouch();
       if (!fxSettings().cards) return;
       startGame(d.gameId);
+      if (d.puzzle) { game.current.puzzle = true; setPlaying(false); return; }
       // FN-3: 첫 5판과 연습 단계(쉬움 상대)에서는 되감기 1번이 공짜로 있다.
       {
         const rival = engine()?.getRivalCatalog?.()?.rivals?.find((r: any) => r.id === d.rivalId) || null;
@@ -285,30 +288,31 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       // The first check the player gives pays the lion common, once per game (a resumed pouch remembers it).
       if (d.byPlayer && d.check && fxSettings().cards) {
         startGame(d.gameId);
-        if (!game.current.won.some((c: any) => c.check)) pay('check', 0, 50, 30);
+        if (!game.current.puzzle && !game.current.won.some((c: any) => c.check)) pay('check', 0, 50, 30);
       }
     };
-    const onFinished = (e: Event) => {
+    // contract=true: 왕관 계약전 한 판(contractfinished). 카드는 보통 판과 같이 주고(이기면 사자 카드, 빈손이면 위로 카드),
+    // 판 수와 일일 퀘스트의 「판 끝」은 올리지 않는다. 이긴·진 도토리는 계약전 결과 상자가 따로 적으므로 집계 줄에서 뺀다.
+    const onFinished = (e: Event, contract = false) => {
       if (!fxSettings().cards) return;
       const d = (e as CustomEvent).detail;
       if (loadCollection().settled.includes(d.gameId >>> 0)) return;
       startGame(d.gameId);
-      if (d.result === 'win') pay('king', seededRoll(d.gameId, 'mate', 0));
+      if (game.current.puzzle) return;
+      // 잭팟 판(세 칸이 다 같은 말)을 이기면 사자 카드가 희귀 이상이다.
+      if (d.result === 'win') pay('king', seededRoll(d.gameId, 'mate', 0), undefined, undefined, contract && d.jackpot ? { floor: RARE } : undefined);
       if (!game.current.won.length) pay(null, seededRoll(d.gameId, 'comfort', 0));
       const g = game.current;
       const saved = loadCollection();
-      const pouch = loadPouch();
-      if (pouch?.gameId === (d.gameId >>> 0)) commitPouch(saved, pouch);
+      const closed = closePouch(saved, loadPouch(), d.gameId, !contract);
       clearPouch();
-      saved.games += 1;
-      const dust = convertOverflow(saved);
       saveCollection(saved);
       setCol(saved);
-      if (dust) say(en ? `Stardust +${dust}` : `별가루 +${dust}`);
-      if (d.result) feedQuest({ kind: 'end', result: d.result });
+      if (closed?.dust) say(en ? `Stardust +${closed.dust}` : `별가루 +${closed.dust}`);
+      if (d.result && !contract) feedQuest({ kind: 'end', result: d.result });
       const extra = (g.missionState === 'done' ? MISSION_ACORNS : 0) + g.bountyAcorns + g.stampAcorns + g.questAcorns + g.rallyAcorns;
       if (extra) payMissionAcorns(extra);
-      setTally(acornTally({ result: d.result, mission: g.missionState === 'done' ? MISSION_ACORNS : 0, bounty: g.bountyAcorns, stamps: g.stampAcorns, quests: g.questAcorns, rally: g.rallyAcorns }));
+      setTally(acornTally({ result: contract ? null : d.result, mission: g.missionState === 'done' ? MISSION_ACORNS : 0, bounty: g.bountyAcorns, stamps: g.stampAcorns, quests: g.questAcorns, rally: g.rallyAcorns }));
       setTallyShown(0);
       engine()?.setBountyMarks?.([]);
       setPlaying(false);
@@ -317,19 +321,22 @@ export default function CardLayer({ open, onOpen, onClose, lang }: { open: boole
       setReveal([...g.won]);
       setSkills({ scout: 0, rewind: 0 });
       logGame({
-        type: 'game', at: new Date().toISOString(), gameId: d.gameId, rivalId: d.rivalId || null, color: d.color || null, result: d.result, seconds: Math.round((Date.now() - g.started) / 1000),
-        plies: d.moves?.length, captures: g.captures, cards: g.won.map((c) => c.id), fresh: g.won.filter((c) => c.fresh).length,
+        type: contract ? 'contract' : 'game', at: new Date().toISOString(), gameId: d.gameId, rivalId: d.rivalId || null, color: d.color || null, result: d.result, seconds: Math.round((Date.now() - g.started) / 1000),
+        plies: contract ? d.plies : d.moves?.length, captures: g.captures, cards: g.won.map((c) => c.id), fresh: g.won.filter((c) => c.fresh).length,
         mission: g.mission?.id || null, missionState: g.missionState, resigned: Boolean(d.resigned),
         rally: g.rally ? { offered: g.rally.offered, done: g.rally.done } : null, usedScout: g.usedScout, usedRewind: g.usedRewind
       });
     };
     window.addEventListener('piececaptured', onCapture);
+    const onContract = (e: Event) => onFinished(e, true);
     window.addEventListener('gamefinished', onFinished);
+    window.addEventListener('contractfinished', onContract);
     window.addEventListener('gamestarted', onStarted);
     window.addEventListener('movelanded', onMoved);
     return () => {
       window.removeEventListener('piececaptured', onCapture);
       window.removeEventListener('gamefinished', onFinished);
+      window.removeEventListener('contractfinished', onContract);
       window.removeEventListener('gamestarted', onStarted);
       window.removeEventListener('movelanded', onMoved);
     };

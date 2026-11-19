@@ -257,3 +257,14 @@ test('결정타 · 위험 · 아차: 심판이 센 합법 수로만', async () =
   // 둘 수 없는 수는 조용히 넘어간다
   assert.equal(oopsCheck(q.fen(), set, { from: 'a1', to: 'a8' }, after).oops, false);
 });
+
+// 11-18: 잭팟 판은 도토리가 두 배(기권은 여전히 0)
+test('잭팟 판의 도토리는 두 배', async () => {
+  const { contractCoins, CONTRACT_COINS, JACKPOT_COIN_MULT } = await import('../src/rules/contractGame.js');
+  assert.equal(JACKPOT_COIN_MULT, 2);
+  assert.equal(contractCoins('win', 'contract', 'p2nb'), CONTRACT_COINS.win);
+  assert.equal(contractCoins('win', 'contract'), CONTRACT_COINS.win);
+  assert.equal(contractCoins('win', 'contract', 'j-p3'), CONTRACT_COINS.win * 2);
+  assert.equal(contractCoins('loss', 'contract', 'j-p3'), CONTRACT_COINS.loss * 2);
+  assert.equal(contractCoins('win', 'resign', 'j-p3'), 0);
+});

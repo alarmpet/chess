@@ -1,0 +1,46 @@
+{
+ "seed": 7000,
+ "level": "normal",
+ "games": 100,
+ "rows": [
+  {
+   "id": "jk-b",
+   "jackpot": true,
+   "goals": [
+    {
+     "type": "b",
+     "count": 1
+    },
+    {
+     "type": "b",
+     "count": 1
+    },
+    {
+     "type": "b",
+     "count": 1
+    }
+   ],
+   "games": 100,
+   "white": 39,
+   "black": 46,
+   "draw": 15,
+   "whiteShare": 0.459,
+   "reasons": {
+    "limit": 15,
+    "contract": 85
+   },
+   "contractShare": 0.85,
+   "plies": {
+    "median": 25,
+    "p90": 48
+   },
+   "captures": 6,
+   "use": [
+    1,
+    1,
+    0
+   ],
+   "sec": 184
+  }
+ ]
+}

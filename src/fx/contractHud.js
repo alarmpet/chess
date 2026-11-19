@@ -6,9 +6,9 @@
 // IR-2 왕관 보석: 머리줄은 판 위 두 왕관의 거울이다 — 「내 왕관 ◆◇ · 상대 ◇◇」. 찬 보석은 색과 함께 그 목표의 체스 기호를 적는다.
 
 const NAMES = { p: '미어캣', n: '캥거루', b: '판다', r: '코뿔소', q: '호랑이' };
-const GLYPHS = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
+const GLYPHS = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛', j: '★' };
 // 판 위 보석(src/fx/crownGems.js 의 GEM_COLORS)과 같은 색
-const GEM_COLORS = { p: '#ffc233', n: '#35d6b8', b: '#a877ff', r: '#ff7a5c', q: '#ff7ec0' };
+const GEM_COLORS = { p: '#ffc233', n: '#35d6b8', b: '#a877ff', r: '#ff7a5c', q: '#ff7ec0', j: '#ffffff' };
 const CROWN_SLOTS = 2;
 
 const CSS = `
@@ -85,7 +85,9 @@ export function turnsLeftFor(pliesLeft, turn, color) {
 }
 
 const goalWord = (g) => `${NAMES[g.type]}${g.count > 1 ? ` ×${g.count}` : ''}`;
-const filled = (set, side) => set.goals.filter((g, i) => side.counts[i] >= g.count).map(goalWord).join(' · ');
+// 조커 세트의 첫 칸은 조커 ★ 가 채운 칸이다
+const cellWord = (set, g, i) => (set.joker && i === 0 ? '조커 ★' : goalWord(g));
+const filled = (set, side) => set.goals.map((g, i) => (side.counts[i] >= g.count ? cellWord(set, g, i) : null)).filter(Boolean).join(' · ');
 
 /**
  * 끝난 까닭 한 문장(IR-0) — 내 쪽에서 본 말로, 실제로 채운 목표를 적는다.
@@ -188,11 +190,11 @@ export function createContractHud(doc = document) {
       const chip = el('div', 'cr-goal');
       chip.classList.toggle('mine-done', end.mine.counts[i] >= g.count);
       chip.classList.toggle('theirs-done', end.theirs.counts[i] >= g.count);
-      chip.append(el('span', '', `${GLYPHS[g.type]} ${goalWord(g)}`), el('small', '', `나 ${end.mine.counts[i]}/${g.count} · 상대 ${end.theirs.counts[i]}/${g.count}`));
+      chip.append(el('span', '', set.joker && i === 0 ? cellWord(set, g, i) : `${GLYPHS[g.type]} ${goalWord(g)}`), el('small', '', `나 ${end.mine.counts[i]}/${g.count} · 상대 ${end.theirs.counts[i]}/${g.count}`));
       goals.appendChild(chip);
     });
     box.append(el('div', 'cr-line', line), score, goals);
-    if (end.coins > 0) { const pay = el('div', 'cr-pay', `🌰 도토리 +${end.coins}${end.work > 0 ? ` · 🔨 공방 진도 +${end.work}일` : ''}`); pay.id = 'contract-pay'; box.appendChild(pay); }
+    if (end.coins > 0) { const pay = el('div', 'cr-pay', `${end.jackpot ? '🎰 잭팟 판 2배 · ' : ''}🌰 도토리 +${end.coins}${end.work > 0 ? ` · 🔨 공방 진도 +${end.work}일` : ''}`); pay.id = 'contract-pay'; box.appendChild(pay); }
     if (end.note) box.appendChild(el('div', 'cr-note', end.note));
     // 놓친 왕관(IR-3): 이 판에서 실제로 지나친 결정타가 있을 때만. 누르면 그 국면이 연습으로 열린다.
     if (end.missed) {
@@ -234,7 +236,7 @@ export function createContractHud(doc = document) {
     head.append(mineEl, theirsEl, (turnsEl = el('span', 'ch-turns', '')));
     rivalName = rival;
     root.appendChild(head);
-    goalEls = set.goals.map((g) => {
+    goalEls = set.goals.map((g, i) => {
       const box = el('div', 'ch-goal');
       const rows = el('div', 'ch-rows');
       const mine = el('div', 'ch-row');
@@ -244,7 +246,9 @@ export function createContractHud(doc = document) {
       theirs.appendChild(el('span', 'ch-who', '상대'));
       const dots = Array.from({ length: g.count }, () => theirs.appendChild(el('span', 'ch-dot')));
       rows.append(mine, theirs);
-      box.append(el('span', 'ch-glyph', GLYPHS[g.type]), el('span', 'ch-name', `${NAMES[g.type]} ×${g.count}`), rows);
+      // 조커 세트의 첫 칸은 조커가 채운 칸이다
+      const jokerCell = Boolean(set.joker) && i === 0;
+      box.append(el('span', 'ch-glyph', jokerCell ? GLYPHS.j : GLYPHS[g.type]), el('span', 'ch-name', jokerCell ? '조커 ★' : `${NAMES[g.type]} ×${g.count}`), rows);
       root.appendChild(box);
       return { box, pips, dots };
     });
@@ -257,8 +261,9 @@ export function createContractHud(doc = document) {
   }
 
   /** 규칙 한 줄을 잠깐 띄운다(릴이 끝난 뒤 한 번). */
-  function hint(seconds = HINT_SEC) {
+  function hint(seconds = HINT_SEC, text = HINT_TEXT) {
     if (!hintEl) return;
+    hintEl.textContent = text;
     hintLeft = seconds;
     hintEl.classList.add('on');
   }

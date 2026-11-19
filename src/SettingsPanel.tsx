@@ -19,14 +19,16 @@ export default function SettingsPanel({ open, onClose, lang }: { open: boolean; 
   };
 
   const en = lang === 'en';
-  const setOption = (key: 'shake' | 'quick' | 'cards' | 'dive' | 'quests' | 'blitz', value: boolean) => {
+  const setOption = (key: 'shake' | 'quick' | 'cards' | 'dive' | 'quests' | 'blitz' | 'post', value: boolean) => {
     const next = { ...fx, [key]: value };
     setFx(next);
     writeFxSettings(window.localStorage, next);
+    if (key === 'post') (window as any).wizardChess?.setPost?.(value);   // 화면 보정은 바로 바뀐다
   };
   const rows = [
     { id: 'sound', icon: soundOn ? '🔊' : '🔇', label: en ? 'Sound' : '소리', hint: en ? 'Animal voices and effects' : '동물 목소리와 효과음', on: soundOn, toggle: () => { sfx.setMuted(soundOn); setSoundOn(!soundOn); } },
     { id: 'shake', icon: '📳', label: en ? 'Screen shake' : '화면 흔들림', hint: en ? 'Shake on big captures' : '큰 잡기 때 화면이 흔들립니다', on: fx.shake, toggle: () => setOption('shake', !fx.shake) },
+    { id: 'post', icon: '✨', label: en ? 'Picture polish' : '화면 보정', hint: en ? 'Soft corner shading, glow and colour. Turn off if the game feels slow' : '구석 그늘 · 빛 번짐 · 색 보정. 느리면 끄세요', on: fx.post, toggle: () => setOption('post', !fx.post) },
     { id: 'cards', icon: '🃏', label: en ? 'Capture cards' : '잡기 카드', hint: en ? 'Captures drop cards' : '말을 잡으면 카드가 나옵니다', on: fx.cards, toggle: () => setOption('cards', !fx.cards) },
     { id: 'quick', icon: '⚡', label: en ? 'Quick games' : '빠른 대국', hint: en ? 'Skips the capture close-up' : '잡을 때 카메라가 다가가지 않습니다', on: fx.quick, toggle: () => setOption('quick', !fx.quick) },
     { id: 'dive', icon: '🫧', label: en ? 'Dive to the village' : '마을로 잠수', hint: en ? 'The camera plunges under the board on the way to the island' : '마을로 갈 때 카메라가 판 아래 물속으로 내려갑니다', on: fx.dive, toggle: () => setOption('dive', !fx.dive) },

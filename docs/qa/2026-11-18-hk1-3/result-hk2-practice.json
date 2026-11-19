@@ -1,0 +1,215 @@
+{
+ "at": "2026-11-17T15:44:47.928Z",
+ "base": "http://localhost:4173/",
+ "query": "?lab=contract",
+ "runs": [
+  {
+   "name": "desk",
+   "run": 1,
+   "query": "?lab=contract",
+   "t": {
+    "started": 45.3,
+    "reelStart": 45.7,
+    "reelStop": 46.9,
+    "tags": 46.9,
+    "canMove": 48.6,
+    "offer": 48.6,
+    "puzzleOpen": 49.7,
+    "firstGem": 53.3
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": true,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 4542
+     }
+    },
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "desk",
+   "run": 2,
+   "query": "?lab=contract",
+   "t": {
+    "started": 41.4,
+    "reelStart": 41.8,
+    "reelStop": 43,
+    "tags": 43,
+    "canMove": 44.7,
+    "offer": 44.7,
+    "puzzleOpen": 45.5,
+    "firstGem": 48.3
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": true,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 3472
+     }
+    },
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "phone",
+   "run": 1,
+   "query": "?lab=contract",
+   "t": {
+    "started": 48.8,
+    "reelStart": 49.2,
+    "reelStop": 50.4,
+    "tags": 50.4,
+    "canMove": 52.1,
+    "offer": 52.1,
+    "puzzleOpen": 52.8,
+    "firstGem": 56.8
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": true,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 4618
+     }
+    },
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  },
+  {
+   "name": "phone",
+   "run": 2,
+   "query": "?lab=contract",
+   "t": {
+    "started": 40.6,
+    "reelStart": 41,
+    "reelStop": 42.2,
+    "tags": 42.2,
+    "canMove": 43.9,
+    "offer": 43.9,
+    "puzzleOpen": 43.9,
+    "firstGem": 47.8
+   },
+   "moves": [],
+   "note": [],
+   "goals": [
+    "p2",
+    "n1",
+    "b1"
+   ],
+   "offer": true,
+   "answer": "Qxh7",
+   "puzzlePly": 16,
+   "end": {
+    "puzzle": {
+     "started": 1,
+     "solved": 1,
+     "wrong": 0,
+     "last": {
+      "kind": "practice",
+      "index": 0,
+      "tries": 0,
+      "ms": 3904
+     }
+    },
+    "crown": {
+     "sockets": 4,
+     "gems": 3,
+     "flying": 0,
+     "landed": 1,
+     "w": [
+      "n",
+      "p"
+     ],
+     "b": [
+      "n"
+     ],
+     "draws": 2
+    }
+   }
+  }
+ ]
+}

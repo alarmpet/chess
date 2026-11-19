@@ -30,13 +30,13 @@
 
 ```bash
 npm run dev        # Vite, 3000 포트 (.claude/launch.json 의 dev)
-npm test           # 빠른 테스트 328개, 약 10초
+npm test           # 빠른 테스트 375개, 약 10초
 npm run test:slow  # 300판 시뮬 1개, 약 150초 (CI 에서 돈다)
 npm run build      # vite build → dist/
 npm run lint       # tsc --noEmit, 오류 0 (CI 포함)
 npm run gate:assets   # GLB 삼각형·본·텍스처·크기·pack.json 참조 (--report 로 표)
 npm run gate:bundle   # 빌드 뒤 JS/CSS gzip 상한
-npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·잡기 세 칸 드로우콜 ≤ 100 (DRAWCALL_URL 로 떠 있는 서버 사용 가능)
+npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·잡기 세 칸·계약전 첫 화면 드로우콜 ≤ 100 (DRAWCALL_URL 로 떠 있는 서버 사용 가능)
 ```
 
 캐릭터·건물·소품 제작은 `~/.claude/skills/chess-character-pipeline` 스킬을 따른다(Flow/ComfyUI 콘셉트 → 로컬 TRELLIS → `tools/make_biped.py` → `tools/build_looks.py`). 긴 작업은 산출물이 늘어나는지로 감시한다.
@@ -49,7 +49,7 @@ npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·�
 | `src/rules/` | `chess.js` 심판 `referee.js`, AI, 이어 하기 |
 | `src/village/` | 섬 경제 `economy.js`, 장면 `islandScene.ts`, 저장 |
 | `src/cards/` | 카드 주머니·도감 |
-| `src/fx/`, `src/audio/` | 효과·바다·소리 |
+| `src/fx/`, `src/audio/` | 효과·바다·소리. 왕관 슬롯머신은 `src/fx/slotMachine.js`(DOM, 레버를 기다린다 — 검증 스크립트는 `wizardChess.pullLever()` 로 당긴다) |
 | `src/packs/packManifest.js` | 팩 매니페스트 로더·검사기 |
 | `src/net/`, `src/rank/`, `worker/` | 친구 대전 전송·기기 신분, 랭크 보고·Glicko-2, Cloudflare Worker `/api/rank` + D1 |
 | `public/packs/legend/` | 동물·건물·소품 GLB, `pack.json` |
@@ -59,4 +59,4 @@ npm run gate:drawcalls # 빌드 뒤 헤드리스 Chrome 으로 초기 국면·�
 
 ## 저장 키
 
-`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · `wildcrown.identity.v1`(기기 익명 서명 키, 랭크) · `wildcrown.skill.v1`(AI 판 실력 점수·단계, DR-M1) · `wildcrown.contract.v1`(계약전 전용 기록과 상대 사다리 `rung`, 연습 표시 `practice`, 메뉴에서 켜 둠 `on`, 시험 스위치 `?lab=contract`, SC-1·IR-1) · 마을·카드·설정 스토어. 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.
+`localStorage`: `wildcrown.resume.v1`(이어 하기) · `wildcrown.pouch.v1`(카드 주머니) · `wildcrown.identity.v1`(기기 익명 서명 키, 랭크) · `wildcrown.skill.v1`(AI 판 실력 점수·단계, DR-M1) · `wildcrown.contract.v1`(계약전 전용 기록과 상대 사다리 `rung`, 연습 표시 `practice`, 기본이 켬이고 메뉴에서 끄면 `on=false`, 시험 스위치 `?lab=contract`(늘 켬, 첫 연습 자동 열기 없음) · `?lab=classic`(이 접속만 보통 체스), SC-1·IR-1) · 마을·카드·설정 스토어(`wildcrown.fx.v1` 의 `post:false` 면 화면 보정 끔, 시험 스위치 `?post=0|1`). 시험으로 저장을 건드렸으면 시험 전으로 되돌린다.

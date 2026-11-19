@@ -3,12 +3,13 @@ const FX_SETTINGS_KEY = 'wildcrown.fx.v1';
 // dive: the short plunge from the board down to the village (atlantis plan AT-2); off skips straight to the island.
 // quests: today's three quests (objective-layer OL-3); off hides them and stops their progress.
 // blitz: the lightning board ⚡ (dynamic-chess DY-3), off unless chosen; the setting shows after the first five games.
-const DEFAULTS = { shake: true, quick: false, cards: true, dive: true, quests: true, blitz: false };
+// post: 화면 보정(구석 그늘 · 빛 번짐 · 색 보정, WG-P1). 느린 기기에서 끈다.
+const DEFAULTS = { shake: true, quick: false, cards: true, dive: true, quests: true, blitz: false, post: true };
 
 export function readFxSettings(storage) {
   try {
     const saved = JSON.parse(storage.getItem(FX_SETTINGS_KEY) || '{}');
-    return { shake: saved.shake !== false, quick: saved.quick === true, cards: saved.cards !== false, dive: saved.dive !== false, quests: saved.quests !== false, blitz: saved.blitz === true };
+    return { shake: saved.shake !== false, quick: saved.quick === true, cards: saved.cards !== false, dive: saved.dive !== false, quests: saved.quests !== false, blitz: saved.blitz === true, post: saved.post !== false };
   } catch (e) {
     return { ...DEFAULTS };
   }

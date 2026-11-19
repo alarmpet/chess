@@ -1,6 +1,6 @@
 // 계약전 한 판의 판정 (슬롯 체스 계획서 2026-11-11 §3.1 · §3.2, SC-1).
 // 표준 합법 행마는 그대로 두고, 「언제·누가 이겨서 끝나는가」만 다시 정한다. 순수 함수(DOM·three·chess.js 없음).
-import { CONTRACT_NEED, contractById, contractProgress } from './contractSets.js';
+import { CONTRACT_NEED, contractById, contractProgress, isJackpot } from './contractSets.js';
 
 /** 길이 상한: 양쪽 24차례씩(§3.1). 흑의 24번째 수까지 둔 뒤에 판정한다. */
 export const CONTRACT_PLY_LIMIT = 48;
@@ -58,14 +58,17 @@ export function contractAiState(set, moves = [], limit = CONTRACT_PLY_LIMIT, run
 }
 
 // ── 보상(SC-2, 계획서 §7.2): 짧은 판이라 일반 판(30/20/15)보다 적다. 기권한 판은 받지 않는다(끝까지 둔 판만).
+// 잭팟 판(세 칸이 다 같은 말, 11-18)은 이기든 지든 두 배다.
 export const CONTRACT_COINS = { win: 18, draw: 12, loss: 10 };
-export function contractCoins(result, reason) {
-  return reason === 'resign' ? 0 : CONTRACT_COINS[result] ?? 0;
+export const JACKPOT_COIN_MULT = 2;
+export function contractCoins(result, reason, setId = null) {
+  if (reason === 'resign') return 0;
+  return (CONTRACT_COINS[result] ?? 0) * (isJackpot(contractById(setId)) ? JACKPOT_COIN_MULT : 1);
 }
 
 // ── 전용 기록(§3.1 「계약전과 일반 체스의 결과를 분리」). 일반 판의 실력 점수·카드·마을 정산과 섞지 않는다.
 export const CONTRACT_STORE_KEY = 'wildcrown.contract.v1';
-export const emptyContractStore = () => ({ v: 1, on: false, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: RUNG_NOVICE, lossRun: 0, practice: 0 });
+export const emptyContractStore = () => ({ v: 1, on: true, games: 0, win: 0, loss: 0, draw: 0, byReason: {}, last: null, rung: RUNG_NOVICE, lossRun: 0, practice: 0 });
 
 export function sanitizeContractStore(raw) {
   const base = emptyContractStore();
@@ -74,7 +77,7 @@ export function sanitizeContractStore(raw) {
   const byReason = {};
   for (const [k, v] of Object.entries(raw.byReason || {})) if (typeof k === 'string' && k.length < 20) byReason[k] = n(v);
   const last = raw.last && contractById(raw.last.set) ? { set: raw.last.set, result: String(raw.last.result), reason: String(raw.last.reason), plies: n(raw.last.plies) } : null;
-  return { v: 1, on: raw.on === true, games: n(raw.games), win: n(raw.win), loss: n(raw.loss), draw: n(raw.draw), byReason, last, rung: Math.min(RUNG_FULL, n(raw.rung)), lossRun: Math.min(RUNG_DROP_AFTER, n(raw.lossRun)), practice: raw.practice ? 1 : 0 };
+  return { v: 1, on: raw.on !== false, games: n(raw.games), win: n(raw.win), loss: n(raw.loss), draw: n(raw.draw), byReason, last, rung: Math.min(RUNG_FULL, n(raw.rung)), lossRun: Math.min(RUNG_DROP_AFTER, n(raw.lossRun)), practice: raw.practice ? 1 : 0 };
 }
 
 /** 끝난 판 하나를 기록에 더한다. `result` 는 내 쪽에서 본 'win' | 'loss' | 'draw'. */

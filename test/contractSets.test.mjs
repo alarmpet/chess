@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { Chess } from 'chess.js';
 import {
   CONTRACT_NEED, CONTRACT_SETS, FIRST_GAMES, FIRST_GAMES_SET,
-  contractById, contractProblem, contractProgress, pickContract
+  contractById, contractProblem, contractProgress, isJackpot, pickContract
 } from '../src/rules/contractSets.js';
 
 // 판정 함수 시험용 세트 — 풀에서 뺀 조합이라도 진도 세기는 같아야 한다
@@ -13,7 +13,12 @@ const PNR = { id: 'pnr', goals: [{ type: 'p', count: 1 }, { type: 'n', count: 1 
 const play = (sans) => { const g = new Chess(); return sans.map((s) => g.move(s)); };
 
 test('풀의 세트는 모두 규칙에 맞는다', () => {
-  assert.deepEqual(CONTRACT_SETS.map((s) => s.id), ['p2nb', 'p3nb']);   // SC-0(11-13): pnb·pnr 은 뺐다
+  // 11-18 전수 시뮬에서 두 시드 다 합격한 아홉 + 잭팟 하나(docs/research/2026-11-18-set-pool/)
+  assert.deepEqual(CONTRACT_SETS.map((s) => s.id), ['p2nb', 'p3nb', 'pn2b', 'p2n2b', 'pbr', 'p2br', 'pbq', 'p2bq', 'nbr', 'j-p3', 'j-n', 'j-b', 'j-r', 'j-q']);
+  assert.deepEqual(CONTRACT_SETS.filter(isJackpot).map((s) => s.id), ['j-p3', 'j-n', 'j-b', 'j-r', 'j-q']);
+  assert.deepEqual(CONTRACT_SETS.filter((s) => s.joker).map((s) => s.id), ['j-n', 'j-b', 'j-r', 'j-q']);
+  // 다섯 동물이 다 나온다
+  assert.deepEqual([...new Set(CONTRACT_SETS.flatMap((s) => s.goals.map((g) => g.type)))].sort(), ['b', 'n', 'p', 'q', 'r']);
   for (const set of CONTRACT_SETS) assert.equal(contractProblem(set), null, set.id);
   assert.equal(new Set(CONTRACT_SETS.map((s) => s.id)).size, CONTRACT_SETS.length);
 });
@@ -31,12 +36,73 @@ test('잘못된 세트는 이유와 함께 걸러진다', () => {
 test('첫 두 판은 고정 세트, 그 뒤는 시드 하나로 정해진다', () => {
   for (const roll of [0, 0.4, 0.99]) for (let n = 0; n < FIRST_GAMES; n++) assert.equal(pickContract(roll, n).id, FIRST_GAMES_SET);
   for (const roll of [0, 0.123, 0.5, 0.77, 0.999999]) assert.equal(pickContract(roll, 5).id, pickContract(roll, 9).id);
-  // 가중치 2:1 — 구간 경계(SC-0 풀)
+  // 가중치: 보통 세트 6씩 아홉(54) + 잭팟 2 · 2 · 2 · 1 · 1 = 62. 구간 경계
   assert.equal(pickContract(0, 5).id, 'p2nb');
-  assert.equal(pickContract(0.66, 5).id, 'p2nb');
-  assert.equal(pickContract(0.67, 5).id, 'p3nb');
-  assert.equal(pickContract(1, 5).id, 'p3nb');     // 범위를 벗어난 값도 세트 하나를 준다
+  assert.equal(pickContract(5.9 / 62, 5).id, 'p2nb');
+  assert.equal(pickContract(6.1 / 62, 5).id, 'p3nb');
+  assert.equal(pickContract(53.9 / 62, 5).id, 'nbr');
+  assert.equal(pickContract(54.1 / 62, 5).id, 'j-p3');
+  assert.equal(pickContract(56.1 / 62, 5).id, 'j-n');
+  assert.equal(pickContract(58.1 / 62, 5).id, 'j-b');
+  assert.equal(pickContract(60.1 / 62, 5).id, 'j-r');
+  assert.equal(pickContract(61.1 / 62, 5).id, 'j-q');
+  assert.equal(pickContract(1, 5).id, 'j-q');      // 범위를 벗어난 값도 세트 하나를 준다
   assert.equal(pickContract(-1, 5).id, 'p2nb');
+  // 고르게 굴리면 모든 세트가 나오고, 잭팟은 62판에 8판(코뿔소 · 호랑이는 한 판씩)
+  const seen = {};
+  for (let k = 0; k < 6200; k++) { const id = pickContract((k + 0.5) / 6200, 5).id; seen[id] = (seen[id] || 0) + 1; }
+  assert.equal(Object.keys(seen).length, CONTRACT_SETS.length);
+  assert.equal(seen['j-p3'] + seen['j-n'] + seen['j-b'] + seen['j-r'] + seen['j-q'], 800);
+  assert.equal(seen['j-r'], 100);
+  assert.equal(seen['j-q'], 100);
+});
+
+test('조커 잭팟: 첫 보석은 조커가 채워 주고, 그 동물 하나만 먼저 잡으면 왕관이 완성된다', () => {
+  const set = contractById('j-n');
+  assert.equal(contractProblem(set), null);
+  const start = contractProgress(set, []);
+  assert.deepEqual(start.w.counts, [1, 0, 0]);
+  assert.equal(start.w.done, 1);
+  assert.equal(start.b.done, 1);
+  assert.deepEqual(start.matchPoint, { w: true, b: true });   // 처음부터 양쪽 다 하나 남았다
+  assert.equal(start.winner, null);
+  const cap = (color, captured) => ({ color, captured });
+  // 다른 종류를 잡아도 아무 일 없고, 캥거루를 먼저 잡은 쪽이 이긴다
+  const end = contractProgress(set, [cap('w', 'p'), cap('b', 'b'), cap('w', 'p'), cap('b', 'n'), cap('w', 'n')]);
+  assert.equal(end.winner, 'b');
+  assert.equal(end.ply, 4);
+  assert.deepEqual(end.b.counts, [1, 1, 0]);
+  // 호랑이는 판에 하나뿐이지만 조커가 첫 칸을 채워 주므로 규칙에 맞는다 — 호랑이를 잡는 순간 끝난다
+  assert.equal(contractProblem(contractById('j-q')), null);
+  assert.equal(contractProgress(contractById('j-q'), [cap('b', 'q')]).winner, 'b');
+  assert.equal(contractProgress(contractById('j-r'), [cap('w', 'n'), cap('w', 'r')]).winner, 'w');
+  // 조커는 잭팟 세트에만 쓴다
+  assert.match(contractProblem({ joker: true, goals: [{ type: 'p', count: 1 }, { type: 'n', count: 1 }, { type: 'b', count: 1 }] }), /조커/);
+});
+
+test('잭팟(세 칸이 다 같은 말): 칸을 차례로 채워 미어캣 3마리에 왕관이 완성된다', () => {
+  const set = contractById('j-p3');
+  assert.equal(isJackpot(set), true);
+  assert.equal(isJackpot(contractById('p2nb')), false);
+  assert.equal(contractProblem(set), null);
+  const cap = (color, captured) => ({ color, captured });
+  const one = contractProgress(set, [cap('w', 'p')]);
+  assert.deepEqual(one.w.counts, [1, 0, 0]);
+  assert.equal(one.w.done, 1);
+  assert.equal(one.matchPoint.w, true);
+  const two = contractProgress(set, [cap('w', 'p'), cap('b', 'p'), cap('w', 'p')]);
+  assert.deepEqual(two.w.counts, [1, 1, 0]);
+  assert.equal(two.winner, null);
+  // 다른 종류는 세지 않는다. 셋째 미어캣에서 끝난다
+  const end = contractProgress(set, [cap('w', 'p'), cap('w', 'n'), cap('w', 'p'), cap('b', 'p'), cap('w', 'p'), cap('w', 'p')]);
+  assert.deepEqual(end.w.counts, [1, 2, 0]);
+  assert.equal(end.winner, 'w');
+  assert.equal(end.ply, 5);
+  // 잭팟이 아닌데 같은 종류가 두 번이면 여전히 규칙 밖 · 채울 말이 모자란 잭팟도 밖
+  const g = (type, count = 1) => ({ type, count });
+  assert.match(contractProblem({ goals: [g('p'), g('p'), g('n')] }), /같은 종류/);
+  assert.match(contractProblem({ goals: [g('q'), g('q'), g('q')] }), /잭팟을 채울/);
+  assert.equal(contractProblem({ goals: [g('n'), g('n'), g('n')] }), null);
 });
 
 test('폰×2 는 두 마리를 잡아야 한 칸이고, 더 잡아도 늘지 않는다', () => {

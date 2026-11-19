@@ -8,7 +8,8 @@ import { CONTRACT_NEED } from './contractSets.js';
 
 /** 그 색이 `type` 을 하나 더 잡으면 계약이 완성되는가. */
 function completes(set, side, type) {
-  const gi = set.goals.findIndex((g) => g.type === type);
+  // 그 종류의 목표 가운데 덜 찬 첫 칸(잭팟 세트는 같은 종류가 셋이다 — contractProgress 와 같은 규칙)
+  const gi = set.goals.findIndex((g, k) => g.type === type && side.counts[k] < g.count);
   if (gi < 0) return false;
   return side.counts[gi] + 1 === set.goals[gi].count && side.done + 1 >= CONTRACT_NEED;
 }

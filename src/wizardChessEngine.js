@@ -12,7 +12,7 @@ import { RESUME_KEY, replayResume, resumeRecord, sanitizeResume, takebackEntry }
 import { sfx } from './audio/sfx.js';
 import { createImpactFx, shakeAllowed } from './fx/impactFx.js';
 import { SIGNATURE_WORD, createSignatureFx } from './fx/signatureFx.js';
-import { contractById, contractProgress, contractStage, openGoals, pickContract } from './rules/contractSets.js';
+import { contractById, contractProgress, contractStage, isJackpot, openGoals, pickContract } from './rules/contractSets.js';
 import { CONTRACT_PLY_LIMIT, CONTRACT_STORE_KEY, RUNG_FULL, RUNG_NAMES, addContractResult, contractAiState, contractCoins, contractVerdict, sanitizeContractStore } from './rules/contractGame.js';
 import { dangerSquares, finishersAt, oopsCheck } from './rules/contractGuard.js';
 import { buildSeaBiome, daylightEnvironment } from './fx/seaBiome.js';
@@ -20,6 +20,8 @@ import { ISLAND_LOOKS, ISLAND_SKY, PALETTES, coastProfile, islandHeightmap } fro
 import { createHorizonIsland } from './fx/horizonIsland.js';
 import { createContactShadows } from './fx/contactShadows.js';
 import { createLayeredRender, createGpuTimer } from './fx/layeredRender.js';
+import { createPostFx } from './fx/postFx.js';
+import { approach, dayLook, dayPhase, tideLevel } from './fx/dayCycle.js';
 import { fxSettings } from './fx/settings.js';
 import { kindAllows, lockKind } from './cards/teamPlay.js';
 import { LANDING_SQUASH, moveStyle } from './fx/moveStyle.js';
@@ -137,9 +139,19 @@ export function initWizardChess() {
     // 계층 렌더 실험(①)과 GPU 시간 탐침 — src/fx/layeredRender.js. 기본은 꺼짐, `?layers=1&hz=12` 또는 wizardChess.setLayered 로 켠다.
     const layered = createLayeredRender(renderer, scene, camera, { staticRoots: () => [biomeGroup, boardGroup, scene.getObjectByName('cathedral')] });
     const gpuTimer = createGpuTimer(renderer);
+    // 화면 보정 한 장(WG-P1, 11-19) — src/fx/postFx.js. 설정 「화면 보정」(기본 켬). 시험: ?post=0|1 · ?postaa=4(FXAA 대신 MSAA 4배).
+    // 계단 지우기는 FXAA 가 기본이다: 내장 그래픽(Intel UHD)에서 MSAA 렌더 타깃은 데스크 GPU 21.7 → 38.0ms, FXAA 는 20.3ms(docs/qa/2026-11-19-post-fx).
+    const postFx = createPostFx(renderer, scene, camera, { msaa: 0 });
     {
       const q = new URLSearchParams(window.location.search);
       if (q.get('layers') === '1') layered.setEnabled(true, Number(q.get('hz') ?? 12));
+      postFx.setEnabled(q.get('post') === '0' ? false : q.get('post') === '1' ? true : fxSettings().post !== false);
+      if (q.get('postaa')) postFx.setSamples(Number(q.get('postaa')));
+    }
+    /** 한 프레임을 화면에 그린다. 계층 렌더 실험이 켜져 있으면 그쪽(보정 없음), 아니면 화면 보정을 거친다. */
+    function drawFrame(time = clock.elapsedTime) {
+      if (layered.isEnabled()) layered.render();
+      else postFx.render(time);
     }
 
     // =========================================================================
@@ -960,14 +972,15 @@ export function initWizardChess() {
       if (gameReported || gameMode !== 'single' || scriptedGameActive || playerColor === 'spectator') return;
       gameReported = true;
       if (contract) {
-        // 계약전(SC-1): 결과를 전용 기록에만 남긴다. 일반 판의 실력 점수·카드·마을 정산(gamefinished)에는 섞지 않는다(§3.1).
+        // 계약전(SC-1): 결과를 전용 기록에만 남긴다. 일반 판의 실력 점수·마을 정산(gamefinished)에는 섞지 않는다(§3.1).
+        // 카드 주머니는 준다(11-18): 카드 층이 contractfinished 를 듣고 도감에 넣는다. 판 수는 올리지 않는다.
         const reason = extra.reason || (extra.resigned ? 'resign' : 'other');
         const plies = referee.history().length;
         const rungBefore = contractStore.rung;
         contractStore = addContractResult(contractStore, { set: contract.id, result, reason, plies });
         rungNote = contractStore.rung > rungBefore ? `다음 상대는 한 단계 위 「${RUNG_NAMES[contractStore.rung]}」이에요.` : contractStore.rung < rungBefore ? `다음 상대는 「${RUNG_NAMES[contractStore.rung]}」로 내려와요.` : '';
         try { window.localStorage.setItem(CONTRACT_STORE_KEY, JSON.stringify(contractStore)); } catch (e) { /* 저장이 막히면 기록만 잃는다 */ }
-        lastContractEnd = { gameId, set: contract.id, result, reason, plies, coins: contractCoins(result, reason) };
+        lastContractEnd = { gameId, set: contract.id, result, reason, plies, coins: contractCoins(result, reason, contract.id), jackpot: isJackpot(contract) };
         sfx.play(result === 'win' ? 'stingWin' : result === 'loss' ? 'stingLose' : 'draw', 0.25);
         // 놓친 왕관(IR-3): 진 판에서 실제로 지나친 결정타가 있을 때만 다시 보기를 권한다.
         try { missedOffer = result === 'loss' && puzzleLib ? puzzleLib.missedCrown(contract.id, referee.history(), playerColor) : null; } catch (e) { missedOffer = null; }
@@ -1095,26 +1108,28 @@ export function initWizardChess() {
     // 소라 릴 (슬롯 체스 PP-1): 판 시작에 이번 판 계약 목표 셋을 공개한다. 시험 스위치(?lab=contract) 뒤에서만 돈다 —
     // 계약으로 판을 끝내는 규칙과 계약을 아는 AI 가 아직 없다(SC-1).
     // 릴 모듈은 첫 화면 묶음에 넣지 않는다(번들 상한) — 시험 스위치가 켜질 때 받아 온다.
-    let reelLib = null;           // src/fx/shellReel.js
-    let shellReel = null;
+    let reelLib = null;           // src/fx/shellReel.js — 파도타기 곡선만 쓴다
+    let shellReel = null;         // 왕관 슬롯머신(src/fx/slotMachine.js, 11-18). 이름은 예전 소라 릴에서 왔다
+    let aiHeldBySlot = false;     // 슬롯머신이 떠 있어 미뤄 둔 AI 의 첫 수
     function loadShellReel() {
       if (shellReel) return Promise.resolve(shellReel);
-      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js'), import('./fx/contractHud.js'), import('./fx/crownGems.js'), import('./rules/crownPuzzles.js'), import('./rules/crownPuzzleData.js'), import('./fx/puzzleBar.js')]).then(([lib, tagLib, hudLib, gemsLib, pzLib, pzData, barLib]) => {
+      return Promise.all([import('./fx/shellReel.js'), import('./fx/bountyTags.js'), import('./fx/contractHud.js'), import('./fx/crownGems.js'), import('./rules/crownPuzzles.js'), import('./rules/crownPuzzleData.js'), import('./fx/puzzleBar.js'), import('./fx/slotMachine.js')]).then(([lib, tagLib, hudLib, gemsLib, pzLib, pzData, barLib, slotLib]) => {
         puzzleLib = pzLib;
         puzzleData = pzData.CROWN_PUZZLES;
         puzzleBar = puzzleBar || barLib.createPuzzleBar({ onStart: () => startPractice(0), onDismiss: () => setPracticeDone(), onNext: () => nextPuzzle(), onQuit: () => quitPuzzle() });
         gemLib = gemsLib;
         crownGems = crownGems || gemsLib.createCrownGems(scene, { square: BOARD_SQ_SIZE });
         reelLib = lib;
-        shellReel = shellReel || lib.createShellReel(scene, { surfaceY: BOARD_SURFACE_Y, square: BOARD_SQ_SIZE });
+        shellReel = shellReel || slotLib.createSlotMachine({ sound: (name, pitch = 1) => sfx.play(name, 0, pitch) });
         bountyTags = bountyTags || tagLib.createBountyTags(scene, { square: BOARD_SQ_SIZE });
         contractHud = contractHud || hudLib.createContractHud();
         return shellReel;
       });
     }
-    // 왕관 계약전은 메뉴에서 켜 두면(저장) 다음 판부터 열린다. 주소의 ?lab=contract 는 시험용으로 남겼다.
-    const contractSavedOn = () => { try { return JSON.parse(window.localStorage.getItem(CONTRACT_STORE_KEY) || 'null')?.on === true; } catch (e) { return false; } };
-    let contractLab = new URLSearchParams(window.location.search).get('lab') === 'contract' || contractSavedOn();
+    // 왕관 계약전이 기본이다(HK-2, 2026-11-18). 메뉴에서 끄면(저장 on=false) 보통 체스. 주소의 ?lab=contract 는 늘 켜고 ?lab=classic 은 이 접속만 끈다(시험용).
+    const contractSavedOn = () => { try { return JSON.parse(window.localStorage.getItem(CONTRACT_STORE_KEY) || 'null')?.on !== false; } catch (e) { return true; } };
+    const labSwitch = new URLSearchParams(window.location.search).get('lab');
+    let contractLab = labSwitch === 'contract' || (labSwitch !== 'classic' && contractSavedOn());
     if (contractLab) { loadShellReel(); sfx.preload?.(); }
     let contract = null;          // 이번 판의 계약 세트(시험 중에만)
     let contractGames = 0;        // 이 접속에서 시작한 계약 판 수 — 첫 두 판은 고정 세트
@@ -1165,6 +1180,8 @@ export function initWizardChess() {
     let puzzle = null;                // { kind: 'practice' | 'missed', index, total, tries, hint, solved, at, ms }
     let missedOffer = null;           // 방금 진 판에서 지나친 결정타(missedCrown) — 결과 화면의 단추가 연다
     let offerOn = false;
+    let autoPracticeTries = 0;
+    let autoPractice = false;         // 이 접속에서 첫 연습을 스스로 열었는가(HK-2) — 한 번만
     const puzzleStats = { started: 0, solved: 0, wrong: 0, last: null };
     function setPracticeDone() {
       contractStore = { ...contractStore, practice: 1 };
@@ -1183,10 +1200,10 @@ export function initWizardChess() {
       puzzleBar?.show(next);
       return true;
     }
-    function startPractice(index = 0) {
+    function startPractice(index = 0, auto = false) {
       const list = puzzleLib && puzzleData ? puzzleLib.practiceSet(puzzleData) : [];
       if (!list[index]) return Promise.resolve(false);
-      return startPuzzle(list[index], { kind: 'practice', index, total: list.length, id: list[index].id });
+      return startPuzzle(list[index], { kind: 'practice', index, total: list.length, id: list[index].id, auto: auto || Boolean(puzzle?.auto) });
     }
     function startMissed() {
       if (!missedOffer) return Promise.resolve(false);
@@ -1199,6 +1216,7 @@ export function initWizardChess() {
     // 연습을 닫고 전체 말로 새 판을 연다.
     function quitPuzzle() {
       if (!puzzle || isAnimatingMove) return false;
+      if (puzzle.auto) setPracticeDone();   // 스스로 열린 연습을 닫았으면 다시 권하지 않는다
       resetChessBoard(true);
       return true;
     }
@@ -2358,12 +2376,14 @@ let engineStarted = false;
       contractState = null;
       contractStageNow = 'open';
       sfx.play('reelRise');
-      shellReel.play(contract, playerCamSide, (i, pos, goal) => {
+      // 기계가 내려와 레버를 기다린다. 릴이 멈출 때마다: 소리, 판 너머에서 번지는 파도타기, 그 종류의 상대 말에 딱지.
+      const far = (playerCamSide === 'b' ? 1 : -1) * BOARD_SQ_SIZE * 4.5;
+      shellReel.play(contract, (i, goal) => {
         sfx.play(i === 2 ? 'reelFinal' : 'reelStop', 0, 1 + i * 0.06);
-        startReelWave(pos, REEL_TYPE[goal.type]);
-        contractRevealed[i] = true;     // 이 소라가 멈춘 순간부터 그 종류의 상대 말에 딱지가 붙는다
+        startReelWave(new THREE.Vector3((i - 1) * BOARD_SQ_SIZE * 2.3, BOARD_SURFACE_Y, far), REEL_TYPE[goal.type]);
+        contractRevealed[i] = true;     // 이 릴이 멈춘 순간부터 그 종류의 상대 말에 딱지가 붙는다
         refreshContract(false);
-      }, camera.aspect > 1.05 ? 'center' : 'far');
+      });
       window.dispatchEvent(new CustomEvent('contractrevealed', { detail: { gameId, setId: contract.id, goals: contract.goals } }));
       return contract.id;
     }
@@ -2461,7 +2481,11 @@ let engineStarted = false;
           hudShown[i] = true;
           contractHud.reveal(i);
           // 셋이 다 드러난 순간 규칙 한 줄을 잠깐 — 처음 몇 판만(§4-2: 「한 번 나온다」)
-          if (hudShown.every(Boolean) && contractStore.games < 3 && !moveHistory.length) contractHud.hint();
+          if (hudShown.every(Boolean) && !moveHistory.length) {
+            // 잭팟 판(세 칸이 다 같은 말)은 규칙이 달라 보이므로 늘 한 줄로 알린다. 보통 판은 첫 세 판만.
+            if (isJackpot(contract)) contractHud.hint(undefined, `🎰 잭팟 판! ${reelLib?.REEL_NAMES?.[contract.goals[0].type] || ''} ${contract.joker ? contract.goals[1].count : contract.goals[0].count + contract.goals[1].count}마리를 먼저 잡으면 승리${contract.joker ? '(조커 보석 ★ 하나는 받고 시작)' : ''} · 보상 2배`);
+            else if (contractStore.games < 3) contractHud.hint();
+          }
         }
       }
       if (hudWide !== wide) { hudWide = wide; contractHud.layout(wide); }
@@ -2475,7 +2499,7 @@ let engineStarted = false;
         hudEnded = ended;
         if (ended) {
           const me = playerColor === 'b' ? 'b' : 'w';
-          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, coins: lastContractEnd.coins, work: lastContractEnd.work, gems: contractGems, missed: missedOffer ? () => startMissed() : null });
+          contractHud.finish({ reason: lastContractEnd.reason, result: lastContractEnd.result, mine: contractState[me], theirs: contractState[me === 'w' ? 'b' : 'w'], note: rungNote, coins: lastContractEnd.coins, jackpot: lastContractEnd.jackpot, work: lastContractEnd.work, gems: contractGems, missed: missedOffer ? () => startMissed() : null });
         } else contractHud.resume(wide);
       }
       contractHud.tick(dt);
@@ -2486,7 +2510,13 @@ let engineStarted = false;
         if (!isAnimatingMove && (contractWasAnimating || contractSig !== `${gameId}:${moveHistory.length}`)) refreshContract();
         contractWasAnimating = isAnimatingMove;
       }
-      const wantOffer = Boolean(puzzleBar && contract && !puzzle && !contractStore.practice && !moveHistory.length && !gameOver);
+      const wantOffer = Boolean(puzzleBar && contract && !puzzle && !contractStore.practice && !moveHistory.length && !gameOver && !reelPendingFor && !shellReel?.busy());   // 슬롯머신이 떠 있는 동안은 권하지 않는다
+      // 계약전을 처음 여는 사람은 릴이 표적을 뽑은 뒤 연습 1번(한 수로 왕관 완성)으로 바로 들어간다 — 첫 보석을 30초 안에 본다(HK-2). 시험 스위치(?lab=contract)로 열면 예전처럼 권유만 뜬다.
+      if (wantOffer && !autoPractice && labSwitch !== 'contract' && !contractStore.games && reelPendingFor === 0 && shellReel && !shellReel.busy() && !isAnimatingMove && !aiThinking && engineStarted) {
+        autoPractice = true;
+        // 판을 여는 길이 아직 바쁘면 실패한다(실제 브라우저에서 봄) — 잠깐 뒤에 다시, 여덟 번까지
+        Promise.resolve(startPractice(0, true)).then((ok) => { if (!ok && (autoPracticeTries += 1) < 8) setTimeout(() => { autoPractice = false; }, 600); });
+      }
       if (wantOffer !== offerOn) { offerOn = wantOffer; if (wantOffer) puzzleBar.offer(); else puzzleBar?.hideOffer(); }
       const want = contract && !gameOver && (contractStageNow === 'matchPoint' || contractStageNow === 'finalPoint') ? 1 : 0;
       if (stageMix !== want) {
@@ -3493,6 +3523,7 @@ let engineStarted = false;
       lastContractEnd = null;
       reelPendingFor = contract ? gameId : 0;
       reelPendingAge = 0;
+      shellReel?.cancel();          // 앞 판의 슬롯머신이 떠 있으면 치운다
     }
 
     // =========================================================================
@@ -3759,6 +3790,7 @@ let engineStarted = false;
       contractRung = contractStore.rung;
       oopsKey = '';
       reelPendingFor = 0;
+      shellReel?.cancel();
       finalPointShown = false;
       lastContractEnd = null;
       contractStageNow = 'open';
@@ -4996,6 +5028,8 @@ let engineStarted = false;
 
     function triggerAIMoveNow() {
       if (isAnimatingMove || gameOver || aiThinking) return false;
+      // 슬롯머신이 떠 있는 동안(레버를 기다리거나 도는 중)에는 AI 가 먼저 두지 않는다 — 기계가 빠지면 둔다.
+      if (!moveHistory.length && (reelPendingFor || shellReel?.busy())) { aiHeldBySlot = true; return false; }
       if (referee.turn() !== currentTurn) return false;
       const worker = aiWorkerOrNull();
       if (worker) {
@@ -7088,6 +7122,14 @@ let engineStarted = false;
       setLayered: (on, hz) => layered.setEnabled(on, hz),
       debugLayered: () => layered.stats(),
       debugGpuMs: () => gpuTimer.take(),
+      // 화면 보정(WG-P1): 켜고 끄기 · 세기 · 상태
+      setPost: (on) => postFx.setEnabled(on),
+      setPostParams: (p) => postFx.setParams(p),
+      setPostSamples: (n) => postFx.setSamples(n),
+      debugPost: () => postFx.state(),
+      // 판의 시간 · 밀물(WG-4 · WG-5)
+      debugTime: () => ({ day: +dayNow.toFixed(3), name: dayLook(dayNow).name, tide: +tideNow.toFixed(3), override: timeOverride && { ...timeOverride } }),
+      setTimeOverride: (o) => { timeOverride = o && typeof o === 'object' ? { ...o } : null; return timeOverride; },
       gpuTimerAvailable: gpuTimer.available,
       // 드로우콜 분해 실험(엔진 선택 계획서 §5 1일차): 장면·렌더러·카메라를 읽기 전용으로 노출
       debugScene: () => scene, debugRenderer: () => renderer, debugCamera: () => camera,
@@ -7157,6 +7199,7 @@ let engineStarted = false;
       debugSamples: () => sfx.samples(),
       playReel: (setId) => loadShellReel().then(() => startContractReel(setId)),
       skipReel: () => Boolean(shellReel?.skip()),
+      pullLever: () => Boolean(shellReel?.pull()),
       // 파도타기로 지금 가장 높이 뜬 말(칸 단위)과, 쉬는 높이에서 벗어나 있는 말의 수(움직이는 수가 없을 때 0 이어야 한다).
       debugReelHopMax: () => reelHops.reduce((m, h) => Math.max(m, (h.mesh.position.y - h.baseY) / BOARD_SQ_SIZE), 0),
       debugReelOffBase: () => boardState.flat().filter((p) => p?.mesh && p.rig !== 'statue' && Math.abs(p.mesh.position.y - BOARD_SURFACE_Y) > 1e-6).length,
@@ -7177,7 +7220,7 @@ let engineStarted = false;
       startPractice: (i = 0) => loadShellReel().then(() => startPractice(i)),
       startMissedCrown: () => startMissed(),
       debugPuzzle: () => ({ loaded: Boolean(puzzleLib), count: puzzleData ? puzzleData.length : 0, puzzle: puzzle && { ...puzzle }, missed: missedOffer && { ply: missedOffer.ply, answers: missedOffer.answers.slice() }, practiceDone: Boolean(contractStore.practice), stats: { ...puzzleStats }, bar: puzzleBar ? puzzleBar.state() : null, resume: (() => { try { return window.localStorage.getItem(RESUME_KEY) !== null; } catch (e) { return null; } })() }),
-      debugReel: () => ({ lab: contractLab, contract: contract && contract.id, games: contractGames, hops: reelHops.length, pending: reelPendingFor !== 0, loaded: Boolean(shellReel), ...(shellReel ? shellReel.state() : { active: false, plays: 0, stopped: [], goals: [] }) }),
+      debugReel: () => ({ lab: contractLab, contract: contract && contract.id, games: contractGames, hops: reelHops.length, pending: reelPendingFor !== 0, loaded: Boolean(shellReel), ...(shellReel ? shellReel.state() : { active: false, waiting: false, plays: 0, stopped: [], goals: [] }) }),
       // Hand and brain (objective-layer OL-4): the kind the hand may move this turn, and what the brain needs to see.
       // 종류 잠금(CO-1): 부른 종류는 손이 둘 때까지 다른 종류로 못 바꾼다. 바뀌었는지 돌려준다.
       setHandBrain: (kind) => {
@@ -7390,7 +7433,7 @@ let engineStarted = false;
         telemetry: cameraTelemetry
       }),
       captureScreenshot: async (filename) => {
-        renderer.render(scene, camera);
+        drawFrame();
         const outCanvas = document.createElement('canvas');
         outCanvas.width = renderer.domElement.width;
         outCanvas.height = renderer.domElement.height;
@@ -7526,7 +7569,7 @@ let engineStarted = false;
       for (let i = 0; i < steps; i++) {
         stepScene(subDt, false);
       }
-      renderer.render(scene, camera);
+      drawFrame();
     };
 
     // =========================================================================
@@ -7608,12 +7651,29 @@ let engineStarted = false;
       updateBountyMarks();
     }
 
+    // 판의 시간 · 밀물(WG-4 · WG-5, 11-19): 판의 수에서 목표를 정하고 1~2초에 걸쳐 다가간다. 시험용으로 `setTimeOverride` 가 덮는다.
+    let dayNow = 0;
+    let tideNow = 0;
+    let timeOverride = null;   // { day?, tide? } — 캡처·블라인드 측정용
+    function stepDayAndTide(dt) {
+      const played = moveHistory.length;
+      const limit = contract ? CONTRACT_PLY_LIMIT : 0;
+      const dayTarget = timeOverride?.day ?? dayPhase({ plies: played, limit, puzzle: Boolean(puzzle) });
+      const tideTarget = timeOverride?.tide ?? (contract && !puzzle ? tideLevel({ pliesLeft: contractPliesLeft, limit: CONTRACT_PLY_LIMIT }) : 0);
+      dayNow = timeOverride?.snap ? dayTarget : approach(dayNow, dayTarget, dt, 1.1);
+      tideNow = timeOverride?.snap ? tideTarget : approach(tideNow, tideTarget, dt, 0.9);
+      const look = dayLook(dayNow);
+      postFx.setTint(look.tint, look.lift);
+      seaBiome?.ocean?.setTide?.(tideNow);
+    }
+
     function stepScene(dt, doRender = true) {
       if (skipFast) {
         if (isAnimatingMove || hitStopLeft > 0 || slowLeft > 0) dt *= SKIP_SPEED;
         else skipFast = false;
       }
       elapsedTotal += dt;
+      stepDayAndTide(dt);
       const prevCamPos = camera.position.clone();
 
       // Effects run on real time; the game itself holds during a hit stop and slows through a big capture.
@@ -7625,8 +7685,10 @@ let engineStarted = false;
         if (reelPendingFor !== gameId || gameOver) reelPendingFor = 0;
         else if (moveHistory.length) { reelPendingFor = 0; revealContractNow(); }   // 릴보다 먼저 뒀다 — 릴 없이 목표를 다 공개
         else if (reelPendingAge >= 0.3 && shellReel) { reelPendingFor = 0; startContractReel(); }
+        else if (reelPendingAge > 10 && !shellReel) { reelPendingFor = 0; revealContractNow(); }   // 연출 묶음을 못 받았다 — 기계 없이 공개
       }
       shellReel?.update(dt);
+      if (aiHeldBySlot && !reelPendingFor && !shellReel?.busy()) { aiHeldBySlot = false; if (!gameOver && gameMode === 'single' && currentTurn !== playerColor) triggerAIMoveNow(); }
       stepReelHops(dt);
       moveMarks.step(dt);
       stepContract(dt);
@@ -7864,7 +7926,7 @@ let engineStarted = false;
       if (doRender) {
         camera.position.add(impactFx.shakeOffset);
         gpuTimer.begin();
-        layered.render();
+        drawFrame(elapsedTotal);
         gpuTimer.end();
         camera.position.sub(impactFx.shakeOffset);
       }

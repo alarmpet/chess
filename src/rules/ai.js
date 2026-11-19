@@ -100,11 +100,18 @@ function contractContext(c) {
     left: Number.isFinite(c.left) ? c.left : Infinity
   };
 }
+/** 그 색이 그 종류를 잡으면 차는 목표 칸: 그 종류의 목표 가운데 덜 찬 첫 칸(잭팟 세트는 같은 종류가 셋). 없으면 -1. */
+function goalAt(color, type) {
+  const goals = ctx.goals;
+  const counts = ctx.counts[color];
+  for (let i = 0; i < goals.length; i++) if (goals[i].type === type && counts[i] < goals[i].count) return i;
+  return -1;
+}
 /** 이 수가 둔 쪽의 계약을 완성하는가(= 판이 끝나는 잡기). */
 function completesContract(m) {
   if (!ctx || !m.captured || (ctx.only && m.color !== ctx.only)) return false;
-  const gi = ctx.index[m.captured];
-  if (gi === undefined) return false;
+  const gi = goalAt(m.color, m.captured);
+  if (gi < 0) return false;
   const have = ctx.counts[m.color][gi];
   return have + 1 === ctx.goals[gi].count && ctx.done[m.color] + 1 >= ctx.need;
 }
@@ -115,8 +122,8 @@ function make(chess, m) {
   let gi = -1;
   let filled = 0;
   if (m.captured && (!ctx.only || m.color === ctx.only)) {
-    const at = ctx.index[m.captured];
-    if (at !== undefined && ctx.counts[m.color][at] < ctx.goals[at].count) {
+    const at = goalAt(m.color, m.captured);
+    if (at >= 0) {
       gi = at;
       ctx.counts[m.color][gi] += 1;
       if (ctx.counts[m.color][gi] === ctx.goals[gi].count) { ctx.done[m.color] += 1; filled = 1; }

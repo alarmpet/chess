@@ -66,3 +66,28 @@ test('the island pays a game once even if its end is reported twice', () => {
   assert.equal(v.coins, coins);
   assert.equal(v.games, 1);
 });
+
+// 11-18: 왕관 계약전 판도 주머니를 도감에 넣는다. 판 수는 보통 체스만 올린다.
+test('closePouch: 계약전 판(countGame=false)은 카드만 넣고 판 수는 그대로, 같은 판은 두 번 넣지 않는다', async () => {
+  const { closePouch } = await import('../src/cards/economy.js');
+  const col = newCollection();
+  const pouch = newPouch(77);
+  pouch.cards.push(awardCard(withPouch(col, pouch), 'pawn', 0.5));
+  pouch.cards.push(awardCard(withPouch(col, pouch), 'knight', 0.5));
+  const count = () => Object.values(col.cards).reduce((s, n) => s + n, 0);
+  const closed = closePouch(col, pouch, 77, false);
+  assert.ok(closed);
+  const held = count();
+  assert.ok(held >= 2, '주머니의 카드가 도감에 들어간다');
+  assert.equal(col.games, 0);
+  assert.ok(col.settled.includes(77));
+  assert.equal(closePouch(col, pouch, 77, false), null);
+  assert.equal(count(), held);
+  // 보통 판은 판 수가 오른다. 다른 판의 주머니는 넣지 않지만 그 판은 정산한 것으로 적는다.
+  const other = newPouch(5);
+  other.cards.push(consolationCard(withPouch(col, other), 0.3));
+  assert.ok(closePouch(col, other, 78, true));
+  assert.equal(col.games, 1);
+  assert.equal(count(), held);
+  assert.ok(col.settled.includes(78));
+});
